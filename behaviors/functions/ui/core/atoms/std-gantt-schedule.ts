@@ -85,6 +85,8 @@ export interface StdGanttScheduleConfig {
   showToday?: boolean;
   /** Default: `"start"` */
   startField?: string;
+  /** Default: `{}` */
+  statusColorMap?: Record<string, TraitConfig>;
   /** Default: `"status"` */
   statusField?: string;
   /** Default: `"Schedule"` */

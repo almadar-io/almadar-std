@@ -37,6 +37,15 @@
         "parent": "trt_01KXG04SJF04WRRXPKM7PJD93N",
         "renames": []
       },
+      "evt_01M3T1CTZ3ZYA6FHZ18QR37H8E": {
+        "bakedName": "@config.itemClickEvent",
+        "curName": "@config.itemClickEvent",
+        "id": "evt_01M3T1CTZ3ZYA6FHZ18QR37H8E",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04SJF04WRRXPKM7PJD93N",
+        "renames": []
+      },
       "orb_01KXG04SJFV1XY022E435J9GPQ": {
         "bakedName": "EntityTableOrbital",
         "curName": "EntityTableOrbital",
@@ -163,6 +172,28 @@
               "description": "Columns can be Column objects or simple string field names",
               "items": {
                 "properties": {
+                  "align": {
+                    "name": "align",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "left",
+                      "center",
+                      "right"
+                    ]
+                  },
+                  "format": {
+                    "name": "format",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "date",
+                      "currency",
+                      "number",
+                      "boolean",
+                      "percent"
+                    ]
+                  },
                   "header": {
                     "name": "header",
                     "required": false,
@@ -267,6 +298,8 @@
             "fields": {
               "default": [
                 {
+                  "align": "left",
+                  "format": "date",
                   "header": "Header",
                   "key": "Key",
                   "label": "Label",
@@ -275,6 +308,8 @@
                   "width": "Width"
                 },
                 {
+                  "align": "center",
+                  "format": "currency",
                   "header": "Header 2",
                   "key": "Key 2",
                   "label": "Label 2",
@@ -286,6 +321,28 @@
               "description": "Fields to display - accepts string[] or Column[] for unified interface. Alias for columns",
               "items": {
                 "properties": {
+                  "align": {
+                    "name": "align",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "left",
+                      "center",
+                      "right"
+                    ]
+                  },
+                  "format": {
+                    "name": "format",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "date",
+                      "currency",
+                      "number",
+                      "boolean",
+                      "percent"
+                    ]
+                  },
                   "header": {
                     "name": "header",
                     "required": false,
@@ -396,6 +453,13 @@
               "label": "Item Actions",
               "tier": "presentation",
               "type": "[EntityTableItemActionsItem]"
+            },
+            "itemClickEvent": {
+              "default": "ITEM_CLICK",
+              "description": "When set, rows are activatable and emit UI:{itemClickEvent} with { id, row }",
+              "label": "Item Click Event",
+              "tier": "presentation",
+              "type": "event"
             },
             "look": {
               "default": "dense",
@@ -601,6 +665,26 @@
           ],
           "emits": [
             {
+              "definerKnob": "itemClickEvent",
+              "description": "When set, rows are activatable and emit UI:{itemClickEvent} with { id, row }",
+              "event": "@config.itemClickEvent",
+              "eventId": "evt_01M3T1CTZ3ZYA6FHZ18QR37H8E",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "row",
+                  "required": true,
+                  "type": "@entity"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
               "description": "User opened a record from the list.",
               "event": "VIEW",
               "eventId": "evt_01KXG04SJJ648J6B44Z4MCR8KK",
@@ -682,6 +766,25 @@
                   }
                 ],
                 "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
+              },
+              {
+                "description": "When set, rows are activatable and emit UI:{itemClickEvent} with { id, row }",
+                "id": "evt_01M3T1CTZ3ZYA6FHZ18QR37H8E",
+                "key": "@config.itemClickEvent",
+                "name": "@config.item click event",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "row",
+                    "required": true,
+                    "type": "@entity"
+                  }
+                ],
                 "tier": "essential"
               },
               {
@@ -806,6 +909,7 @@
                           ]
                         ]
                       ],
+                      "itemClickEvent": "@config.itemClickEvent",
                       "look": "@config.look",
                       "page": "@config.pageProp",
                       "pageSize": "@config.pageSize",
@@ -949,6 +1053,7 @@
                           ]
                         ]
                       ],
+                      "itemClickEvent": "@config.itemClickEvent",
                       "look": "@config.look",
                       "page": "@config.pageProp",
                       "pageSize": "@config.pageSize",
@@ -1095,6 +1200,7 @@
                           ]
                         ]
                       ],
+                      "itemClickEvent": "@config.itemClickEvent",
                       "look": "@config.look",
                       "page": "@config.pageProp",
                       "pageSize": "@config.pageSize",
@@ -1203,6 +1309,14 @@
           {
             "name": "sortable",
             "type": "boolean"
+          },
+          {
+            "name": "align",
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "type": "string"
           }
         ],
         "EntityTableEmptyAction": [
@@ -1259,6 +1373,14 @@
           {
             "name": "sortable",
             "type": "boolean"
+          },
+          {
+            "name": "align",
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "type": "string"
           }
         ],
         "EntityTableItemActionsItem": [

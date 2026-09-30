@@ -87,6 +87,10 @@ export interface StdEventLogConfig {
   bodySearch?: boolean;
   /** Default: `"elevated"` */
   cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
+  /** Default: `"date"` */
+  dateField?: string;
+  /** Default: `"description"` */
+  descriptionField?: string;
   /** Default: `"toolbar"` */
   filterBarLook?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
   /** Default: `[]` */
@@ -103,10 +107,14 @@ export interface StdEventLogConfig {
   searchField?: string;
   /** Default: `"Search activity…"` */
   searchPlaceholder?: string;
+  /** Default: `"status"` */
+  statusField?: string;
   /** Default: `"vertical-spacious"` */
   timelineLook?: 'vertical-compact' | 'vertical-spacious' | 'horizontal' | 'swimlane';
   /** Default: `"Activity"` */
   title?: string;
+  /** Default: `"title"` */
+  titleField?: string;
 }
 
 /**
@@ -485,6 +493,20 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
               'tile-image-first',
             ],
           },
+          'dateField': {
+            'default': 'date',
+            'description': 'Entity field holding each event\'s date.',
+            'label': 'Date field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'descriptionField': {
+            'default': 'description',
+            'description': 'Entity field holding each event\'s description.',
+            'label': 'Description field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'filterBarLook': {
             'default': 'toolbar',
             'description': 'Visual treatment for the embedded filter bar, mirroring std-filter\'s own enum. Only applies when `filters` is non-empty.',
@@ -641,6 +663,13 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
             'tier': 'presentation',
             'type': 'string',
           },
+          'statusField': {
+            'default': 'status',
+            'description': 'Entity field holding each event\'s status (complete | active | pending | error).',
+            'label': 'Status field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'timelineLook': {
             'default': 'vertical-spacious',
             'description': 'Layer 2 visual treatment for the timeline.',
@@ -658,6 +687,13 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
             'default': 'Activity',
             'description': 'Heading shown above the activity timeline',
             'label': 'Section title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'titleField': {
+            'default': 'title',
+            'description': 'Entity field holding each event\'s title.',
+            'label': 'Title field',
             'tier': 'presentation',
             'type': 'string',
           },
@@ -1364,6 +1400,8 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                         'type': 'tabs',
                       },
                       {
+                        'dateField': '@config.dateField',
+                        'descriptionField': '@config.descriptionField',
                         'entity': '@entity.entries',
                         'fields': [
                           'title',
@@ -1372,6 +1410,8 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                           'status',
                         ],
                         'look': '@config.timelineLook',
+                        'statusField': '@config.statusField',
+                        'titleField': '@config.titleField',
                         'type': 'timeline',
                       },
                     ],
@@ -1595,6 +1635,8 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                         'type': 'tabs',
                       },
                       {
+                        'dateField': '@config.dateField',
+                        'descriptionField': '@config.descriptionField',
                         'entity': '@entity.entries',
                         'fields': [
                           'title',
@@ -1603,6 +1645,8 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                           'status',
                         ],
                         'look': '@config.timelineLook',
+                        'statusField': '@config.statusField',
+                        'titleField': '@config.titleField',
                         'type': 'timeline',
                       },
                     ],
@@ -2072,6 +2116,8 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                         'type': 'tabs',
                       },
                       {
+                        'dateField': '@config.dateField',
+                        'descriptionField': '@config.descriptionField',
                         'entity': '@entity.entries',
                         'fields': [
                           'title',
@@ -2080,6 +2126,8 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                           'status',
                         ],
                         'look': '@config.timelineLook',
+                        'statusField': '@config.statusField',
+                        'titleField': '@config.titleField',
                         'type': 'timeline',
                       },
                     ],
@@ -2292,6 +2340,8 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                         'type': 'tabs',
                       },
                       {
+                        'dateField': '@config.dateField',
+                        'descriptionField': '@config.descriptionField',
                         'entity': '@entity.entries',
                         'fields': [
                           'title',
@@ -2300,6 +2350,8 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                           'status',
                         ],
                         'look': '@config.timelineLook',
+                        'statusField': '@config.statusField',
+                        'titleField': '@config.titleField',
                         'type': 'timeline',
                       },
                     ],

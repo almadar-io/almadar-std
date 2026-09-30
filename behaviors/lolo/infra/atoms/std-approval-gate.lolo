@@ -189,10 +189,12 @@ orbital ApprovalGateOrbital {
               variant: caption
             }, {
               label: Requested
+              format: date
               name: requestedAt
               variant: caption
             }]
             gap: sm
+            itemClickEvent: @config.itemClickEvent
             itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             look: @config.tableLook
             type: data-grid
@@ -337,6 +339,7 @@ orbital ApprovalGateOrbital {
         @tier "domain"
       OPEN_SUBJECT -> external {
         id : string!
+        row : ApprovalRequest
         subjectId : string
         subjectLabel : string
       }
@@ -496,6 +499,10 @@ orbital ApprovalGateOrbital {
         @label "Review slot"
         @description "UI slot the review queue renders into. Defaults to the modal overlay so the queue never seizes the host's main content; summoned via OPEN, cleared via CLOSE."
         @tier "internal"
+      itemClickEvent : event = OPEN_SUBJECT
+        @label "Row click"
+        @description "Event emitted when a row is clicked; opens the subject under review. Empty disables the row click."
+        @tier "presentation"
       itemActions : [ItemAction] = [{
         event: OPEN_SUBJECT
         icon: eye

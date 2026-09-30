@@ -57,14 +57,12 @@ export interface StdUiDateRangePickerConfig {
   className?: string;
   /** Default: `"EVENT"` */
   event?: string;
-  /** Default: `"From"` */
   fromLabel?: string;
   fromProp?: string;
   /** Default: `"CHANGE"` */
   onChange?: string;
   /** Default: `[]` */
   presets?: EntityRow[];
-  /** Default: `"To"` */
   toLabel?: string;
   toProp?: string;
 }

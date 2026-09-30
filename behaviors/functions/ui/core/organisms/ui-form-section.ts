@@ -705,6 +705,14 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                   'required': false,
                   'type': 'string',
                 },
+                'labels': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'labels',
+                  'required': false,
+                  'type': 'object',
+                },
                 'max': {
                   'name': 'max',
                   'required': false,
@@ -1062,6 +1070,14 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                         'name': 'label',
                         'required': false,
                         'type': 'string',
+                      },
+                      'labels': {
+                        'items': {
+                          'type': 'string',
+                        },
+                        'name': 'labels',
+                        'required': false,
+                        'type': 'object',
                       },
                       'max': {
                         'name': 'max',

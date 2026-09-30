@@ -43,7 +43,6 @@ export interface StdUiScoreDisplayConfig {
   className?: string;
   icon?: unknown;
   label?: string;
-  /** Default: `"en-US"` */
   locale?: string;
   score?: number;
   /** Default: `"md"` */

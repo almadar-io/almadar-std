@@ -39,7 +39,6 @@ export type StdUiAuthLayoutEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiAuthLayoutConfig {
-  /** Default: `"My App"` */
   appName?: string;
   /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png"` */
   backgroundImage?: unknown;

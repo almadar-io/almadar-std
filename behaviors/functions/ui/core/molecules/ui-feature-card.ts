@@ -44,7 +44,6 @@ export interface StdUiFeatureCardConfig {
   description?: string;
   href?: string;
   icon?: unknown;
-  /** Default: `"Learn more"` */
   linkLabel?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';

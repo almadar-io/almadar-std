@@ -77,6 +77,7 @@ orbital SavedSearchOrbital {
               variant: badge
             }]
             gap: sm
+            itemClickEvent: @config.itemClickEvent
             itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             look: @config.tableLook
             type: data-grid
@@ -253,6 +254,7 @@ orbital SavedSearchOrbital {
         @tier "presentation"
       EDIT {
         id : string!
+        row : SavedSearch
       }
         @description "Indicates a saved search is being modified."
         @synonyms "modify, update, change"
@@ -404,6 +406,10 @@ orbital SavedSearchOrbital {
       defaultSearchName : string = "Saved search"
         @label "Default saved-search name"
         @description "Name given to a saved search when the current search has no query text (filters only). Renamable afterwards."
+        @tier "presentation"
+      itemClickEvent : event = EDIT
+        @label "Row click"
+        @description "Event emitted when a row is clicked; opens the saved search for editing. Empty disables the row click."
         @tier "presentation"
       itemActions : [ItemAction] = [{
         event: TOGGLE_ALERT

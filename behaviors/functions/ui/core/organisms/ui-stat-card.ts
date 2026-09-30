@@ -281,10 +281,36 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
             'description': 'Metrics to display (schema format) - accepts readonly for compatibility with generated const arrays',
             'items': {
               'properties': {
+                'aggregate': {
+                  'name': 'aggregate',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'count',
+                    'sum',
+                  ],
+                },
                 'field': {
                   'name': 'field',
                   'required': false,
                   'type': 'string',
+                },
+                'filter': {
+                  'name': 'filter',
+                  'properties': {
+                    'equals': {
+                      'name': 'equals',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    'field': {
+                      'name': 'field',
+                      'required': true,
+                      'type': 'string',
+                    },
+                  },
+                  'required': false,
+                  'type': 'object',
                 },
                 'format': {
                   'name': 'format',

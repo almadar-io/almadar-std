@@ -56,7 +56,6 @@ export interface StdUiCommandPaletteConfig {
   className?: string;
   /** Default: `[]` */
   commands?: EntityRow[];
-  /** Default: `"No matching commands"` */
   emptyLabel?: string;
   /** Default: `"OPEN_CHANGE"` */
   onOpenChange?: string;
@@ -64,7 +63,6 @@ export interface StdUiCommandPaletteConfig {
   onSelect?: string;
   /** Default: `false` */
   open?: boolean;
-  /** Default: `"Type a command..."` */
   placeholder?: string;
   /** Default: `""` */
   viewerRole?: string;

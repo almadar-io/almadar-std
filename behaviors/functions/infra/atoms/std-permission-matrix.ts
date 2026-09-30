@@ -576,6 +576,13 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
             'tier': 'presentation',
             'type': '[ItemAction]',
           },
+          'itemClickEvent': {
+            'default': 'EDIT',
+            'description': 'Event emitted when a row is clicked; opens the grant for editing. Empty disables the row click.',
+            'label': 'Row click',
+            'tier': 'presentation',
+            'type': 'event',
+          },
           'viewerRole': {
             'default': '',
             'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
@@ -1150,6 +1157,7 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                             ],
                           ],
                         ],
+                        'itemClickEvent': '@config.itemClickEvent',
                         'type': 'data-grid',
                       },
                     ],

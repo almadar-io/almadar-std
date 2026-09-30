@@ -88,6 +88,8 @@ export interface StdListConfig {
   filters?: EntityRow[];
   /** Default: `[{"event":"EDIT","label":"Edit","variant":"ghost"},{"event":"DELETE","label":"Delete","variant":"danger"}]` */
   itemActions?: EntityRow[];
+  /** Default: `"EDIT"` */
+  itemClickEvent?: string;
   /** Default: `20` */
   pageSize?: number;
   /** Default: `"name"` */
@@ -522,6 +524,14 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
             'label': 'Row actions',
             'tier': 'presentation',
             'type': '[ItemAction]',
+          },
+          'itemClickEvent': {
+            'default': 'EDIT',
+            'description': 'Row-click channel; empty = rows are not clickable.',
+            'label': 'Which event does clicking a row fire?',
+            'synonyms': 'row click event, item click, open event',
+            'tier': 'presentation',
+            'type': 'event',
           },
           'pageSize': {
             'default': 20,
@@ -1154,6 +1164,7 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
                             ],
                           ],
                         ],
+                        'itemClickEvent': '@config.itemClickEvent',
                         'pageSize': '@config.displayPageSize',
                         'type': 'data-grid',
                       },
@@ -1496,6 +1507,7 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
                             ],
                           ],
                         ],
+                        'itemClickEvent': '@config.itemClickEvent',
                         'pageSize': '@config.displayPageSize',
                         'type': 'data-grid',
                       },

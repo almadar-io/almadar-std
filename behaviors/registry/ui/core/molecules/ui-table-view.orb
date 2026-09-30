@@ -55,6 +55,15 @@
         "parent": "trt_01KXG04RSAMGZ70BX7E6M2EKPH",
         "renames": []
       },
+      "evt_01M3T1CT5CK8DD217ZVXZP6EP5": {
+        "bakedName": "@config.itemClickEvent",
+        "curName": "@config.itemClickEvent",
+        "id": "evt_01M3T1CT5CK8DD217ZVXZP6EP5",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04RSAMGZ70BX7E6M2EKPH",
+        "renames": []
+      },
       "orb_01KXG04RSAMH7355J2NZQRJWY9": {
         "bakedName": "TableViewOrbital",
         "curName": "TableViewOrbital",
@@ -148,6 +157,26 @@
                     "required": false,
                     "type": "string"
                   },
+                  "colorMap": {
+                    "items": {
+                      "type": "string",
+                      "values": [
+                        "default",
+                        "primary",
+                        "secondary",
+                        "success",
+                        "warning",
+                        "danger",
+                        "error",
+                        "info",
+                        "neutral",
+                        "destructive"
+                      ]
+                    },
+                    "name": "colorMap",
+                    "required": false,
+                    "type": "object"
+                  },
                   "field": {
                     "name": "field",
                     "required": false,
@@ -186,10 +215,27 @@
                     "required": false,
                     "type": "string"
                   },
+                  "labels": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "labels",
+                    "required": false,
+                    "type": "object"
+                  },
                   "sortable": {
                     "name": "sortable",
                     "required": false,
                     "type": "boolean"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "h3",
+                      "h4"
+                    ]
                   },
                   "weight": {
                     "name": "weight",
@@ -327,6 +373,26 @@
                     "required": false,
                     "type": "string"
                   },
+                  "colorMap": {
+                    "items": {
+                      "type": "string",
+                      "values": [
+                        "default",
+                        "primary",
+                        "secondary",
+                        "success",
+                        "warning",
+                        "danger",
+                        "error",
+                        "info",
+                        "neutral",
+                        "destructive"
+                      ]
+                    },
+                    "name": "colorMap",
+                    "required": false,
+                    "type": "object"
+                  },
                   "field": {
                     "name": "field",
                     "required": false,
@@ -365,10 +431,27 @@
                     "required": false,
                     "type": "string"
                   },
+                  "labels": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "labels",
+                    "required": false,
+                    "type": "object"
+                  },
                   "sortable": {
                     "name": "sortable",
                     "required": false,
                     "type": "boolean"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "h3",
+                      "h4"
+                    ]
                   },
                   "weight": {
                     "name": "weight",
@@ -457,8 +540,8 @@
               "type": "[TableViewItemActionsItem]"
             },
             "itemClickEvent": {
-              "default": "",
-              "description": "When set, the whole row is clickable and emits UI:{itemClickEvent} with { id, row } (action-button clicks stopPropagation so they still win). Mirrors DataList's contract. When OMITTED and `itemActions` exist, the row click defaults to the first non-danger item action (the view/open action by authoring convention) — a danger action never becomes the row default (destructive actions require intentional reach).",
+              "default": "ITEM_CLICK",
+              "description": "When set, the whole row is clickable and emits UI:{itemClickEvent} with { id, row } (action-button clicks stopPropagation so they still win). Mirrors DataList's contract. Omit = rows are not clickable.",
               "label": "Item Click Event",
               "tier": "presentation",
               "type": "event"
@@ -618,6 +701,26 @@
           ],
           "emits": [
             {
+              "definerKnob": "itemClickEvent",
+              "description": "When set, the whole row is clickable and emits UI:{itemClickEvent} with { id, row } (action-button clicks stopPropagation so they still win). Mirrors DataList's contract. Omit = rows are not clickable.",
+              "event": "@config.itemClickEvent",
+              "eventId": "evt_01M3T1CT5CK8DD217ZVXZP6EP5",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "row",
+                  "required": true,
+                  "type": "@entity"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
               "definerKnob": "selectEvent",
               "description": "Event emitted on selection change: UI:{selectEvent} with { selectedIds }.",
               "event": "@config.selectEvent",
@@ -734,6 +837,25 @@
                   }
                 ],
                 "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
+              },
+              {
+                "description": "When set, the whole row is clickable and emits UI:{itemClickEvent} with { id, row } (action-button clicks stopPropagation so they still win). Mirrors DataList's contract. Omit = rows are not clickable.",
+                "id": "evt_01M3T1CT5CK8DD217ZVXZP6EP5",
+                "key": "@config.itemClickEvent",
+                "name": "@config.item click event",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "row",
+                    "required": true,
+                    "type": "@entity"
+                  }
+                ],
                 "tier": "essential"
               },
               {
@@ -1094,6 +1216,18 @@
             "type": "string"
           },
           {
+            "name": "colorMap",
+            "type": "Map<string,TableViewColumnsItemColorMapValue>"
+          },
+          {
+            "name": "labels",
+            "type": "Map<string,string>"
+          },
+          {
+            "name": "variant",
+            "type": "string"
+          },
+          {
             "name": "icon",
             "type": "icon"
           },
@@ -1168,6 +1302,18 @@
           },
           {
             "name": "format",
+            "type": "string"
+          },
+          {
+            "name": "colorMap",
+            "type": "Map<string,TableViewFieldsItemColorMapValue>"
+          },
+          {
+            "name": "labels",
+            "type": "Map<string,string>"
+          },
+          {
+            "name": "variant",
             "type": "string"
           },
           {

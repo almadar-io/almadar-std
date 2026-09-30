@@ -55,8 +55,10 @@ export interface StdUiTimelineTimelineLoadedPayload {
  */
 export interface StdUiTimelineConfig {
   className?: string;
+  dateField?: string;
+  descriptionField?: string;
   error?: EntityRow;
-  /** Default: `["Item","Item 2"]` */
+  /** Default: `[]` */
   fields?: string[];
   /** Default: `false` */
   isLoading?: boolean;
@@ -68,7 +70,9 @@ export interface StdUiTimelineConfig {
   look?: 'vertical-compact' | 'vertical-spacious' | 'horizontal' | 'swimlane';
   /** Default: `true` */
   selfFetch?: boolean;
+  statusField?: string;
   title?: string;
+  titleField?: string;
   /** Default: `""` */
   viewerRole?: string;
 }
@@ -150,6 +154,18 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
             'tier': 'presentation',
             'type': 'string',
           },
+          'dateField': {
+            'description': 'Entity field holding each item\'s date.',
+            'label': 'Date Field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'descriptionField': {
+            'description': 'Entity field holding each item\'s description.',
+            'label': 'Description Field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'error': {
             'description': 'Error state',
             'label': 'Error',
@@ -179,11 +195,8 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
             'type': 'TimelineError',
           },
           'fields': {
-            'default': [
-              'Item',
-              'Item 2',
-            ],
-            'description': 'Fields to display',
+            'default': [],
+            'description': 'Entity fields the timeline draws; each slot is named by its own `*Field` prop.',
             'items': {
               'type': 'string',
             },
@@ -319,9 +332,21 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
             'tier': 'internal',
             'type': 'boolean',
           },
+          'statusField': {
+            'description': 'Entity field holding each item\'s status (complete | active | pending | error).',
+            'label': 'Status Field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'title': {
             'description': 'Timeline title',
             'label': 'Title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'titleField': {
+            'description': 'Entity field holding each item\'s title.',
+            'label': 'Title Field',
             'tier': 'presentation',
             'type': 'string',
           },
@@ -461,6 +486,8 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
                   'main',
                   {
                     'className': '@config.className',
+                    'dateField': '@config.dateField',
+                    'descriptionField': '@config.descriptionField',
                     'entity': '@entity',
                     'error': '@config.error',
                     'fields': '@config.fields',
@@ -501,7 +528,9 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
                     ],
                     'items': '@config.items',
                     'look': '@config.look',
+                    'statusField': '@config.statusField',
                     'title': '@config.title',
+                    'titleField': '@config.titleField',
                     'type': 'timeline',
                   },
                 ],
@@ -518,6 +547,8 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
                   'main',
                   {
                     'className': '@config.className',
+                    'dateField': '@config.dateField',
+                    'descriptionField': '@config.descriptionField',
                     'entity': '@entity',
                     'error': '@config.error',
                     'fields': '@config.fields',
@@ -558,7 +589,9 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
                     ],
                     'items': '@config.items',
                     'look': '@config.look',
+                    'statusField': '@config.statusField',
                     'title': '@config.title',
+                    'titleField': '@config.titleField',
                     'type': 'timeline',
                   },
                 ],
@@ -578,6 +611,8 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
                   'main',
                   {
                     'className': '@config.className',
+                    'dateField': '@config.dateField',
+                    'descriptionField': '@config.descriptionField',
                     'entity': '@payload.data',
                     'error': '@config.error',
                     'fields': '@config.fields',
@@ -618,7 +653,9 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
                     ],
                     'items': '@config.items',
                     'look': '@config.look',
+                    'statusField': '@config.statusField',
                     'title': '@config.title',
+                    'titleField': '@config.titleField',
                     'type': 'timeline',
                   },
                 ],

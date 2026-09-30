@@ -1003,7 +1003,9 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                         'type': 'upload-drop-zone',
                       },
                       {
+                        'captionField': 'name',
                         'entity': '@payload.data',
+                        'srcField': 'url',
                         'type': 'media-gallery',
                       },
                     ],
@@ -1287,7 +1289,9 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                         'type': 'upload-drop-zone',
                       },
                       {
+                        'captionField': 'name',
                         'entity': '@payload.data',
+                        'srcField': 'url',
                         'type': 'media-gallery',
                       },
                     ],

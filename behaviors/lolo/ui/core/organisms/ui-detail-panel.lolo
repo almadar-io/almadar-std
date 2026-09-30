@@ -41,12 +41,18 @@ orbital DetailPanelOrbital {
     when : SExpr
   }
   type DetailPanelFieldsItem = {
-    key : string!
-    header : string
+    name : string!
+    label : string
+    icon : icon
+    variant : "h3" | "h4" | "body" | "caption" | "badge" | "small" | "progress"
+    format : "date" | "currency" | "number" | "boolean" | "percent"
+    colorMap : Map string DetailPanelFieldsItemColorMapValue
+    labels : Map string string
     type : string
     values : [string]
     relation : DetailPanelFieldsItemRelation
   }
+  type DetailPanelFieldsItemColorMapValue = "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "error" | "info" | "neutral" | "destructive"
   type DetailPanelFieldsItemRelation = {
     entity : string!
     cardinality : "one" | "many" | "one-to-many" | "many-to-one" | "many-to-many"
@@ -90,6 +96,7 @@ orbital DetailPanelOrbital {
           actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           maxInlineActions: @config.maxInlineActions
           backAction: @config.backAction
+          closeEvent: @config.closeEvent
           footer: @config.footer
           slideOver: @config.slideOver
           fields: @config.fields
@@ -126,6 +133,7 @@ orbital DetailPanelOrbital {
           actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           maxInlineActions: @config.maxInlineActions
           backAction: @config.backAction
+          closeEvent: @config.closeEvent
           footer: @config.footer
           slideOver: @config.slideOver
           fields: @config.fields
@@ -165,6 +173,7 @@ orbital DetailPanelOrbital {
           actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           maxInlineActions: @config.maxInlineActions
           backAction: @config.backAction
+          closeEvent: @config.closeEvent
           footer: @config.footer
           slideOver: @config.slideOver
           fields: @config.fields
@@ -201,6 +210,7 @@ orbital DetailPanelOrbital {
           actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           maxInlineActions: @config.maxInlineActions
           backAction: @config.backAction
+          closeEvent: @config.closeEvent
           footer: @config.footer
           slideOver: @config.slideOver
           fields: @config.fields
@@ -217,6 +227,9 @@ orbital DetailPanelOrbital {
     }
 
     emits {
+      @config.closeEvent -> external { }
+        @description "The event of the declared action that dismisses the panel. The matching action renders as the header close ×; omitted, no × is drawn."
+        @tier "essential"
       DetailPanelLoaded
         @description "DetailPanel row finished loading; payload.data holds the single row."
         @synonyms "loaded, fetched, retrieved"
@@ -313,6 +326,10 @@ orbital DetailPanelOrbital {
         @label "Back Action"
         @description "Navigation-back affordance. Renders top-LEFT before the title (OS/back convention — Almadar_UX §8.4), spatially separated from the right-aligned action buttons + close X. Never inferred from actions[] labels."
         @tier "presentation"
+      closeEvent : event = "CLOSE"
+        @label "Close Event"
+        @description "The event of the declared action that dismisses the panel. The matching action renders as the header close ×; omitted, no × is drawn."
+        @tier "presentation"
       footer : node
         @label "Footer"
         @description "footer prop"
@@ -321,9 +338,9 @@ orbital DetailPanelOrbital {
         @label "Slide Over"
         @description "slideOver prop"
         @tier "presentation"
-      fields : [DetailPanelFieldsItem] = [{ key: "Key", header: "Header", type: "Type", values: ["Item", "Item 2"], relation: { entity: "Entity", cardinality: one } }, { key: "Key 2", header: "Header 2", type: "Type 2", values: ["Item", "Item 2"], relation: { entity: "Entity 2", cardinality: many } }]
+      fields : [DetailPanelFieldsItem] = [{ name: "Name", label: "Label", icon: "circle", variant: h3, format: date, type: "Type", values: ["Item", "Item 2"], relation: { entity: "Entity", cardinality: one } }, { name: "Name 2", label: "Label 2", icon: "circle", variant: h4, format: currency, type: "Type 2", values: ["Item", "Item 2"], relation: { entity: "Entity 2", cardinality: many } }]
         @label "Fields"
-        @description "Fields to display - accepts string[], {key, header}[], or DetailField[]"
+        @description "Fields to display: field names, or declared fields ({ name, label, variant, format, colorMap, labels })"
         @tier "presentation"
       fieldNames : [string] = []
         @label "Field Names"

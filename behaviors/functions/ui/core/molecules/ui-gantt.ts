@@ -77,6 +77,8 @@ export interface StdUiGanttConfig {
   showToday?: boolean;
   /** Default: `"start"` */
   startField?: string;
+  /** Default: `{"item":"default"}` */
+  statusColorMap?: Record<string, TraitConfig>;
   /** Default: `"status"` */
   statusField?: string;
   /** Default: `"title"` */

@@ -73,13 +73,15 @@ orbital RevisionOrbital {
             }, {
               label: Summary
               name: summary
-              variant: caption
+              variant: h4
             }, {
               label: Saved
+              format: date
               name: createdAt
               variant: caption
             }]
             gap: sm
+            itemClickEvent: @config.itemClickEvent
             itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             look: @config.tableLook
             type: data-grid
@@ -591,6 +593,10 @@ orbital RevisionOrbital {
         @label "Scope field"
         @description "Revision entity field holding the parent document's id. When set, a page-mounted {id} route param scopes INIT's fetch, and a SHOW_HISTORY { key } event rescopes the feed, to rows whose scopeField equals the id/key; rollback and retry refetches stay scoped too. Empty (default) or no id = unfiltered global feed, unchanged from prior behavior."
         @tier "domain"
+      itemClickEvent : event = OPEN_REVISION
+        @label "Row click"
+        @description "Event emitted when a row is clicked; opens the revision. Empty disables the row click."
+        @tier "presentation"
       itemActions : [ItemAction] = [{
         event: OPEN_REVISION
         icon: arrow-right

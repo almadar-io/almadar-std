@@ -109,8 +109,10 @@ export interface StdRecordDetailConfig {
   allowEdit?: boolean;
   /** Default: `"Saves as you type"` */
   autosaveHint?: string;
-  /** Default: `{"children":[{"actions":["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"entity":"@entity.loadedRow","fields":"@config.fields","initialData":"@entity.loadedRow","maxInlineActions":"@config.maxInlineActions","sections":"@config.sections","showActions":"@config.showActions","subtitle":"@entity.description","title":"@entity.name","type":"detail-panel"}],"direction":"vertical","gap":"lg","type":"stack"}` */
+  /** Default: `{"children":[{"actions":["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"closeEvent":"@config.closeEvent","entity":"@entity.loadedRow","fields":"@config.fields","initialData":"@entity.loadedRow","maxInlineActions":"@config.maxInlineActions","sections":"@config.sections","showActions":"@config.showActions","subtitle":"@entity.description","title":"@entity.name","type":"detail-panel"}],"direction":"vertical","gap":"lg","type":"stack"}` */
   bodyContent?: unknown;
+  /** Default: `""` */
+  closeEvent?: string;
   /** Default: `"content"` */
   contentField?: string;
   /** Default: `""` */
@@ -125,7 +127,7 @@ export interface StdRecordDetailConfig {
   doneLabel?: string;
   /** Default: `"Edit"` */
   editLabel?: string;
-  /** Default: `[{"header":"Name","key":"name"},{"header":"Description","key":"description"},{"header":"Status","key":"status"},{"format":"date","header":"Created","key":"createdAt"}]` */
+  /** Default: `[{"header":"Name","key":"name","variant":"h4"},{"header":"Description","key":"description","variant":"body"},{"header":"Status","key":"status","variant":"badge"},{"format":"date","header":"Created","key":"createdAt"}]` */
   fields?: EntityRow[];
   /** Default: `""` */
   iconField?: string;
@@ -135,7 +137,7 @@ export interface StdRecordDetailConfig {
   maxInlineActions?: number;
   /** Default: `"init"` */
   openOn?: 'init' | 'event';
-  /** Default: `{"children":[{"actions":["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"entity":"@entity.loadedRow","fields":"@config.fields","initialData":"@entity.loadedRow","maxInlineActions":"@config.maxInlineActions","sections":"@config.sections","showActions":"@config.showActions","subtitle":"@entity.description","title":"@entity.name","type":"detail-panel"}],"className":"w-full max-w-4xl","direction":"vertical","gap":"lg","type":"stack"}` */
+  /** Default: `{"children":[{"actions":["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"closeEvent":"@config.closeEvent","entity":"@entity.loadedRow","fields":"@config.fields","initialData":"@entity.loadedRow","maxInlineActions":"@config.maxInlineActions","sections":"@config.sections","showActions":"@config.showActions","subtitle":"@entity.description","title":"@entity.name","type":"detail-panel"}],"className":"w-full max-w-4xl","direction":"vertical","gap":"lg","type":"stack"}` */
   pageBodyContent?: unknown;
   /** Default: `"Start writing…"` */
   placeholder?: string;
@@ -143,7 +145,7 @@ export interface StdRecordDetailConfig {
   sections?: EntityRow[];
   /** Default: `true` */
   showActions?: boolean;
-  /** Default: `{"children":[{"actions":["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"entity":"@entity.loadedRow","fields":"@config.fields","initialData":"@entity.loadedRow","maxInlineActions":"@config.maxInlineActions","sections":"@config.sections","showActions":"@config.showActions","slideOver":true,"subtitle":"@entity.description","title":"@entity.name","type":"detail-panel"}],"direction":"vertical","gap":"none","type":"stack"}` */
+  /** Default: `{"children":[{"actions":["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"closeEvent":"@config.closeEvent","entity":"@entity.loadedRow","fields":"@config.fields","initialData":"@entity.loadedRow","maxInlineActions":"@config.maxInlineActions","sections":"@config.sections","showActions":"@config.showActions","slideOver":true,"subtitle":"@entity.description","title":"@entity.name","type":"detail-panel"}],"direction":"vertical","gap":"none","type":"stack"}` */
   slideOverBodyContent?: unknown;
   /** Default: `"description"` */
   subtitleField?: string;
@@ -503,6 +505,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                       ],
                     ],
                   ],
+                  'closeEvent': '@config.closeEvent',
                   'entity': '@entity.loadedRow',
                   'fields': '@config.fields',
                   'initialData': '@entity.loadedRow',
@@ -522,6 +525,14 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
             'label': 'Body content tree',
             'tier': 'internal',
             'type': 'render-ui',
+          },
+          'closeEvent': {
+            'default': '',
+            'description': 'The `actions` entry whose event matches renders as the panel\'s close (×) button. Empty = no close button (a routed detail page navigates back instead).',
+            'label': 'Which action closes the record?',
+            'synonyms': 'close event, dismiss event, close button',
+            'tier': 'presentation',
+            'type': 'event',
           },
           'contentField': {
             'default': 'content',
@@ -695,14 +706,17 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
               {
                 'header': 'Name',
                 'key': 'name',
+                'variant': 'h4',
               },
               {
                 'header': 'Description',
                 'key': 'description',
+                'variant': 'body',
               },
               {
                 'header': 'Status',
                 'key': 'status',
+                'variant': 'badge',
               },
               {
                 'format': 'date',
@@ -713,6 +727,26 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
             'description': 'Each entry maps one entity field to a labelled row in the panel. Unlike a list row, a detail panel SHOULD label every field — the value stands alone here with no column header or repeated row position to name it.',
             'items': {
               'properties': {
+                'colorMap': {
+                  'items': {
+                    'type': 'string',
+                    'values': [
+                      'default',
+                      'primary',
+                      'secondary',
+                      'success',
+                      'warning',
+                      'danger',
+                      'error',
+                      'info',
+                      'neutral',
+                      'destructive',
+                    ],
+                  },
+                  'name': 'colorMap',
+                  'required': false,
+                  'type': 'object',
+                },
                 'format': {
                   'name': 'format',
                   'required': false,
@@ -734,6 +768,28 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                   'name': 'key',
                   'required': true,
                   'type': 'string',
+                },
+                'labels': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'labels',
+                  'required': false,
+                  'type': 'object',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'h3',
+                    'h4',
+                    'body',
+                    'caption',
+                    'badge',
+                    'small',
+                    'progress',
+                  ],
                 },
               },
               'type': 'object',
@@ -820,6 +876,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                       ],
                     ],
                   ],
+                  'closeEvent': '@config.closeEvent',
                   'entity': '@entity.loadedRow',
                   'fields': '@config.fields',
                   'initialData': '@entity.loadedRow',
@@ -920,6 +977,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                       ],
                     ],
                   ],
+                  'closeEvent': '@config.closeEvent',
                   'entity': '@entity.loadedRow',
                   'fields': '@config.fields',
                   'initialData': '@entity.loadedRow',

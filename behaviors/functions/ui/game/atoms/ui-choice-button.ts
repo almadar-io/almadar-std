@@ -53,7 +53,7 @@ export interface StdUiChoiceButtonConfig {
   payload?: Record<string, TraitConfig>;
   /** Default: `false` */
   selected?: boolean;
-  /** Default: `"Charge forward into the fray"` */
+  /** Default: `""` */
   text?: string;
 }
 

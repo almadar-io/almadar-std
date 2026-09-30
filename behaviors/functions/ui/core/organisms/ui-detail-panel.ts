@@ -30,7 +30,7 @@ const ALIAS = 'UiDetailPanel';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiDetailPanelEventKey = 'DetailPanelLoaded' | 'INIT';
+export type StdUiDetailPanelEventKey = 'CLOSE' | 'DetailPanelLoaded' | 'INIT';
 
 /**
  * Payload shape for the `DetailPanelLoaded` event.
@@ -53,12 +53,14 @@ export interface StdUiDetailPanelConfig {
   avatar?: PatternValue;
   backAction?: EntityRow;
   className?: string;
+  /** Default: `"CLOSE"` */
+  closeEvent?: string;
   /** Default: `[]` */
   displayFields?: string[];
   error?: EntityRow;
   /** Default: `[]` */
   fieldNames?: string[];
-  /** Default: `[{"header":"Header","key":"Key","relation":{"cardinality":"one","entity":"Entity"},"type":"Type","values":["Item","Item 2"]},{"header":"Header 2","key":"Key 2","relation":{"cardinality":"many","entity":"Entity 2"},"type":"Type 2","values":["Item","Item 2"]}]` */
+  /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","relation":{"cardinality":"one","entity":"Entity"},"type":"Type","values":["Item","Item 2"],"variant":"h3"},{"format":"currency","icon":"circle","label":"Label 2","name":"Name 2","relation":{"cardinality":"many","entity":"Entity 2"},"type":"Type 2","values":["Item","Item 2"],"variant":"h4"}]` */
   fields?: EntityRow[];
   footer?: PatternValue;
   /** Default: `false` */
@@ -290,6 +292,13 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'tier': 'presentation',
             'type': 'string',
           },
+          'closeEvent': {
+            'default': 'CLOSE',
+            'description': 'The event of the declared action that dismisses the panel. The matching action renders as the header close ×; omitted, no × is drawn.',
+            'label': 'Close Event',
+            'tier': 'presentation',
+            'type': 'event',
+          },
           'displayFields': {
             'default': [],
             'description': 'Display fields (alias for fields)',
@@ -341,8 +350,10 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
           'fields': {
             'default': [
               {
-                'header': 'Header',
-                'key': 'Key',
+                'format': 'date',
+                'icon': 'circle',
+                'label': 'Label',
+                'name': 'Name',
                 'relation': {
                   'cardinality': 'one',
                   'entity': 'Entity',
@@ -352,10 +363,13 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                   'Item',
                   'Item 2',
                 ],
+                'variant': 'h3',
               },
               {
-                'header': 'Header 2',
-                'key': 'Key 2',
+                'format': 'currency',
+                'icon': 'circle',
+                'label': 'Label 2',
+                'name': 'Name 2',
                 'relation': {
                   'cardinality': 'many',
                   'entity': 'Entity 2',
@@ -365,18 +379,64 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                   'Item',
                   'Item 2',
                 ],
+                'variant': 'h4',
               },
             ],
-            'description': 'Fields to display - accepts string[], {key, header}[], or DetailField[]',
+            'description': 'Fields to display: field names, or declared fields ({ name, label, variant, format, colorMap, labels })',
             'items': {
               'properties': {
-                'header': {
-                  'name': 'header',
+                'colorMap': {
+                  'items': {
+                    'type': 'string',
+                    'values': [
+                      'default',
+                      'primary',
+                      'secondary',
+                      'success',
+                      'warning',
+                      'danger',
+                      'error',
+                      'info',
+                      'neutral',
+                      'destructive',
+                    ],
+                  },
+                  'name': 'colorMap',
+                  'required': false,
+                  'type': 'object',
+                },
+                'format': {
+                  'name': 'format',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'date',
+                    'currency',
+                    'number',
+                    'boolean',
+                    'percent',
+                  ],
+                },
+                'icon': {
+                  'name': 'icon',
                   'required': false,
                   'type': 'string',
                 },
-                'key': {
-                  'name': 'key',
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'labels': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'labels',
+                  'required': false,
+                  'type': 'object',
+                },
+                'name': {
+                  'name': 'name',
                   'required': true,
                   'type': 'string',
                 },
@@ -416,6 +476,20 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                   'name': 'values',
                   'required': false,
                   'type': 'array',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'h3',
+                    'h4',
+                    'body',
+                    'caption',
+                    'badge',
+                    'small',
+                    'progress',
+                  ],
                 },
               },
               'type': 'object',
@@ -686,6 +760,13 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
         ],
         'emits': [
           {
+            'definerKnob': 'closeEvent',
+            'description': 'The event of the declared action that dismisses the panel. The matching action renders as the header close ×; omitted, no × is drawn.',
+            'event': '@config.closeEvent',
+            'scope': 'external',
+            'tier': 'essential',
+          },
+          {
             'description': 'DetailPanel row finished loading; payload.data holds the single row.',
             'event': 'DetailPanelLoaded',
             'payloadSchema': [
@@ -748,6 +829,12 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                 },
               ],
               'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'essential',
+            },
+            {
+              'description': 'The event of the declared action that dismisses the panel. The matching action renders as the header close ×; omitted, no × is drawn.',
+              'key': '@config.closeEvent',
+              'name': '@config.close event',
               'tier': 'essential',
             },
           ],
@@ -815,6 +902,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'avatar': '@config.avatar',
                     'backAction': '@config.backAction',
                     'className': '@config.className',
+                    'closeEvent': '@config.closeEvent',
                     'displayFields': '@config.displayFields',
                     'entity': '@entity',
                     'error': '@config.error',
@@ -912,6 +1000,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'avatar': '@config.avatar',
                     'backAction': '@config.backAction',
                     'className': '@config.className',
+                    'closeEvent': '@config.closeEvent',
                     'displayFields': '@config.displayFields',
                     'entity': '@entity',
                     'error': '@config.error',
@@ -1012,6 +1101,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'avatar': '@config.avatar',
                     'backAction': '@config.backAction',
                     'className': '@config.className',
+                    'closeEvent': '@config.closeEvent',
                     'displayFields': '@config.displayFields',
                     'entity': '@entity',
                     'error': '@config.error',
@@ -1091,6 +1181,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'avatar': '@config.avatar',
                     'backAction': '@config.backAction',
                     'className': '@config.className',
+                    'closeEvent': '@config.closeEvent',
                     'displayFields': '@config.displayFields',
                     'entity': '@payload.data',
                     'error': '@config.error',

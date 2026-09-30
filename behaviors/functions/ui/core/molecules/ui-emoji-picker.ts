@@ -52,7 +52,6 @@ export interface StdUiEmojiPickerConfig {
   /** Default: `"top"` */
   position?: 'top' | 'bottom';
   triggerIcon?: unknown;
-  /** Default: `"Add emoji"` */
   triggerLabel?: string;
 }
 

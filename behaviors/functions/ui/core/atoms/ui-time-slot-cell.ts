@@ -30,7 +30,7 @@ const ALIAS = 'UiTimeSlotCell';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiTimeSlotCellEventKey = 'CLICK' | 'INIT';
+export type StdUiTimeSlotCellEventKey = 'CLICK' | 'INIT' | 'POINTER_CANCEL' | 'POINTER_DOWN' | 'POINTER_LEAVE' | 'POINTER_UP';
 
 /**
  * Payload shape for the `CLICK` event.
@@ -52,6 +52,14 @@ export interface StdUiTimeSlotCellConfig {
   isOccupied?: boolean;
   /** Default: `"CLICK"` */
   onClick?: string;
+  /** Default: `"POINTER_CANCEL"` */
+  onPointerCancel?: string;
+  /** Default: `"POINTER_DOWN"` */
+  onPointerDown?: string;
+  /** Default: `"POINTER_LEAVE"` */
+  onPointerLeave?: string;
+  /** Default: `"POINTER_UP"` */
+  onPointerUp?: string;
   /** Default: `""` */
   time?: string;
 }

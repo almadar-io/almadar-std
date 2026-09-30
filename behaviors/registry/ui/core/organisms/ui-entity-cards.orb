@@ -37,6 +37,15 @@
         "parent": "trt_01KXG04SFSBE96PSPPSF6583GX",
         "renames": []
       },
+      "evt_01M3T0VXG9TJAGVG9GXRSZM3G8": {
+        "bakedName": "@config.itemClickEvent",
+        "curName": "@config.itemClickEvent",
+        "id": "evt_01M3T0VXG9TJAGVG9GXRSZM3G8",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04SFSBE96PSPPSF6583GX",
+        "renames": []
+      },
       "orb_01KXG04SFS0B5Q7S2YETSA8YFJ": {
         "bakedName": "EntityCardsOrbital",
         "curName": "EntityCardsOrbital",
@@ -138,13 +147,40 @@
               "description": "Alias for fields - backwards compatibility",
               "items": {
                 "properties": {
-                  "header": {
-                    "name": "header",
+                  "colorMap": {
+                    "items": {
+                      "type": "string",
+                      "values": [
+                        "default",
+                        "primary",
+                        "secondary",
+                        "success",
+                        "warning",
+                        "danger",
+                        "error",
+                        "info",
+                        "neutral",
+                        "destructive"
+                      ]
+                    },
+                    "name": "colorMap",
                     "required": false,
-                    "type": "string"
+                    "type": "object"
                   },
-                  "key": {
-                    "name": "key",
+                  "format": {
+                    "name": "format",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "date",
+                      "currency",
+                      "number",
+                      "boolean",
+                      "percent"
+                    ]
+                  },
+                  "icon": {
+                    "name": "icon",
                     "required": false,
                     "type": "string"
                   },
@@ -153,10 +189,32 @@
                     "required": false,
                     "type": "string"
                   },
+                  "labels": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "labels",
+                    "required": false,
+                    "type": "object"
+                  },
                   "name": {
                     "name": "name",
-                    "required": false,
+                    "required": true,
                     "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "h3",
+                      "h4",
+                      "body",
+                      "caption",
+                      "badge",
+                      "small",
+                      "progress"
+                    ]
                   }
                 },
                 "type": "object"
@@ -206,28 +264,57 @@
             "fields": {
               "default": [
                 {
-                  "header": "Header",
-                  "key": "Key",
+                  "format": "date",
+                  "icon": "circle",
                   "label": "Label",
-                  "name": "Name"
+                  "name": "Name",
+                  "variant": "h3"
                 },
                 {
-                  "header": "Header 2",
-                  "key": "Key 2",
+                  "format": "currency",
+                  "icon": "circle",
                   "label": "Label 2",
-                  "name": "Name 2"
+                  "name": "Name 2",
+                  "variant": "h4"
                 }
               ],
               "description": "Fields to display - required for schema-driven rendering",
               "items": {
                 "properties": {
-                  "header": {
-                    "name": "header",
+                  "colorMap": {
+                    "items": {
+                      "type": "string",
+                      "values": [
+                        "default",
+                        "primary",
+                        "secondary",
+                        "success",
+                        "warning",
+                        "danger",
+                        "error",
+                        "info",
+                        "neutral",
+                        "destructive"
+                      ]
+                    },
+                    "name": "colorMap",
                     "required": false,
-                    "type": "string"
+                    "type": "object"
                   },
-                  "key": {
-                    "name": "key",
+                  "format": {
+                    "name": "format",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "date",
+                      "currency",
+                      "number",
+                      "boolean",
+                      "percent"
+                    ]
+                  },
+                  "icon": {
+                    "name": "icon",
                     "required": false,
                     "type": "string"
                   },
@@ -236,10 +323,32 @@
                     "required": false,
                     "type": "string"
                   },
+                  "labels": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "labels",
+                    "required": false,
+                    "type": "object"
+                  },
                   "name": {
                     "name": "name",
-                    "required": false,
+                    "required": true,
                     "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "h3",
+                      "h4",
+                      "body",
+                      "caption",
+                      "badge",
+                      "small",
+                      "progress"
+                    ]
                   }
                 },
                 "type": "object"
@@ -330,6 +439,13 @@
               "label": "Item Actions",
               "tier": "presentation",
               "type": "[EntityCardsItemActionsItem]"
+            },
+            "itemClickEvent": {
+              "default": "ITEM_CLICK",
+              "description": "When set, clicking a card emits UI:{itemClickEvent} with { id, row }. Omit = cards are not clickable.",
+              "label": "Item Click Event",
+              "tier": "presentation",
+              "type": "event"
             },
             "maxCols": {
               "description": "Maximum number of columns",
@@ -442,6 +558,26 @@
           ],
           "emits": [
             {
+              "definerKnob": "itemClickEvent",
+              "description": "When set, clicking a card emits UI:{itemClickEvent} with { id, row }. Omit = cards are not clickable.",
+              "event": "@config.itemClickEvent",
+              "eventId": "evt_01M3T0VXG9TJAGVG9GXRSZM3G8",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "row",
+                  "required": true,
+                  "type": "@entity"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
               "description": "User opened a record from the list.",
               "event": "VIEW",
               "eventId": "evt_01KXG04SFWKXQ588AJKC3XTPME",
@@ -523,6 +659,25 @@
                   }
                 ],
                 "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
+              },
+              {
+                "description": "When set, clicking a card emits UI:{itemClickEvent} with { id, row }. Omit = cards are not clickable.",
+                "id": "evt_01M3T0VXG9TJAGVG9GXRSZM3G8",
+                "key": "@config.itemClickEvent",
+                "name": "@config.item click event",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "row",
+                    "required": true,
+                    "type": "@entity"
+                  }
+                ],
                 "tier": "essential"
               },
               {
@@ -613,6 +768,7 @@
                           ]
                         ]
                       ],
+                      "itemClickEvent": "@config.itemClickEvent",
                       "maxCols": "@config.maxCols",
                       "minCardWidth": "@config.minCardWidth",
                       "page": "@config.pageProp",
@@ -687,6 +843,7 @@
                           ]
                         ]
                       ],
+                      "itemClickEvent": "@config.itemClickEvent",
                       "maxCols": "@config.maxCols",
                       "minCardWidth": "@config.minCardWidth",
                       "page": "@config.pageProp",
@@ -764,6 +921,7 @@
                           ]
                         ]
                       ],
+                      "itemClickEvent": "@config.itemClickEvent",
                       "maxCols": "@config.maxCols",
                       "minCardWidth": "@config.minCardWidth",
                       "page": "@config.pageProp",
@@ -792,20 +950,33 @@
       "types": {
         "EntityCardsColumnsItem": [
           {
-            "name": "key",
-            "type": "string"
-          },
-          {
-            "name": "header",
-            "type": "string"
-          },
-          {
             "name": "name",
+            "required": true,
             "type": "string"
           },
           {
             "name": "label",
             "type": "string"
+          },
+          {
+            "name": "icon",
+            "type": "icon"
+          },
+          {
+            "name": "variant",
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "type": "string"
+          },
+          {
+            "name": "colorMap",
+            "type": "Map<string,EntityCardsColumnsItemColorMapValue>"
+          },
+          {
+            "name": "labels",
+            "type": "Map<string,string>"
           }
         ],
         "EntityCardsError": [
@@ -829,20 +1000,33 @@
         ],
         "EntityCardsFieldsItem": [
           {
-            "name": "key",
-            "type": "string"
-          },
-          {
-            "name": "header",
-            "type": "string"
-          },
-          {
             "name": "name",
+            "required": true,
             "type": "string"
           },
           {
             "name": "label",
             "type": "string"
+          },
+          {
+            "name": "icon",
+            "type": "icon"
+          },
+          {
+            "name": "variant",
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "type": "string"
+          },
+          {
+            "name": "colorMap",
+            "type": "Map<string,EntityCardsFieldsItemColorMapValue>"
+          },
+          {
+            "name": "labels",
+            "type": "Map<string,string>"
           }
         ],
         "EntityCardsItemActionsItem": [

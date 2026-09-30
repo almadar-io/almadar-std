@@ -10,17 +10,25 @@ orbital EntityCardsOrbital {
     stack : string
   }
   type EntityCardsFieldsItem = {
-    key : string
-    header : string
-    name : string
+    name : string!
     label : string
+    icon : icon
+    variant : "h3" | "h4" | "body" | "caption" | "badge" | "small" | "progress"
+    format : "date" | "currency" | "number" | "boolean" | "percent"
+    colorMap : Map string EntityCardsFieldsItemColorMapValue
+    labels : Map string string
   }
+  type EntityCardsFieldsItemColorMapValue = "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "error" | "info" | "neutral" | "destructive"
   type EntityCardsColumnsItem = {
-    key : string
-    header : string
-    name : string
+    name : string!
     label : string
+    icon : icon
+    variant : "h3" | "h4" | "body" | "caption" | "badge" | "small" | "progress"
+    format : "date" | "currency" | "number" | "boolean" | "percent"
+    colorMap : Map string EntityCardsColumnsItemColorMapValue
+    labels : Map string string
   }
+  type EntityCardsColumnsItemColorMapValue = "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "error" | "info" | "neutral" | "destructive"
   type EntityCardsItemActionsItem = {
     label : string!
     event : event
@@ -62,6 +70,7 @@ orbital EntityCardsOrbital {
           fields: @config.fields
           fieldNames: @config.fieldNames
           columns: @config.columns
+          itemClickEvent: @config.itemClickEvent
           itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           showTotal: @config.showTotal
           showAvatar: @config.showAvatar
@@ -91,6 +100,7 @@ orbital EntityCardsOrbital {
           fields: @config.fields
           fieldNames: @config.fieldNames
           columns: @config.columns
+          itemClickEvent: @config.itemClickEvent
           itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           showTotal: @config.showTotal
           showAvatar: @config.showAvatar
@@ -120,6 +130,7 @@ orbital EntityCardsOrbital {
           fields: @config.fields
           fieldNames: @config.fieldNames
           columns: @config.columns
+          itemClickEvent: @config.itemClickEvent
           itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           showTotal: @config.showTotal
           showAvatar: @config.showAvatar
@@ -130,6 +141,12 @@ orbital EntityCardsOrbital {
     }
 
     emits {
+      @config.itemClickEvent -> external {
+        id : string!
+        row : @entity!
+      }
+        @description "When set, clicking a card emits UI:{itemClickEvent} with { id, row }. Omit = cards are not clickable."
+        @tier "essential"
       VIEW -> external {
         id : string!
         row : @entity!
@@ -208,7 +225,7 @@ orbital EntityCardsOrbital {
         @label "Children"
         @description "Children elements (cards) - optional when using entity prop"
         @tier "presentation"
-      fields : [EntityCardsFieldsItem] = [{ key: "Key", header: "Header", name: "Name", label: "Label" }, { key: "Key 2", header: "Header 2", name: "Name 2", label: "Label 2" }]
+      fields : [EntityCardsFieldsItem] = [{ name: "Name", label: "Label", icon: "circle", variant: h3, format: date }, { name: "Name 2", label: "Label 2", icon: "circle", variant: h4, format: currency }]
         @label "Fields"
         @description "Fields to display - required for schema-driven rendering"
         @tier "presentation"
@@ -219,6 +236,10 @@ orbital EntityCardsOrbital {
       columns : [EntityCardsColumnsItem] = []
         @label "Columns"
         @description "Alias for fields - backwards compatibility"
+        @tier "presentation"
+      itemClickEvent : event = "ITEM_CLICK"
+        @label "Item Click Event"
+        @description "When set, clicking a card emits UI:{itemClickEvent} with { id, row }. Omit = cards are not clickable."
         @tier "presentation"
       itemActions : [EntityCardsItemActionsItem] = [{ event: VIEW, label: View, variant: ghost }]
         @label "Item Actions"

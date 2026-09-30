@@ -472,6 +472,7 @@
                         ]
                       ]
                     ],
+                    "closeEvent": "@config.closeEvent",
                     "entity": "@entity.loadedRow",
                     "fields": "@config.fields",
                     "initialData": "@entity.loadedRow",
@@ -491,6 +492,14 @@
               "label": "Body content tree",
               "tier": "internal",
               "type": "render-ui"
+            },
+            "closeEvent": {
+              "default": "",
+              "description": "The `actions` entry whose event matches renders as the panel's close (×) button. Empty = no close button (a routed detail page navigates back instead).",
+              "label": "Which action closes the record?",
+              "synonyms": "close event, dismiss event, close button",
+              "tier": "presentation",
+              "type": "event"
             },
             "contentField": {
               "default": "content",
@@ -663,15 +672,18 @@
               "default": [
                 {
                   "header": "Name",
-                  "key": "name"
+                  "key": "name",
+                  "variant": "h4"
                 },
                 {
                   "header": "Description",
-                  "key": "description"
+                  "key": "description",
+                  "variant": "body"
                 },
                 {
                   "header": "Status",
-                  "key": "status"
+                  "key": "status",
+                  "variant": "badge"
                 },
                 {
                   "format": "date",
@@ -682,6 +694,26 @@
               "description": "Each entry maps one entity field to a labelled row in the panel. Unlike a list row, a detail panel SHOULD label every field — the value stands alone here with no column header or repeated row position to name it.",
               "items": {
                 "properties": {
+                  "colorMap": {
+                    "items": {
+                      "type": "string",
+                      "values": [
+                        "default",
+                        "primary",
+                        "secondary",
+                        "success",
+                        "warning",
+                        "danger",
+                        "error",
+                        "info",
+                        "neutral",
+                        "destructive"
+                      ]
+                    },
+                    "name": "colorMap",
+                    "required": false,
+                    "type": "object"
+                  },
                   "format": {
                     "name": "format",
                     "required": false,
@@ -703,6 +735,28 @@
                     "name": "key",
                     "required": true,
                     "type": "string"
+                  },
+                  "labels": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "labels",
+                    "required": false,
+                    "type": "object"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "h3",
+                      "h4",
+                      "body",
+                      "caption",
+                      "badge",
+                      "small",
+                      "progress"
+                    ]
                   }
                 },
                 "type": "object"
@@ -789,6 +843,7 @@
                         ]
                       ]
                     ],
+                    "closeEvent": "@config.closeEvent",
                     "entity": "@entity.loadedRow",
                     "fields": "@config.fields",
                     "initialData": "@entity.loadedRow",
@@ -889,6 +944,7 @@
                         ]
                       ]
                     ],
+                    "closeEvent": "@config.closeEvent",
                     "entity": "@entity.loadedRow",
                     "fields": "@config.fields",
                     "initialData": "@entity.loadedRow",
@@ -4384,6 +4440,18 @@
           {
             "name": "format",
             "type": "string"
+          },
+          {
+            "name": "variant",
+            "type": "string"
+          },
+          {
+            "name": "colorMap",
+            "type": "Map<string,BadgeColor>"
+          },
+          {
+            "name": "labels",
+            "type": "Map<string,string>"
           }
         ],
         "RecordSection": [

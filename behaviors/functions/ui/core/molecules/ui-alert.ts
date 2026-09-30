@@ -46,6 +46,7 @@ export interface StdUiAlertConfig {
   dismissEvent?: string;
   /** Default: `false` */
   dismissible?: boolean;
+  icon?: unknown;
   message?: string;
   /** Default: `"CLOSE"` */
   onClose?: string;

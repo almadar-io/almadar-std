@@ -53,7 +53,6 @@ export interface StdUiDashboardLayoutSearchSubmitPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDashboardLayoutConfig {
-  /** Default: `"{{APP_TITLE}}"` */
   appName?: string;
   children?: PatternValue;
   currentPath?: string;

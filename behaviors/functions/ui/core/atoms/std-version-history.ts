@@ -85,6 +85,8 @@ export interface StdVersionHistoryRevisionRolledBackPayload {
 export interface StdVersionHistoryConfig {
   /** Default: `[{"event":"OPEN_REVISION","icon":"arrow-right","label":"Open","variant":"ghost"},{"event":"ROLLBACK","icon":"rotate-ccw","label":"Rollback","variant":"danger"}]` */
   itemActions?: EntityRow[];
+  /** Default: `"OPEN_REVISION"` */
+  itemClickEvent?: string;
   /** Default: `""` */
   scopeField?: string;
   /** Default: `"elevated"` */
@@ -386,6 +388,13 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
             'label': 'Row actions',
             'tier': 'presentation',
             'type': '[ItemAction]',
+          },
+          'itemClickEvent': {
+            'default': 'OPEN_REVISION',
+            'description': 'Event emitted when a row is clicked; opens the revision. Empty disables the row click.',
+            'label': 'Row click',
+            'tier': 'presentation',
+            'type': 'event',
           },
           'scopeField': {
             'default': '',
@@ -1318,9 +1327,10 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                           {
                             'label': 'Summary',
                             'name': 'summary',
-                            'variant': 'caption',
+                            'variant': 'h4',
                           },
                           {
+                            'format': 'date',
                             'label': 'Saved',
                             'name': 'createdAt',
                             'variant': 'caption',
@@ -1361,6 +1371,7 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                             ],
                           ],
                         ],
+                        'itemClickEvent': '@config.itemClickEvent',
                         'look': '@config.tableLook',
                         'type': 'data-grid',
                       },

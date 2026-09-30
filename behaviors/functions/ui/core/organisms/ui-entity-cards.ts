@@ -30,7 +30,15 @@ const ALIAS = 'UiEntityCards';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiEntityCardsEventKey = 'EntityCardsLoaded' | 'INIT' | 'VIEW';
+export type StdUiEntityCardsEventKey = 'EntityCardsLoaded' | 'INIT' | 'ITEM_CLICK' | 'VIEW';
+
+/**
+ * Payload shape for the `ITEM_CLICK` event.
+ */
+export interface StdUiEntityCardsItemClickPayload {
+  id: string;
+  row: unknown;
+}
 
 /**
  * Payload shape for the `VIEW` event.
@@ -65,7 +73,7 @@ export interface StdUiEntityCardsConfig {
   error?: EntityRow;
   /** Default: `[]` */
   fieldNames?: string[];
-  /** Default: `[{"header":"Header","key":"Key","label":"Label","name":"Name"},{"header":"Header 2","key":"Key 2","label":"Label 2","name":"Name 2"}]` */
+  /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","variant":"h3"},{"format":"currency","icon":"circle","label":"Label 2","name":"Name 2","variant":"h4"}]` */
   fields?: EntityRow[];
   /** Default: `"md"` */
   gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
@@ -74,6 +82,8 @@ export interface StdUiEntityCardsConfig {
   isLoading?: boolean;
   /** Default: `[{"event":"VIEW","label":"View","variant":"ghost"}]` */
   itemActions?: EntityRow[];
+  /** Default: `"ITEM_CLICK"` */
+  itemClickEvent?: string;
   maxCols?: number;
   /** Default: `280` */
   minCardWidth?: number;
@@ -207,13 +217,40 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
             'description': 'Alias for fields - backwards compatibility',
             'items': {
               'properties': {
-                'header': {
-                  'name': 'header',
+                'colorMap': {
+                  'items': {
+                    'type': 'string',
+                    'values': [
+                      'default',
+                      'primary',
+                      'secondary',
+                      'success',
+                      'warning',
+                      'danger',
+                      'error',
+                      'info',
+                      'neutral',
+                      'destructive',
+                    ],
+                  },
+                  'name': 'colorMap',
+                  'required': false,
+                  'type': 'object',
+                },
+                'format': {
+                  'name': 'format',
                   'required': false,
                   'type': 'string',
+                  'values': [
+                    'date',
+                    'currency',
+                    'number',
+                    'boolean',
+                    'percent',
+                  ],
                 },
-                'key': {
-                  'name': 'key',
+                'icon': {
+                  'name': 'icon',
                   'required': false,
                   'type': 'string',
                 },
@@ -222,10 +259,32 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                   'required': false,
                   'type': 'string',
                 },
+                'labels': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'labels',
+                  'required': false,
+                  'type': 'object',
+                },
                 'name': {
                   'name': 'name',
+                  'required': true,
+                  'type': 'string',
+                },
+                'variant': {
+                  'name': 'variant',
                   'required': false,
                   'type': 'string',
+                  'values': [
+                    'h3',
+                    'h4',
+                    'body',
+                    'caption',
+                    'badge',
+                    'small',
+                    'progress',
+                  ],
                 },
               },
               'type': 'object',
@@ -275,28 +334,57 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
           'fields': {
             'default': [
               {
-                'header': 'Header',
-                'key': 'Key',
+                'format': 'date',
+                'icon': 'circle',
                 'label': 'Label',
                 'name': 'Name',
+                'variant': 'h3',
               },
               {
-                'header': 'Header 2',
-                'key': 'Key 2',
+                'format': 'currency',
+                'icon': 'circle',
                 'label': 'Label 2',
                 'name': 'Name 2',
+                'variant': 'h4',
               },
             ],
             'description': 'Fields to display - required for schema-driven rendering',
             'items': {
               'properties': {
-                'header': {
-                  'name': 'header',
+                'colorMap': {
+                  'items': {
+                    'type': 'string',
+                    'values': [
+                      'default',
+                      'primary',
+                      'secondary',
+                      'success',
+                      'warning',
+                      'danger',
+                      'error',
+                      'info',
+                      'neutral',
+                      'destructive',
+                    ],
+                  },
+                  'name': 'colorMap',
+                  'required': false,
+                  'type': 'object',
+                },
+                'format': {
+                  'name': 'format',
                   'required': false,
                   'type': 'string',
+                  'values': [
+                    'date',
+                    'currency',
+                    'number',
+                    'boolean',
+                    'percent',
+                  ],
                 },
-                'key': {
-                  'name': 'key',
+                'icon': {
+                  'name': 'icon',
                   'required': false,
                   'type': 'string',
                 },
@@ -305,10 +393,32 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                   'required': false,
                   'type': 'string',
                 },
+                'labels': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'labels',
+                  'required': false,
+                  'type': 'object',
+                },
                 'name': {
                   'name': 'name',
+                  'required': true,
+                  'type': 'string',
+                },
+                'variant': {
+                  'name': 'variant',
                   'required': false,
                   'type': 'string',
+                  'values': [
+                    'h3',
+                    'h4',
+                    'body',
+                    'caption',
+                    'badge',
+                    'small',
+                    'progress',
+                  ],
                 },
               },
               'type': 'object',
@@ -399,6 +509,13 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
             'label': 'Item Actions',
             'tier': 'presentation',
             'type': '[EntityCardsItemActionsItem]',
+          },
+          'itemClickEvent': {
+            'default': 'ITEM_CLICK',
+            'description': 'When set, clicking a card emits UI:{itemClickEvent} with { id, row }. Omit = cards are not clickable.',
+            'label': 'Item Click Event',
+            'tier': 'presentation',
+            'type': 'event',
           },
           'maxCols': {
             'description': 'Maximum number of columns',
@@ -511,6 +628,25 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
         ],
         'emits': [
           {
+            'definerKnob': 'itemClickEvent',
+            'description': 'When set, clicking a card emits UI:{itemClickEvent} with { id, row }. Omit = cards are not clickable.',
+            'event': '@config.itemClickEvent',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'row',
+                'required': true,
+                'type': '@entity',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'essential',
+          },
+          {
             'description': 'User opened a record from the list.',
             'event': 'VIEW',
             'payloadSchema': [
@@ -583,6 +719,24 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                 },
               ],
               'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'essential',
+            },
+            {
+              'description': 'When set, clicking a card emits UI:{itemClickEvent} with { id, row }. Omit = cards are not clickable.',
+              'key': '@config.itemClickEvent',
+              'name': '@config.item click event',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'required': true,
+                  'type': '@entity',
+                },
+              ],
               'tier': 'essential',
             },
             {
@@ -672,6 +826,7 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                         ],
                       ],
                     ],
+                    'itemClickEvent': '@config.itemClickEvent',
                     'maxCols': '@config.maxCols',
                     'minCardWidth': '@config.minCardWidth',
                     'page': '@config.pageProp',
@@ -745,6 +900,7 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                         ],
                       ],
                     ],
+                    'itemClickEvent': '@config.itemClickEvent',
                     'maxCols': '@config.maxCols',
                     'minCardWidth': '@config.minCardWidth',
                     'page': '@config.pageProp',
@@ -821,6 +977,7 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                         ],
                       ],
                     ],
+                    'itemClickEvent': '@config.itemClickEvent',
                     'maxCols': '@config.maxCols',
                     'minCardWidth': '@config.minCardWidth',
                     'page': '@config.pageProp',

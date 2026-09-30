@@ -697,6 +697,13 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
             'tier': 'presentation',
             'type': '[ItemAction]',
           },
+          'itemClickEvent': {
+            'default': 'OPEN_SUBJECT',
+            'description': 'Event emitted when a row is clicked; opens the subject under review. Empty disables the row click.',
+            'label': 'Row click',
+            'tier': 'presentation',
+            'type': 'event',
+          },
           'reviewSlot': {
             'default': 'modal',
             'description': 'UI slot the review queue renders into. Defaults to the modal overlay so the queue never seizes the host\'s main content; summoned via OPEN, cleared via CLOSE.',
@@ -933,6 +940,66 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                 'name': 'id',
                 'required': true,
                 'type': 'string',
+              },
+              {
+                'entity': 'ApprovalRequest',
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'gatedEvent',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'subjectLabel',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'subjectId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'requestedBy',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'requestedByName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'reviewer',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'requestedAt',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'decidedAt',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'escalatedAt',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'notes',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'payload',
+                    'type': 'Map<string,scalar>',
+                  },
+                ],
+                'type': 'object',
               },
               {
                 'name': 'subjectId',
@@ -1765,6 +1832,7 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                             'variant': 'caption',
                           },
                           {
+                            'format': 'date',
                             'label': 'Requested',
                             'name': 'requestedAt',
                             'variant': 'caption',
@@ -1805,6 +1873,7 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                             ],
                           ],
                         ],
+                        'itemClickEvent': '@config.itemClickEvent',
                         'look': '@config.tableLook',
                         'type': 'data-grid',
                       },

@@ -52,6 +52,7 @@ export interface StdSavedSearchDeletePayload {
  */
 export interface StdSavedSearchEditPayload {
   id: string;
+  row?: EntityRow;
 }
 
 /**
@@ -131,6 +132,8 @@ export interface StdSavedSearchConfig {
   defaultSearchName?: string;
   /** Default: `[{"event":"TOGGLE_ALERT","icon":"bell","label":"Toggle alert","variant":"secondary"},{"event":"EDIT","icon":"pencil","label":"Edit","variant":"secondary"},{"event":"DELETE","icon":"trash-2","label":"Delete","variant":"danger"}]` */
   itemActions?: EntityRow[];
+  /** Default: `"EDIT"` */
+  itemClickEvent?: string;
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `"Saved Searches"` */
@@ -427,6 +430,13 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
             'tier': 'presentation',
             'type': '[ItemAction]',
           },
+          'itemClickEvent': {
+            'default': 'EDIT',
+            'description': 'Event emitted when a row is clicked; opens the saved search for editing. Empty disables the row click.',
+            'label': 'Row click',
+            'tier': 'presentation',
+            'type': 'event',
+          },
           'tableLook': {
             'default': 'dense',
             'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
@@ -534,6 +544,51 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                 'name': 'id',
                 'required': true,
                 'type': 'string',
+              },
+              {
+                'entity': 'SavedSearch',
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'name',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'query',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'filters',
+                    'type': 'Map<string,scalar>',
+                  },
+                  {
+                    'name': 'alertEnabled',
+                    'type': 'boolean',
+                  },
+                  {
+                    'name': 'alertFrequency',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'userId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'lastNotifiedAt',
+                    'type': 'datetime',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                ],
+                'type': 'object',
               },
             ],
             'synonyms': 'modify, update, change',
@@ -1217,6 +1272,7 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                             ],
                           ],
                         ],
+                        'itemClickEvent': '@config.itemClickEvent',
                         'look': '@config.tableLook',
                         'type': 'data-grid',
                       },

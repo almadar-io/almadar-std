@@ -63,6 +63,7 @@ orbital StoredFileOrbital {
             entity: ?data
             fields: @config.fields
             gap: sm
+            itemClickEvent: @config.itemClickEvent
             itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             look: @config.tableLook
             reorderEvent: REORDER
@@ -385,7 +386,7 @@ orbital StoredFileOrbital {
       fields : [FieldSpec] = [{
         label: Name
         name: name
-        variant: caption
+        variant: h4
       }, {
         label: Folder
         name: folder
@@ -399,12 +400,18 @@ orbital StoredFileOrbital {
         name: sizeBytes
         variant: caption
       }, {
+        format: date
         label: Uploaded
         name: uploadedAt
         variant: caption
       }]
         @label "Columns to show"
         @description "Each column maps to one field on the linked entity"
+        @tier "presentation"
+      itemClickEvent : event = OPEN_FILE
+        @label "Which event does clicking a row fire?"
+        @description "Row-click channel; empty = rows are not clickable."
+        @synonyms "row click event, item click, open event"
         @tier "presentation"
       itemActions : [ItemAction] = [{
         event: OPEN_FILE

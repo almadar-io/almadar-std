@@ -30,7 +30,15 @@ const ALIAS = 'UiDataGrid';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiDataGridEventKey = 'DataGridLoaded' | 'INIT' | 'LOAD_MORE' | 'SELECTION' | 'VIEW';
+export type StdUiDataGridEventKey = 'DataGridLoaded' | 'INIT' | 'ITEM_CLICK' | 'LOAD_MORE' | 'SELECTION' | 'VIEW';
+
+/**
+ * Payload shape for the `ITEM_CLICK` event.
+ */
+export interface StdUiDataGridItemClickPayload {
+  id: string;
+  row: unknown;
+}
 
 /**
  * Payload shape for the `SELECTION` event.
@@ -86,6 +94,8 @@ export interface StdUiDataGridConfig {
   isLoading?: boolean;
   /** Default: `[]` */
   itemActions?: EntityRow[];
+  /** Default: `"ITEM_CLICK"` */
+  itemClickEvent?: string;
   /** Default: `"LOAD_MORE"` */
   loadMoreEvent?: string;
   /** Default: `"dense"` */

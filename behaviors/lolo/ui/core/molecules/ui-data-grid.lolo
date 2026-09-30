@@ -14,16 +14,20 @@ orbital DataGridOrbital {
     icon : icon
     variant : "h3" | "h4" | "body" | "caption" | "badge" | "small" | "progress"
     format : "date" | "currency" | "number" | "boolean" | "percent"
-    colorMap : Map string string
+    colorMap : Map string DataGridFieldsItemColorMapValue
+    labels : Map string string
   }
+  type DataGridFieldsItemColorMapValue = "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "error" | "info" | "neutral" | "destructive"
   type DataGridColumnsItem = {
     name : string!
     label : string
     icon : icon
     variant : "h3" | "h4" | "body" | "caption" | "badge" | "small" | "progress"
     format : "date" | "currency" | "number" | "boolean" | "percent"
-    colorMap : Map string string
+    colorMap : Map string DataGridColumnsItemColorMapValue
+    labels : Map string string
   }
+  type DataGridColumnsItemColorMapValue = "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "error" | "info" | "neutral" | "destructive"
   type DataGridItemActionsItem = {
     label : string!
     event : event
@@ -73,6 +77,7 @@ orbital DataGridOrbital {
           fields: @config.fields
           columns: @config.columns
           itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          itemClickEvent: @config.itemClickEvent
           maxInlineActions: @config.maxInlineActions
           scrollX: @config.scrollX
           cols: @config.cols
@@ -110,6 +115,7 @@ orbital DataGridOrbital {
           fields: @config.fields
           columns: @config.columns
           itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          itemClickEvent: @config.itemClickEvent
           maxInlineActions: @config.maxInlineActions
           scrollX: @config.scrollX
           cols: @config.cols
@@ -147,6 +153,7 @@ orbital DataGridOrbital {
           fields: @config.fields
           columns: @config.columns
           itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          itemClickEvent: @config.itemClickEvent
           maxInlineActions: @config.maxInlineActions
           scrollX: @config.scrollX
           cols: @config.cols
@@ -169,6 +176,12 @@ orbital DataGridOrbital {
     }
 
     emits {
+      @config.itemClickEvent -> external {
+        id : string!
+        row : @entity!
+      }
+        @description "When set, clicking a card emits UI:{itemClickEvent} with { id, row }. Omit = cards are not clickable."
+        @tier "essential"
       @config.selectionEvent -> external {
         selectedIds : [string]!
       }
@@ -249,6 +262,10 @@ orbital DataGridOrbital {
       itemActions : [DataGridItemActionsItem] = []
         @label "Item Actions"
         @description "Per-item action buttons"
+        @tier "presentation"
+      itemClickEvent : event = "ITEM_CLICK"
+        @label "Item Click Event"
+        @description "When set, clicking a card emits UI:{itemClickEvent} with { id, row }. Omit = cards are not clickable."
         @tier "presentation"
       maxInlineActions : number
         @label "Max Inline Actions"

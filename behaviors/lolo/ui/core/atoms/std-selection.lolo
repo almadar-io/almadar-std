@@ -87,6 +87,7 @@ orbital SelectableItemOrbital {
             className: "transition-shadow hover:shadow-md cursor-pointer"
             entity: ?data
             fields: []
+            itemClickEvent: @config.itemClickEvent
             itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             look: @config.tableLook
             pageSize: @config.displayPageSize
@@ -217,6 +218,7 @@ orbital SelectableItemOrbital {
             className: "transition-shadow hover:shadow-md cursor-pointer"
             entity: ?data
             fields: []
+            itemClickEvent: @config.itemClickEvent
             itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             look: @config.tableLook
             pageSize: @config.displayPageSize
@@ -380,6 +382,7 @@ orbital SelectableItemOrbital {
     listens {
       SELECT {
         id : string!
+        row : SelectableItem
       }
         @description "Indicates an item has been chosen."
         @synonyms "chosen, picked, highlighted"
@@ -459,6 +462,10 @@ orbital SelectableItemOrbital {
         @label "How many candidates to show at once?"
         @description "Rows visible per page before the data-grid's own pagination control appears — 20 matches the pick-list density sweet spot (Miller's law, 10-25 rows)."
         @synonyms "visible rows, items per page, display limit, show per page"
+        @tier "presentation"
+      itemClickEvent : event = SELECT
+        @label "Row click"
+        @description "Event emitted when a row is clicked; clicking a row selects it. Empty disables the row click."
         @tier "presentation"
       itemActions : [ItemAction] = [{
         event: SELECT

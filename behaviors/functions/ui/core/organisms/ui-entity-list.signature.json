@@ -16,6 +16,7 @@
         "name": "EntityListRender",
         "emittedEvents": [
           "ITEM_ACTIONS",
+          "ITEM_CLICK",
           "VIEW",
           "EntityListLoaded"
         ],
@@ -25,6 +26,12 @@
             "name": "ITEM_ACTIONS",
             "direction": "emit",
             "description": "Item actions - schema-driven or function-based",
+            "tier": "essential"
+          },
+          {
+            "name": "ITEM_CLICK",
+            "direction": "emit",
+            "description": "When set, clicking a row emits UI:{itemClickEvent} with { id, row }. Omit = rows are not clickable.",
             "tier": "essential"
           },
           {
@@ -69,6 +76,20 @@
             "type": "string",
             "label": "Class Name",
             "description": "Additional CSS classes",
+            "tier": "presentation"
+          },
+          {
+            "key": "completedField",
+            "type": "string",
+            "label": "Completed Field",
+            "description": "Row field that marks an item completed (`true` strikes its title through)",
+            "tier": "presentation"
+          },
+          {
+            "key": "disabledField",
+            "type": "string",
+            "label": "Disabled Field",
+            "description": "Row field that marks an item disabled (`true` dims the row and disables its click)",
             "tier": "presentation"
           },
           {
@@ -130,30 +151,59 @@
             "type": "[EntityListFieldsItem]",
             "default": [
               {
-                "header": "Header",
-                "key": "Key",
+                "format": "date",
+                "icon": "circle",
                 "label": "Label",
-                "name": "Name"
+                "name": "Name",
+                "variant": "h3"
               },
               {
-                "header": "Header 2",
-                "key": "Key 2",
+                "format": "currency",
+                "icon": "circle",
                 "label": "Label 2",
-                "name": "Name 2"
+                "name": "Name 2",
+                "variant": "h4"
               }
             ],
             "label": "Fields",
-            "description": "Fields to display - accepts string[] or {key, header}[] for unified interface",
+            "description": "Fields to display: field names, or declared fields ({ name, label, variant, format, colorMap, labels })",
             "tier": "presentation",
             "items": {
               "properties": {
-                "header": {
-                  "name": "header",
+                "colorMap": {
+                  "name": "colorMap",
                   "required": false,
-                  "type": "string"
+                  "type": "object",
+                  "items": {
+                    "type": "string",
+                    "values": [
+                      "default",
+                      "primary",
+                      "secondary",
+                      "success",
+                      "warning",
+                      "danger",
+                      "error",
+                      "info",
+                      "neutral",
+                      "destructive"
+                    ]
+                  }
                 },
-                "key": {
-                  "name": "key",
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "date",
+                    "currency",
+                    "number",
+                    "boolean",
+                    "percent"
+                  ]
+                },
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
@@ -162,10 +212,32 @@
                   "required": false,
                   "type": "string"
                 },
+                "labels": {
+                  "name": "labels",
+                  "required": false,
+                  "type": "object",
+                  "items": {
+                    "type": "string"
+                  }
+                },
                 "name": {
                   "name": "name",
-                  "required": false,
+                  "required": true,
                   "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "h3",
+                    "h4",
+                    "body",
+                    "caption",
+                    "badge",
+                    "small",
+                    "progress"
+                  ]
                 }
               },
               "type": "object"
@@ -198,6 +270,11 @@
                   "name": "event",
                   "required": false,
                   "type": "event"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
                 },
                 "label": {
                   "name": "label",
@@ -242,6 +319,14 @@
               },
               "type": "object"
             }
+          },
+          {
+            "key": "itemClickEvent",
+            "type": "event",
+            "default": "ITEM_CLICK",
+            "label": "Item Click Event",
+            "description": "When set, clicking a row emits UI:{itemClickEvent} with { id, row }. Omit = rows are not clickable.",
+            "tier": "presentation"
           },
           {
             "key": "pageProp",
@@ -352,7 +437,9 @@
           "EntityListLoaded",
           "INIT"
         ],
-        "definerKnobs": [],
+        "definerKnobs": [
+          "itemClickEvent"
+        ],
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
@@ -383,6 +470,7 @@
     "emittedEvents": [
       "EntityListLoaded",
       "ITEM_ACTIONS",
+      "ITEM_CLICK",
       "VIEW"
     ],
     "listenedEvents": [],

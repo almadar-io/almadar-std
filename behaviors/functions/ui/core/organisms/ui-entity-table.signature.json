@@ -15,11 +15,18 @@
       {
         "name": "EntityTableRender",
         "emittedEvents": [
+          "ITEM_CLICK",
           "VIEW",
           "EntityTableLoaded"
         ],
         "listenedEvents": [],
         "events": [
+          {
+            "name": "ITEM_CLICK",
+            "direction": "emit",
+            "description": "When set, rows are activatable and emit UI:{itemClickEvent} with { id, row }",
+            "tier": "essential"
+          },
           {
             "name": "VIEW",
             "direction": "emit",
@@ -111,6 +118,28 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "align": {
+                  "name": "align",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "left",
+                    "center",
+                    "right"
+                  ]
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "date",
+                    "currency",
+                    "number",
+                    "boolean",
+                    "percent"
+                  ]
+                },
                 "header": {
                   "name": "header",
                   "required": false,
@@ -219,6 +248,8 @@
             "type": "[EntityTableFieldsItem]",
             "default": [
               {
+                "align": "left",
+                "format": "date",
                 "header": "Header",
                 "key": "Key",
                 "label": "Label",
@@ -227,6 +258,8 @@
                 "width": "Width"
               },
               {
+                "align": "center",
+                "format": "currency",
                 "header": "Header 2",
                 "key": "Key 2",
                 "label": "Label 2",
@@ -240,6 +273,28 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "align": {
+                  "name": "align",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "left",
+                    "center",
+                    "right"
+                  ]
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "date",
+                    "currency",
+                    "number",
+                    "boolean",
+                    "percent"
+                  ]
+                },
                 "header": {
                   "name": "header",
                   "required": false,
@@ -350,6 +405,14 @@
               },
               "type": "object"
             }
+          },
+          {
+            "key": "itemClickEvent",
+            "type": "event",
+            "default": "ITEM_CLICK",
+            "label": "Item Click Event",
+            "description": "When set, rows are activatable and emit UI:{itemClickEvent} with { id, row }",
+            "tier": "presentation"
           },
           {
             "key": "look",
@@ -565,7 +628,9 @@
           "EntityTableLoaded",
           "INIT"
         ],
-        "definerKnobs": [],
+        "definerKnobs": [
+          "itemClickEvent"
+        ],
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
@@ -595,6 +660,7 @@
     ],
     "emittedEvents": [
       "EntityTableLoaded",
+      "ITEM_CLICK",
       "VIEW"
     ],
     "listenedEvents": [],

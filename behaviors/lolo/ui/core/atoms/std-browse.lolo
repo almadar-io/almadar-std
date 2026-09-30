@@ -1,8 +1,9 @@
 app std-browse "2.5.0"
 "std-browse as a Function — single primitive: data-grid. Owns the fetch + REFETCH (query/filter/page) state machine. Consumers configure fields/imageField/itemActions/cols/gap/variant; the atom renders the grid. Each `fields[]` entry accepts `{ name, label, variant }` plus optional `referenceEntity` + `displayField` to render a foreign-key column as the joined entity's display value (data-grid resolves @list[referenceEntity] at render time when both keys are present). `browseLook` (table default / dense / feed / gallery / master-detail / triage) selects one of six render bodies; dense/feed/gallery were folded in from std-browse-dense/-feed/-gallery (Phase 5.B); master-detail (split record view driven by the guarded VIEW/CLOSE self-transitions) and triage (inbox rows) were folded in 2026-07-26. Consumers retarget by setting browseLook."
-type FieldSpec = { name : string!, label : string, variant : h3 | h4 | body | caption | badge | small | progress, icon : string, format : date | currency | number | boolean | percent, key : string, header : string }
+type BadgeColor = "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "error" | "info" | "neutral" | "destructive"
+type FieldSpec = { name : string!, label : string, variant : h3 | h4 | body | caption | badge | small | progress, icon : string, format : date | currency | number | boolean | percent, key : string, header : string, colorMap : Map string BadgeColor, labels : Map string string }
 type ItemAction = { label : string!, event : event, navigatesTo : string, variant : primary | secondary | ghost | danger, icon : string, roles : [string], when : SExpr }
-type ColumnSpec = { key : string!, field : string, header : string, width : string, align : left | center | right, className : string, weight : normal | medium | semibold, format : badge | date | currency | number | percent | boolean, icon : string }
+type ColumnSpec = { key : string!, field : string, header : string, width : string, align : left | center | right, className : string, weight : normal | medium | semibold, format : badge | date | currency | number | percent | boolean, icon : string, colorMap : Map string BadgeColor, labels : Map string string, variant : h3 | h4 }
 type FilterSpec = { field : string!, label : string, options : [string] }
 orbital BrowseItemOrbital {
   type BrowseDetailAction = {
@@ -406,10 +407,31 @@ orbital BrowseItemOrbital {
         @label "Browse look"
         @description "Layer 2 visual treatment for the whole browse surface. table = the default data-grid (bodyContent); dense = spreadsheet-style table with toolbar search (denseBodyContent); feed = chronological card stream (feedBodyContent); gallery = image-first responsive card grid (galleryBodyContent); master-detail = record-work split view — dense list left, clicked record's detail right (masterDetailBodyContent); triage = inbox-register compact rows for queue work (triageBodyContent). Selecting a non-table look swaps which body tree renders after rows load; any body may still be overridden directly at the call site for a one-off layout."
         @tier "presentation"
-      detailFields : [string] = [name, description, status, createdAt]
+      detailFields : [FieldSpec] = [{
+        label: Name
+        name: name
+        variant: h4
+      }, {
+        label: Description
+        name: description
+        variant: body
+      }, {
+        label: Status
+        name: status
+        variant: badge
+      }, {
+        format: date
+        label: Created
+        name: createdAt
+      }]
         @label "Which fields appear in the master-detail record pane?"
-        @description "Field names shown in the detail panel when browseLook = master-detail; the first entry doubles as the pane title. Consumers overriding columns/fields should override this list to match their entity."
+        @description "Fields shown in the detail panel when browseLook = master-detail; the field declared variant h3/h4 is the pane title. Consumers overriding columns/fields should override this list to match their entity."
         @synonyms "detail columns, record fields, detail pane fields"
+        @tier "presentation"
+      detailCloseEvent : event = CLOSE
+        @label "Which pane action closes the record?"
+        @description "The detailActions entry whose event matches renders as the pane's close (×) button."
+        @synonyms "close event, dismiss event, pane close"
         @tier "presentation"
       detailActions : [BrowseDetailAction] = [{ event: CLOSE, label: Close }]
         @label "Master-detail record pane actions"
@@ -453,6 +475,7 @@ orbital BrowseItemOrbital {
           fields: @config.fields
           gap: @config.gap
           imageField: @config.imageField
+          itemClickEvent: @config.itemClickEvent
           itemActions: (array/filter @config.itemActions (fn item (or (= (array/len (object/get @item roles [])) 0) (array/includes (object/get @item roles []) @config.viewerRole))))
           maxInlineActions: @config.maxInlineActions
           pageSize: @config.displayPageSize
@@ -566,6 +589,7 @@ orbital BrowseItemOrbital {
           entity: ?data
           fields: []
           gap: md
+          itemClickEvent: @config.itemClickEvent
           itemActions: (array/filter @config.itemActions (fn item (or (= (array/len (object/get @item roles [])) 0) (array/includes (object/get @item roles []) @config.viewerRole))))
           renderItem: (fn item {
             children: [{
@@ -688,6 +712,7 @@ orbital BrowseItemOrbital {
           fields: @config.fields
           gap: lg
           imageField: @config.imageField
+          itemClickEvent: @config.itemClickEvent
           itemActions: (array/filter @config.itemActions (fn item (or (= (array/len (object/get @item roles [])) 0) (array/includes (object/get @item roles []) @config.viewerRole))))
           maxInlineActions: @config.maxInlineActions
           minCardWidth: 260
@@ -741,6 +766,7 @@ orbital BrowseItemOrbital {
           children: [{
             entity: ?data
             fields: @config.fields
+            itemClickEvent: @config.itemClickEvent
             itemActions: (array/filter @config.itemActions (fn item (or (= (array/len (object/get @item roles [])) 0) (array/includes (object/get @item roles []) @config.viewerRole))))
             maxInlineActions: @config.maxInlineActions
             emptyDescription: @config.emptyDescription
@@ -861,7 +887,8 @@ orbital BrowseItemOrbital {
         }), {
           detail: {
             actions: (array/filter @config.detailActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
-            fieldNames: @config.detailFields
+            fields: @config.detailFields
+            closeEvent: @config.detailCloseEvent
             initialData: ?row
             showActions: true
             type: detail-panel

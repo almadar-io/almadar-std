@@ -46,9 +46,8 @@ export interface StdUiDialogueBubbleConfig {
   /** Default: `"bottom"` */
   position?: 'top' | 'bottom';
   revealedChars?: number;
-  /** Default: `"Hero"` */
   speaker?: string;
-  /** Default: `"The dungeon awaits. Choose your path wisely."` */
+  /** Default: `""` */
   text?: string;
 }
 

@@ -30,7 +30,15 @@ const ALIAS = 'UiEntityTable';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiEntityTableEventKey = 'EntityTableLoaded' | 'INIT' | 'VIEW';
+export type StdUiEntityTableEventKey = 'EntityTableLoaded' | 'INIT' | 'ITEM_CLICK' | 'VIEW';
+
+/**
+ * Payload shape for the `ITEM_CLICK` event.
+ */
+export interface StdUiEntityTableItemClickPayload {
+  id: string;
+  row: unknown;
+}
 
 /**
  * Payload shape for the `VIEW` event.
@@ -66,13 +74,15 @@ export interface StdUiEntityTableConfig {
   emptyIcon?: unknown;
   emptyTitle?: string;
   error?: EntityRow;
-  /** Default: `[{"header":"Header","key":"Key","label":"Label","name":"Name","sortable":false,"width":"Width"},{"header":"Header 2","key":"Key 2","label":"Label 2","name":"Name 2","sortable":true,"width":"Width 2"}]` */
+  /** Default: `[{"align":"left","format":"date","header":"Header","key":"Key","label":"Label","name":"Name","sortable":false,"width":"Width"},{"align":"center","format":"currency","header":"Header 2","key":"Key 2","label":"Label 2","name":"Name 2","sortable":true,"width":"Width 2"}]` */
   fields?: EntityRow[];
   headerActions?: PatternValue;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `[{"event":"VIEW","label":"View","variant":"ghost"}]` */
   itemActions?: EntityRow[];
+  /** Default: `"ITEM_CLICK"` */
+  itemClickEvent?: string;
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   pageProp?: number;
@@ -237,6 +247,28 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
             'description': 'Columns can be Column objects or simple string field names',
             'items': {
               'properties': {
+                'align': {
+                  'name': 'align',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'left',
+                    'center',
+                    'right',
+                  ],
+                },
+                'format': {
+                  'name': 'format',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'date',
+                    'currency',
+                    'number',
+                    'boolean',
+                    'percent',
+                  ],
+                },
                 'header': {
                   'name': 'header',
                   'required': false,
@@ -341,6 +373,8 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
           'fields': {
             'default': [
               {
+                'align': 'left',
+                'format': 'date',
                 'header': 'Header',
                 'key': 'Key',
                 'label': 'Label',
@@ -349,6 +383,8 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                 'width': 'Width',
               },
               {
+                'align': 'center',
+                'format': 'currency',
                 'header': 'Header 2',
                 'key': 'Key 2',
                 'label': 'Label 2',
@@ -360,6 +396,28 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
             'description': 'Fields to display - accepts string[] or Column[] for unified interface. Alias for columns',
             'items': {
               'properties': {
+                'align': {
+                  'name': 'align',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'left',
+                    'center',
+                    'right',
+                  ],
+                },
+                'format': {
+                  'name': 'format',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'date',
+                    'currency',
+                    'number',
+                    'boolean',
+                    'percent',
+                  ],
+                },
                 'header': {
                   'name': 'header',
                   'required': false,
@@ -470,6 +528,13 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
             'label': 'Item Actions',
             'tier': 'presentation',
             'type': '[EntityTableItemActionsItem]',
+          },
+          'itemClickEvent': {
+            'default': 'ITEM_CLICK',
+            'description': 'When set, rows are activatable and emit UI:{itemClickEvent} with { id, row }',
+            'label': 'Item Click Event',
+            'tier': 'presentation',
+            'type': 'event',
           },
           'look': {
             'default': 'dense',
@@ -675,6 +740,25 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
         ],
         'emits': [
           {
+            'definerKnob': 'itemClickEvent',
+            'description': 'When set, rows are activatable and emit UI:{itemClickEvent} with { id, row }',
+            'event': '@config.itemClickEvent',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'row',
+                'required': true,
+                'type': '@entity',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'essential',
+          },
+          {
             'description': 'User opened a record from the list.',
             'event': 'VIEW',
             'payloadSchema': [
@@ -747,6 +831,24 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                 },
               ],
               'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'essential',
+            },
+            {
+              'description': 'When set, rows are activatable and emit UI:{itemClickEvent} with { id, row }',
+              'key': '@config.itemClickEvent',
+              'name': '@config.item click event',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'required': true,
+                  'type': '@entity',
+                },
+              ],
               'tier': 'essential',
             },
             {
@@ -870,6 +972,7 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                         ],
                       ],
                     ],
+                    'itemClickEvent': '@config.itemClickEvent',
                     'look': '@config.look',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
@@ -1012,6 +1115,7 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                         ],
                       ],
                     ],
+                    'itemClickEvent': '@config.itemClickEvent',
                     'look': '@config.look',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
@@ -1157,6 +1261,7 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                         ],
                       ],
                     ],
+                    'itemClickEvent': '@config.itemClickEvent',
                     'look': '@config.look',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',

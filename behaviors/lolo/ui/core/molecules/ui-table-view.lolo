@@ -18,9 +18,13 @@ orbital TableViewOrbital {
     className : string
     weight : "normal" | "medium" | "semibold"
     format : "badge" | "date" | "currency" | "number" | "percent" | "boolean"
+    colorMap : Map string TableViewColumnsItemColorMapValue
+    labels : Map string string
+    variant : "h3" | "h4"
     icon : icon
     sortable : boolean
   }
+  type TableViewColumnsItemColorMapValue = "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "error" | "info" | "neutral" | "destructive"
   type TableViewFieldsItem = {
     key : string!
     field : string
@@ -31,9 +35,13 @@ orbital TableViewOrbital {
     className : string
     weight : "normal" | "medium" | "semibold"
     format : "badge" | "date" | "currency" | "number" | "percent" | "boolean"
+    colorMap : Map string TableViewFieldsItemColorMapValue
+    labels : Map string string
+    variant : "h3" | "h4"
     icon : icon
     sortable : boolean
   }
+  type TableViewFieldsItemColorMapValue = "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "error" | "info" | "neutral" | "destructive"
   type TableViewItemActionsItem = {
     label : string!
     event : event!
@@ -175,6 +183,12 @@ orbital TableViewOrbital {
     }
 
     emits {
+      @config.itemClickEvent -> external {
+        id : string!
+        row : @entity!
+      }
+        @description "When set, the whole row is clickable and emits UI:{itemClickEvent} with { id, row } (action-button clicks stopPropagation so they still win). Mirrors DataList's contract. Omit = rows are not clickable."
+        @tier "essential"
       @config.selectEvent -> external {
         selectedIds : [string]!
       }
@@ -263,9 +277,9 @@ orbital TableViewOrbital {
         @label "Max Inline Actions"
         @description "maxInlineActions prop"
         @tier "presentation"
-      itemClickEvent : event = ""
+      itemClickEvent : event = "ITEM_CLICK"
         @label "Item Click Event"
-        @description "When set, the whole row is clickable and emits UI:{itemClickEvent} with { id, row } (action-button clicks stopPropagation so they still win). Mirrors DataList's contract. When OMITTED and `itemActions` exist, the row click defaults to the first non-danger item action (the view/open action by authoring convention) — a danger action never becomes the row default (destructive actions require intentional reach)."
+        @description "When set, the whole row is clickable and emits UI:{itemClickEvent} with { id, row } (action-button clicks stopPropagation so they still win). Mirrors DataList's contract. Omit = rows are not clickable."
         @tier "presentation"
       selectable : boolean = false
         @label "Selectable"

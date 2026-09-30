@@ -1517,6 +1517,8 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                         'variant': 'h4',
                       },
                       {
+                        'dateField': 'timestamp',
+                        'descriptionField': 'description',
                         'entity': '@entity.audit',
                         'fields': [
                           'title',
@@ -1525,6 +1527,8 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                           'status',
                         ],
                         'look': '@config.timelineLook',
+                        'statusField': 'status',
+                        'titleField': 'title',
                         'type': 'timeline',
                       },
                       {
@@ -2031,6 +2035,8 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                         'variant': 'h4',
                       },
                       {
+                        'dateField': 'timestamp',
+                        'descriptionField': 'description',
                         'entity': '@entity.audit',
                         'fields': [
                           'title',
@@ -2039,6 +2045,8 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                           'status',
                         ],
                         'look': '@config.timelineLook',
+                        'statusField': 'status',
+                        'titleField': 'title',
                         'type': 'timeline',
                       },
                       {
@@ -2311,6 +2319,8 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                         'variant': 'h4',
                       },
                       {
+                        'dateField': 'timestamp',
+                        'descriptionField': 'description',
                         'entity': '@entity.audit',
                         'fields': [
                           'title',
@@ -2319,6 +2329,8 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                           'status',
                         ],
                         'look': '@config.timelineLook',
+                        'statusField': 'status',
+                        'titleField': 'title',
                         'type': 'timeline',
                       },
                     ],
@@ -2589,6 +2601,8 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                         'variant': 'h4',
                       },
                       {
+                        'dateField': 'timestamp',
+                        'descriptionField': 'description',
                         'entity': '@entity.audit',
                         'fields': [
                           'title',
@@ -2597,6 +2611,8 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                           'status',
                         ],
                         'look': '@config.timelineLook',
+                        'statusField': 'status',
+                        'titleField': 'title',
                         'type': 'timeline',
                       },
                       {
@@ -2738,6 +2754,8 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                         'variant': 'h4',
                       },
                       {
+                        'dateField': 'timestamp',
+                        'descriptionField': 'description',
                         'entity': '@entity.audit',
                         'fields': [
                           'title',
@@ -2746,6 +2764,8 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                           'status',
                         ],
                         'look': '@config.timelineLook',
+                        'statusField': 'status',
+                        'titleField': 'title',
                         'type': 'timeline',
                       },
                       {
@@ -2886,6 +2906,8 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                         'variant': 'h4',
                       },
                       {
+                        'dateField': 'timestamp',
+                        'descriptionField': 'description',
                         'entity': '@entity.audit',
                         'fields': [
                           'title',
@@ -2894,6 +2916,8 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                           'status',
                         ],
                         'look': '@config.timelineLook',
+                        'statusField': 'status',
+                        'titleField': 'title',
                         'type': 'timeline',
                       },
                       {

@@ -46,6 +46,15 @@
         "parent": "trt_01KXG04SH1BXS9YPS5MGN6Z0YS",
         "renames": []
       },
+      "evt_01M3T1CTXPWVSNX3WQ0YQWW5XX": {
+        "bakedName": "@config.itemClickEvent",
+        "curName": "@config.itemClickEvent",
+        "id": "evt_01M3T1CTXPWVSNX3WQ0YQWW5XX",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04SH1BXS9YPS5MGN6Z0YS",
+        "renames": []
+      },
       "orb_01KXG04SH1E46PBKVFJV3M4A4Z": {
         "bakedName": "EntityListOrbital",
         "curName": "EntityListOrbital",
@@ -129,6 +138,18 @@
               "tier": "presentation",
               "type": "string"
             },
+            "completedField": {
+              "description": "Row field that marks an item completed (`true` strikes its title through)",
+              "label": "Completed Field",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "disabledField": {
+              "description": "Row field that marks an item disabled (`true` dims the row and disables its click)",
+              "label": "Disabled Field",
+              "tier": "presentation",
+              "type": "string"
+            },
             "emptyMessage": {
               "description": "emptyMessage prop",
               "label": "Empty Message",
@@ -182,28 +203,57 @@
             "fields": {
               "default": [
                 {
-                  "header": "Header",
-                  "key": "Key",
+                  "format": "date",
+                  "icon": "circle",
                   "label": "Label",
-                  "name": "Name"
+                  "name": "Name",
+                  "variant": "h3"
                 },
                 {
-                  "header": "Header 2",
-                  "key": "Key 2",
+                  "format": "currency",
+                  "icon": "circle",
                   "label": "Label 2",
-                  "name": "Name 2"
+                  "name": "Name 2",
+                  "variant": "h4"
                 }
               ],
-              "description": "Fields to display - accepts string[] or {key, header}[] for unified interface",
+              "description": "Fields to display: field names, or declared fields ({ name, label, variant, format, colorMap, labels })",
               "items": {
                 "properties": {
-                  "header": {
-                    "name": "header",
+                  "colorMap": {
+                    "items": {
+                      "type": "string",
+                      "values": [
+                        "default",
+                        "primary",
+                        "secondary",
+                        "success",
+                        "warning",
+                        "danger",
+                        "error",
+                        "info",
+                        "neutral",
+                        "destructive"
+                      ]
+                    },
+                    "name": "colorMap",
                     "required": false,
-                    "type": "string"
+                    "type": "object"
                   },
-                  "key": {
-                    "name": "key",
+                  "format": {
+                    "name": "format",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "date",
+                      "currency",
+                      "number",
+                      "boolean",
+                      "percent"
+                    ]
+                  },
+                  "icon": {
+                    "name": "icon",
                     "required": false,
                     "type": "string"
                   },
@@ -212,10 +262,32 @@
                     "required": false,
                     "type": "string"
                   },
+                  "labels": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "labels",
+                    "required": false,
+                    "type": "object"
+                  },
                   "name": {
                     "name": "name",
-                    "required": false,
+                    "required": true,
                     "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "h3",
+                      "h4",
+                      "body",
+                      "caption",
+                      "badge",
+                      "small",
+                      "progress"
+                    ]
                   }
                 },
                 "type": "object"
@@ -246,6 +318,11 @@
                     "name": "event",
                     "required": false,
                     "type": "event"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
                   },
                   "label": {
                     "name": "label",
@@ -293,6 +370,13 @@
               "label": "Item Actions",
               "tier": "presentation",
               "type": "[EntityListItemActionsItem]"
+            },
+            "itemClickEvent": {
+              "default": "ITEM_CLICK",
+              "description": "When set, clicking a row emits UI:{itemClickEvent} with { id, row }. Omit = rows are not clickable.",
+              "label": "Item Click Event",
+              "tier": "presentation",
+              "type": "event"
             },
             "pageProp": {
               "description": "Current page number",
@@ -404,6 +488,26 @@
               "tier": "essential"
             },
             {
+              "definerKnob": "itemClickEvent",
+              "description": "When set, clicking a row emits UI:{itemClickEvent} with { id, row }. Omit = rows are not clickable.",
+              "event": "@config.itemClickEvent",
+              "eventId": "evt_01M3T1CTXPWVSNX3WQ0YQWW5XX",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "row",
+                  "required": true,
+                  "type": "@entity"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
               "description": "User opened a record from the list.",
               "event": "VIEW",
               "eventId": "evt_01KXG04SH3R1YPRSCJX64JDKM2",
@@ -495,6 +599,25 @@
                 "tier": "essential"
               },
               {
+                "description": "When set, clicking a row emits UI:{itemClickEvent} with { id, row }. Omit = rows are not clickable.",
+                "id": "evt_01M3T1CTXPWVSNX3WQ0YQWW5XX",
+                "key": "@config.itemClickEvent",
+                "name": "@config.item click event",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "row",
+                    "required": true,
+                    "type": "@entity"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
                 "description": "User opened a record from the list.",
                 "id": "evt_01KXG04SH3R1YPRSCJX64JDKM2",
                 "key": "VIEW",
@@ -539,6 +662,8 @@
                       "activeFilters": "@config.activeFilters",
                       "children": "@config.children",
                       "className": "@config.className",
+                      "completedField": "@config.completedField",
+                      "disabledField": "@config.disabledField",
                       "emptyMessage": "@config.emptyMessage",
                       "entity": "@entity",
                       "entityType": "@config.entityType",
@@ -580,6 +705,7 @@
                           ]
                         ]
                       ],
+                      "itemClickEvent": "@config.itemClickEvent",
                       "page": "@config.pageProp",
                       "pageSize": "@config.pageSize",
                       "searchValue": "@config.searchValue",
@@ -609,6 +735,8 @@
                       "activeFilters": "@config.activeFilters",
                       "children": "@config.children",
                       "className": "@config.className",
+                      "completedField": "@config.completedField",
+                      "disabledField": "@config.disabledField",
                       "emptyMessage": "@config.emptyMessage",
                       "entity": "@entity",
                       "entityType": "@config.entityType",
@@ -650,6 +778,7 @@
                           ]
                         ]
                       ],
+                      "itemClickEvent": "@config.itemClickEvent",
                       "page": "@config.pageProp",
                       "pageSize": "@config.pageSize",
                       "searchValue": "@config.searchValue",
@@ -682,6 +811,8 @@
                       "activeFilters": "@config.activeFilters",
                       "children": "@config.children",
                       "className": "@config.className",
+                      "completedField": "@config.completedField",
+                      "disabledField": "@config.disabledField",
                       "emptyMessage": "@config.emptyMessage",
                       "entity": "@payload.data",
                       "entityType": "@config.entityType",
@@ -723,6 +854,7 @@
                           ]
                         ]
                       ],
+                      "itemClickEvent": "@config.itemClickEvent",
                       "page": "@config.pageProp",
                       "pageSize": "@config.pageSize",
                       "searchValue": "@config.searchValue",
@@ -768,20 +900,33 @@
         ],
         "EntityListFieldsItem": [
           {
-            "name": "key",
-            "type": "string"
-          },
-          {
-            "name": "header",
-            "type": "string"
-          },
-          {
             "name": "name",
+            "required": true,
             "type": "string"
           },
           {
             "name": "label",
             "type": "string"
+          },
+          {
+            "name": "icon",
+            "type": "icon"
+          },
+          {
+            "name": "variant",
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "type": "string"
+          },
+          {
+            "name": "colorMap",
+            "type": "Map<string,EntityListFieldsItemColorMapValue>"
+          },
+          {
+            "name": "labels",
+            "type": "Map<string,string>"
           }
         ],
         "EntityListItemActionsItem": [
@@ -805,6 +950,10 @@
           {
             "name": "variant",
             "type": "string"
+          },
+          {
+            "name": "icon",
+            "type": "icon"
           },
           {
             "name": "when",

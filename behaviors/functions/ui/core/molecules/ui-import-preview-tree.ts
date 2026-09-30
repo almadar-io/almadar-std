@@ -39,10 +39,8 @@ export type StdUiImportPreviewTreeEventKey = 'CANCEL' | 'CONFIRM' | 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiImportPreviewTreeConfig {
-  /** Default: `"Cancel"` */
   cancelLabel?: string;
   className?: string;
-  /** Default: `"Confirm import"` */
   confirmLabel?: string;
   /** Default: `{"item":{"plural":"Plural","singular":"Singular"}}` */
   entityDisplay?: Record<string, TraitConfig>;

@@ -28,6 +28,15 @@
         "parent": "trt_01KXG04SD9CXEV12B2DCF8KYGK",
         "renames": []
       },
+      "evt_01M3T0VXEXYCXXAVQSJNA41FTD": {
+        "bakedName": "@config.closeEvent",
+        "curName": "@config.closeEvent",
+        "id": "evt_01M3T0VXEXYCXXAVQSJNA41FTD",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04SD9CXEV12B2DCF8KYGK",
+        "renames": []
+      },
       "orb_01KXG04SD96J1YG0ZTZP69D4AJ": {
         "bakedName": "DetailPanelOrbital",
         "curName": "DetailPanelOrbital",
@@ -211,6 +220,13 @@
               "tier": "presentation",
               "type": "string"
             },
+            "closeEvent": {
+              "default": "CLOSE",
+              "description": "The event of the declared action that dismisses the panel. The matching action renders as the header close ×; omitted, no × is drawn.",
+              "label": "Close Event",
+              "tier": "presentation",
+              "type": "event"
+            },
             "displayFields": {
               "default": [],
               "description": "Display fields (alias for fields)",
@@ -262,8 +278,10 @@
             "fields": {
               "default": [
                 {
-                  "header": "Header",
-                  "key": "Key",
+                  "format": "date",
+                  "icon": "circle",
+                  "label": "Label",
+                  "name": "Name",
                   "relation": {
                     "cardinality": "one",
                     "entity": "Entity"
@@ -272,11 +290,14 @@
                   "values": [
                     "Item",
                     "Item 2"
-                  ]
+                  ],
+                  "variant": "h3"
                 },
                 {
-                  "header": "Header 2",
-                  "key": "Key 2",
+                  "format": "currency",
+                  "icon": "circle",
+                  "label": "Label 2",
+                  "name": "Name 2",
                   "relation": {
                     "cardinality": "many",
                     "entity": "Entity 2"
@@ -285,19 +306,65 @@
                   "values": [
                     "Item",
                     "Item 2"
-                  ]
+                  ],
+                  "variant": "h4"
                 }
               ],
-              "description": "Fields to display - accepts string[], {key, header}[], or DetailField[]",
+              "description": "Fields to display: field names, or declared fields ({ name, label, variant, format, colorMap, labels })",
               "items": {
                 "properties": {
-                  "header": {
-                    "name": "header",
+                  "colorMap": {
+                    "items": {
+                      "type": "string",
+                      "values": [
+                        "default",
+                        "primary",
+                        "secondary",
+                        "success",
+                        "warning",
+                        "danger",
+                        "error",
+                        "info",
+                        "neutral",
+                        "destructive"
+                      ]
+                    },
+                    "name": "colorMap",
+                    "required": false,
+                    "type": "object"
+                  },
+                  "format": {
+                    "name": "format",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "date",
+                      "currency",
+                      "number",
+                      "boolean",
+                      "percent"
+                    ]
+                  },
+                  "icon": {
+                    "name": "icon",
                     "required": false,
                     "type": "string"
                   },
-                  "key": {
-                    "name": "key",
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "labels": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "labels",
+                    "required": false,
+                    "type": "object"
+                  },
+                  "name": {
+                    "name": "name",
                     "required": true,
                     "type": "string"
                   },
@@ -337,6 +404,20 @@
                     "name": "values",
                     "required": false,
                     "type": "array"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "h3",
+                      "h4",
+                      "body",
+                      "caption",
+                      "badge",
+                      "small",
+                      "progress"
+                    ]
                   }
                 },
                 "type": "object"
@@ -607,6 +688,14 @@
           ],
           "emits": [
             {
+              "definerKnob": "closeEvent",
+              "description": "The event of the declared action that dismisses the panel. The matching action renders as the header close ×; omitted, no × is drawn.",
+              "event": "@config.closeEvent",
+              "eventId": "evt_01M3T0VXEXYCXXAVQSJNA41FTD",
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
               "description": "DetailPanel row finished loading; payload.data holds the single row.",
               "event": "DetailPanelLoaded",
               "eventId": "evt_01M3RWGFY2NR2AWA5M5G9DE397",
@@ -678,6 +767,13 @@
                 ],
                 "synonyms": "loaded, fetched, retrieved",
                 "tier": "essential"
+              },
+              {
+                "description": "The event of the declared action that dismisses the panel. The matching action renders as the header close ×; omitted, no × is drawn.",
+                "id": "evt_01M3T0VXEXYCXXAVQSJNA41FTD",
+                "key": "@config.closeEvent",
+                "name": "@config.close event",
+                "tier": "essential"
               }
             ],
             "states": [
@@ -744,6 +840,7 @@
                       "avatar": "@config.avatar",
                       "backAction": "@config.backAction",
                       "className": "@config.className",
+                      "closeEvent": "@config.closeEvent",
                       "displayFields": "@config.displayFields",
                       "entity": "@entity",
                       "error": "@config.error",
@@ -842,6 +939,7 @@
                       "avatar": "@config.avatar",
                       "backAction": "@config.backAction",
                       "className": "@config.className",
+                      "closeEvent": "@config.closeEvent",
                       "displayFields": "@config.displayFields",
                       "entity": "@entity",
                       "error": "@config.error",
@@ -943,6 +1041,7 @@
                       "avatar": "@config.avatar",
                       "backAction": "@config.backAction",
                       "className": "@config.className",
+                      "closeEvent": "@config.closeEvent",
                       "displayFields": "@config.displayFields",
                       "entity": "@entity",
                       "error": "@config.error",
@@ -1023,6 +1122,7 @@
                       "avatar": "@config.avatar",
                       "backAction": "@config.backAction",
                       "className": "@config.className",
+                      "closeEvent": "@config.closeEvent",
                       "displayFields": "@config.displayFields",
                       "entity": "@payload.data",
                       "error": "@config.error",
@@ -1143,13 +1243,33 @@
         ],
         "DetailPanelFieldsItem": [
           {
-            "name": "key",
+            "name": "name",
             "required": true,
             "type": "string"
           },
           {
-            "name": "header",
+            "name": "label",
             "type": "string"
+          },
+          {
+            "name": "icon",
+            "type": "icon"
+          },
+          {
+            "name": "variant",
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "type": "string"
+          },
+          {
+            "name": "colorMap",
+            "type": "Map<string,DetailPanelFieldsItemColorMapValue>"
+          },
+          {
+            "name": "labels",
+            "type": "Map<string,string>"
           },
           {
             "name": "type",

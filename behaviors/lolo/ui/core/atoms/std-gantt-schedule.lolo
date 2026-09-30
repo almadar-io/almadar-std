@@ -2,6 +2,7 @@ app std-gantt-schedule "1.0.0"
 "std-gantt-schedule — GENERIC view-only Gantt/timeline atom: fetches a task collection on INIT and renders it as bars on a day-scale axis via the gantt pattern, with group headers, dependency arrows, and a today marker. Fully rebindable: a host overrides the linked entity and points the field-mapping configs (labelField/startField/endField/durationField/statusField/groupField) at its own columns; clicking a bar emits the config-named onBarClick event with the row id. No drag-edit, no zoom — schedule viewing only."
 type GanttLinkSpec = { from : string!, to : string! }
 orbital GanttScheduleOrbital {
+  type BarColor = "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "error" | "info" | "neutral" | "destructive"
     type TaskLoaded = Event { data : [Task] } "Fired when Task finishes loading; payload.data holds the tasks"
 
     type TaskLoadFailed = Event { error : string, code : string } "Fired when Task fails to load"
@@ -61,6 +62,7 @@ orbital GanttScheduleOrbital {
             showToday: @config.showToday
             startField: @config.startField
             statusField: @config.statusField
+            statusColorMap: @config.statusColorMap
             tasks: ?data
             titleField: @config.labelField
             type: gantt
@@ -167,8 +169,13 @@ orbital GanttScheduleOrbital {
         @tier "presentation"
       statusField : string = "status"
         @label "Status field"
-        @description "Row column holding the status value that drives bar colour."
+        @description "Row column holding each bar's status value."
         @synonyms "status column, state field, stage field"
+        @tier "presentation"
+      statusColorMap : Map string BarColor = {}
+        @label "Bar colour per status"
+        @description "Bar colour for each exact status value, e.g. {blocked: danger, complete: success}. Unmapped statuses are primary bars."
+        @synonyms "status colours, bar colours, colour map"
         @tier "presentation"
       groupField : string = ""
         @label "Group field"

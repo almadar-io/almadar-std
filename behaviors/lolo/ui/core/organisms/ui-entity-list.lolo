@@ -10,17 +10,22 @@ orbital EntityListOrbital {
     stack : string
   }
   type EntityListFieldsItem = {
-    key : string
-    header : string
-    name : string
+    name : string!
     label : string
+    icon : icon
+    variant : "h3" | "h4" | "body" | "caption" | "badge" | "small" | "progress"
+    format : "date" | "currency" | "number" | "boolean" | "percent"
+    colorMap : Map string EntityListFieldsItemColorMapValue
+    labels : Map string string
   }
+  type EntityListFieldsItemColorMapValue = "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "error" | "info" | "neutral" | "destructive"
   type EntityListItemActionsItem = {
     label : string!
     event : event
     navigatesTo : string
     placement : string
     variant : "primary" | "secondary" | "ghost" | "danger" | "default"
+    icon : icon
     when : SExpr
     roles : [string]
   }
@@ -57,6 +62,9 @@ orbital EntityListOrbital {
           children: @config.children
           fields: @config.fields
           fieldNames: @config.fieldNames
+          itemClickEvent: @config.itemClickEvent
+          completedField: @config.completedField
+          disabledField: @config.disabledField
           type: entity-list
         })
       INIT -> idle when (not @config.selfFetch)
@@ -82,6 +90,9 @@ orbital EntityListOrbital {
           children: @config.children
           fields: @config.fields
           fieldNames: @config.fieldNames
+          itemClickEvent: @config.itemClickEvent
+          completedField: @config.completedField
+          disabledField: @config.disabledField
           type: entity-list
         })
       EntityListLoaded -> idle
@@ -107,6 +118,9 @@ orbital EntityListOrbital {
           children: @config.children
           fields: @config.fields
           fieldNames: @config.fieldNames
+          itemClickEvent: @config.itemClickEvent
+          completedField: @config.completedField
+          disabledField: @config.disabledField
           type: entity-list
         })
     }
@@ -114,6 +128,12 @@ orbital EntityListOrbital {
     emits {
       ITEM_ACTIONS -> external { }
         @description "Item actions - schema-driven or function-based"
+        @tier "essential"
+      @config.itemClickEvent -> external {
+        id : string!
+        row : @entity!
+      }
+        @description "When set, clicking a row emits UI:{itemClickEvent} with { id, row }. Omit = rows are not clickable."
         @tier "essential"
       VIEW -> external {
         id : string!
@@ -201,13 +221,25 @@ orbital EntityListOrbital {
         @label "Children"
         @description "children prop"
         @tier "presentation"
-      fields : [EntityListFieldsItem] = [{ key: "Key", header: "Header", name: "Name", label: "Label" }, { key: "Key 2", header: "Header 2", name: "Name 2", label: "Label 2" }]
+      fields : [EntityListFieldsItem] = [{ name: "Name", label: "Label", icon: "circle", variant: h3, format: date }, { name: "Name 2", label: "Label 2", icon: "circle", variant: h4, format: currency }]
         @label "Fields"
-        @description "Fields to display - accepts string[] or {key, header}[] for unified interface"
+        @description "Fields to display: field names, or declared fields ({ name, label, variant, format, colorMap, labels })"
         @tier "presentation"
       fieldNames : [string] = []
         @label "Field Names"
         @description "Alias for fields - backwards compatibility"
+        @tier "presentation"
+      itemClickEvent : event = "ITEM_CLICK"
+        @label "Item Click Event"
+        @description "When set, clicking a row emits UI:{itemClickEvent} with { id, row }. Omit = rows are not clickable."
+        @tier "presentation"
+      completedField : string
+        @label "Completed Field"
+        @description "Row field that marks an item completed (`true` strikes its title through)"
+        @tier "presentation"
+      disabledField : string
+        @label "Disabled Field"
+        @description "Row field that marks an item disabled (`true` dims the row and disables its click)"
         @tier "presentation"
       viewerRole : string = ""
         @label "Viewer's role"

@@ -385,7 +385,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
           },
           {
             'default': [],
-            'description': 'Staged ImportUnits ready for review (ref/targetEntity/fields/parentRef), when the host stages the full rows rather than aggregate stats only.',
+            'description': 'Staged ImportUnits ready for review (ref/targetEntity/title/fields/parentRef), when the host stages the full rows rather than aggregate stats only.',
             'items': {
               'properties': {
                 'fields': {
@@ -409,6 +409,11 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                 'targetEntity': {
                   'name': 'targetEntity',
                   'required': true,
+                  'type': 'string',
+                },
+                'title': {
+                  'name': 'title',
+                  'required': false,
                   'type': 'string',
                 },
               },
@@ -712,6 +717,10 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                     'type': 'string',
                   },
                   {
+                    'name': 'title',
+                    'type': 'string',
+                  },
+                  {
                     'name': 'fields',
                     'type': 'Map<string,scalar>',
                   },
@@ -984,6 +993,10 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                       'type': 'string',
                     },
                     {
+                      'name': 'title',
+                      'type': 'string',
+                    },
+                    {
                       'name': 'fields',
                       'type': 'Map<string,scalar>',
                     },
@@ -1042,6 +1055,10 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                       'type': 'string',
                     },
                     {
+                      'name': 'title',
+                      'type': 'string',
+                    },
+                    {
                       'name': 'fields',
                       'type': 'Map<string,scalar>',
                     },
@@ -1094,6 +1111,10 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                     {
                       'name': 'targetEntity',
                       'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'title',
                       'type': 'string',
                     },
                     {

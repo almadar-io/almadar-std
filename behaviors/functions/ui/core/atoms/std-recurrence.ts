@@ -1184,6 +1184,8 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
                         'variant': 'h4',
                       },
                       {
+                        'dateField': 'date',
+                        'descriptionField': 'description',
                         'entity': '@entity.occurrences',
                         'fields': [
                           'title',
@@ -1226,6 +1228,8 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
                           ],
                         ],
                         'look': '@config.timelineLook',
+                        'statusField': 'status',
+                        'titleField': 'title',
                         'type': 'timeline',
                       },
                       {

@@ -406,6 +406,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                       ],
                     ],
                   ],
+                  'itemClickEvent': '@config.itemClickEvent',
                   'maxInlineActions': '@config.maxInlineActions',
                   'pageSize': '@config.displayPageSize',
                   'type': 'data-grid',
@@ -498,6 +499,26 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                   'required': false,
                   'type': 'string',
                 },
+                'colorMap': {
+                  'items': {
+                    'type': 'string',
+                    'values': [
+                      'default',
+                      'primary',
+                      'secondary',
+                      'success',
+                      'warning',
+                      'danger',
+                      'error',
+                      'info',
+                      'neutral',
+                      'destructive',
+                    ],
+                  },
+                  'name': 'colorMap',
+                  'required': false,
+                  'type': 'object',
+                },
                 'field': {
                   'name': 'field',
                   'required': false,
@@ -530,6 +551,23 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                   'name': 'key',
                   'required': true,
                   'type': 'string',
+                },
+                'labels': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'labels',
+                  'required': false,
+                  'type': 'object',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'h3',
+                    'h4',
+                  ],
                 },
                 'weight': {
                   'name': 'weight',
@@ -735,21 +773,126 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
             'tier': 'presentation',
             'type': '[BrowseDetailAction]',
           },
+          'detailCloseEvent': {
+            'default': 'CLOSE',
+            'description': 'The detailActions entry whose event matches renders as the pane\'s close (×) button.',
+            'label': 'Which pane action closes the record?',
+            'synonyms': 'close event, dismiss event, pane close',
+            'tier': 'presentation',
+            'type': 'event',
+          },
           'detailFields': {
             'default': [
-              'name',
-              'description',
-              'status',
-              'createdAt',
+              {
+                'label': 'Name',
+                'name': 'name',
+                'variant': 'h4',
+              },
+              {
+                'label': 'Description',
+                'name': 'description',
+                'variant': 'body',
+              },
+              {
+                'label': 'Status',
+                'name': 'status',
+                'variant': 'badge',
+              },
+              {
+                'format': 'date',
+                'label': 'Created',
+                'name': 'createdAt',
+              },
             ],
-            'description': 'Field names shown in the detail panel when browseLook = master-detail; the first entry doubles as the pane title. Consumers overriding columns/fields should override this list to match their entity.',
+            'description': 'Fields shown in the detail panel when browseLook = master-detail; the field declared variant h3/h4 is the pane title. Consumers overriding columns/fields should override this list to match their entity.',
             'items': {
-              'type': 'string',
+              'properties': {
+                'colorMap': {
+                  'items': {
+                    'type': 'string',
+                    'values': [
+                      'default',
+                      'primary',
+                      'secondary',
+                      'success',
+                      'warning',
+                      'danger',
+                      'error',
+                      'info',
+                      'neutral',
+                      'destructive',
+                    ],
+                  },
+                  'name': 'colorMap',
+                  'required': false,
+                  'type': 'object',
+                },
+                'format': {
+                  'name': 'format',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'date',
+                    'currency',
+                    'number',
+                    'boolean',
+                    'percent',
+                  ],
+                },
+                'header': {
+                  'name': 'header',
+                  'required': false,
+                  'type': 'string',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'key': {
+                  'name': 'key',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'labels': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'labels',
+                  'required': false,
+                  'type': 'object',
+                },
+                'name': {
+                  'name': 'name',
+                  'required': true,
+                  'type': 'string',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'h3',
+                    'h4',
+                    'body',
+                    'caption',
+                    'badge',
+                    'small',
+                    'progress',
+                  ],
+                },
+              },
+              'type': 'object',
             },
             'label': 'Which fields appear in the master-detail record pane?',
             'synonyms': 'detail columns, record fields, detail pane fields',
             'tier': 'presentation',
-            'type': '[string]',
+            'type': '[FieldSpec]',
           },
           'displayPageSize': {
             'default': 10,
@@ -883,6 +1026,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                       ],
                     ],
                   ],
+                  'itemClickEvent': '@config.itemClickEvent',
                   'renderItem': [
                     'fn',
                     'item',
@@ -1004,6 +1148,26 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
             'description': 'Each entry maps one entity field to a display column with an optional label and variant.',
             'items': {
               'properties': {
+                'colorMap': {
+                  'items': {
+                    'type': 'string',
+                    'values': [
+                      'default',
+                      'primary',
+                      'secondary',
+                      'success',
+                      'warning',
+                      'danger',
+                      'error',
+                      'info',
+                      'neutral',
+                      'destructive',
+                    ],
+                  },
+                  'name': 'colorMap',
+                  'required': false,
+                  'type': 'object',
+                },
                 'format': {
                   'name': 'format',
                   'required': false,
@@ -1035,6 +1199,14 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                   'name': 'label',
                   'required': false,
                   'type': 'string',
+                },
+                'labels': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'labels',
+                  'required': false,
+                  'type': 'object',
                 },
                 'name': {
                   'name': 'name',
@@ -1211,6 +1383,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                       ],
                     ],
                   ],
+                  'itemClickEvent': '@config.itemClickEvent',
                   'maxInlineActions': '@config.maxInlineActions',
                   'minCardWidth': 260,
                   'type': 'data-grid',
@@ -1521,7 +1694,8 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                         ],
                       ],
                     ],
-                    'fieldNames': '@config.detailFields',
+                    'closeEvent': '@config.detailCloseEvent',
+                    'fields': '@config.detailFields',
                     'initialData': '@payload.row',
                     'showActions': true,
                     'type': 'detail-panel',
@@ -1725,6 +1899,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                           ],
                         ],
                       ],
+                      'itemClickEvent': '@config.itemClickEvent',
                       'maxInlineActions': '@config.maxInlineActions',
                       'type': 'data-list',
                       'variant': 'compact',

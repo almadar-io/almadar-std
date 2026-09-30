@@ -8,6 +8,7 @@ orbital GanttOrbital {
     from : string!
     to : string!
   }
+  type GanttStatusColorMapValue = "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "error" | "info" | "neutral" | "destructive"
   type GanttError = {
     message : string!
     name : string
@@ -33,6 +34,7 @@ orbital GanttOrbital {
           endField: @config.endField
           durationField: @config.durationField
           statusField: @config.statusField
+          statusColorMap: @config.statusColorMap
           groupField: @config.groupField
           rangeStart: @config.rangeStart
           rangeEnd: @config.rangeEnd
@@ -53,6 +55,7 @@ orbital GanttOrbital {
           endField: @config.endField
           durationField: @config.durationField
           statusField: @config.statusField
+          statusColorMap: @config.statusColorMap
           groupField: @config.groupField
           rangeStart: @config.rangeStart
           rangeEnd: @config.rangeEnd
@@ -73,6 +76,7 @@ orbital GanttOrbital {
           endField: @config.endField
           durationField: @config.durationField
           statusField: @config.statusField
+          statusColorMap: @config.statusColorMap
           groupField: @config.groupField
           rangeStart: @config.rangeStart
           rangeEnd: @config.rangeEnd
@@ -121,7 +125,11 @@ orbital GanttOrbital {
         @tier "presentation"
       statusField : string = status
         @label "Status Field"
-        @description "Row field holding the bar status (drives bar colour). Defaults to `status`."
+        @description "Row field holding the bar status. Defaults to `status`."
+        @tier "presentation"
+      statusColorMap : Map string GanttStatusColorMapValue = { item: default }
+        @label "Status Color Map"
+        @description "Bar colour per exact status value; unmapped statuses are primary bars."
         @tier "presentation"
       groupField : string
         @label "Group Field"

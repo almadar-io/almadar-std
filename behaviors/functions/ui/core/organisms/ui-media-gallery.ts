@@ -59,6 +59,8 @@ export interface StdUiMediaGalleryConfig {
   activeFilters?: Record<string, TraitConfig>;
   /** Default: `"square"` */
   aspectRatio?: 'square' | 'landscape' | 'portrait';
+  /** Default: `"caption"` */
+  captionField?: string;
   className?: string;
   /** Default: `3` */
   columns?: number;
@@ -85,6 +87,8 @@ export interface StdUiMediaGalleryConfig {
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
+  /** Default: `"src"` */
+  srcField?: string;
   title?: string;
   totalCount?: number;
   /** Default: `""` */
@@ -228,6 +232,13 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
               'landscape',
               'portrait',
             ],
+          },
+          'captionField': {
+            'default': 'caption',
+            'description': 'Record field holding each image\'s caption (entity mode). Default `caption`.',
+            'label': 'Caption Field',
+            'tier': 'presentation',
+            'type': 'string',
           },
           'className': {
             'description': 'Additional CSS classes',
@@ -412,6 +423,13 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
               'desc',
             ],
           },
+          'srcField': {
+            'default': 'src',
+            'description': 'Record field holding each image\'s URL (entity mode). Default `src`.',
+            'label': 'Src Field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'title': {
             'description': 'Gallery title',
             'label': 'Title',
@@ -586,6 +604,7 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
                     ],
                     'activeFilters': '@config.activeFilters',
                     'aspectRatio': '@config.aspectRatio',
+                    'captionField': '@config.captionField',
                     'className': '@config.className',
                     'columns': '@config.columns',
                     'entity': '@entity',
@@ -602,6 +621,7 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
                     'showUpload': '@config.showUpload',
                     'sortBy': '@config.sortBy',
                     'sortDirection': '@config.sortDirection',
+                    'srcField': '@config.srcField',
                     'title': '@config.title',
                     'totalCount': '@config.totalCount',
                     'type': 'media-gallery',
@@ -655,6 +675,7 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
                     ],
                     'activeFilters': '@config.activeFilters',
                     'aspectRatio': '@config.aspectRatio',
+                    'captionField': '@config.captionField',
                     'className': '@config.className',
                     'columns': '@config.columns',
                     'entity': '@entity',
@@ -671,6 +692,7 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
                     'showUpload': '@config.showUpload',
                     'sortBy': '@config.sortBy',
                     'sortDirection': '@config.sortDirection',
+                    'srcField': '@config.srcField',
                     'title': '@config.title',
                     'totalCount': '@config.totalCount',
                     'type': 'media-gallery',
@@ -727,6 +749,7 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
                     ],
                     'activeFilters': '@config.activeFilters',
                     'aspectRatio': '@config.aspectRatio',
+                    'captionField': '@config.captionField',
                     'className': '@config.className',
                     'columns': '@config.columns',
                     'entity': '@payload.data',
@@ -743,6 +766,7 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
                     'showUpload': '@config.showUpload',
                     'sortBy': '@config.sortBy',
                     'sortDirection': '@config.sortDirection',
+                    'srcField': '@config.srcField',
                     'title': '@config.title',
                     'totalCount': '@config.totalCount',
                     'type': 'media-gallery',

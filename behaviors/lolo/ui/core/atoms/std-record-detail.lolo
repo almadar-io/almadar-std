@@ -3,7 +3,8 @@ app std-record-detail "1.0.0"
 ;; @capabilities "record detail, single record view, entity detail panel, drill-down record, show one record, record profile, detail page, view details, document editor, wiki page, note taking, article body, rich text editing, write and edit content"
 orbital RecordItemOrbital {
   type RecordAction = { label : string!, event : event!, icon : string, variant : primary | secondary | ghost | danger, roles : [string], when : SExpr }
-  type RecordFieldSpec = { key : string!, header : string, format : date | currency | number | boolean | percent }
+  type BadgeColor = "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "error" | "info" | "neutral" | "destructive"
+  type RecordFieldSpec = { key : string!, header : string, format : date | currency | number | boolean | percent, variant : h3 | h4 | body | caption | badge | small | progress, colorMap : Map string BadgeColor, labels : Map string string }
   type MetaFieldSpec = { key : string!, label : string, kind : text | boolean | select | readonly, options : [string], icon : string, format : date | currency | number | boolean | percent }
   type RecordSection = { title : string!, fields : [string] }
 
@@ -448,12 +449,15 @@ orbital RecordItemOrbital {
       fields : [RecordFieldSpec] = [{
         header: Name
         key: name
+        variant: h4
       }, {
         header: Description
         key: description
+        variant: body
       }, {
         header: Status
         key: status
+        variant: badge
       }, {
         format: date
         header: Created
@@ -462,6 +466,11 @@ orbital RecordItemOrbital {
         @label "Which fields appear in the record panel?"
         @description "Each entry maps one entity field to a labelled row in the panel. Unlike a list row, a detail panel SHOULD label every field — the value stands alone here with no column header or repeated row position to name it."
         @synonyms "detail fields, record fields, panel fields, shown fields"
+        @tier "presentation"
+      closeEvent : event = ""
+        @label "Which action closes the record?"
+        @description "The `actions` entry whose event matches renders as the panel's close (×) button. Empty = no close button (a routed detail page navigates back instead)."
+        @synonyms "close event, dismiss event, close button"
         @tier "presentation"
       sections : [RecordSection] = []
         @label "How should the fields be grouped?"
@@ -567,6 +576,7 @@ orbital RecordItemOrbital {
           actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           entity: @entity.loadedRow
           fields: @config.fields
+          closeEvent: @config.closeEvent
           initialData: @entity.loadedRow
           maxInlineActions: @config.maxInlineActions
           sections: @config.sections
@@ -587,6 +597,7 @@ orbital RecordItemOrbital {
           actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           entity: @entity.loadedRow
           fields: @config.fields
+          closeEvent: @config.closeEvent
           initialData: @entity.loadedRow
           maxInlineActions: @config.maxInlineActions
           sections: @config.sections
@@ -608,6 +619,7 @@ orbital RecordItemOrbital {
           actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           entity: @entity.loadedRow
           fields: @config.fields
+          closeEvent: @config.closeEvent
           initialData: @entity.loadedRow
           maxInlineActions: @config.maxInlineActions
           sections: @config.sections

@@ -30,7 +30,15 @@ const ALIAS = 'UiEntityList';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiEntityListEventKey = 'EntityListLoaded' | 'INIT' | 'ITEM_ACTIONS' | 'VIEW';
+export type StdUiEntityListEventKey = 'EntityListLoaded' | 'INIT' | 'ITEM_ACTIONS' | 'ITEM_CLICK' | 'VIEW';
+
+/**
+ * Payload shape for the `ITEM_CLICK` event.
+ */
+export interface StdUiEntityListItemClickPayload {
+  id: string;
+  row: unknown;
+}
 
 /**
  * Payload shape for the `VIEW` event.
@@ -58,17 +66,21 @@ export interface StdUiEntityListConfig {
   activeFilters?: Record<string, TraitConfig>;
   children?: PatternValue;
   className?: string;
+  completedField?: string;
+  disabledField?: string;
   emptyMessage?: string;
   entityType?: string;
   error?: EntityRow;
   /** Default: `[]` */
   fieldNames?: string[];
-  /** Default: `[{"header":"Header","key":"Key","label":"Label","name":"Name"},{"header":"Header 2","key":"Key 2","label":"Label 2","name":"Name 2"}]` */
+  /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","variant":"h3"},{"format":"currency","icon":"circle","label":"Label 2","name":"Name 2","variant":"h4"}]` */
   fields?: EntityRow[];
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `[{"event":"VIEW","label":"View","variant":"ghost"}]` */
   itemActions?: EntityRow[];
+  /** Default: `"ITEM_CLICK"` */
+  itemClickEvent?: string;
   pageProp?: number;
   pageSize?: number;
   searchValue?: string;
@@ -182,6 +194,18 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
             'tier': 'presentation',
             'type': 'string',
           },
+          'completedField': {
+            'description': 'Row field that marks an item completed (`true` strikes its title through)',
+            'label': 'Completed Field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'disabledField': {
+            'description': 'Row field that marks an item disabled (`true` dims the row and disables its click)',
+            'label': 'Disabled Field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'emptyMessage': {
             'description': 'emptyMessage prop',
             'label': 'Empty Message',
@@ -235,28 +259,57 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
           'fields': {
             'default': [
               {
-                'header': 'Header',
-                'key': 'Key',
+                'format': 'date',
+                'icon': 'circle',
                 'label': 'Label',
                 'name': 'Name',
+                'variant': 'h3',
               },
               {
-                'header': 'Header 2',
-                'key': 'Key 2',
+                'format': 'currency',
+                'icon': 'circle',
                 'label': 'Label 2',
                 'name': 'Name 2',
+                'variant': 'h4',
               },
             ],
-            'description': 'Fields to display - accepts string[] or {key, header}[] for unified interface',
+            'description': 'Fields to display: field names, or declared fields ({ name, label, variant, format, colorMap, labels })',
             'items': {
               'properties': {
-                'header': {
-                  'name': 'header',
+                'colorMap': {
+                  'items': {
+                    'type': 'string',
+                    'values': [
+                      'default',
+                      'primary',
+                      'secondary',
+                      'success',
+                      'warning',
+                      'danger',
+                      'error',
+                      'info',
+                      'neutral',
+                      'destructive',
+                    ],
+                  },
+                  'name': 'colorMap',
+                  'required': false,
+                  'type': 'object',
+                },
+                'format': {
+                  'name': 'format',
                   'required': false,
                   'type': 'string',
+                  'values': [
+                    'date',
+                    'currency',
+                    'number',
+                    'boolean',
+                    'percent',
+                  ],
                 },
-                'key': {
-                  'name': 'key',
+                'icon': {
+                  'name': 'icon',
                   'required': false,
                   'type': 'string',
                 },
@@ -265,10 +318,32 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                   'required': false,
                   'type': 'string',
                 },
+                'labels': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'labels',
+                  'required': false,
+                  'type': 'object',
+                },
                 'name': {
                   'name': 'name',
+                  'required': true,
+                  'type': 'string',
+                },
+                'variant': {
+                  'name': 'variant',
                   'required': false,
                   'type': 'string',
+                  'values': [
+                    'h3',
+                    'h4',
+                    'body',
+                    'caption',
+                    'badge',
+                    'small',
+                    'progress',
+                  ],
                 },
               },
               'type': 'object',
@@ -299,6 +374,11 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                   'name': 'event',
                   'required': false,
                   'type': 'event',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
                 },
                 'label': {
                   'name': 'label',
@@ -346,6 +426,13 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
             'label': 'Item Actions',
             'tier': 'presentation',
             'type': '[EntityListItemActionsItem]',
+          },
+          'itemClickEvent': {
+            'default': 'ITEM_CLICK',
+            'description': 'When set, clicking a row emits UI:{itemClickEvent} with { id, row }. Omit = rows are not clickable.',
+            'label': 'Item Click Event',
+            'tier': 'presentation',
+            'type': 'event',
           },
           'pageProp': {
             'description': 'Current page number',
@@ -456,6 +543,25 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
             'tier': 'essential',
           },
           {
+            'definerKnob': 'itemClickEvent',
+            'description': 'When set, clicking a row emits UI:{itemClickEvent} with { id, row }. Omit = rows are not clickable.',
+            'event': '@config.itemClickEvent',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'row',
+                'required': true,
+                'type': '@entity',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'essential',
+          },
+          {
             'description': 'User opened a record from the list.',
             'event': 'VIEW',
             'payloadSchema': [
@@ -537,6 +643,24 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
               'tier': 'essential',
             },
             {
+              'description': 'When set, clicking a row emits UI:{itemClickEvent} with { id, row }. Omit = rows are not clickable.',
+              'key': '@config.itemClickEvent',
+              'name': '@config.item click event',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'required': true,
+                  'type': '@entity',
+                },
+              ],
+              'tier': 'essential',
+            },
+            {
               'description': 'User opened a record from the list.',
               'key': 'VIEW',
               'name': 'View',
@@ -580,6 +704,8 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                     'activeFilters': '@config.activeFilters',
                     'children': '@config.children',
                     'className': '@config.className',
+                    'completedField': '@config.completedField',
+                    'disabledField': '@config.disabledField',
                     'emptyMessage': '@config.emptyMessage',
                     'entity': '@entity',
                     'entityType': '@config.entityType',
@@ -621,6 +747,7 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                         ],
                       ],
                     ],
+                    'itemClickEvent': '@config.itemClickEvent',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
                     'searchValue': '@config.searchValue',
@@ -649,6 +776,8 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                     'activeFilters': '@config.activeFilters',
                     'children': '@config.children',
                     'className': '@config.className',
+                    'completedField': '@config.completedField',
+                    'disabledField': '@config.disabledField',
                     'emptyMessage': '@config.emptyMessage',
                     'entity': '@entity',
                     'entityType': '@config.entityType',
@@ -690,6 +819,7 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                         ],
                       ],
                     ],
+                    'itemClickEvent': '@config.itemClickEvent',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
                     'searchValue': '@config.searchValue',
@@ -721,6 +851,8 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                     'activeFilters': '@config.activeFilters',
                     'children': '@config.children',
                     'className': '@config.className',
+                    'completedField': '@config.completedField',
+                    'disabledField': '@config.disabledField',
                     'emptyMessage': '@config.emptyMessage',
                     'entity': '@payload.data',
                     'entityType': '@config.entityType',
@@ -762,6 +894,7 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                         ],
                       ],
                     ],
+                    'itemClickEvent': '@config.itemClickEvent',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
                     'searchValue': '@config.searchValue',

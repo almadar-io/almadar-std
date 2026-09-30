@@ -58,6 +58,8 @@ orbital MediaGalleryOrbital {
           showUpload: @config.showUpload
           actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           aspectRatio: @config.aspectRatio
+          srcField: @config.srcField
+          captionField: @config.captionField
           type: media-gallery
         })
       INIT -> idle when (not @config.selfFetch)
@@ -83,6 +85,8 @@ orbital MediaGalleryOrbital {
           showUpload: @config.showUpload
           actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           aspectRatio: @config.aspectRatio
+          srcField: @config.srcField
+          captionField: @config.captionField
           type: media-gallery
         })
       MediaGalleryLoaded -> idle
@@ -108,6 +112,8 @@ orbital MediaGalleryOrbital {
           showUpload: @config.showUpload
           actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           aspectRatio: @config.aspectRatio
+          srcField: @config.srcField
+          captionField: @config.captionField
           type: media-gallery
         })
     }
@@ -205,6 +211,14 @@ orbital MediaGalleryOrbital {
       aspectRatio : "square" | "landscape" | "portrait" = square
         @label "Aspect Ratio"
         @description "Aspect ratio for thumbnails"
+        @tier "presentation"
+      srcField : string = src
+        @label "Src Field"
+        @description "Record field holding each image's URL (entity mode). Default `src`."
+        @tier "presentation"
+      captionField : string = caption
+        @label "Caption Field"
+        @description "Record field holding each image's caption (entity mode). Default `caption`."
         @tier "presentation"
       viewerRole : string = ""
         @label "Viewer's role"

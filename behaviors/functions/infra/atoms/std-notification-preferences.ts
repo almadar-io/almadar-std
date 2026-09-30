@@ -100,6 +100,8 @@ export interface StdNotificationPreferencesPreferenceDeletedPayload {
 export interface StdNotificationPreferencesConfig {
   /** Default: `[{"event":"EDIT","icon":"pencil","label":"Edit","variant":"secondary"},{"event":"DELETE","icon":"trash-2","label":"Delete","variant":"danger"}]` */
   itemActions?: EntityRow[];
+  /** Default: `"EDIT"` */
+  itemClickEvent?: string;
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `"Notification preferences"` */
@@ -483,6 +485,13 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
             'label': 'Row actions',
             'tier': 'presentation',
             'type': '[ItemAction]',
+          },
+          'itemClickEvent': {
+            'default': 'EDIT',
+            'description': 'Event emitted when a row is clicked; opens the preference for editing. Empty disables the row click.',
+            'label': 'Row click',
+            'tier': 'presentation',
+            'type': 'event',
           },
           'tableLook': {
             'default': 'dense',
@@ -1279,6 +1288,7 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                             ],
                           ],
                         ],
+                        'itemClickEvent': '@config.itemClickEvent',
                         'look': '@config.tableLook',
                         'type': 'data-grid',
                       },

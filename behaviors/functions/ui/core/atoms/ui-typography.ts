@@ -51,6 +51,7 @@ export interface StdUiTypographyConfig {
   level?: number;
   /** Default: `"visible"` */
   overflow?: 'visible' | 'hidden' | 'wrap' | 'clamp-2' | 'clamp-3';
+  role?: string;
   /** Default: `"none"` */
   size?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
   /** Default: `{}` */

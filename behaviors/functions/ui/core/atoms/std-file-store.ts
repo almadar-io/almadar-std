@@ -86,12 +86,14 @@ export interface StdFileStoreStoredFileLoadFailedPayload {
 export interface StdFileStoreConfig {
   /** Default: `[{"event":"DOWNLOAD_FILE","label":"Download","variant":"primary"},{"event":"ARCHIVE_FILE","label":"Archive","variant":"danger"}]` */
   detailActions?: EntityRow[];
-  /** Default: `[{"label":"Name","name":"name","variant":"caption"},{"label":"Folder","name":"folder","variant":"caption"},{"label":"Type","name":"mimeType","variant":"badge"},{"label":"Size","name":"sizeBytes","variant":"caption"},{"label":"Uploaded","name":"uploadedAt","variant":"caption"}]` */
+  /** Default: `[{"label":"Name","name":"name","variant":"h4"},{"label":"Folder","name":"folder","variant":"caption"},{"label":"Type","name":"mimeType","variant":"badge"},{"label":"Size","name":"sizeBytes","variant":"caption"},{"format":"date","label":"Uploaded","name":"uploadedAt","variant":"caption"}]` */
   fields?: EntityRow[];
   /** Default: `"folder"` */
   headerIcon?: string;
   /** Default: `[{"event":"OPEN_FILE","icon":"arrow-right","label":"Open","variant":"primary"},{"event":"ARCHIVE_FILE","label":"Archive","variant":"danger"}]` */
   itemActions?: EntityRow[];
+  /** Default: `"OPEN_FILE"` */
+  itemClickEvent?: string;
   /** Default: `false` */
   reorderable?: boolean;
   /** Default: `"dense"` */
@@ -388,7 +390,7 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
               {
                 'label': 'Name',
                 'name': 'name',
-                'variant': 'caption',
+                'variant': 'h4',
               },
               {
                 'label': 'Folder',
@@ -406,6 +408,7 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
                 'variant': 'caption',
               },
               {
+                'format': 'date',
                 'label': 'Uploaded',
                 'name': 'uploadedAt',
                 'variant': 'caption',
@@ -541,6 +544,14 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
             'label': 'Row actions',
             'tier': 'presentation',
             'type': '[ItemAction]',
+          },
+          'itemClickEvent': {
+            'default': 'OPEN_FILE',
+            'description': 'Row-click channel; empty = rows are not clickable.',
+            'label': 'Which event does clicking a row fire?',
+            'synonyms': 'row click event, item click, open event',
+            'tier': 'presentation',
+            'type': 'event',
           },
           'reorderable': {
             'default': false,
@@ -1318,6 +1329,7 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
                             ],
                           ],
                         ],
+                        'itemClickEvent': '@config.itemClickEvent',
                         'look': '@config.tableLook',
                         'reorderEvent': 'REORDER',
                         'reorderable': '@config.reorderable',

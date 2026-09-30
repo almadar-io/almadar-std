@@ -16,6 +16,8 @@ orbital EntityTableOrbital {
     label : string
     width : string
     sortable : boolean
+    align : "left" | "center" | "right"
+    format : "date" | "currency" | "number" | "boolean" | "percent"
   }
   type EntityTableColumnsItem = {
     key : string
@@ -24,6 +26,8 @@ orbital EntityTableOrbital {
     label : string
     width : string
     sortable : boolean
+    align : "left" | "center" | "right"
+    format : "date" | "currency" | "number" | "boolean" | "percent"
   }
   type EntityTableItemActionsItem = {
     label : string!
@@ -86,6 +90,7 @@ orbital EntityTableOrbital {
           entity: @entity
           fields: @config.fields
           columns: @config.columns
+          itemClickEvent: @config.itemClickEvent
           itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           emptyIcon: @config.emptyIcon
           emptyTitle: @config.emptyTitle
@@ -118,6 +123,7 @@ orbital EntityTableOrbital {
           entity: @entity
           fields: @config.fields
           columns: @config.columns
+          itemClickEvent: @config.itemClickEvent
           itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           emptyIcon: @config.emptyIcon
           emptyTitle: @config.emptyTitle
@@ -150,6 +156,7 @@ orbital EntityTableOrbital {
           entity: @payload.data
           fields: @config.fields
           columns: @config.columns
+          itemClickEvent: @config.itemClickEvent
           itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           emptyIcon: @config.emptyIcon
           emptyTitle: @config.emptyTitle
@@ -169,6 +176,12 @@ orbital EntityTableOrbital {
     }
 
     emits {
+      @config.itemClickEvent -> external {
+        id : string!
+        row : @entity!
+      }
+        @description "When set, rows are activatable and emit UI:{itemClickEvent} with { id, row }"
+        @tier "essential"
       VIEW -> external {
         id : string!
         row : @entity!
@@ -227,13 +240,17 @@ orbital EntityTableOrbital {
         @label "Selected Ids"
         @description "Currently selected item IDs"
         @tier "presentation"
-      fields : [EntityTableFieldsItem] = [{ key: "Key", header: "Header", name: "Name", label: "Label", width: "Width", sortable: false }, { key: "Key 2", header: "Header 2", name: "Name 2", label: "Label 2", width: "Width 2", sortable: true }]
+      fields : [EntityTableFieldsItem] = [{ key: "Key", header: "Header", name: "Name", label: "Label", width: "Width", sortable: false, align: left, format: date }, { key: "Key 2", header: "Header 2", name: "Name 2", label: "Label 2", width: "Width 2", sortable: true, align: center, format: currency }]
         @label "Fields"
         @description "Fields to display - accepts string[] or Column[] for unified interface. Alias for columns"
         @tier "presentation"
       columns : [EntityTableColumnsItem] = []
         @label "Columns"
         @description "Columns can be Column objects or simple string field names"
+        @tier "presentation"
+      itemClickEvent : event = "ITEM_CLICK"
+        @label "Item Click Event"
+        @description "When set, rows are activatable and emit UI:{itemClickEvent} with { id, row }"
         @tier "presentation"
       itemActions : [EntityTableItemActionsItem] = [{ event: VIEW, label: View, variant: ghost }]
         @label "Item Actions"

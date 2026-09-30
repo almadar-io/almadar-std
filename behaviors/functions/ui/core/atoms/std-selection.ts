@@ -64,6 +64,8 @@ export interface StdSelectionConfig {
   filters?: EntityRow[];
   /** Default: `[{"event":"SELECT","icon":"check","label":"Select"}]` */
   itemActions?: EntityRow[];
+  /** Default: `"SELECT"` */
+  itemClickEvent?: string;
   /** Default: `20` */
   pageSize?: number;
   /** Default: `"name"` */
@@ -356,6 +358,13 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
             'tier': 'presentation',
             'type': '[ItemAction]',
           },
+          'itemClickEvent': {
+            'default': 'SELECT',
+            'description': 'Event emitted when a row is clicked; clicking a row selects it. Empty disables the row click.',
+            'label': 'Row click',
+            'tier': 'presentation',
+            'type': 'event',
+          },
           'pageSize': {
             'default': 20,
             'description': 'Records fetched from the server per REFETCH_PAGE request. The initial load and search/filter refetches remain unpaginated (load every candidate) unless a consumer wires REFETCH_PAGE, so the default pick-list surface is unchanged. Safe to page: this atom\'s selection is a single transient id (never an accumulated array), so no already-picked item can be stranded on another page.',
@@ -608,6 +617,35 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                   'required': true,
                   'type': 'string',
                 },
+                {
+                  'entity': 'SelectableItem',
+                  'name': 'row',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
+                },
               ],
               'synonyms': 'chosen, picked, highlighted',
               'tier': 'domain',
@@ -818,6 +856,7 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                             ],
                           ],
                         ],
+                        'itemClickEvent': '@config.itemClickEvent',
                         'look': '@config.tableLook',
                         'pageSize': '@config.displayPageSize',
                         'renderItem': [
@@ -1134,6 +1173,7 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                             ],
                           ],
                         ],
+                        'itemClickEvent': '@config.itemClickEvent',
                         'look': '@config.tableLook',
                         'pageSize': '@config.displayPageSize',
                         'renderItem': [

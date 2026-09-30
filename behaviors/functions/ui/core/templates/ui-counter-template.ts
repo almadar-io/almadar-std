@@ -56,7 +56,6 @@ export interface StdUiCounterTemplateConfig {
   showReset?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `"Counter"` */
   title?: string;
   /** Default: `"minimal"` */
   variant?: 'minimal' | 'standard' | 'full';
