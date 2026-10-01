@@ -41,18 +41,33 @@ export type StdUiDocumentViewerEventKey = 'INIT';
 export interface StdUiDocumentViewerConfig {
   /** Default: `[]` */
   actions?: EntityRow[];
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
   className?: string;
   content?: string;
   currentPage?: number;
+  dir?: 'ltr' | 'rtl' | 'auto';
   /** Default: `"pdf"` */
   documentType?: 'pdf' | 'text' | 'html' | 'markdown';
   /** Default: `[]` */
   documents?: EntityRow[];
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   error?: EntityRow;
   /** Default: `600` */
   height?: unknown;
   /** Default: `false` */
   isLoading?: boolean;
+  lang?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   /** Default: `false` */
   showDownload?: boolean;
   /** Default: `false` */
@@ -61,6 +76,7 @@ export interface StdUiDocumentViewerConfig {
   showToolbar?: boolean;
   /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"` */
   src?: unknown;
+  tabIndex?: number;
   title?: string;
   totalPages?: number;
   /** Default: `""` */

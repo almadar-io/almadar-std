@@ -557,22 +557,8 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
-                    'children': [
-                      {
-                        'type': 'spinner',
-                      },
-                      {
-                        'color': 'muted',
-                        'content': 'Loading votes…',
-                        'type': 'typography',
-                        'variant': 'caption',
-                      },
-                    ],
-                    'className': 'py-12',
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
+                    'type': 'skeleton',
+                    'variant': 'card',
                   },
                 ],
               ],
@@ -642,28 +628,6 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
                       'failure': 'VoteCastFailed',
                       'success': 'VoteCasted',
                     },
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'align': 'center',
-                    'children': [
-                      {
-                        'type': 'spinner',
-                      },
-                      {
-                        'color': 'muted',
-                        'content': 'Recording your vote…',
-                        'type': 'typography',
-                        'variant': 'caption',
-                      },
-                    ],
-                    'className': 'py-12',
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -853,22 +817,8 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
-                    'children': [
-                      {
-                        'type': 'spinner',
-                      },
-                      {
-                        'color': 'muted',
-                        'content': 'Loading votes…',
-                        'type': 'typography',
-                        'variant': 'caption',
-                      },
-                    ],
-                    'className': 'py-12',
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
+                    'type': 'skeleton',
+                    'variant': 'card',
                   },
                 ],
               ],

@@ -1,0 +1,346 @@
+[
+  {
+    "organism": "std-scoped-list",
+    "orbital": "ScopedListOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-scoped-list.ts",
+    "entities": [
+      {
+        "name": "ScopedListItem",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string",
+            "required": true,
+            "description": "The row's title.",
+            "synonyms": "title, label"
+          },
+          {
+            "name": "parentId",
+            "type": "string",
+            "required": false,
+            "description": "The parent record this row belongs to (the default scopeField).",
+            "synonyms": "parent, owner id"
+          },
+          {
+            "name": "scopeValue",
+            "type": "string",
+            "required": false,
+            "intrinsic": true,
+            "description": "The parent the list is scoped to; blank until SET_SCOPE."
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ScopedListBrowse",
+        "emittedEvents": [
+          "ScopedListLoaded",
+          "ScopedListLoadFailed",
+          "VIEW",
+          "EDIT",
+          "DELETE"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "ScopedListLoaded",
+            "direction": "emit",
+            "description": "The scoped rows loaded; mirror them in another view (e.g. a sortable list).",
+            "synonyms": "loaded, rows ready",
+            "tier": "domain"
+          },
+          {
+            "name": "ScopedListLoadFailed",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "VIEW",
+            "direction": "emit",
+            "description": "A row was opened.",
+            "synonyms": "open, view, select",
+            "tier": "presentation"
+          },
+          {
+            "name": "EDIT",
+            "direction": "emit",
+            "description": "A row's edit action was chosen.",
+            "synonyms": "edit, change",
+            "tier": "presentation"
+          },
+          {
+            "name": "DELETE",
+            "direction": "emit",
+            "description": "A row's delete action was chosen.",
+            "synonyms": "remove, delete",
+            "tier": "presentation"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "SET_SCOPE",
+            "direction": "listen",
+            "description": "Scope the list to the rows of this parent; kept for later reloads.",
+            "synonyms": "scope, select parent, open parent",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "emptyDescription",
+            "type": "string",
+            "default": "",
+            "label": "Empty-state description",
+            "tier": "presentation"
+          },
+          {
+            "key": "emptyIcon",
+            "type": "icon",
+            "default": "inbox",
+            "label": "Empty-state icon",
+            "tier": "presentation"
+          },
+          {
+            "key": "emptyTitle",
+            "type": "string",
+            "default": "Nothing here yet",
+            "label": "Empty-state title",
+            "tier": "presentation"
+          },
+          {
+            "key": "fields",
+            "type": "[FieldSpec]",
+            "default": [
+              {
+                "label": "Name",
+                "name": "name",
+                "variant": "h4"
+              }
+            ],
+            "label": "Which fields does each row show?",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "date",
+                    "currency",
+                    "number",
+                    "boolean",
+                    "percent"
+                  ]
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "h3",
+                    "h4",
+                    "body",
+                    "caption",
+                    "badge",
+                    "small",
+                    "progress"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "gap",
+            "type": "string",
+            "default": "sm",
+            "label": "Gap between rows",
+            "tier": "presentation",
+            "enumValues": [
+              "none",
+              "sm",
+              "md",
+              "lg"
+            ]
+          },
+          {
+            "key": "itemActions",
+            "type": "[ItemAction]",
+            "default": [],
+            "label": "Row actions",
+            "description": "Actions offered on each row; give an item `roles` to show it only to those viewer roles.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "event": {
+                  "name": "event",
+                  "required": false,
+                  "type": "event"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "roles": {
+                  "name": "roles",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "primary",
+                    "secondary",
+                    "ghost",
+                    "danger"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "itemClickEvent",
+            "type": "event",
+            "default": "VIEW",
+            "label": "Event a row click fires",
+            "tier": "presentation"
+          },
+          {
+            "key": "scopeField",
+            "type": "string",
+            "default": "parentId",
+            "label": "Which field names the parent?",
+            "description": "The row field holding the parent's id; SET_SCOPE's value is matched against it.",
+            "synonyms": "parent field, foreign key, owner field",
+            "tier": "domain"
+          },
+          {
+            "key": "sortBy",
+            "type": "string",
+            "default": "",
+            "label": "Sort rows by",
+            "description": "Field the rows are ordered by; blank keeps the stored order.",
+            "synonyms": "order by, sort field",
+            "tier": "presentation"
+          },
+          {
+            "key": "sortDirection",
+            "type": "string",
+            "default": "asc",
+            "label": "Sort direction",
+            "tier": "presentation",
+            "enumValues": [
+              "asc",
+              "desc"
+            ]
+          },
+          {
+            "key": "viewerRole",
+            "type": "string",
+            "default": "",
+            "label": "Viewer's role",
+            "description": "The signed-in viewer's role that each action's `roles` is checked against (e.g. `viewerRole: @user.role`).",
+            "tier": "policy"
+          },
+          {
+            "key": "whenUnscoped",
+            "type": "string",
+            "default": "everything",
+            "label": "What does the list show before a parent is picked?",
+            "description": "everything = every row until SET_SCOPE narrows it; nothing = the empty state, so a detail page never shows other parents' rows while it loads.",
+            "synonyms": "unscoped, before selection, default scope",
+            "tier": "policy",
+            "enumValues": [
+              "everything",
+              "nothing"
+            ]
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "ScopedListItem",
+        "transitionEvents": [
+          "INIT",
+          "SET_SCOPE",
+          "ScopedListLoadFailed",
+          "ScopedListLoaded"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "scopeValue"
+          ]
+        },
+        "effectRow": [
+          {
+            "kind": "fetch",
+            "resource": "ScopedListItem"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "main"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.scopeValue"
+          }
+        ],
+        "effectEntityRefs": [
+          "ScopedListItem"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "ScopedListPage",
+        "defaultPath": "/scoped-list",
+        "primaryEntity": "ScopedListItem"
+      }
+    ],
+    "emittedEvents": [
+      "DELETE",
+      "EDIT",
+      "ScopedListLoadFailed",
+      "ScopedListLoaded",
+      "VIEW"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

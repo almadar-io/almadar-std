@@ -48,6 +48,16 @@ export interface StdUiChemistryCanvasShapeClickPayload {
 export interface StdUiChemistryCanvasConfig {
   /** Default: `false` */
   animate?: boolean;
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
   /** Default: `[]` */
   arrows?: EntityRow[];
   /** Default: `[]` */
@@ -61,6 +71,9 @@ export interface StdUiChemistryCanvasConfig {
   className?: string;
   /** Default: `[]` */
   containers?: EntityRow[];
+  dir?: 'ltr' | 'rtl' | 'auto';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   equation?: string;
   equationColor?: string;
   error?: EntityRow;
@@ -68,6 +81,7 @@ export interface StdUiChemistryCanvasConfig {
   height?: number;
   interactive?: boolean;
   isLoading?: boolean;
+  lang?: string;
   lattice3d?: EntityRow;
   lighting?: EntityRow;
   /** Default: `"2d"` */
@@ -77,10 +91,12 @@ export interface StdUiChemistryCanvasConfig {
   post?: EntityRow;
   /** Default: `[]` */
   readouts?: EntityRow[];
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   shadows?: boolean;
   /** Default: `[]` */
   shapes?: EntityRow[];
   showGrid?: boolean;
+  tabIndex?: number;
   title?: string;
   /** Default: `[]` */
   traces?: EntityRow[];

@@ -45,10 +45,7 @@ orbital BoardOrbital {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
         })
-        (render-ui main {
-          title: "Loading board…"
-          type: loading-state
-        })
+        (render-ui main { type: skeleton, variant: card })
       BoardItemsLoaded -> viewing_board
         (set @entity.boards (array/map @config.columns (fn col {
           count: (array/len (array/filter ?data (fn item ["=", (object/get @item @config.groupByField), (object/get @col key)])))
@@ -76,20 +73,13 @@ orbital BoardOrbital {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
         })
-        (render-ui main {
-          title: "Refreshing board…"
-          type: loading-state
-        })
+        (render-ui main { type: skeleton, variant: card })
       ;; Same refresh, different contract: a delete emits { id, deleted }, not
       ;; the row, so it cannot ride BoardItemsSaved's payload.
       BoardItemDeleted -> loading
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
-        })
-        (render-ui main {
-          title: "Refreshing board…"
-          type: loading-state
         })
       BoardItemsSaveFailed -> error
         (set @entity.errorMessage ?error)
@@ -106,10 +96,7 @@ orbital BoardOrbital {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
         })
-        (render-ui main {
-          title: "Loading board…"
-          type: loading-state
-        })
+        (render-ui main { type: skeleton, variant: card })
       OPEN_CARD -> viewing_card
         (set @entity.currentId ?id)
         (set @entity.currentTitle ?title)
@@ -291,10 +278,7 @@ orbital BoardOrbital {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
         })
-        (render-ui main {
-          title: "Refreshing board…"
-          type: loading-state
-        })
+        (render-ui main { type: skeleton, variant: card })
       MOVE_CARD -> loading
         (persist update BoardView { id: ?id, stage: ?targetGroup } {
           emit: { failure: BoardItemsSaveFailed, success: BoardItemsSaved }
@@ -307,20 +291,12 @@ orbital BoardOrbital {
         (persist delete BoardView ?id {
           emit: { failure: BoardItemsSaveFailed, success: BoardItemDeleted }
         })
-        (render-ui main {
-          title: "Deleting item…"
-          type: loading-state
-        })
     }
 
     state adding {
       SAVE_CARD -> loading
         (persist create BoardView ?data {
           emit: { failure: BoardItemsSaveFailed, success: BoardItemsSaved }
-        })
-        (render-ui main {
-          title: "Saving…"
-          type: loading-state
         })
       CANCEL_ADD -> viewing_board
         (render-ui main {
@@ -331,10 +307,7 @@ orbital BoardOrbital {
 
     state error {
       INIT -> loading
-        (render-ui main {
-          title: "Retrying…"
-          type: loading-state
-        })
+        (render-ui main { type: skeleton, variant: card })
     }
 
     emits {

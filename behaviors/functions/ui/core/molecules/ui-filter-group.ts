@@ -65,14 +65,28 @@ export interface StdUiFilterGroupClearPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFilterGroupConfig {
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
   className?: string;
   /** Default: `"CLEAR"` */
   clearEvent?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   /** Default: `"EVENT"` */
   event?: string;
   /** Default: `[{"field":"Field","filterType":"text","label":"Label","max":1,"min":1,"options":["Item","Item 2"],"step":1,"type":"text"},{"field":"Field 2","filterType":"select","label":"Label 2","max":2,"min":2,"options":["Item","Item 2"],"step":2,"type":"select"}]` */
   filters?: EntityRow[];
   isLoading?: boolean;
+  lang?: string;
   /** Default: `"toolbar"` */
   look?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
   /** Default: `"CLEAR_ALL"` */
@@ -80,8 +94,10 @@ export interface StdUiFilterGroupConfig {
   /** Default: `"FILTER_CHANGE"` */
   onFilterChange?: string;
   query?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   /** Default: `true` */
   showIcon?: boolean;
+  tabIndex?: number;
   /** Default: `"default"` */
   variant?: 'default' | 'compact' | 'pills' | 'vertical';
 }

@@ -26,17 +26,10 @@ orbital GanttScheduleOrbital {
           include: @config.include
         })
         (render-ui main {
-          align: center
-          children: [{ type: spinner }, {
-            color: muted
-            content: "Loading schedule…"
-            type: typography
-            variant: caption
-          }]
-          className: py-12
-          direction: vertical
-          gap: md
           type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: card }]
         })
       TaskLoaded -> chart
         (render-ui main {
@@ -108,7 +101,12 @@ orbital GanttScheduleOrbital {
           emit: { failure: TaskLoadFailed, success: TaskLoaded }
           include: @config.include
         })
-        (render-ui main { type: spinner })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: card }]
+        })
     }
 
     state error {
@@ -117,13 +115,23 @@ orbital GanttScheduleOrbital {
           emit: { failure: TaskLoadFailed, success: TaskLoaded }
           include: @config.include
         })
-        (render-ui main { type: spinner })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: card }]
+        })
       RETRY -> loading
         (fetch Task {
           emit: { failure: TaskLoadFailed, success: TaskLoaded }
           include: @config.include
         })
-        (render-ui main { type: spinner })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: card }]
+        })
     }
 
     emits {

@@ -42,6 +42,8 @@ export interface StdUiEdgeDecorationConfig {
   className?: string;
   /** Default: `"primary"` */
   color?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   /** Default: `0.15` */
   opacity?: number;
   /** Default: `"both"` */

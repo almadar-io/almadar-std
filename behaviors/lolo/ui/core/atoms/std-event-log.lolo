@@ -44,8 +44,10 @@ orbital EventLogOrbital {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
         })
         (render-ui main {
-          title: "Loading activity…"
-          type: loading-state
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
         })
       EventLogLoaded -> viewing
         (set @entity.filterChips (array/prepend (array/map @config.kindOptions (fn k {
@@ -151,8 +153,10 @@ orbital EventLogOrbital {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
         })
         (render-ui main {
-          title: "Refreshing…"
-          type: loading-state
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
         })
       EventLogSaveFailed -> error
         (set @entity.errorMessage ?error)
@@ -403,10 +407,6 @@ orbital EventLogOrbital {
         (persist create EventLogView ?data {
           emit: { failure: EventLogSaveFailed, success: EventLogSaved }
         })
-        (render-ui main {
-          title: "Saving entry…"
-          type: loading-state
-        })
       CANCEL_BACKFILL -> viewing
         (render-ui main {
           children: [{
@@ -479,8 +479,10 @@ orbital EventLogOrbital {
     state error {
       INIT -> loading
         (render-ui main {
-          title: "Retrying…"
-          type: loading-state
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
         })
     }
 

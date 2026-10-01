@@ -40,8 +40,11 @@ export type StdUiAtlasImageEventKey = 'INIT';
  */
 export interface StdUiAtlasImageConfig {
   alt?: string;
+  ariaHidden?: boolean;
   asset?: EntityRow;
   className?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   /** Default: `false` */
   fill?: boolean;
   /** Default: `"contain"` */

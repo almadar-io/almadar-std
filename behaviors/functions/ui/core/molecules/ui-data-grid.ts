@@ -70,10 +70,21 @@ export interface StdUiDataGridDataGridLoadedPayload {
  */
 export interface StdUiDataGridConfig {
   accepts?: string;
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
   className?: string;
   cols?: number;
   /** Default: `[]` */
   columns?: EntityRow[];
+  dir?: 'ltr' | 'rtl' | 'auto';
   dndItemIdField?: string;
   dndRoot?: boolean;
   dragGroup?: string;
@@ -82,6 +93,8 @@ export interface StdUiDataGridConfig {
   emptyDescription?: string;
   emptyIcon?: unknown;
   emptyTitle?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   error?: EntityRow;
   /** Default: `[]` */
   fields?: EntityRow[];
@@ -96,6 +109,7 @@ export interface StdUiDataGridConfig {
   itemActions?: EntityRow[];
   /** Default: `"ITEM_CLICK"` */
   itemClickEvent?: string;
+  lang?: string;
   /** Default: `"LOAD_MORE"` */
   loadMoreEvent?: string;
   /** Default: `"dense"` */
@@ -109,6 +123,7 @@ export interface StdUiDataGridConfig {
   /** Default: `{}` */
   relationsData?: Record<string, TraitConfig>;
   reorderEvent?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   /** Default: `false` */
   scrollX?: boolean;
   /** Default: `false` */
@@ -118,6 +133,7 @@ export interface StdUiDataGridConfig {
   /** Default: `true` */
   selfFetch?: boolean;
   sortable?: boolean;
+  tabIndex?: number;
   /** Default: `""` */
   viewerRole?: string;
 }

@@ -7,7 +7,48 @@
     "entities": [
       {
         "name": "DetailPanelItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "authorName",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "authorAvatarUrl",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "postedAt",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "voteCount",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "userVote",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "collapsed",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "replies",
+            "type": "array",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
@@ -70,6 +111,11 @@
                   "required": false,
                   "type": "string"
                 },
+                "payload": {
+                  "name": "payload",
+                  "required": false,
+                  "type": "object"
+                },
                 "roles": {
                   "name": "roles",
                   "required": false,
@@ -110,10 +156,180 @@
             }
           },
           {
+            "key": "activity",
+            "type": "[DetailPanelActivityItem]",
+            "default": [],
+            "label": "Activity",
+            "description": "Activity entries shown under the record (workflow).",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "date": {
+                  "name": "date",
+                  "required": false,
+                  "type": "string"
+                },
+                "description": {
+                  "name": "description",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "status": {
+                  "name": "status",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "complete",
+                    "active",
+                    "pending",
+                    "error"
+                  ]
+                },
+                "tags": {
+                  "name": "tags",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "title": {
+                  "name": "title",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "activityContent",
+            "type": "node",
+            "label": "Activity Content",
+            "description": "Activity composed in instead of `activity` — e.g. the record's own history trait (workflow).",
+            "tier": "presentation"
+          },
+          {
+            "key": "ariaBusy",
+            "type": "boolean",
+            "label": "Aria-busy",
+            "description": "This region is updating; assistive technology waits before announcing it.",
+            "synonyms": "aria-busy",
+            "tier": "presentation"
+          },
+          {
+            "key": "ariaCurrent",
+            "type": "string",
+            "label": "Aria-current",
+            "description": "Marks the current item in a set: the current page, step, location, date or time.",
+            "synonyms": "aria-current",
+            "tier": "presentation",
+            "enumValues": [
+              "page",
+              "step",
+              "location",
+              "date",
+              "time",
+              "true",
+              "false"
+            ]
+          },
+          {
+            "key": "ariaDescribedby",
+            "type": "string",
+            "label": "Aria-describedby",
+            "description": "Id of the element whose text describes this one (help text, error).",
+            "synonyms": "aria-describedby",
+            "tier": "presentation"
+          },
+          {
+            "key": "ariaExpanded",
+            "type": "boolean",
+            "label": "Aria-expanded",
+            "description": "Whether the element it controls is expanded.",
+            "synonyms": "aria-expanded",
+            "tier": "presentation"
+          },
+          {
+            "key": "ariaHidden",
+            "type": "boolean",
+            "label": "Aria-hidden",
+            "description": "Hide from assistive technology (decorative content only).",
+            "synonyms": "aria-hidden",
+            "tier": "presentation"
+          },
+          {
+            "key": "ariaLabel",
+            "type": "string",
+            "label": "Aria-label",
+            "description": "Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).",
+            "synonyms": "aria-label",
+            "tier": "presentation"
+          },
+          {
+            "key": "ariaLabelledby",
+            "type": "string",
+            "label": "Aria-labelledby",
+            "description": "Id of the element whose text names this one.",
+            "synonyms": "aria-labelledby",
+            "tier": "presentation"
+          },
+          {
+            "key": "ariaLive",
+            "type": "string",
+            "label": "Aria-live",
+            "description": "Announce changes to this region: polite waits for a pause, assertive interrupts.",
+            "synonyms": "aria-live",
+            "tier": "presentation",
+            "enumValues": [
+              "off",
+              "polite",
+              "assertive"
+            ]
+          },
+          {
+            "key": "ariaPressed",
+            "type": "string",
+            "label": "Aria-pressed",
+            "description": "Toggle-button state.",
+            "synonyms": "aria-pressed",
+            "tier": "presentation",
+            "enumValues": [
+              "true",
+              "false",
+              "mixed"
+            ]
+          },
+          {
+            "key": "ariaSelected",
+            "type": "boolean",
+            "label": "Aria-selected",
+            "description": "Whether this item is selected (tabs, options, grid cells).",
+            "synonyms": "aria-selected",
+            "tier": "presentation"
+          },
+          {
             "key": "avatar",
             "type": "node",
             "label": "Avatar",
             "description": "avatar prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "avatarField",
+            "type": "string",
+            "label": "Avatar Field",
+            "description": "Record field holding the avatar image. The profile look always shows an avatar, with the title's initials when this is unset or empty.",
             "tier": "presentation"
           },
           {
@@ -142,6 +358,11 @@
                 "name": "navigatesTo",
                 "required": false,
                 "type": "string"
+              },
+              "payload": {
+                "name": "payload",
+                "required": false,
+                "type": "object"
               },
               "variant": {
                 "name": "variant",
@@ -177,6 +398,25 @@
             "tier": "presentation"
           },
           {
+            "key": "coverField",
+            "type": "string",
+            "label": "Cover Field",
+            "description": "Record field holding the cover image (profile).",
+            "tier": "presentation"
+          },
+          {
+            "key": "dir",
+            "type": "string",
+            "label": "Dir",
+            "description": "Text direction of this element's content.",
+            "tier": "presentation",
+            "enumValues": [
+              "ltr",
+              "rtl",
+              "auto"
+            ]
+          },
+          {
             "key": "displayFields",
             "type": "[string]",
             "default": [],
@@ -186,6 +426,27 @@
             "items": {
               "type": "string"
             }
+          },
+          {
+            "key": "enter",
+            "type": "string",
+            "label": "Enter",
+            "description": "How this element animates in when it mounts (theme-styled); overrides the theme's default slot entry. `none` opts out.",
+            "tier": "presentation",
+            "enumValues": [
+              "none",
+              "fade",
+              "rise",
+              "scale",
+              "slide"
+            ]
+          },
+          {
+            "key": "enterDelay",
+            "type": "number",
+            "label": "Enter Delay",
+            "description": "Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.",
+            "tier": "presentation"
           },
           {
             "key": "error",
@@ -248,7 +509,7 @@
                 "variant": "h3"
               },
               {
-                "format": "currency",
+                "format": "datetime",
                 "icon": "circle",
                 "label": "Label 2",
                 "name": "Name 2",
@@ -295,6 +556,7 @@
                   "type": "string",
                   "values": [
                     "date",
+                    "datetime",
                     "currency",
                     "number",
                     "boolean",
@@ -395,11 +657,187 @@
             "tier": "presentation"
           },
           {
+            "key": "lang",
+            "type": "string",
+            "label": "Lang",
+            "description": "Language of this element's content (BCP 47, e.g. ar, sl, en).",
+            "tier": "presentation"
+          },
+          {
+            "key": "latitudeField",
+            "type": "string",
+            "label": "Latitude Field",
+            "description": "Record fields holding the location (map).",
+            "tier": "presentation"
+          },
+          {
+            "key": "lineItemColumns",
+            "type": "[DetailPanelLineItemColumnsItem]",
+            "default": [],
+            "label": "Line Item Columns",
+            "description": "Columns of the line-items table (ledger).",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "align": {
+                  "name": "align",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "left",
+                    "center",
+                    "right"
+                  ]
+                },
+                "className": {
+                  "name": "className",
+                  "required": false,
+                  "type": "string"
+                },
+                "colorMap": {
+                  "name": "colorMap",
+                  "required": false,
+                  "type": "object",
+                  "items": {
+                    "type": "string",
+                    "values": [
+                      "default",
+                      "primary",
+                      "secondary",
+                      "success",
+                      "warning",
+                      "danger",
+                      "error",
+                      "info",
+                      "neutral",
+                      "destructive"
+                    ]
+                  }
+                },
+                "field": {
+                  "name": "field",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "badge",
+                    "date",
+                    "currency",
+                    "number",
+                    "percent",
+                    "boolean"
+                  ]
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "labels": {
+                  "name": "labels",
+                  "required": false,
+                  "type": "object",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "sortable": {
+                  "name": "sortable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "h3",
+                    "h4"
+                  ]
+                },
+                "weight": {
+                  "name": "weight",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "normal",
+                    "medium",
+                    "semibold"
+                  ]
+                },
+                "width": {
+                  "name": "width",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "lineItemsContent",
+            "type": "node",
+            "label": "Line Items Content",
+            "description": "Line items composed in instead of `lineItems` — e.g. the child rows' own trait (ledger).",
+            "tier": "presentation"
+          },
+          {
+            "key": "longitudeField",
+            "type": "string",
+            "label": "Longitude Field",
+            "description": "longitudeField prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "look",
+            "type": "string",
+            "default": "panel",
+            "label": "Look",
+            "description": "Page variant: panel (labelled fields, default), profile (person/member hero), showcase (image-first product/listing), workflow (lifecycle stepper + activity), map (location hero), ledger (document with line items + totals), conversation (thread beside the record), workspace (tabbed record).",
+            "tier": "presentation",
+            "enumValues": [
+              "panel",
+              "profile",
+              "showcase",
+              "workflow",
+              "map",
+              "ledger",
+              "conversation",
+              "workspace"
+            ]
+          },
+          {
             "key": "maxInlineActions",
             "type": "number",
             "default": 2,
             "label": "Max Inline Actions",
             "description": "Max inline action buttons before the rest collapse into a '⋯' overflow menu (mirrors DataGrid's maxInlineActions). Defaults to 2 — primary + secondary visible, the rest under the menu — so every detail panel carries the same action pattern.",
+            "tier": "presentation"
+          },
+          {
+            "key": "mediaField",
+            "type": "string",
+            "label": "Media Field",
+            "description": "Record field holding the image, or list of images, the showcase look leads with.",
             "tier": "presentation"
           },
           {
@@ -435,7 +873,6 @@
           {
             "key": "position",
             "type": "string",
-            "default": "left",
             "label": "Position",
             "description": "Panel position (for drawer/sidebar placement)",
             "tier": "presentation",
@@ -479,6 +916,96 @@
                 "type": "object"
               }
             }
+          },
+          {
+            "key": "role",
+            "type": "string",
+            "label": "Role",
+            "description": "WAI-ARIA role when the element's native semantics don't describe it.",
+            "tier": "presentation",
+            "enumValues": [
+              "alert",
+              "alertdialog",
+              "application",
+              "article",
+              "banner",
+              "blockquote",
+              "button",
+              "caption",
+              "cell",
+              "checkbox",
+              "code",
+              "columnheader",
+              "combobox",
+              "complementary",
+              "contentinfo",
+              "definition",
+              "deletion",
+              "dialog",
+              "document",
+              "emphasis",
+              "feed",
+              "figure",
+              "form",
+              "generic",
+              "grid",
+              "gridcell",
+              "group",
+              "heading",
+              "img",
+              "insertion",
+              "link",
+              "list",
+              "listbox",
+              "listitem",
+              "log",
+              "main",
+              "marquee",
+              "math",
+              "menu",
+              "menubar",
+              "menuitem",
+              "menuitemcheckbox",
+              "menuitemradio",
+              "meter",
+              "navigation",
+              "none",
+              "note",
+              "option",
+              "paragraph",
+              "presentation",
+              "progressbar",
+              "radio",
+              "radiogroup",
+              "region",
+              "row",
+              "rowgroup",
+              "rowheader",
+              "scrollbar",
+              "search",
+              "searchbox",
+              "separator",
+              "slider",
+              "spinbutton",
+              "status",
+              "strong",
+              "subscript",
+              "superscript",
+              "switch",
+              "tab",
+              "table",
+              "tablist",
+              "tabpanel",
+              "term",
+              "textbox",
+              "time",
+              "timer",
+              "toolbar",
+              "tooltip",
+              "tree",
+              "treegrid",
+              "treeitem"
+            ]
           },
           {
             "key": "searchValue",
@@ -580,7 +1107,6 @@
           {
             "key": "sortDirection",
             "type": "string",
-            "default": "asc",
             "label": "Sort Direction",
             "description": "Current sort direction",
             "tier": "presentation",
@@ -588,6 +1114,36 @@
               "asc",
               "desc"
             ]
+          },
+          {
+            "key": "stageField",
+            "type": "string",
+            "label": "Stage Field",
+            "description": "Record field holding the current lifecycle stage (workflow).",
+            "tier": "presentation"
+          },
+          {
+            "key": "stages",
+            "type": "[DetailPanelStagesItem]",
+            "default": [],
+            "label": "Stages",
+            "description": "The lifecycle in order, `{ value, label }` per stage (workflow).",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
           },
           {
             "key": "status",
@@ -623,6 +1179,56 @@
             "tier": "presentation"
           },
           {
+            "key": "tabIndex",
+            "type": "number",
+            "label": "Tab Index",
+            "description": "0 puts the element in the Tab order; -1 makes it focusable only programmatically.",
+            "tier": "presentation"
+          },
+          {
+            "key": "tabs",
+            "type": "[DetailPanelTabsItem]",
+            "default": [],
+            "label": "Tabs",
+            "description": "Tabs after the overview tab, each listing declared field names (workspace).",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "content": {
+                  "name": "content",
+                  "required": false,
+                  "type": "node"
+                },
+                "fields": {
+                  "name": "fields",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "threadContent",
+            "type": "node",
+            "label": "Thread Content",
+            "description": "The thread composed in instead of `thread` — e.g. the replies' own trait with its composer (conversation).",
+            "tier": "presentation"
+          },
+          {
             "key": "title",
             "type": "string",
             "label": "Title",
@@ -635,6 +1241,89 @@
             "label": "Total Count",
             "description": "Total number of items",
             "tier": "presentation"
+          },
+          {
+            "key": "totals",
+            "type": "[DetailPanelTotalsItem]",
+            "default": [],
+            "label": "Totals",
+            "description": "Record fields shown as the document's totals, in order (ledger).",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "colorMap": {
+                  "name": "colorMap",
+                  "required": false,
+                  "type": "object",
+                  "items": {
+                    "type": "string",
+                    "values": [
+                      "default",
+                      "primary",
+                      "secondary",
+                      "success",
+                      "warning",
+                      "danger",
+                      "error",
+                      "info",
+                      "neutral",
+                      "destructive"
+                    ]
+                  }
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "date",
+                    "datetime",
+                    "currency",
+                    "number",
+                    "boolean",
+                    "percent"
+                  ]
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "labels": {
+                  "name": "labels",
+                  "required": false,
+                  "type": "object",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "h3",
+                    "h4",
+                    "body",
+                    "caption",
+                    "badge",
+                    "small",
+                    "progress"
+                  ]
+                }
+              },
+              "type": "object"
+            }
           },
           {
             "key": "viewerRole",

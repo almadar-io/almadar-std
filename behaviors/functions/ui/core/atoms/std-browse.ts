@@ -2468,12 +2468,60 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                   },
                 ],
                 [
-                  'render-ui',
-                  'main',
-                  {
-                    'rows': 4,
-                    'type': 'skeleton',
-                  },
+                  'if',
+                  [
+                    '=',
+                    '@config.browseLook',
+                    'gallery',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'rows': 6,
+                      'type': 'skeleton',
+                      'variant': 'grid',
+                    },
+                  ],
+                  [
+                    'if',
+                    [
+                      'or',
+                      [
+                        '=',
+                        '@config.browseLook',
+                        'feed',
+                      ],
+                      [
+                        '=',
+                        '@config.browseLook',
+                        'master-detail',
+                      ],
+                      [
+                        '=',
+                        '@config.browseLook',
+                        'triage',
+                      ],
+                    ],
+                    [
+                      'render-ui',
+                      'main',
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    [
+                      'render-ui',
+                      'main',
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'table',
+                      },
+                    ],
+                  ],
                 ],
               ],
               'event': 'INIT',
@@ -2975,12 +3023,60 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                   },
                 ],
                 [
-                  'render-ui',
-                  'main',
-                  {
-                    'rows': 4,
-                    'type': 'skeleton',
-                  },
+                  'if',
+                  [
+                    '=',
+                    '@config.browseLook',
+                    'gallery',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'rows': 6,
+                      'type': 'skeleton',
+                      'variant': 'grid',
+                    },
+                  ],
+                  [
+                    'if',
+                    [
+                      'or',
+                      [
+                        '=',
+                        '@config.browseLook',
+                        'feed',
+                      ],
+                      [
+                        '=',
+                        '@config.browseLook',
+                        'master-detail',
+                      ],
+                      [
+                        '=',
+                        '@config.browseLook',
+                        'triage',
+                      ],
+                    ],
+                    [
+                      'render-ui',
+                      'main',
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    [
+                      'render-ui',
+                      'main',
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'table',
+                      },
+                    ],
+                  ],
                 ],
               ],
               'event': 'INIT',

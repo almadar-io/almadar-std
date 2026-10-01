@@ -97,6 +97,13 @@
             "required": false,
             "intrinsic": true,
             "description": "Thread root the reply being composed belongs to."
+          },
+          {
+            "name": "lastReplyId",
+            "type": "string",
+            "required": false,
+            "intrinsic": true,
+            "description": "Reply just created, added to its parent post's replies."
           }
         ],
         "persistence": "persistent"
@@ -114,6 +121,9 @@
           "ThreadPostLoaded",
           "ThreadPostLoadFailed",
           "ThreadPostCreated",
+          "ReplyParentLoaded",
+          "ReplyParentUpdated",
+          "ReplyParentLoadFailed",
           "ThreadPostCreateFailed"
         ],
         "listenedEvents": [],
@@ -173,6 +183,22 @@
             "description": "A new post has been added to the thread — payload is the created ThreadPost row itself (flat: ?id, ?threadRootId, ?authorId, ?content, …), not wrapped under a row field.",
             "synonyms": "new post, added, created",
             "tier": "domain"
+          },
+          {
+            "name": "ReplyParentLoaded",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "ReplyParentUpdated",
+            "direction": "emit",
+            "description": "Fired after a new reply is added to its parent post's replies",
+            "tier": "internal"
+          },
+          {
+            "name": "ReplyParentLoadFailed",
+            "direction": "emit",
+            "tier": "internal"
           },
           {
             "name": "ThreadPostCreateFailed",
@@ -414,6 +440,9 @@
           "EDIT_REPLY",
           "INIT",
           "REPLY",
+          "ReplyParentLoadFailed",
+          "ReplyParentLoaded",
+          "ReplyParentUpdated",
           "SELECT",
           "SET_THREAD_ROOT",
           "SUBMIT_REPLY",
@@ -428,6 +457,7 @@
           "requires": [],
           "provides": [
             "focusedRow",
+            "lastReplyId",
             "replyDraft",
             "replyParentId",
             "replyRootId"
@@ -447,8 +477,16 @@
             "resource": "main"
           },
           {
+            "kind": "render-ui",
+            "resource": "toast"
+          },
+          {
             "kind": "set",
             "resource": "@entity.focusedRow"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.lastReplyId"
           },
           {
             "kind": "set",
@@ -542,6 +580,9 @@
       "CANCEL_REPLY",
       "EDIT_REPLY",
       "REPLY",
+      "ReplyParentLoadFailed",
+      "ReplyParentLoaded",
+      "ReplyParentUpdated",
       "SELECT",
       "SUBMIT_REPLY",
       "ThreadPostCreateFailed",

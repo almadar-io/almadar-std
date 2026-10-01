@@ -1016,8 +1016,8 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'title': 'Loading review…',
-                    'type': 'loading-state',
+                    'type': 'skeleton',
+                    'variant': 'card',
                   },
                 ],
               ],
@@ -2067,8 +2067,8 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'title': 'Restarting…',
-                    'type': 'loading-state',
+                    'type': 'skeleton',
+                    'variant': 'card',
                   },
                 ],
               ],
@@ -2107,8 +2107,8 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'title': 'Restarting…',
-                    'type': 'loading-state',
+                    'type': 'skeleton',
+                    'variant': 'card',
                   },
                 ],
               ],
@@ -2142,8 +2142,8 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'title': 'Restarting…',
-                    'type': 'loading-state',
+                    'type': 'skeleton',
+                    'variant': 'card',
                   },
                 ],
               ],

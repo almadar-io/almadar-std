@@ -1,5 +1,5 @@
 app std-thread "1.3.0"
-"std-thread — forum-style nested replies with collapse. Owns ThreadPost (persistent). INIT fetches, scoped by @config.threadRootId when set (blank = every root, the default). REPLY persists a child post under @payload.parentId, stamped with the real @user identity. A consumer that mounts this as page comments forwards its own document-opened signal to SET_THREAD_ROOT { rootId }, which stamps @entity.replyRootId (scratch — the persisted threadRootId column is written only by the reply persist create) and refetches filtered by the payload; a plain INIT re-entry now also falls back through @entity.replyRootId before @config.threadRootId, so it stays scoped to the last SET_THREAD_ROOT instead of re-widening — only the after-create/after-select refetches still scope directly off their own event payload. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens. A non-empty sectionTitle switches the default bodyContent into titled-comments mode: header + post list + a standalone composer button (without it an empty thread has no REPLY emitter at all — the affordance only existed per-row)."
+"std-thread — forum-style nested replies with collapse. Owns ThreadPost (persistent). INIT fetches, scoped by @config.threadRootId when set (blank = every root, the default). The list holds top-level posts, each with its replies nested (one level). REPLY persists a child post under @payload.parentId in the same thread root, stamped with the real @user identity, and adds it to the parent's replies and replyCount. A consumer that mounts this as page comments forwards its own document-opened signal to SET_THREAD_ROOT { rootId }, which stamps @entity.replyRootId (scratch — the persisted threadRootId column is written only by the reply persist create) and refetches filtered by the payload; a plain INIT re-entry now also falls back through @entity.replyRootId before @config.threadRootId, so it stays scoped to the last SET_THREAD_ROOT instead of re-widening — only the after-create/after-select refetches still scope directly off their own event payload. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens. A non-empty sectionTitle switches the default bodyContent into titled-comments mode: header + post list + a standalone composer button (without it an empty thread has no REPLY emitter at all — the affordance only existed per-row)."
 type ItemAction = { label : string!, event : event, icon : string, roles : [string], when : SExpr }
 orbital ThreadPostOrbital {
   uses RoleGate from "std/behaviors/std-role-gate"
@@ -20,17 +20,17 @@ orbital ThreadPostOrbital {
 
     type ThreadPostLoadFailed = Event { error : string, code : string } "Fired when the thread-post collection fails to load"
 
-    ;; Bare entity alias, not { row: ThreadPost } — `persist create`'s success
-    ;; emit is the created row itself (flat), matching @almadar/runtime's
-    ;; EffectExecutor.ts (`successPayload = persisted ?? data`, emitted
-    ;; directly) AND orbital-core's executor.rs (`executed_with_value(effect,
-    ;; value)`), verified live 2026-08-30: a wrapped declaration validates and
-    ;; compiles clean but silently returns undefined for every `?row.<field>`
-    ;; access — no validator connects a persist-emit's declared shape to what
-    ;; the effect that fires it actually produces.
-    type ThreadPostCreated = Event ThreadPost "Fired after a new thread-post persists successfully"
+    ;; Flat, not { row: … }: `persist create`'s success emit is the stored row
+    ;; itself. Declared to the fields this atom reads back.
+    type ThreadPostCreated = Event { id : string!, threadRootId : string!, parentId : string } "Fired after a new thread-post persists successfully"
 
     type ThreadPostCreateFailed = Event { error : string, code : string } "Fired when a new thread-post fails to persist"
+
+    type ReplyParentLoaded = Event { data : ThreadPost! } "Fired when the post a new reply answers has loaded"
+
+    type ReplyParentLoadFailed = Event { error : string } "Fired when the post a new reply answers cannot be loaded"
+
+    type ReplyParentUpdated = Event ThreadPost "Fired after a new reply is added to its parent post's replies"
 
     type SetThreadRoot = Event { rootId : string! } "Fired to scope every ThreadPost fetch, and new-reply threadRootId stamping, to the descendants of one document root"
 
@@ -49,6 +49,7 @@ orbital ThreadPostOrbital {
     replyDraft : string @intrinsic @description "Reply text being composed." = ""
     replyParentId : string @intrinsic @description "Post the reply being composed answers." = ""
     replyRootId : string @intrinsic @description "Thread root the reply being composed belongs to." = ""
+    lastReplyId : string @intrinsic @description "Reply just created, added to its parent post's replies." = ""
   }
 
   trait ThreadPostBrowse -> @rebindable ThreadPost [interaction, collection] {
@@ -58,10 +59,10 @@ orbital ThreadPostOrbital {
       INIT -> loading
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (or ["=", (str/default @entity.replyRootId @config.threadRootId), ""] ["=", (object/get @entity threadRootId), (str/default @entity.replyRootId @config.threadRootId)])
+          filter: (and (or ["=", (str/default @entity.replyRootId @config.threadRootId), ""] ["=", (object/get @entity threadRootId), (str/default @entity.replyRootId @config.threadRootId)]) ["=", (str/default (object/get @entity parentId) ""), ""])
           include: (replies)
         })
-        (render-ui main { size: sm, type: spinner })
+        (render-ui main { type: skeleton, variant: list, rows: 6 })
       ThreadPostLoaded -> browsing
         (render-ui main @config.bodyContent)
       ThreadPostLoadFailed -> error
@@ -74,20 +75,20 @@ orbital ThreadPostOrbital {
         (set @entity.replyRootId ?rootId)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (or ["=", ?rootId, ""] ["=", (object/get @entity threadRootId), ?rootId])
+          filter: (and (or ["=", ?rootId, ""] ["=", (object/get @entity threadRootId), ?rootId]) ["=", (str/default (object/get @entity parentId) ""), ""])
           include: (replies)
         })
-        (render-ui main { size: sm, type: spinner })
+        (render-ui main { type: skeleton, variant: list, rows: 6 })
     }
 
     state browsing {
       INIT -> loading
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (or ["=", (str/default @entity.replyRootId @config.threadRootId), ""] ["=", (object/get @entity threadRootId), (str/default @entity.replyRootId @config.threadRootId)])
+          filter: (and (or ["=", (str/default @entity.replyRootId @config.threadRootId), ""] ["=", (object/get @entity threadRootId), (str/default @entity.replyRootId @config.threadRootId)]) ["=", (str/default (object/get @entity parentId) ""), ""])
           include: (replies)
         })
-        (render-ui main { size: sm, type: spinner })
+        (render-ui main { type: skeleton, variant: list, rows: 6 })
       ThreadPostLoaded -> browsing
         (render-ui main @config.bodyContent)
       ;; Inline reply: when the event already carries the composed text (e.g.
@@ -97,22 +98,23 @@ orbital ThreadPostOrbital {
         (persist create ThreadPost {
           authorId: @user.id
           authorName: @user.name
+          createdAt: @now
           content: ?content
           parentId: (str/default ?parentNodeId ?parentId)
-          threadRootId: (str/default ?parentNodeId (str/default @entity.replyRootId (str/default @config.threadRootId root)))
+          threadRootId: (str/default @entity.replyRootId (str/default @config.threadRootId root))
         } {
           emit: { failure: ThreadPostCreateFailed, success: ThreadPostCreated }
         })
       ;; Reply with no text yet (e.g. an email "Reply" button) opens the composer.
       REPLY -> replying when ["=", (str/default ?content ""), ""]
         (set @entity.replyParentId (str/default ?parentNodeId ?parentId))
-        (set @entity.replyRootId (str/default ?parentNodeId (str/default @entity.replyRootId (str/default @config.threadRootId root))))
         (render-ui main {
           children: [{
             content: "Write a reply"
             type: typography
             variant: h4
           }, {
+            aria-label: "Your reply"
             onChange: EDIT_REPLY
             placeholder: "Your reply…"
             type: textarea
@@ -145,12 +147,41 @@ orbital ThreadPostOrbital {
       ;; row's own scope, per the create effect's fallback chain) — NOT
       ;; ?row.threadRootId; ThreadPostCreated's payload is the created row
       ;; itself (see the type alias above), no `row` wrapper exists.
-      ThreadPostCreated -> browsing
+      ThreadPostCreated -> browsing when (not ["=", (str/default ?parentId ""), ""])
+        (set @entity.replyDraft "")
+        (set @entity.replyParentId "")
+        (set @entity.lastReplyId ?id)
+        (fetch ThreadPost {
+          id: ?parentId
+          emit: { failure: ReplyParentLoadFailed, success: ReplyParentLoaded }
+        })
+      ThreadPostCreated -> browsing when ["=", (str/default ?parentId ""), ""]
         (set @entity.replyDraft "")
         (set @entity.replyParentId "")
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (or ["=", ?threadRootId, ""] ["=", (object/get @entity threadRootId), ?threadRootId])
+          filter: (and (or ["=", ?threadRootId, ""] ["=", (object/get @entity threadRootId), ?threadRootId]) ["=", (str/default (object/get @entity parentId) ""), ""])
+          include: (replies)
+        })
+      ReplyParentLoaded -> browsing
+        (persist update ThreadPost {
+          id: ?data.id
+          replies: (array/append (object/get ?data replies []) @entity.lastReplyId)
+          replyCount: (+ (object/get ?data replyCount 0) 1)
+        } {
+          emit: { failure: ThreadPostCreateFailed, success: ReplyParentUpdated }
+        })
+      ReplyParentLoadFailed -> browsing
+        (notify error (str/concat "Couldn't attach the reply to its post — " ?error))
+        (fetch ThreadPost {
+          emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
+          filter: (and (or ["=", (str/default @entity.replyRootId @config.threadRootId), ""] ["=", (object/get @entity threadRootId), (str/default @entity.replyRootId @config.threadRootId)]) ["=", (str/default (object/get @entity parentId) ""), ""])
+          include: (replies)
+        })
+      ReplyParentUpdated -> browsing
+        (fetch ThreadPost {
+          emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
+          filter: (and (or ["=", ?threadRootId, ""] ["=", (object/get @entity threadRootId), ?threadRootId]) ["=", (str/default (object/get @entity parentId) ""), ""])
           include: (replies)
         })
       ;; SELECT's payload IS { id, row } (caller-constructed, unlike the
@@ -160,7 +191,7 @@ orbital ThreadPostOrbital {
         (set @entity.focusedRow ?row)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (or ["=", ?row.threadRootId, ""] ["=", (object/get @entity threadRootId), ?row.threadRootId])
+          filter: (and (or ["=", ?row.threadRootId, ""] ["=", (object/get @entity threadRootId), ?row.threadRootId]) ["=", (str/default (object/get @entity parentId) ""), ""])
           include: (replies)
         })
       ;; Inline composers (bodyContent overrides with their own textarea +
@@ -172,6 +203,7 @@ orbital ThreadPostOrbital {
         (persist create ThreadPost {
           authorId: @user.id
           authorName: @user.name
+          createdAt: @now
           content: @entity.replyDraft
           parentId: (str/default @entity.replyParentId "")
           threadRootId: (str/default @entity.replyRootId (str/default @config.threadRootId root))
@@ -201,10 +233,10 @@ orbital ThreadPostOrbital {
         (set @entity.replyRootId ?rootId)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (or ["=", ?rootId, ""] ["=", (object/get @entity threadRootId), ?rootId])
+          filter: (and (or ["=", ?rootId, ""] ["=", (object/get @entity threadRootId), ?rootId]) ["=", (str/default (object/get @entity parentId) ""), ""])
           include: (replies)
         })
-        (render-ui main { size: sm, type: spinner })
+        (render-ui main { type: skeleton, variant: list, rows: 6 })
     }
 
     state replying {
@@ -214,6 +246,7 @@ orbital ThreadPostOrbital {
         (persist create ThreadPost {
           authorId: @user.id
           authorName: @user.name
+          createdAt: @now
           content: @entity.replyDraft
           parentId: (str/default @entity.replyParentId "")
           threadRootId: (str/default @entity.replyRootId (str/default @config.threadRootId root))
@@ -225,12 +258,20 @@ orbital ThreadPostOrbital {
         (set @entity.replyParentId "")
       ;; Scoped to the row just created (?threadRootId, flat) — see the twin
       ;; arm in `browsing` for why.
-      ThreadPostCreated -> browsing
+      ThreadPostCreated -> browsing when (not ["=", (str/default ?parentId ""), ""])
+        (set @entity.replyDraft "")
+        (set @entity.replyParentId "")
+        (set @entity.lastReplyId ?id)
+        (fetch ThreadPost {
+          id: ?parentId
+          emit: { failure: ReplyParentLoadFailed, success: ReplyParentLoaded }
+        })
+      ThreadPostCreated -> browsing when ["=", (str/default ?parentId ""), ""]
         (set @entity.replyDraft "")
         (set @entity.replyParentId "")
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (or ["=", ?threadRootId, ""] ["=", (object/get @entity threadRootId), ?threadRootId])
+          filter: (and (or ["=", ?threadRootId, ""] ["=", (object/get @entity threadRootId), ?threadRootId]) ["=", (str/default (object/get @entity parentId) ""), ""])
           include: (replies)
         })
       ThreadPostCreateFailed -> replying
@@ -243,28 +284,28 @@ orbital ThreadPostOrbital {
         (set @entity.replyRootId ?rootId)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (or ["=", ?rootId, ""] ["=", (object/get @entity threadRootId), ?rootId])
+          filter: (and (or ["=", ?rootId, ""] ["=", (object/get @entity threadRootId), ?rootId]) ["=", (str/default (object/get @entity parentId) ""), ""])
           include: (replies)
         })
-        (render-ui main { size: sm, type: spinner })
+        (render-ui main { type: skeleton, variant: list, rows: 6 })
     }
 
     state error {
       INIT -> loading
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (or ["=", (str/default @entity.replyRootId @config.threadRootId), ""] ["=", (object/get @entity threadRootId), (str/default @entity.replyRootId @config.threadRootId)])
+          filter: (and (or ["=", (str/default @entity.replyRootId @config.threadRootId), ""] ["=", (object/get @entity threadRootId), (str/default @entity.replyRootId @config.threadRootId)]) ["=", (str/default (object/get @entity parentId) ""), ""])
           include: (replies)
         })
-        (render-ui main { size: sm, type: spinner })
+        (render-ui main { type: skeleton, variant: list, rows: 6 })
       SET_THREAD_ROOT -> loading
         (set @entity.replyRootId ?rootId)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (or ["=", ?rootId, ""] ["=", (object/get @entity threadRootId), ?rootId])
+          filter: (and (or ["=", ?rootId, ""] ["=", (object/get @entity threadRootId), ?rootId]) ["=", (str/default (object/get @entity parentId) ""), ""])
           include: (replies)
         })
-        (render-ui main { size: sm, type: spinner })
+        (render-ui main { type: skeleton, variant: list, rows: 6 })
     }
 
     emits {
@@ -314,6 +355,16 @@ orbital ThreadPostOrbital {
         @description "A new post has been added to the thread — payload is the created ThreadPost row itself (flat: ?id, ?threadRootId, ?authorId, ?content, …), not wrapped under a row field."
         @synonyms "new post, added, created"
         @tier "domain"
+      ReplyParentLoaded -> internal {
+        data : ThreadPost!
+      }
+        @tier "internal"
+      ReplyParentUpdated -> internal
+        @tier "internal"
+      ReplyParentLoadFailed -> internal {
+        error : string
+      }
+        @tier "internal"
       ThreadPostCreateFailed {
         error : string
         code : string
@@ -376,6 +427,16 @@ orbital ThreadPostOrbital {
       }
         @description "Indicates a failure to create a new thread post."
         @synonyms "error, failure, rejected, invalid"
+        @tier "internal"
+      ReplyParentLoaded {
+        data : ThreadPost!
+      }
+        @tier "internal"
+      ReplyParentUpdated
+        @tier "internal"
+      ReplyParentLoadFailed {
+        error : string
+      }
         @tier "internal"
       SET_THREAD_ROOT {
         rootId : string!

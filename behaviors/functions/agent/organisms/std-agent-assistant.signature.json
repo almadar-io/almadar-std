@@ -1,0 +1,448 @@
+[
+  {
+    "organism": "std-agent-assistant",
+    "orbital": "AgentAssistantOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/agent/organisms/std-agent-assistant.ts",
+    "entities": [
+      {
+        "name": "AgentAssistant",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "AssistantThread",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "REPLIED",
+          "REPLY_FAILED"
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "links",
+            "type": "[AgentLink]",
+            "default": "@config.links",
+            "items": {
+              "properties": {
+                "href": {
+                  "name": "href",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "label": "Links above the conversation",
+            "description": "Related pages (e.g. the run history), shown under the title.",
+            "tier": "presentation"
+          },
+          {
+            "key": "placeholder",
+            "type": "string",
+            "default": "Ask the assistant…",
+            "label": "Message placeholder",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Assistant",
+            "label": "Title",
+            "description": "Heading above the conversation.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Session.traits.AgentThread",
+        "linkedEntity": "AgentMessage",
+        "eventRenames": {
+          "CONVERSE": "REQUEST_CONTEXT"
+        },
+        "transitionEvents": [
+          "AgentConversationLoaded",
+          "AgentMessageSaveFailed",
+          "AgentMessageSaved",
+          "AgentMessagesLoadFailed",
+          "AgentMessagesLoaded",
+          "EDIT_MESSAGE",
+          "INIT",
+          "REPLIED",
+          "REPLY_FAILED",
+          "SEND",
+          "SEND_DRAFT"
+        ],
+        "effectEntityRefs": [
+          "AgentMessage"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "draft"
+          ]
+        }
+      },
+      {
+        "name": "AssistantContext",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "REQUEST_CONTEXT"
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "keepMessages",
+            "type": "number",
+            "default": "@config.keepMessages",
+            "label": "Turns kept verbatim",
+            "description": "The most recent turns sent to the model word for word; older turns are summarized.",
+            "synonyms": "window, history length, context size",
+            "tier": "policy"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Context.traits.AgentContextCompactor",
+        "transitionEvents": [
+          "COMPACT",
+          "ContextSummarizeFailed",
+          "ContextSummarized",
+          "INIT"
+        ],
+        "definerKnobs": []
+      },
+      {
+        "name": "AssistantMemory",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "COMPACTED",
+          "REPLIED"
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "recallLimit",
+            "type": "number",
+            "default": "@config.recallLimit",
+            "label": "Memories recalled per request",
+            "description": "How many of the closest memories go to the model with each request.",
+            "tier": "policy"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Memory.traits.AgentMemoryRecall",
+        "linkedEntity": "AgentMemory",
+        "transitionEvents": [
+          "AgentMemoriesLoadFailed",
+          "INIT",
+          "MEMORY_STORED",
+          "MemoriesForRecall",
+          "MemoryEmbedFailed",
+          "MemoryEmbedded",
+          "RECALL",
+          "REMEMBER"
+        ],
+        "effectEntityRefs": [
+          "AgentMemory"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "pendingContent",
+            "pendingMessages",
+            "pendingQuery",
+            "queryVector"
+          ]
+        }
+      },
+      {
+        "name": "AssistantLoop",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "RECALLED"
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "instructions",
+            "type": "string",
+            "default": "@config.instructions",
+            "label": "How should the assistant behave?",
+            "description": "Standing instructions sent with every conversation.",
+            "synonyms": "system prompt, persona, guidance",
+            "tier": "domain"
+          },
+          {
+            "key": "maxSteps",
+            "type": "number",
+            "default": "@config.maxSteps",
+            "label": "Model round-trips per request",
+            "description": "How many model calls one request may take before it fails.",
+            "tier": "policy"
+          },
+          {
+            "key": "tools",
+            "type": "[AgentTool]",
+            "default": "@config.tools",
+            "items": {
+              "properties": {
+                "event": {
+                  "name": "event",
+                  "required": false,
+                  "type": "event"
+                },
+                "read": {
+                  "name": "read",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "label": "What may the assistant do?",
+            "description": "The declared inputs it may fire (`{ event: Trait.EVENT }`) and the entities it may read (`{ read: Entity }`), as the signed-in user.",
+            "synonyms": "allowlist, abilities, actions, permissions",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Loop.traits.AgentToolLoop",
+        "transitionEvents": [
+          "ANSWERED",
+          "ASK_FAILED",
+          "CONVERSE",
+          "INIT"
+        ],
+        "definerKnobs": []
+      },
+      {
+        "name": "AssistantTrace",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "REPLIED",
+          "REPLY_FAILED"
+        ],
+        "overridableConfigKeys": [],
+        "capabilities": [],
+        "ref": "Trace.traits.AgentTraceRecorder",
+        "linkedEntity": "AgentRun",
+        "transitionEvents": [
+          "INIT",
+          "REPLIED",
+          "REPLY_FAILED",
+          "RUN_RECORDED"
+        ],
+        "effectEntityRefs": [
+          "AgentRun"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "outcome"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "AssistantPage",
+        "defaultPath": "/assistant",
+        "primaryEntity": "AgentAssistant"
+      }
+    ],
+    "emittedEvents": [],
+    "listenedEvents": [
+      "COMPACTED",
+      "RECALLED",
+      "REPLIED",
+      "REPLY_FAILED",
+      "REQUEST_CONTEXT"
+    ],
+    "config": [
+      {
+        "key": "instructions",
+        "type": "string",
+        "default": "You operate this app for the signed-in user. Use the tools to act and to look things up; when a tool reports that something was refused or denied, say so plainly.",
+        "label": "How should the assistant behave?",
+        "description": "Standing instructions sent with every request.",
+        "synonyms": "system prompt, persona, guidance",
+        "tier": "domain"
+      },
+      {
+        "key": "keepMessages",
+        "type": "number",
+        "default": 12,
+        "label": "Turns kept verbatim",
+        "tier": "policy"
+      },
+      {
+        "key": "links",
+        "type": "[AgentLink]",
+        "default": [
+          {
+            "href": "/assistant/runs",
+            "label": "Run history"
+          },
+          {
+            "href": "/assistant/memory",
+            "label": "What I remember"
+          }
+        ],
+        "label": "Links above the conversation",
+        "description": "The pages showing the assistant's run history and memory.",
+        "tier": "presentation",
+        "items": {
+          "properties": {
+            "href": {
+              "name": "href",
+              "required": true,
+              "type": "string"
+            },
+            "label": {
+              "name": "label",
+              "required": true,
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      },
+      {
+        "key": "maxSteps",
+        "type": "number",
+        "default": 8,
+        "label": "Model round-trips per request",
+        "tier": "policy"
+      },
+      {
+        "key": "recallLimit",
+        "type": "number",
+        "default": 3,
+        "label": "Memories recalled per request",
+        "tier": "policy"
+      },
+      {
+        "key": "tools",
+        "type": "[AgentTool]",
+        "default": [],
+        "label": "What may the assistant do?",
+        "description": "The declared inputs it may fire (`{ event: Trait.EVENT }` / `{ event: Orbital.Trait.EVENT }`) and the entities it may read (`{ read: Entity }`), as the signed-in user.",
+        "synonyms": "allowlist, abilities, actions, permissions",
+        "tier": "domain",
+        "items": {
+          "properties": {
+            "event": {
+              "name": "event",
+              "required": false,
+              "type": "event"
+            },
+            "read": {
+              "name": "read",
+              "required": false,
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      }
+    ],
+    "exposure": "internal",
+    "provenance": "authored",
+    "sourceValid": true
+  },
+  {
+    "organism": "std-agent-assistant",
+    "orbital": "AgentRecordsOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/agent/organisms/std-agent-assistant.ts",
+    "entities": [
+      {
+        "name": "AgentRun",
+        "fields": [],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "AgentRunHistory",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "RUN_RECORDED"
+        ],
+        "overridableConfigKeys": [],
+        "capabilities": [],
+        "ref": "Trace.traits.AgentRunBrowse",
+        "linkedEntity": "AgentRun",
+        "transitionEvents": [
+          "AgentRunsLoadFailed",
+          "AgentRunsLoaded",
+          "INIT",
+          "RUN_RECORDED"
+        ],
+        "effectEntityRefs": [
+          "AgentRun"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      },
+      {
+        "name": "AgentMemoryList",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "MEMORY_STORED"
+        ],
+        "overridableConfigKeys": [],
+        "capabilities": [],
+        "ref": "Memory.traits.AgentMemoryBrowse",
+        "linkedEntity": "AgentMemory",
+        "transitionEvents": [
+          "AgentMemoriesLoadFailed",
+          "AgentMemoriesLoaded",
+          "INIT",
+          "MEMORY_STORED"
+        ],
+        "effectEntityRefs": [
+          "AgentMemory"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "AssistantRunsPage",
+        "defaultPath": "/assistant/runs",
+        "primaryEntity": "AgentRun"
+      },
+      {
+        "name": "AssistantMemoryPage",
+        "defaultPath": "/assistant/memory",
+        "primaryEntity": "AgentRun"
+      }
+    ],
+    "emittedEvents": [],
+    "listenedEvents": [
+      "MEMORY_STORED",
+      "RUN_RECORDED"
+    ],
+    "exposure": "internal",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

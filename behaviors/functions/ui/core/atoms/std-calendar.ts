@@ -1515,22 +1515,8 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
-                    'children': [
-                      {
-                        'type': 'spinner',
-                      },
-                      {
-                        'color': 'muted',
-                        'content': 'Loading calendar…',
-                        'type': 'typography',
-                        'variant': 'caption',
-                      },
-                    ],
-                    'className': 'py-12',
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
+                    'type': 'skeleton',
+                    'variant': 'card',
                   },
                 ],
               ],
@@ -1637,7 +1623,8 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                   'render-ui',
                   'main',
                   {
-                    'type': 'spinner',
+                    'type': 'skeleton',
+                    'variant': 'card',
                   },
                 ],
               ],
@@ -1878,7 +1865,8 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                   'render-ui',
                   'main',
                   {
-                    'type': 'spinner',
+                    'type': 'skeleton',
+                    'variant': 'card',
                   },
                 ],
               ],
@@ -1903,7 +1891,8 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                   'render-ui',
                   'main',
                   {
-                    'type': 'spinner',
+                    'type': 'skeleton',
+                    'variant': 'card',
                   },
                 ],
               ],

@@ -42,20 +42,36 @@ export interface StdUiNotificationConfig {
   /** Default: `"ACTION"` */
   actionEvent?: string;
   actionLabel?: string;
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
   badge?: unknown;
   className?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
   /** Default: `"DISMISS"` */
   dismissEvent?: string;
   /** Default: `true` */
   dismissible?: boolean;
   /** Default: `5000` */
   duration?: number;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
+  lang?: string;
   /** Default: `""` */
   message?: string;
   /** Default: `"ACTION"` */
   onAction?: string;
   /** Default: `"DISMISS"` */
   onDismiss?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  tabIndex?: number;
   title?: string;
   /** Default: `"info"` */
   variant?: 'success' | 'error' | 'info' | 'warning';

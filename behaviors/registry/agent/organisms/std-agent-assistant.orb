@@ -1,0 +1,594 @@
+{
+  "description": "std-agent-assistant — an in-app assistant that operates the running app for the signed-in user. One request flows down a chain of std agent atoms on the bus: the conversation (std-agent-session) SENDs → CONVERSE → std-agent-context bounds it → std-agent-memory adds what it recalls → std-agent-tool-loop answers it through `call-service llm call-tools`, firing only the inputs and reading only the entities the `tools` allowlist names, as the signed-in user → REPLIED goes back to the conversation, to memory (remembered) and to std-agent-trace (the run record). Import the orbital and supply the allowlist: `orbital Assistant = Agent.orbitals.AgentAssistantOrbital { config { tools: [{ event: TaskOrbital.TaskPersistor.DO_CREATE }, { read: Task }], instructions: \"…\" } }`. The conversation, memory and run records live in AgentRecordsOrbital; retarget them onto your own owner-scoped entities (`ownerId` a relation to your [identity] roster, with @read/@create) with `entities { AgentMessage: …, AgentMemory: …, AgentRun: … }`.",
+  "ledger": {
+    "entries": {
+      "ent_01M3TZ0DZDY909P5HZH4V2D7MY": {
+        "bakedName": "AgentAssistant",
+        "curName": "AgentAssistant",
+        "id": "ent_01M3TZ0DZDY909P5HZH4V2D7MY",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "ent_01M3V71WRK9FF6XANDFRRXF24C": {
+        "bakedName": "AgentMemory",
+        "curName": "AgentMemory",
+        "id": "ent_01M3V71WRK9FF6XANDFRRXF24C",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "ent_01M3V71WRKECFYNSB315YS0KXD": {
+        "bakedName": "AgentRun",
+        "curName": "AgentRun",
+        "id": "ent_01M3V71WRKECFYNSB315YS0KXD",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "ent_01M3V71WRKZMW480AJQT70PD2M": {
+        "bakedName": "AgentMessage",
+        "curName": "AgentMessage",
+        "id": "ent_01M3V71WRKZMW480AJQT70PD2M",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "orb_01M3TZ0DZDJS90708ZRDH25S9C": {
+        "bakedName": "AgentAssistantOrbital",
+        "curName": "AgentAssistantOrbital",
+        "id": "orb_01M3TZ0DZDJS90708ZRDH25S9C",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "orb_01M3V71WRKWXCSD4WXEENEWWH8": {
+        "bakedName": "AgentRecordsOrbital",
+        "curName": "AgentRecordsOrbital",
+        "id": "orb_01M3V71WRKWXCSD4WXEENEWWH8",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01M3TZ0DZDAMWN3HAZF4F2614C": {
+        "bakedName": "AssistantPage",
+        "curName": "AssistantPage",
+        "id": "pag_01M3TZ0DZDAMWN3HAZF4F2614C",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01M3V71WRKCGD8WA8HHGFNM00H": {
+        "bakedName": "AssistantRunsPage",
+        "curName": "AssistantRunsPage",
+        "id": "pag_01M3V71WRKCGD8WA8HHGFNM00H",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01M3V71WRKMMBWKNQ7768PP579": {
+        "bakedName": "AssistantMemoryPage",
+        "curName": "AssistantMemoryPage",
+        "id": "pag_01M3V71WRKMMBWKNQ7768PP579",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M3TZ0DZD2Q7ZQVBTW902F1CE": {
+        "bakedName": "AssistantLoop",
+        "curName": "AssistantLoop",
+        "id": "trt_01M3TZ0DZD2Q7ZQVBTW902F1CE",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M3TZ0DZD8CKHJ98ZY28D6D5V": {
+        "bakedName": "AssistantTrace",
+        "curName": "AssistantTrace",
+        "id": "trt_01M3TZ0DZD8CKHJ98ZY28D6D5V",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M3TZ0DZDA49NXYE56JV7SZH9": {
+        "bakedName": "AssistantContext",
+        "curName": "AssistantContext",
+        "id": "trt_01M3TZ0DZDA49NXYE56JV7SZH9",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M3TZ0DZDK3ZYFHBSBZMWW4V7": {
+        "bakedName": "AssistantThread",
+        "curName": "AssistantThread",
+        "id": "trt_01M3TZ0DZDK3ZYFHBSBZMWW4V7",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M3TZ0DZDMWSDQY5C5X7R3GYZ": {
+        "bakedName": "AssistantMemory",
+        "curName": "AssistantMemory",
+        "id": "trt_01M3TZ0DZDMWSDQY5C5X7R3GYZ",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M3V71WRKAPCPAVW5XM7T3BW5": {
+        "bakedName": "AgentMemoryList",
+        "curName": "AgentMemoryList",
+        "id": "trt_01M3V71WRKAPCPAVW5XM7T3BW5",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M3V71WRKRBWAZMCGX5EQD8X6": {
+        "bakedName": "AgentRunHistory",
+        "curName": "AgentRunHistory",
+        "id": "trt_01M3V71WRKRBWAZMCGX5EQD8X6",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "std-agent-assistant",
+  "orbitals": [
+    {
+      "config": {
+        "instructions": {
+          "default": "You operate this app for the signed-in user. Use the tools to act and to look things up; when a tool reports that something was refused or denied, say so plainly.",
+          "description": "Standing instructions sent with every request.",
+          "label": "How should the assistant behave?",
+          "synonyms": "system prompt, persona, guidance",
+          "tier": "domain",
+          "type": "string"
+        },
+        "keepMessages": {
+          "default": 12.0,
+          "label": "Turns kept verbatim",
+          "tier": "policy",
+          "type": "number"
+        },
+        "links": {
+          "default": [
+            {
+              "href": "/assistant/runs",
+              "label": "Run history"
+            },
+            {
+              "href": "/assistant/memory",
+              "label": "What I remember"
+            }
+          ],
+          "description": "The pages showing the assistant's run history and memory.",
+          "items": {
+            "properties": {
+              "href": {
+                "name": "href",
+                "required": true,
+                "type": "string"
+              },
+              "label": {
+                "name": "label",
+                "required": true,
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "label": "Links above the conversation",
+          "tier": "presentation",
+          "type": "[AgentLink]"
+        },
+        "maxSteps": {
+          "default": 8.0,
+          "label": "Model round-trips per request",
+          "tier": "policy",
+          "type": "number"
+        },
+        "recallLimit": {
+          "default": 3.0,
+          "label": "Memories recalled per request",
+          "tier": "policy",
+          "type": "number"
+        },
+        "tools": {
+          "default": [],
+          "description": "The declared inputs it may fire (`{ event: Trait.EVENT }` / `{ event: Orbital.Trait.EVENT }`) and the entities it may read (`{ read: Entity }`), as the signed-in user.",
+          "items": {
+            "properties": {
+              "event": {
+                "name": "event",
+                "required": false,
+                "type": "event"
+              },
+              "read": {
+                "name": "read",
+                "required": false,
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "label": "What may the assistant do?",
+          "synonyms": "allowlist, abilities, actions, permissions",
+          "tier": "domain",
+          "type": "[AgentTool]"
+        }
+      },
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "id": "ent_01M3TZ0DZDY909P5HZH4V2D7MY",
+        "name": "AgentAssistant",
+        "persistence": "runtime"
+      },
+      "id": "orb_01M3TZ0DZDJS90708ZRDH25S9C",
+      "name": "AgentAssistantOrbital",
+      "pages": [
+        {
+          "id": "pag_01M3TZ0DZDAMWN3HAZF4F2614C",
+          "name": "AssistantPage",
+          "path": "/assistant",
+          "traits": [
+            {
+              "ref": "AssistantThread",
+              "refId": "trt_01M3TZ0DZDK3ZYFHBSBZMWW4V7"
+            },
+            {
+              "ref": "AssistantContext",
+              "refId": "trt_01M3TZ0DZDA49NXYE56JV7SZH9"
+            },
+            {
+              "ref": "AssistantMemory",
+              "refId": "trt_01M3TZ0DZDMWSDQY5C5X7R3GYZ"
+            },
+            {
+              "ref": "AssistantLoop",
+              "refId": "trt_01M3TZ0DZD2Q7ZQVBTW902F1CE"
+            },
+            {
+              "ref": "AssistantTrace",
+              "refId": "trt_01M3TZ0DZD8CKHJ98ZY28D6D5V"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "config": {
+            "links": {
+              "default": "@config.links",
+              "type": "unknown"
+            }
+          },
+          "events": {
+            "CONVERSE": "REQUEST_CONTEXT"
+          },
+          "id": "trt_01M3TZ0DZDK3ZYFHBSBZMWW4V7",
+          "linkedEntity": "AgentMessage",
+          "listens": [
+            {
+              "event": "REPLIED",
+              "source": {
+                "kind": "trait",
+                "trait": "AssistantLoop"
+              },
+              "triggers": "REPLIED"
+            },
+            {
+              "event": "REPLY_FAILED",
+              "source": {
+                "kind": "trait",
+                "trait": "AssistantLoop"
+              },
+              "triggers": "REPLY_FAILED"
+            }
+          ],
+          "name": "AssistantThread",
+          "ref": "Session.traits.AgentThread"
+        },
+        {
+          "config": {
+            "keepMessages": {
+              "default": "@config.keepMessages",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01M3TZ0DZDA49NXYE56JV7SZH9",
+          "listens": [
+            {
+              "event": "REQUEST_CONTEXT",
+              "source": {
+                "kind": "trait",
+                "trait": "AssistantThread"
+              },
+              "triggers": "COMPACT"
+            }
+          ],
+          "name": "AssistantContext",
+          "ref": "Context.traits.AgentContextCompactor"
+        },
+        {
+          "config": {
+            "recallLimit": {
+              "default": "@config.recallLimit",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01M3TZ0DZDMWSDQY5C5X7R3GYZ",
+          "linkedEntity": "AgentMemory",
+          "listens": [
+            {
+              "event": "COMPACTED",
+              "source": {
+                "kind": "trait",
+                "trait": "AssistantContext"
+              },
+              "triggers": "RECALL"
+            },
+            {
+              "event": "REPLIED",
+              "source": {
+                "kind": "trait",
+                "trait": "AssistantLoop"
+              },
+              "triggers": "REMEMBER"
+            }
+          ],
+          "name": "AssistantMemory",
+          "ref": "Memory.traits.AgentMemoryRecall"
+        },
+        {
+          "config": {
+            "instructions": {
+              "default": "@config.instructions",
+              "type": "unknown"
+            },
+            "maxSteps": {
+              "default": "@config.maxSteps",
+              "type": "unknown"
+            },
+            "tools": {
+              "default": "@config.tools",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01M3TZ0DZD2Q7ZQVBTW902F1CE",
+          "listens": [
+            {
+              "event": "RECALLED",
+              "source": {
+                "kind": "trait",
+                "trait": "AssistantMemory"
+              },
+              "triggers": "CONVERSE"
+            }
+          ],
+          "name": "AssistantLoop",
+          "ref": "Loop.traits.AgentToolLoop"
+        },
+        {
+          "id": "trt_01M3TZ0DZD8CKHJ98ZY28D6D5V",
+          "linkedEntity": "AgentRun",
+          "listens": [
+            {
+              "event": "REPLIED",
+              "source": {
+                "kind": "trait",
+                "trait": "AssistantLoop"
+              },
+              "triggers": "REPLIED"
+            },
+            {
+              "event": "REPLY_FAILED",
+              "source": {
+                "kind": "trait",
+                "trait": "AssistantLoop"
+              },
+              "triggers": "REPLY_FAILED"
+            }
+          ],
+          "name": "AssistantTrace",
+          "ref": "Trace.traits.AgentTraceRecorder"
+        }
+      ],
+      "types": {
+        "AgentLink": [
+          {
+            "name": "label",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "href",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "AgentTool": [
+          {
+            "name": "event",
+            "type": "event"
+          },
+          {
+            "name": "read",
+            "type": "string"
+          }
+        ]
+      },
+      "uses": [
+        {
+          "as": "Session",
+          "from": "std/behaviors/std-agent-session"
+        },
+        {
+          "as": "Context",
+          "from": "std/behaviors/std-agent-context"
+        },
+        {
+          "as": "Memory",
+          "from": "std/behaviors/std-agent-memory"
+        },
+        {
+          "as": "Loop",
+          "from": "std/behaviors/std-agent-tool-loop"
+        },
+        {
+          "as": "Trace",
+          "from": "std/behaviors/std-agent-trace"
+        }
+      ]
+    },
+    {
+      "auxiliaryEntities": [
+        {
+          "collection": "agentMessages",
+          "fields": [
+            {
+              "name": "id",
+              "required": true,
+              "type": "string"
+            }
+          ],
+          "id": "ent_01M3V71WRKZMW480AJQT70PD2M",
+          "name": "AgentMessage",
+          "persistence": "persistent"
+        },
+        {
+          "collection": "agentMemories",
+          "fields": [
+            {
+              "name": "id",
+              "required": true,
+              "type": "string"
+            }
+          ],
+          "id": "ent_01M3V71WRK9FF6XANDFRRXF24C",
+          "name": "AgentMemory",
+          "persistence": "persistent"
+        }
+      ],
+      "entity": {
+        "collection": "agentRuns",
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "id": "ent_01M3V71WRKECFYNSB315YS0KXD",
+        "name": "AgentRun",
+        "persistence": "persistent"
+      },
+      "id": "orb_01M3V71WRKWXCSD4WXEENEWWH8",
+      "name": "AgentRecordsOrbital",
+      "pages": [
+        {
+          "id": "pag_01M3V71WRKCGD8WA8HHGFNM00H",
+          "name": "AssistantRunsPage",
+          "path": "/assistant/runs",
+          "traits": [
+            {
+              "ref": "AgentRunHistory",
+              "refId": "trt_01M3V71WRKRBWAZMCGX5EQD8X6"
+            }
+          ]
+        },
+        {
+          "id": "pag_01M3V71WRKMMBWKNQ7768PP579",
+          "name": "AssistantMemoryPage",
+          "path": "/assistant/memory",
+          "traits": [
+            {
+              "ref": "AgentMemoryList",
+              "refId": "trt_01M3V71WRKAPCPAVW5XM7T3BW5"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "id": "trt_01M3V71WRKRBWAZMCGX5EQD8X6",
+          "linkedEntity": "AgentRun",
+          "linkedEntityId": "ent_01M3V71WRKECFYNSB315YS0KXD",
+          "listens": [
+            {
+              "event": "RUN_RECORDED",
+              "source": {
+                "kind": "orbital",
+                "orbital": "AgentAssistantOrbital",
+                "trait": "AssistantTrace"
+              },
+              "triggers": "RUN_RECORDED"
+            }
+          ],
+          "name": "AgentRunHistory",
+          "ref": "Trace.traits.AgentRunBrowse"
+        },
+        {
+          "id": "trt_01M3V71WRKAPCPAVW5XM7T3BW5",
+          "linkedEntity": "AgentMemory",
+          "linkedEntityId": "ent_01M3V71WRK9FF6XANDFRRXF24C",
+          "listens": [
+            {
+              "event": "MEMORY_STORED",
+              "source": {
+                "kind": "orbital",
+                "orbital": "AgentAssistantOrbital",
+                "trait": "AssistantMemory"
+              },
+              "triggers": "MEMORY_STORED"
+            }
+          ],
+          "name": "AgentMemoryList",
+          "ref": "Memory.traits.AgentMemoryBrowse"
+        }
+      ],
+      "types": {
+        "AgentLink": [
+          {
+            "name": "label",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "href",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "AgentTool": [
+          {
+            "name": "event",
+            "type": "event"
+          },
+          {
+            "name": "read",
+            "type": "string"
+          }
+        ]
+      },
+      "uses": [
+        {
+          "as": "Memory",
+          "from": "std/behaviors/std-agent-memory"
+        },
+        {
+          "as": "Trace",
+          "from": "std/behaviors/std-agent-trace"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}

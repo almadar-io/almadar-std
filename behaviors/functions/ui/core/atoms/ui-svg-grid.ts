@@ -39,6 +39,16 @@ export type StdUiSvgGridEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSvgGridConfig {
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
   /** Default: `true` */
   asRoot?: boolean;
   className?: string;
@@ -46,18 +56,24 @@ export interface StdUiSvgGridConfig {
   color?: string;
   /** Default: `4` */
   cols?: number;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   /** Default: `100` */
   height?: number;
   /** Default: `[]` */
   highlights?: number[];
+  lang?: string;
   /** Default: `3` */
   nodeRadius?: number;
   /** Default: `1` */
   opacity?: number;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   /** Default: `3` */
   rows?: number;
   /** Default: `20` */
   spacing?: number;
+  tabIndex?: number;
   /** Default: `100` */
   width?: number;
   /** Default: `10` */

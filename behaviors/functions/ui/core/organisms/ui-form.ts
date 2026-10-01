@@ -60,6 +60,16 @@ export interface StdUiFormFormLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFormConfig {
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
   /** Default: `"CANCEL"` */
   cancelEvent?: string;
   cancelLabel?: string;
@@ -68,6 +78,9 @@ export interface StdUiFormConfig {
   /** Default: `{}` */
   conditionalFields?: Record<string, TraitConfig>;
   configPath?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   error?: EntityRow;
   evaluationContext?: EntityRow;
   /** Default: `[]` */
@@ -78,8 +91,8 @@ export interface StdUiFormConfig {
   gap?: 'sm' | 'md' | 'lg';
   /** Default: `[]` */
   hiddenCalculations?: EntityRow[];
-  /** Default: `false` */
   isLoading?: boolean;
+  lang?: string;
   /** Default: `"vertical"` */
   layout?: 'vertical' | 'horizontal' | 'inline';
   mode?: string;
@@ -92,6 +105,7 @@ export interface StdUiFormConfig {
   /** Default: `{}` */
   relationsLoading?: Record<string, TraitConfig>;
   repeatable?: boolean;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   /** Default: `[]` */
   sections?: EntityRow[];
   /** Default: `true` */
@@ -102,6 +116,7 @@ export interface StdUiFormConfig {
   /** Default: `"SUBMIT"` */
   submitEvent?: string;
   submitLabel?: string;
+  tabIndex?: number;
   title?: string;
   /** Default: `[]` */
   violationTriggers?: EntityRow[];
@@ -178,6 +193,95 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
       {
         'category': 'interaction',
         'config': {
+          'ariaBusy': {
+            'description': 'This region is updating; assistive technology waits before announcing it.',
+            'label': 'Aria-busy',
+            'synonyms': 'aria-busy',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'ariaCurrent': {
+            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
+            'label': 'Aria-current',
+            'synonyms': 'aria-current',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'page',
+              'step',
+              'location',
+              'date',
+              'time',
+              'true',
+              'false',
+            ],
+          },
+          'ariaDescribedby': {
+            'description': 'Id of the element whose text describes this one (help text, error).',
+            'label': 'Aria-describedby',
+            'synonyms': 'aria-describedby',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'ariaExpanded': {
+            'description': 'Whether the element it controls is expanded.',
+            'label': 'Aria-expanded',
+            'synonyms': 'aria-expanded',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'ariaHidden': {
+            'description': 'Hide from assistive technology (decorative content only).',
+            'label': 'Aria-hidden',
+            'synonyms': 'aria-hidden',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'ariaLabel': {
+            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
+            'label': 'Aria-label',
+            'synonyms': 'aria-label',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'ariaLabelledby': {
+            'description': 'Id of the element whose text names this one.',
+            'label': 'Aria-labelledby',
+            'synonyms': 'aria-labelledby',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'ariaLive': {
+            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
+            'label': 'Aria-live',
+            'synonyms': 'aria-live',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'off',
+              'polite',
+              'assertive',
+            ],
+          },
+          'ariaPressed': {
+            'description': 'Toggle-button state.',
+            'label': 'Aria-pressed',
+            'synonyms': 'aria-pressed',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'true',
+              'false',
+              'mixed',
+            ],
+          },
+          'ariaSelected': {
+            'description': 'Whether this item is selected (tabs, options, grid cells).',
+            'label': 'Aria-selected',
+            'synonyms': 'aria-selected',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
           'cancelEvent': {
             'default': 'CANCEL',
             'description': 'Event to dispatch on cancel (defaults to \'CANCEL\')',
@@ -218,6 +322,36 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
             'label': 'Config Path',
             'tier': 'presentation',
             'type': 'string',
+          },
+          'dir': {
+            'description': 'Text direction of this element\'s content.',
+            'label': 'Dir',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'ltr',
+              'rtl',
+              'auto',
+            ],
+          },
+          'enter': {
+            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
+            'label': 'Enter',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'none',
+              'fade',
+              'rise',
+              'scale',
+              'slide',
+            ],
+          },
+          'enterDelay': {
+            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
+            'label': 'Enter Delay',
+            'tier': 'presentation',
+            'type': 'number',
           },
           'error': {
             'description': 'Error state',
@@ -875,11 +1009,16 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
             'type': '[FormHiddenCalculationsItem]',
           },
           'isLoading': {
-            'default': false,
             'description': 'Loading state',
             'label': 'Is Loading',
             'tier': 'presentation',
             'type': 'boolean',
+          },
+          'lang': {
+            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
+            'label': 'Lang',
+            'tier': 'presentation',
+            'type': 'string',
           },
           'layout': {
             'default': 'vertical',
@@ -968,6 +1107,95 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
             'label': 'Repeatable',
             'tier': 'presentation',
             'type': 'boolean',
+          },
+          'role': {
+            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
+            'label': 'Role',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'alert',
+              'alertdialog',
+              'application',
+              'article',
+              'banner',
+              'blockquote',
+              'button',
+              'caption',
+              'cell',
+              'checkbox',
+              'code',
+              'columnheader',
+              'combobox',
+              'complementary',
+              'contentinfo',
+              'definition',
+              'deletion',
+              'dialog',
+              'document',
+              'emphasis',
+              'feed',
+              'figure',
+              'form',
+              'generic',
+              'grid',
+              'gridcell',
+              'group',
+              'heading',
+              'img',
+              'insertion',
+              'link',
+              'list',
+              'listbox',
+              'listitem',
+              'log',
+              'main',
+              'marquee',
+              'math',
+              'menu',
+              'menubar',
+              'menuitem',
+              'menuitemcheckbox',
+              'menuitemradio',
+              'meter',
+              'navigation',
+              'none',
+              'note',
+              'option',
+              'paragraph',
+              'presentation',
+              'progressbar',
+              'radio',
+              'radiogroup',
+              'region',
+              'row',
+              'rowgroup',
+              'rowheader',
+              'scrollbar',
+              'search',
+              'searchbox',
+              'separator',
+              'slider',
+              'spinbutton',
+              'status',
+              'strong',
+              'subscript',
+              'superscript',
+              'switch',
+              'tab',
+              'table',
+              'tablist',
+              'tabpanel',
+              'term',
+              'textbox',
+              'time',
+              'timer',
+              'toolbar',
+              'tooltip',
+              'tree',
+              'treegrid',
+              'treeitem',
+            ],
           },
           'sections': {
             'default': [],
@@ -1247,6 +1475,12 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
             'label': 'Submit Label',
             'tier': 'presentation',
             'type': 'string',
+          },
+          'tabIndex': {
+            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
+            'label': 'Tab Index',
+            'tier': 'presentation',
+            'type': 'number',
           },
           'title': {
             'description': 'Form title (used by ModalSlot to extract title)',
@@ -1599,12 +1833,25 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
                   'render-ui',
                   'main',
                   {
+                    'aria-busy': '@config.ariaBusy',
+                    'aria-current': '@config.ariaCurrent',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'aria-hidden': '@config.ariaHidden',
+                    'aria-label': '@config.ariaLabel',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'aria-live': '@config.ariaLive',
+                    'aria-pressed': '@config.ariaPressed',
+                    'aria-selected': '@config.ariaSelected',
                     'cancelEvent': '@config.cancelEvent',
                     'cancelLabel': '@config.cancelLabel',
                     'children': '@config.children',
                     'className': '@config.className',
                     'conditionalFields': '@config.conditionalFields',
                     'configPath': '@config.configPath',
+                    'dir': '@config.dir',
+                    'enter': '@config.enter',
+                    'enterDelay': '@config.enterDelay',
                     'entity': '@entity',
                     'error': '@config.error',
                     'evaluationContext': '@config.evaluationContext',
@@ -1614,6 +1861,7 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
                     'hiddenCalculations': '@config.hiddenCalculations',
                     'initialData': '@entity',
                     'isLoading': '@config.isLoading',
+                    'lang': '@config.lang',
                     'layout': '@config.layout',
                     'mode': '@config.mode',
                     'onCancel': '@config.onCancel',
@@ -1622,11 +1870,13 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
                     'relationsData': '@config.relationsData',
                     'relationsLoading': '@config.relationsLoading',
                     'repeatable': '@config.repeatable',
+                    'role': '@config.role',
                     'sections': '@config.sections',
                     'showCancel': '@config.showCancel',
                     'showSubmit': '@config.showSubmit',
                     'submitEvent': '@config.submitEvent',
                     'submitLabel': '@config.submitLabel',
+                    'tabIndex': '@config.tabIndex',
                     'title': '@config.title',
                     'type': 'form',
                     'violationTriggers': '@config.violationTriggers',
@@ -1661,12 +1911,25 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
                   'render-ui',
                   'main',
                   {
+                    'aria-busy': '@config.ariaBusy',
+                    'aria-current': '@config.ariaCurrent',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'aria-hidden': '@config.ariaHidden',
+                    'aria-label': '@config.ariaLabel',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'aria-live': '@config.ariaLive',
+                    'aria-pressed': '@config.ariaPressed',
+                    'aria-selected': '@config.ariaSelected',
                     'cancelEvent': '@config.cancelEvent',
                     'cancelLabel': '@config.cancelLabel',
                     'children': '@config.children',
                     'className': '@config.className',
                     'conditionalFields': '@config.conditionalFields',
                     'configPath': '@config.configPath',
+                    'dir': '@config.dir',
+                    'enter': '@config.enter',
+                    'enterDelay': '@config.enterDelay',
                     'entity': '@entity',
                     'error': '@config.error',
                     'evaluationContext': '@config.evaluationContext',
@@ -1676,6 +1939,7 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
                     'hiddenCalculations': '@config.hiddenCalculations',
                     'initialData': '@entity',
                     'isLoading': '@config.isLoading',
+                    'lang': '@config.lang',
                     'layout': '@config.layout',
                     'mode': '@config.mode',
                     'onCancel': '@config.onCancel',
@@ -1684,11 +1948,13 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
                     'relationsData': '@config.relationsData',
                     'relationsLoading': '@config.relationsLoading',
                     'repeatable': '@config.repeatable',
+                    'role': '@config.role',
                     'sections': '@config.sections',
                     'showCancel': '@config.showCancel',
                     'showSubmit': '@config.showSubmit',
                     'submitEvent': '@config.submitEvent',
                     'submitLabel': '@config.submitLabel',
+                    'tabIndex': '@config.tabIndex',
                     'title': '@config.title',
                     'type': 'form',
                     'violationTriggers': '@config.violationTriggers',
@@ -1726,12 +1992,25 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
                   'render-ui',
                   'main',
                   {
+                    'aria-busy': '@config.ariaBusy',
+                    'aria-current': '@config.ariaCurrent',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'aria-hidden': '@config.ariaHidden',
+                    'aria-label': '@config.ariaLabel',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'aria-live': '@config.ariaLive',
+                    'aria-pressed': '@config.ariaPressed',
+                    'aria-selected': '@config.ariaSelected',
                     'cancelEvent': '@config.cancelEvent',
                     'cancelLabel': '@config.cancelLabel',
                     'children': '@config.children',
                     'className': '@config.className',
                     'conditionalFields': '@config.conditionalFields',
                     'configPath': '@config.configPath',
+                    'dir': '@config.dir',
+                    'enter': '@config.enter',
+                    'enterDelay': '@config.enterDelay',
                     'entity': '@entity',
                     'error': '@config.error',
                     'evaluationContext': '@config.evaluationContext',
@@ -1741,6 +2020,7 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
                     'hiddenCalculations': '@config.hiddenCalculations',
                     'initialData': '@entity',
                     'isLoading': '@config.isLoading',
+                    'lang': '@config.lang',
                     'layout': '@config.layout',
                     'mode': '@config.mode',
                     'onCancel': '@config.onCancel',
@@ -1749,11 +2029,13 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
                     'relationsData': '@config.relationsData',
                     'relationsLoading': '@config.relationsLoading',
                     'repeatable': '@config.repeatable',
+                    'role': '@config.role',
                     'sections': '@config.sections',
                     'showCancel': '@config.showCancel',
                     'showSubmit': '@config.showSubmit',
                     'submitEvent': '@config.submitEvent',
                     'submitLabel': '@config.submitLabel',
+                    'tabIndex': '@config.tabIndex',
                     'title': '@config.title',
                     'type': 'form',
                     'violationTriggers': '@config.violationTriggers',
@@ -1770,12 +2052,25 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
                   'render-ui',
                   'main',
                   {
+                    'aria-busy': '@config.ariaBusy',
+                    'aria-current': '@config.ariaCurrent',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'aria-hidden': '@config.ariaHidden',
+                    'aria-label': '@config.ariaLabel',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'aria-live': '@config.ariaLive',
+                    'aria-pressed': '@config.ariaPressed',
+                    'aria-selected': '@config.ariaSelected',
                     'cancelEvent': '@config.cancelEvent',
                     'cancelLabel': '@config.cancelLabel',
                     'children': '@config.children',
                     'className': '@config.className',
                     'conditionalFields': '@config.conditionalFields',
                     'configPath': '@config.configPath',
+                    'dir': '@config.dir',
+                    'enter': '@config.enter',
+                    'enterDelay': '@config.enterDelay',
                     'entity': '@entity',
                     'error': '@config.error',
                     'evaluationContext': '@config.evaluationContext',
@@ -1785,6 +2080,7 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
                     'hiddenCalculations': '@config.hiddenCalculations',
                     'initialData': '@payload.data',
                     'isLoading': '@config.isLoading',
+                    'lang': '@config.lang',
                     'layout': '@config.layout',
                     'mode': '@config.mode',
                     'onCancel': '@config.onCancel',
@@ -1793,11 +2089,13 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
                     'relationsData': '@config.relationsData',
                     'relationsLoading': '@config.relationsLoading',
                     'repeatable': '@config.repeatable',
+                    'role': '@config.role',
                     'sections': '@config.sections',
                     'showCancel': '@config.showCancel',
                     'showSubmit': '@config.showSubmit',
                     'submitEvent': '@config.submitEvent',
                     'submitLabel': '@config.submitLabel',
+                    'tabIndex': '@config.tabIndex',
                     'title': '@config.title',
                     'type': 'form',
                     'violationTriggers': '@config.violationTriggers',

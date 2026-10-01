@@ -53,20 +53,36 @@ export interface StdUiLightboxOpenPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiLightboxConfig {
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
   className?: string;
   closeAction?: string;
   /** Default: `0` */
   currentIndex?: number;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   /** Default: `[{"alt":"Alt","caption":"Caption","src":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"},{"alt":"Alt 2","caption":"Caption 2","src":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}]` */
   images?: EntityRow[];
   /** Default: `false` */
   isOpen?: boolean;
+  lang?: string;
   /** Default: `"CLOSE"` */
   onClose?: string;
   /** Default: `"INDEX_CHANGE"` */
   onIndexChange?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   /** Default: `true` */
   showCounter?: boolean;
+  tabIndex?: number;
 }
 
 /**

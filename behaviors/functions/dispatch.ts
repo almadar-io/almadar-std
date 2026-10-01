@@ -17,6 +17,14 @@ import { mergeCallSiteConfigOverrides } from '@almadar/core/factory-runtime';
 import type { OrbitalParamsManifest, ParamFieldDescriptor } from '@almadar/core/factory-runtime';
 
 import {
+  stdAgentAssistantAgentAssistantOrbital,
+  StdAgentAssistantAgentAssistantOrbitalManifest,
+  isStdAgentAssistantAgentAssistantOrbitalParams,
+  stdAgentAssistantAgentRecordsOrbital,
+  StdAgentAssistantAgentRecordsOrbitalManifest,
+  isStdAgentAssistantAgentRecordsOrbitalParams,
+} from './agent/organisms/std-agent-assistant.js';
+import {
   stdAgentBuilderAgentBuilderOrbital,
   StdAgentBuilderAgentBuilderOrbitalManifest,
   isStdAgentBuilderAgentBuilderOrbitalParams,
@@ -46,14 +54,6 @@ import {
   StdAgentPlannerAgentPlannerOrbitalManifest,
   isStdAgentPlannerAgentPlannerOrbitalParams,
 } from './agent/atoms/std-agent-planner.js';
-import {
-  stdAgentRabitCoordinatorOrbital,
-  StdAgentRabitCoordinatorOrbitalManifest,
-  isStdAgentRabitCoordinatorOrbitalParams,
-  stdAgentRabitOrbitalProcessOrbital,
-  StdAgentRabitOrbitalProcessOrbitalManifest,
-  isStdAgentRabitOrbitalProcessOrbitalParams,
-} from './agent/organisms/std-agent-rabit.js';
 import {
   stdAgentSessionAgentSessionOrbital,
   StdAgentSessionAgentSessionOrbitalManifest,
@@ -673,6 +673,24 @@ interface DispatchEntry {
 }
 
 const REGISTRY_MUT = new Map<string, DispatchEntry>();
+REGISTRY_MUT.set('std-agent-assistant::AgentAssistantOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdAgentAssistantAgentAssistantOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-agent-assistant::AgentAssistantOrbital');
+    }
+    return stdAgentAssistantAgentAssistantOrbital(p);
+  },
+  manifest: StdAgentAssistantAgentAssistantOrbitalManifest,
+});
+REGISTRY_MUT.set('std-agent-assistant::AgentRecordsOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdAgentAssistantAgentRecordsOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-agent-assistant::AgentRecordsOrbital');
+    }
+    return stdAgentAssistantAgentRecordsOrbital(p);
+  },
+  manifest: StdAgentAssistantAgentRecordsOrbitalManifest,
+});
 REGISTRY_MUT.set('std-agent-builder::AgentBuilderOrbital', {
   factory: (p: object): OrbitalDefinition => {
     if (!isStdAgentBuilderAgentBuilderOrbitalParams(p)) {
@@ -726,24 +744,6 @@ REGISTRY_MUT.set('std-agent-planner::AgentPlannerOrbital', {
     return stdAgentPlannerAgentPlannerOrbital(p);
   },
   manifest: StdAgentPlannerAgentPlannerOrbitalManifest,
-});
-REGISTRY_MUT.set('std-agent-rabit::CoordinatorOrbital', {
-  factory: (p: object): OrbitalDefinition => {
-    if (!isStdAgentRabitCoordinatorOrbitalParams(p)) {
-      throw new TypeError('Invalid params for std-agent-rabit::CoordinatorOrbital');
-    }
-    return stdAgentRabitCoordinatorOrbital(p);
-  },
-  manifest: StdAgentRabitCoordinatorOrbitalManifest,
-});
-REGISTRY_MUT.set('std-agent-rabit::OrbitalProcessOrbital', {
-  factory: (p: object): OrbitalDefinition => {
-    if (!isStdAgentRabitOrbitalProcessOrbitalParams(p)) {
-      throw new TypeError('Invalid params for std-agent-rabit::OrbitalProcessOrbital');
-    }
-    return stdAgentRabitOrbitalProcessOrbital(p);
-  },
-  manifest: StdAgentRabitOrbitalProcessOrbitalManifest,
 });
 REGISTRY_MUT.set('std-agent-session::AgentSessionOrbital', {
   factory: (p: object): OrbitalDefinition => {

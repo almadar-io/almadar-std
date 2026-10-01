@@ -50,32 +50,59 @@ export interface StdUiDetailPanelConfig {
   actions?: EntityRow[];
   /** Default: `{}` */
   activeFilters?: Record<string, TraitConfig>;
+  /** Default: `[]` */
+  activity?: EntityRow[];
+  activityContent?: PatternValue;
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
   avatar?: PatternValue;
+  avatarField?: string;
   backAction?: EntityRow;
   className?: string;
   /** Default: `"CLOSE"` */
   closeEvent?: string;
+  coverField?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
   /** Default: `[]` */
   displayFields?: string[];
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   error?: EntityRow;
   /** Default: `[]` */
   fieldNames?: string[];
-  /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","relation":{"cardinality":"one","entity":"Entity"},"type":"Type","values":["Item","Item 2"],"variant":"h3"},{"format":"currency","icon":"circle","label":"Label 2","name":"Name 2","relation":{"cardinality":"many","entity":"Entity 2"},"type":"Type 2","values":["Item","Item 2"],"variant":"h4"}]` */
+  /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","relation":{"cardinality":"one","entity":"Entity"},"type":"Type","values":["Item","Item 2"],"variant":"h3"},{"format":"datetime","icon":"circle","label":"Label 2","name":"Name 2","relation":{"cardinality":"many","entity":"Entity 2"},"type":"Type 2","values":["Item","Item 2"],"variant":"h4"}]` */
   fields?: EntityRow[];
   footer?: PatternValue;
   /** Default: `false` */
   isLoading?: boolean;
+  lang?: string;
+  latitudeField?: string;
+  /** Default: `[]` */
+  lineItemColumns?: EntityRow[];
+  lineItemsContent?: PatternValue;
+  longitudeField?: string;
+  /** Default: `"panel"` */
+  look?: 'panel' | 'profile' | 'showcase' | 'workflow' | 'map' | 'ledger' | 'conversation' | 'workspace';
   /** Default: `2` */
   maxInlineActions?: number;
+  mediaField?: string;
   mode?: string;
   /** Default: `""` */
   onTitleCommit?: string;
   pageProp?: number;
   pageSize?: number;
-  /** Default: `"left"` */
   position?: 'left' | 'right';
   /** Default: `{}` */
   relationsData?: Record<string, TraitConfig>;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   searchValue?: string;
   /** Default: `[]` */
   sections?: EntityRow[];
@@ -88,12 +115,20 @@ export interface StdUiDetailPanelConfig {
   /** Default: `false` */
   slideOver?: boolean;
   sortBy?: string;
-  /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
+  stageField?: string;
+  /** Default: `[]` */
+  stages?: EntityRow[];
   status?: EntityRow;
   subtitle?: string;
+  tabIndex?: number;
+  /** Default: `[]` */
+  tabs?: EntityRow[];
+  threadContent?: PatternValue;
   title?: string;
   totalCount?: number;
+  /** Default: `[]` */
+  totals?: EntityRow[];
   /** Default: `""` */
   viewerRole?: string;
   width?: string;
@@ -159,6 +194,107 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'required': true,
             'type': 'string',
           },
+          {
+            'default': 'Author Name',
+            'name': 'authorName',
+            'type': 'string',
+          },
+          {
+            'default': 'Content',
+            'name': 'content',
+            'type': 'string',
+          },
+          {
+            'default': 'Author Avatar Url',
+            'name': 'authorAvatarUrl',
+            'type': 'string',
+          },
+          {
+            'default': 'Posted At',
+            'name': 'postedAt',
+            'type': 'string',
+          },
+          {
+            'default': 1,
+            'name': 'voteCount',
+            'type': 'number',
+          },
+          {
+            'default': 'up',
+            'name': 'userVote',
+            'type': 'string',
+            'values': [
+              'up',
+              'down',
+              'none',
+            ],
+          },
+          {
+            'default': false,
+            'name': 'collapsed',
+            'type': 'boolean',
+          },
+          {
+            'default': [],
+            'items': {
+              'properties': {
+                'authorAvatarUrl': {
+                  'name': 'authorAvatarUrl',
+                  'required': false,
+                  'type': 'string',
+                },
+                'authorName': {
+                  'name': 'authorName',
+                  'required': false,
+                  'type': 'string',
+                },
+                'collapsed': {
+                  'name': 'collapsed',
+                  'required': false,
+                  'type': 'boolean',
+                },
+                'content': {
+                  'name': 'content',
+                  'required': false,
+                  'type': 'string',
+                },
+                'postedAt': {
+                  'name': 'postedAt',
+                  'required': false,
+                  'type': 'string',
+                },
+                'replies': {
+                  'items': {
+                    'type': 'union',
+                    'values': [
+                      'ReplyNodeRow',
+                    ],
+                  },
+                  'name': 'replies',
+                  'required': false,
+                  'type': 'array',
+                },
+                'userVote': {
+                  'name': 'userVote',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'up',
+                    'down',
+                    'none',
+                  ],
+                },
+                'voteCount': {
+                  'name': 'voteCount',
+                  'required': false,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'replies',
+            'type': 'array',
+          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -194,6 +330,11 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                   'name': 'navigatesTo',
                   'required': false,
                   'type': 'string',
+                },
+                'payload': {
+                  'name': 'payload',
+                  'required': false,
+                  'type': 'object',
                 },
                 'roles': {
                   'items': {
@@ -236,11 +377,168 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'tier': 'presentation',
             'type': 'Map<string,string>',
           },
+          'activity': {
+            'default': [],
+            'description': 'Activity entries shown under the record (workflow).',
+            'items': {
+              'properties': {
+                'date': {
+                  'name': 'date',
+                  'required': false,
+                  'type': 'string',
+                },
+                'description': {
+                  'name': 'description',
+                  'required': false,
+                  'type': 'string',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                'status': {
+                  'name': 'status',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'complete',
+                    'active',
+                    'pending',
+                    'error',
+                  ],
+                },
+                'tags': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'tags',
+                  'required': false,
+                  'type': 'array',
+                },
+                'title': {
+                  'name': 'title',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Activity',
+            'tier': 'presentation',
+            'type': '[DetailPanelActivityItem]',
+          },
+          'activityContent': {
+            'description': 'Activity composed in instead of `activity` — e.g. the record\'s own history trait (workflow).',
+            'label': 'Activity Content',
+            'tier': 'presentation',
+            'type': 'node',
+          },
+          'ariaBusy': {
+            'description': 'This region is updating; assistive technology waits before announcing it.',
+            'label': 'Aria-busy',
+            'synonyms': 'aria-busy',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'ariaCurrent': {
+            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
+            'label': 'Aria-current',
+            'synonyms': 'aria-current',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'page',
+              'step',
+              'location',
+              'date',
+              'time',
+              'true',
+              'false',
+            ],
+          },
+          'ariaDescribedby': {
+            'description': 'Id of the element whose text describes this one (help text, error).',
+            'label': 'Aria-describedby',
+            'synonyms': 'aria-describedby',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'ariaExpanded': {
+            'description': 'Whether the element it controls is expanded.',
+            'label': 'Aria-expanded',
+            'synonyms': 'aria-expanded',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'ariaHidden': {
+            'description': 'Hide from assistive technology (decorative content only).',
+            'label': 'Aria-hidden',
+            'synonyms': 'aria-hidden',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'ariaLabel': {
+            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
+            'label': 'Aria-label',
+            'synonyms': 'aria-label',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'ariaLabelledby': {
+            'description': 'Id of the element whose text names this one.',
+            'label': 'Aria-labelledby',
+            'synonyms': 'aria-labelledby',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'ariaLive': {
+            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
+            'label': 'Aria-live',
+            'synonyms': 'aria-live',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'off',
+              'polite',
+              'assertive',
+            ],
+          },
+          'ariaPressed': {
+            'description': 'Toggle-button state.',
+            'label': 'Aria-pressed',
+            'synonyms': 'aria-pressed',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'true',
+              'false',
+              'mixed',
+            ],
+          },
+          'ariaSelected': {
+            'description': 'Whether this item is selected (tabs, options, grid cells).',
+            'label': 'Aria-selected',
+            'synonyms': 'aria-selected',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
           'avatar': {
             'description': 'avatar prop',
             'label': 'Avatar',
             'tier': 'presentation',
             'type': 'node',
+          },
+          'avatarField': {
+            'description': 'Record field holding the avatar image. The profile look always shows an avatar, with the title\'s initials when this is unset or empty.',
+            'label': 'Avatar Field',
+            'tier': 'presentation',
+            'type': 'string',
           },
           'backAction': {
             'description': 'Navigation-back affordance. Renders top-LEFT before the title (OS/back convention — Almadar_UX §8.4), spatially separated from the right-aligned action buttons + close X. Never inferred from actions[] labels.',
@@ -265,6 +563,11 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                 'name': 'navigatesTo',
                 'required': false,
                 'type': 'string',
+              },
+              'payload': {
+                'name': 'payload',
+                'required': false,
+                'type': 'object',
               },
               'variant': {
                 'name': 'variant',
@@ -299,6 +602,23 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'tier': 'presentation',
             'type': 'event',
           },
+          'coverField': {
+            'description': 'Record field holding the cover image (profile).',
+            'label': 'Cover Field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'dir': {
+            'description': 'Text direction of this element\'s content.',
+            'label': 'Dir',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'ltr',
+              'rtl',
+              'auto',
+            ],
+          },
           'displayFields': {
             'default': [],
             'description': 'Display fields (alias for fields)',
@@ -308,6 +628,25 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'label': 'Display Fields',
             'tier': 'presentation',
             'type': '[string]',
+          },
+          'enter': {
+            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
+            'label': 'Enter',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'none',
+              'fade',
+              'rise',
+              'scale',
+              'slide',
+            ],
+          },
+          'enterDelay': {
+            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
+            'label': 'Enter Delay',
+            'tier': 'presentation',
+            'type': 'number',
           },
           'error': {
             'description': 'Error state (UiError)',
@@ -366,7 +705,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                 'variant': 'h3',
               },
               {
-                'format': 'currency',
+                'format': 'datetime',
                 'icon': 'circle',
                 'label': 'Label 2',
                 'name': 'Name 2',
@@ -411,6 +750,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                   'type': 'string',
                   'values': [
                     'date',
+                    'datetime',
                     'currency',
                     'number',
                     'boolean',
@@ -511,12 +851,181 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'tier': 'presentation',
             'type': 'boolean',
           },
+          'lang': {
+            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
+            'label': 'Lang',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'latitudeField': {
+            'description': 'Record fields holding the location (map).',
+            'label': 'Latitude Field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'lineItemColumns': {
+            'default': [],
+            'description': 'Columns of the line-items table (ledger).',
+            'items': {
+              'properties': {
+                'align': {
+                  'name': 'align',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'left',
+                    'center',
+                    'right',
+                  ],
+                },
+                'className': {
+                  'name': 'className',
+                  'required': false,
+                  'type': 'string',
+                },
+                'colorMap': {
+                  'items': {
+                    'type': 'string',
+                    'values': [
+                      'default',
+                      'primary',
+                      'secondary',
+                      'success',
+                      'warning',
+                      'danger',
+                      'error',
+                      'info',
+                      'neutral',
+                      'destructive',
+                    ],
+                  },
+                  'name': 'colorMap',
+                  'required': false,
+                  'type': 'object',
+                },
+                'field': {
+                  'name': 'field',
+                  'required': false,
+                  'type': 'string',
+                },
+                'format': {
+                  'name': 'format',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'badge',
+                    'date',
+                    'currency',
+                    'number',
+                    'percent',
+                    'boolean',
+                  ],
+                },
+                'header': {
+                  'name': 'header',
+                  'required': false,
+                  'type': 'string',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'key': {
+                  'name': 'key',
+                  'required': true,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'labels': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'labels',
+                  'required': false,
+                  'type': 'object',
+                },
+                'sortable': {
+                  'name': 'sortable',
+                  'required': false,
+                  'type': 'boolean',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'h3',
+                    'h4',
+                  ],
+                },
+                'weight': {
+                  'name': 'weight',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'normal',
+                    'medium',
+                    'semibold',
+                  ],
+                },
+                'width': {
+                  'name': 'width',
+                  'required': false,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Line Item Columns',
+            'tier': 'presentation',
+            'type': '[DetailPanelLineItemColumnsItem]',
+          },
+          'lineItemsContent': {
+            'description': 'Line items composed in instead of `lineItems` — e.g. the child rows\' own trait (ledger).',
+            'label': 'Line Items Content',
+            'tier': 'presentation',
+            'type': 'node',
+          },
+          'longitudeField': {
+            'description': 'longitudeField prop',
+            'label': 'Longitude Field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'look': {
+            'default': 'panel',
+            'description': 'Page variant: panel (labelled fields, default), profile (person/member hero), showcase (image-first product/listing), workflow (lifecycle stepper + activity), map (location hero), ledger (document with line items + totals), conversation (thread beside the record), workspace (tabbed record).',
+            'label': 'Look',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'panel',
+              'profile',
+              'showcase',
+              'workflow',
+              'map',
+              'ledger',
+              'conversation',
+              'workspace',
+            ],
+          },
           'maxInlineActions': {
             'default': 2,
             'description': 'Max inline action buttons before the rest collapse into a \'⋯\' overflow menu (mirrors DataGrid\'s maxInlineActions). Defaults to 2 — primary + secondary visible, the rest under the menu — so every detail panel carries the same action pattern.',
             'label': 'Max Inline Actions',
             'tier': 'presentation',
             'type': 'number',
+          },
+          'mediaField': {
+            'description': 'Record field holding the image, or list of images, the showcase look leads with.',
+            'label': 'Media Field',
+            'tier': 'presentation',
+            'type': 'string',
           },
           'mode': {
             'description': 'Display mode (passed by compiler)',
@@ -545,7 +1054,6 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'type': 'number',
           },
           'position': {
-            'default': 'left',
             'description': 'Panel position (for drawer/sidebar placement)',
             'label': 'Position',
             'tier': 'presentation',
@@ -589,6 +1097,95 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'label': 'Relations Data',
             'tier': 'presentation',
             'type': 'Map<string,[DetailPanelRelationsDataValueItem]>',
+          },
+          'role': {
+            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
+            'label': 'Role',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'alert',
+              'alertdialog',
+              'application',
+              'article',
+              'banner',
+              'blockquote',
+              'button',
+              'caption',
+              'cell',
+              'checkbox',
+              'code',
+              'columnheader',
+              'combobox',
+              'complementary',
+              'contentinfo',
+              'definition',
+              'deletion',
+              'dialog',
+              'document',
+              'emphasis',
+              'feed',
+              'figure',
+              'form',
+              'generic',
+              'grid',
+              'gridcell',
+              'group',
+              'heading',
+              'img',
+              'insertion',
+              'link',
+              'list',
+              'listbox',
+              'listitem',
+              'log',
+              'main',
+              'marquee',
+              'math',
+              'menu',
+              'menubar',
+              'menuitem',
+              'menuitemcheckbox',
+              'menuitemradio',
+              'meter',
+              'navigation',
+              'none',
+              'note',
+              'option',
+              'paragraph',
+              'presentation',
+              'progressbar',
+              'radio',
+              'radiogroup',
+              'region',
+              'row',
+              'rowgroup',
+              'rowheader',
+              'scrollbar',
+              'search',
+              'searchbox',
+              'separator',
+              'slider',
+              'spinbutton',
+              'status',
+              'strong',
+              'subscript',
+              'superscript',
+              'switch',
+              'tab',
+              'table',
+              'tablist',
+              'tabpanel',
+              'term',
+              'textbox',
+              'time',
+              'timer',
+              'toolbar',
+              'tooltip',
+              'tree',
+              'treegrid',
+              'treeitem',
+            ],
           },
           'searchValue': {
             'description': 'Current search query value',
@@ -681,7 +1278,6 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'type': 'string',
           },
           'sortDirection': {
-            'default': 'asc',
             'description': 'Current sort direction',
             'label': 'Sort Direction',
             'tier': 'presentation',
@@ -690,6 +1286,34 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
               'asc',
               'desc',
             ],
+          },
+          'stageField': {
+            'description': 'Record field holding the current lifecycle stage (workflow).',
+            'label': 'Stage Field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'stages': {
+            'default': [],
+            'description': 'The lifecycle in order, `{ value, label }` per stage (workflow).',
+            'items': {
+              'properties': {
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'value': {
+                  'name': 'value',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Stages',
+            'tier': 'presentation',
+            'type': '[DetailPanelStagesItem]',
           },
           'status': {
             'description': 'status prop',
@@ -722,6 +1346,53 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'tier': 'presentation',
             'type': 'string',
           },
+          'tabIndex': {
+            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
+            'label': 'Tab Index',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'tabs': {
+            'default': [],
+            'description': 'Tabs after the overview tab, each listing declared field names (workspace).',
+            'items': {
+              'properties': {
+                'content': {
+                  'name': 'content',
+                  'required': false,
+                  'type': 'node',
+                },
+                'fields': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'fields',
+                  'required': false,
+                  'type': 'array',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Tabs',
+            'tier': 'presentation',
+            'type': '[DetailPanelTabsItem]',
+          },
+          'threadContent': {
+            'description': 'The thread composed in instead of `thread` — e.g. the replies\' own trait with its composer (conversation).',
+            'label': 'Thread Content',
+            'tier': 'presentation',
+            'type': 'node',
+          },
           'title': {
             'description': 'title prop',
             'label': 'Title',
@@ -733,6 +1404,88 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'label': 'Total Count',
             'tier': 'presentation',
             'type': 'number',
+          },
+          'totals': {
+            'default': [],
+            'description': 'Record fields shown as the document\'s totals, in order (ledger).',
+            'items': {
+              'properties': {
+                'colorMap': {
+                  'items': {
+                    'type': 'string',
+                    'values': [
+                      'default',
+                      'primary',
+                      'secondary',
+                      'success',
+                      'warning',
+                      'danger',
+                      'error',
+                      'info',
+                      'neutral',
+                      'destructive',
+                    ],
+                  },
+                  'name': 'colorMap',
+                  'required': false,
+                  'type': 'object',
+                },
+                'format': {
+                  'name': 'format',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'date',
+                    'datetime',
+                    'currency',
+                    'number',
+                    'boolean',
+                    'percent',
+                  ],
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'labels': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'labels',
+                  'required': false,
+                  'type': 'object',
+                },
+                'name': {
+                  'name': 'name',
+                  'required': true,
+                  'type': 'string',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'h3',
+                    'h4',
+                    'body',
+                    'caption',
+                    'badge',
+                    'small',
+                    'progress',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Totals',
+            'tier': 'presentation',
+            'type': '[DetailPanelTotalsItem]',
           },
           'viewerRole': {
             'default': '',
@@ -779,6 +1532,38 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'required': true,
                     'type': 'string',
                   },
+                  {
+                    'name': 'authorName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'content',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'authorAvatarUrl',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'postedAt',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'voteCount',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'userVote',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'collapsed',
+                    'type': 'boolean',
+                  },
+                  {
+                    'name': 'replies',
+                    'type': '[ReplyNodeRow]',
+                  },
                 ],
                 'type': 'object',
               },
@@ -823,6 +1608,38 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                       'name': 'id',
                       'required': true,
                       'type': 'string',
+                    },
+                    {
+                      'name': 'authorName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'content',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'authorAvatarUrl',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'postedAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'voteCount',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'userVote',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'collapsed',
+                      'type': 'boolean',
+                    },
+                    {
+                      'name': 'replies',
+                      'type': '[ReplyNodeRow]',
                     },
                   ],
                   'type': 'object',
@@ -899,11 +1716,28 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                       ],
                     ],
                     'activeFilters': '@config.activeFilters',
+                    'activity': '@config.activity',
+                    'activityContent': '@config.activityContent',
+                    'aria-busy': '@config.ariaBusy',
+                    'aria-current': '@config.ariaCurrent',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'aria-hidden': '@config.ariaHidden',
+                    'aria-label': '@config.ariaLabel',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'aria-live': '@config.ariaLive',
+                    'aria-pressed': '@config.ariaPressed',
+                    'aria-selected': '@config.ariaSelected',
                     'avatar': '@config.avatar',
+                    'avatarField': '@config.avatarField',
                     'backAction': '@config.backAction',
                     'className': '@config.className',
                     'closeEvent': '@config.closeEvent',
+                    'coverField': '@config.coverField',
+                    'dir': '@config.dir',
                     'displayFields': '@config.displayFields',
+                    'enter': '@config.enter',
+                    'enterDelay': '@config.enterDelay',
                     'entity': '@entity',
                     'error': '@config.error',
                     'fieldNames': '@config.fieldNames',
@@ -911,13 +1745,22 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'footer': '@config.footer',
                     'initialData': '@entity',
                     'isLoading': '@config.isLoading',
+                    'lang': '@config.lang',
+                    'latitudeField': '@config.latitudeField',
+                    'lineItemColumns': '@config.lineItemColumns',
+                    'lineItems': '@entity',
+                    'lineItemsContent': '@config.lineItemsContent',
+                    'longitudeField': '@config.longitudeField',
+                    'look': '@config.look',
                     'maxInlineActions': '@config.maxInlineActions',
+                    'mediaField': '@config.mediaField',
                     'mode': '@config.mode',
                     'onTitleCommit': '@config.onTitleCommit',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
                     'position': '@config.position',
                     'relationsData': '@config.relationsData',
+                    'role': '@config.role',
                     'searchValue': '@config.searchValue',
                     'sections': '@config.sections',
                     'selectedIds': '@config.selectedIds',
@@ -925,10 +1768,17 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'slideOver': '@config.slideOver',
                     'sortBy': '@config.sortBy',
                     'sortDirection': '@config.sortDirection',
+                    'stageField': '@config.stageField',
+                    'stages': '@config.stages',
                     'status': '@config.status',
                     'subtitle': '@config.subtitle',
+                    'tabIndex': '@config.tabIndex',
+                    'tabs': '@config.tabs',
+                    'thread': '@entity',
+                    'threadContent': '@config.threadContent',
                     'title': '@config.title',
                     'totalCount': '@config.totalCount',
+                    'totals': '@config.totals',
                     'type': 'detail-panel',
                     'width': '@config.width',
                   },
@@ -997,11 +1847,28 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                       ],
                     ],
                     'activeFilters': '@config.activeFilters',
+                    'activity': '@config.activity',
+                    'activityContent': '@config.activityContent',
+                    'aria-busy': '@config.ariaBusy',
+                    'aria-current': '@config.ariaCurrent',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'aria-hidden': '@config.ariaHidden',
+                    'aria-label': '@config.ariaLabel',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'aria-live': '@config.ariaLive',
+                    'aria-pressed': '@config.ariaPressed',
+                    'aria-selected': '@config.ariaSelected',
                     'avatar': '@config.avatar',
+                    'avatarField': '@config.avatarField',
                     'backAction': '@config.backAction',
                     'className': '@config.className',
                     'closeEvent': '@config.closeEvent',
+                    'coverField': '@config.coverField',
+                    'dir': '@config.dir',
                     'displayFields': '@config.displayFields',
+                    'enter': '@config.enter',
+                    'enterDelay': '@config.enterDelay',
                     'entity': '@entity',
                     'error': '@config.error',
                     'fieldNames': '@config.fieldNames',
@@ -1009,13 +1876,22 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'footer': '@config.footer',
                     'initialData': '@entity',
                     'isLoading': '@config.isLoading',
+                    'lang': '@config.lang',
+                    'latitudeField': '@config.latitudeField',
+                    'lineItemColumns': '@config.lineItemColumns',
+                    'lineItems': '@entity',
+                    'lineItemsContent': '@config.lineItemsContent',
+                    'longitudeField': '@config.longitudeField',
+                    'look': '@config.look',
                     'maxInlineActions': '@config.maxInlineActions',
+                    'mediaField': '@config.mediaField',
                     'mode': '@config.mode',
                     'onTitleCommit': '@config.onTitleCommit',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
                     'position': '@config.position',
                     'relationsData': '@config.relationsData',
+                    'role': '@config.role',
                     'searchValue': '@config.searchValue',
                     'sections': '@config.sections',
                     'selectedIds': '@config.selectedIds',
@@ -1023,10 +1899,17 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'slideOver': '@config.slideOver',
                     'sortBy': '@config.sortBy',
                     'sortDirection': '@config.sortDirection',
+                    'stageField': '@config.stageField',
+                    'stages': '@config.stages',
                     'status': '@config.status',
                     'subtitle': '@config.subtitle',
+                    'tabIndex': '@config.tabIndex',
+                    'tabs': '@config.tabs',
+                    'thread': '@entity',
+                    'threadContent': '@config.threadContent',
                     'title': '@config.title',
                     'totalCount': '@config.totalCount',
+                    'totals': '@config.totals',
                     'type': 'detail-panel',
                     'width': '@config.width',
                   },
@@ -1098,11 +1981,28 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                       ],
                     ],
                     'activeFilters': '@config.activeFilters',
+                    'activity': '@config.activity',
+                    'activityContent': '@config.activityContent',
+                    'aria-busy': '@config.ariaBusy',
+                    'aria-current': '@config.ariaCurrent',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'aria-hidden': '@config.ariaHidden',
+                    'aria-label': '@config.ariaLabel',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'aria-live': '@config.ariaLive',
+                    'aria-pressed': '@config.ariaPressed',
+                    'aria-selected': '@config.ariaSelected',
                     'avatar': '@config.avatar',
+                    'avatarField': '@config.avatarField',
                     'backAction': '@config.backAction',
                     'className': '@config.className',
                     'closeEvent': '@config.closeEvent',
+                    'coverField': '@config.coverField',
+                    'dir': '@config.dir',
                     'displayFields': '@config.displayFields',
+                    'enter': '@config.enter',
+                    'enterDelay': '@config.enterDelay',
                     'entity': '@entity',
                     'error': '@config.error',
                     'fieldNames': '@config.fieldNames',
@@ -1110,13 +2010,22 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'footer': '@config.footer',
                     'initialData': '@entity',
                     'isLoading': '@config.isLoading',
+                    'lang': '@config.lang',
+                    'latitudeField': '@config.latitudeField',
+                    'lineItemColumns': '@config.lineItemColumns',
+                    'lineItems': '@entity',
+                    'lineItemsContent': '@config.lineItemsContent',
+                    'longitudeField': '@config.longitudeField',
+                    'look': '@config.look',
                     'maxInlineActions': '@config.maxInlineActions',
+                    'mediaField': '@config.mediaField',
                     'mode': '@config.mode',
                     'onTitleCommit': '@config.onTitleCommit',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
                     'position': '@config.position',
                     'relationsData': '@config.relationsData',
+                    'role': '@config.role',
                     'searchValue': '@config.searchValue',
                     'sections': '@config.sections',
                     'selectedIds': '@config.selectedIds',
@@ -1124,10 +2033,17 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'slideOver': '@config.slideOver',
                     'sortBy': '@config.sortBy',
                     'sortDirection': '@config.sortDirection',
+                    'stageField': '@config.stageField',
+                    'stages': '@config.stages',
                     'status': '@config.status',
                     'subtitle': '@config.subtitle',
+                    'tabIndex': '@config.tabIndex',
+                    'tabs': '@config.tabs',
+                    'thread': '@entity',
+                    'threadContent': '@config.threadContent',
                     'title': '@config.title',
                     'totalCount': '@config.totalCount',
+                    'totals': '@config.totals',
                     'type': 'detail-panel',
                     'width': '@config.width',
                   },
@@ -1178,11 +2094,28 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                       ],
                     ],
                     'activeFilters': '@config.activeFilters',
+                    'activity': '@config.activity',
+                    'activityContent': '@config.activityContent',
+                    'aria-busy': '@config.ariaBusy',
+                    'aria-current': '@config.ariaCurrent',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'aria-hidden': '@config.ariaHidden',
+                    'aria-label': '@config.ariaLabel',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'aria-live': '@config.ariaLive',
+                    'aria-pressed': '@config.ariaPressed',
+                    'aria-selected': '@config.ariaSelected',
                     'avatar': '@config.avatar',
+                    'avatarField': '@config.avatarField',
                     'backAction': '@config.backAction',
                     'className': '@config.className',
                     'closeEvent': '@config.closeEvent',
+                    'coverField': '@config.coverField',
+                    'dir': '@config.dir',
                     'displayFields': '@config.displayFields',
+                    'enter': '@config.enter',
+                    'enterDelay': '@config.enterDelay',
                     'entity': '@payload.data',
                     'error': '@config.error',
                     'fieldNames': '@config.fieldNames',
@@ -1190,13 +2123,22 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'footer': '@config.footer',
                     'initialData': '@payload.data',
                     'isLoading': '@config.isLoading',
+                    'lang': '@config.lang',
+                    'latitudeField': '@config.latitudeField',
+                    'lineItemColumns': '@config.lineItemColumns',
+                    'lineItems': '@entity',
+                    'lineItemsContent': '@config.lineItemsContent',
+                    'longitudeField': '@config.longitudeField',
+                    'look': '@config.look',
                     'maxInlineActions': '@config.maxInlineActions',
+                    'mediaField': '@config.mediaField',
                     'mode': '@config.mode',
                     'onTitleCommit': '@config.onTitleCommit',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
                     'position': '@config.position',
                     'relationsData': '@config.relationsData',
+                    'role': '@config.role',
                     'searchValue': '@config.searchValue',
                     'sections': '@config.sections',
                     'selectedIds': '@config.selectedIds',
@@ -1204,10 +2146,17 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'slideOver': '@config.slideOver',
                     'sortBy': '@config.sortBy',
                     'sortDirection': '@config.sortDirection',
+                    'stageField': '@config.stageField',
+                    'stages': '@config.stages',
                     'status': '@config.status',
                     'subtitle': '@config.subtitle',
+                    'tabIndex': '@config.tabIndex',
+                    'tabs': '@config.tabs',
+                    'thread': '@entity',
+                    'threadContent': '@config.threadContent',
                     'title': '@config.title',
                     'totalCount': '@config.totalCount',
+                    'totals': '@config.totals',
                     'type': 'detail-panel',
                     'width': '@config.width',
                   },

@@ -43,6 +43,8 @@ export interface StdUiGeometricPatternConfig {
   className?: string;
   /** Default: `"var(--color-primary)"` */
   color?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   /** Default: `"background"` */
   mode?: 'background' | 'left' | 'right' | 'dual' | 'around' | 'frame';
   /** Default: `0.06` */

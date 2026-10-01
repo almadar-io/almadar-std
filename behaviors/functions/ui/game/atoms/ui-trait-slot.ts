@@ -68,20 +68,33 @@ export interface StdUiTraitSlotDropPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTraitSlotConfig {
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
   /** Default: `{}` */
   categoryColors?: Record<string, TraitConfig>;
   className?: string;
   /** Default: `"CLICK"` */
   clickEvent?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
   /** Default: `false` */
   draggable?: boolean;
   /** Default: `"DROP"` */
   dropEvent?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   equippedItem?: EntityRow;
   error?: EntityRow;
-  /** Default: `"correct"` */
   feedback?: 'correct' | 'wrong';
   isLoading?: boolean;
+  lang?: string;
   lockLabel?: string;
   /** Default: `false` */
   locked?: boolean;
@@ -95,6 +108,7 @@ export interface StdUiTraitSlotConfig {
   onRemove?: string;
   /** Default: `""` */
   removeEvent?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   /** Default: `false` */
   selected?: boolean;
   /** Default: `true` */
@@ -103,6 +117,7 @@ export interface StdUiTraitSlotConfig {
   size?: 'sm' | 'md' | 'lg';
   /** Default: `1` */
   slotNumber?: number;
+  tabIndex?: number;
   tooltipFrameUrl?: EntityRow;
 }
 

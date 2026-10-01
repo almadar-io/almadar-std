@@ -282,6 +282,15 @@
             "tier": "presentation"
           },
           {
+            "key": "avatarField",
+            "type": "string",
+            "default": "",
+            "label": "Which field is the avatar?",
+            "description": "Name of the image field shown as the profile look's avatar; the title supplies initials when it is empty.",
+            "synonyms": "photo field, avatar field, picture field",
+            "tier": "presentation"
+          },
+          {
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
@@ -321,15 +330,36 @@
                       ]
                     ]
                   ],
+                  "avatarField": "@config.avatarField",
                   "closeEvent": "@config.closeEvent",
+                  "coverField": "@config.coverField",
                   "entity": "@entity.loadedRow",
                   "fields": "@config.fields",
                   "initialData": "@entity.loadedRow",
+                  "latitudeField": "@config.latitudeField",
+                  "lineItemColumns": "@config.lineItemColumns",
+                  "lineItems": [
+                    "object/get",
+                    "@entity.loadedRow",
+                    "@config.lineItemsField"
+                  ],
+                  "longitudeField": "@config.longitudeField",
+                  "look": "@config.recordLook",
                   "maxInlineActions": "@config.maxInlineActions",
+                  "mediaField": "@config.mediaField",
                   "sections": "@config.sections",
                   "showActions": "@config.showActions",
+                  "stageField": "@config.stageField",
+                  "stages": "@config.stages",
                   "subtitle": "@entity.description",
+                  "tabs": "@config.tabs",
+                  "thread": [
+                    "object/get",
+                    "@entity.loadedRow",
+                    "@config.threadField"
+                  ],
                   "title": "@entity.name",
+                  "totals": "@config.totals",
                   "type": "detail-panel"
                 }
               ],
@@ -364,7 +394,7 @@
             "type": "string",
             "default": "",
             "label": "Which field is the cover image?",
-            "description": "Name of the image-typed field on the loaded record painted as the document look's full-bleed hero banner (e.g. coverImage, heroImage). Empty = no banner, the default.",
+            "description": "Name of the image-typed field on the loaded record painted as the hero banner of the document look and of the profile record look (e.g. coverImage, heroImage). Empty = no banner, the default.",
             "synonyms": "cover field, hero image field, banner field",
             "tier": "presentation"
           },
@@ -645,12 +675,103 @@
             }
           },
           {
+            "key": "latitudeField",
+            "type": "string",
+            "default": "",
+            "label": "Which field is the latitude?",
+            "description": "Name of the latitude field the map look pins.",
+            "tier": "presentation"
+          },
+          {
+            "key": "lineItemColumns",
+            "type": "[LineItemColumn]",
+            "default": [],
+            "label": "Which line-item columns?",
+            "description": "Columns of the ledger look's line-items table.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "align": {
+                  "name": "align",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "left",
+                    "center",
+                    "right"
+                  ]
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "badge",
+                    "date",
+                    "currency",
+                    "number",
+                    "percent",
+                    "boolean"
+                  ]
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "lineItemsField",
+            "type": "string",
+            "default": "",
+            "label": "Which relation holds the line items?",
+            "description": "Name of the hydrated relation (list it in include) whose rows the ledger look tables.",
+            "synonyms": "line items field, order lines, invoice lines, child rows",
+            "tier": "presentation"
+          },
+          {
+            "key": "loadingContent",
+            "type": "render-ui",
+            "default": {
+              "type": "skeleton",
+              "variant": "detail"
+            },
+            "label": "Loading placeholder",
+            "description": "Shown while the record loads, shaped like what replaces it so the page does not jump: the detail skeleton for the panel/slide-over/page looks; a document-look consumer sets { type: skeleton, variant: text, rows: 8 }.",
+            "tier": "internal"
+          },
+          {
+            "key": "longitudeField",
+            "type": "string",
+            "default": "",
+            "label": "Which field is the longitude?",
+            "description": "Name of the longitude field the map look pins.",
+            "tier": "presentation"
+          },
+          {
             "key": "maxInlineActions",
             "type": "number",
             "default": 3,
             "label": "How many actions before collapsing?",
             "description": "Actions beyond this count collapse into a '⋯' overflow menu.",
             "synonyms": "inline actions limit, overflow threshold",
+            "tier": "presentation"
+          },
+          {
+            "key": "mediaField",
+            "type": "string",
+            "default": "",
+            "label": "Which field holds the images?",
+            "description": "Name of the field the showcase look leads with: one image URL, a list of URLs, or a list of { src, caption }.",
+            "synonyms": "gallery field, photos field, images field, media field",
             "tier": "presentation"
           },
           {
@@ -706,15 +827,36 @@
                       ]
                     ]
                   ],
+                  "avatarField": "@config.avatarField",
                   "closeEvent": "@config.closeEvent",
+                  "coverField": "@config.coverField",
                   "entity": "@entity.loadedRow",
                   "fields": "@config.fields",
                   "initialData": "@entity.loadedRow",
+                  "latitudeField": "@config.latitudeField",
+                  "lineItemColumns": "@config.lineItemColumns",
+                  "lineItems": [
+                    "object/get",
+                    "@entity.loadedRow",
+                    "@config.lineItemsField"
+                  ],
+                  "longitudeField": "@config.longitudeField",
+                  "look": "@config.recordLook",
                   "maxInlineActions": "@config.maxInlineActions",
+                  "mediaField": "@config.mediaField",
                   "sections": "@config.sections",
                   "showActions": "@config.showActions",
+                  "stageField": "@config.stageField",
+                  "stages": "@config.stages",
                   "subtitle": "@entity.description",
+                  "tabs": "@config.tabs",
+                  "thread": [
+                    "object/get",
+                    "@entity.loadedRow",
+                    "@config.threadField"
+                  ],
                   "title": "@entity.name",
+                  "totals": "@config.totals",
                   "type": "detail-panel"
                 }
               ],
@@ -734,6 +876,25 @@
             "label": "Placeholder text",
             "description": "Placeholder shown in the document body when it is empty.",
             "tier": "presentation"
+          },
+          {
+            "key": "recordLook",
+            "type": "string",
+            "default": "panel",
+            "label": "Record look",
+            "description": "How the record itself is arranged inside the panel/slide-over/page frame, so not every app reads as an admin form. panel = labelled field grid (default); profile = a person or member: avatar + cover hero (avatarField, coverField); showcase = image-first product or listing with a gallery (mediaField); workflow = a lifecycle stepper over the record (stageField, stages); map = a place: location map hero (latitudeField, longitudeField); ledger = an invoice/order document: line items then totals (lineItemsField, lineItemColumns, totals); conversation = a ticket or thread: the messages beside the record facts (threadField); workspace = a hub record with tabs (tabs). Regions with no data simply do not render. A region fed by a separate trait (replies with their composer, editable order lines, activity history) is composed by overriding the body and passing detail-panel's threadContent / lineItemsContent / activityContent.",
+            "synonyms": "record style, profile page, product page, listing page, invoice view, ticket view, timeline view, tabbed record, location page",
+            "tier": "presentation",
+            "enumValues": [
+              "panel",
+              "profile",
+              "showcase",
+              "workflow",
+              "map",
+              "ledger",
+              "conversation",
+              "workspace"
+            ]
           },
           {
             "key": "sections",
@@ -811,16 +972,37 @@
                       ]
                     ]
                   ],
+                  "avatarField": "@config.avatarField",
                   "closeEvent": "@config.closeEvent",
+                  "coverField": "@config.coverField",
                   "entity": "@entity.loadedRow",
                   "fields": "@config.fields",
                   "initialData": "@entity.loadedRow",
+                  "latitudeField": "@config.latitudeField",
+                  "lineItemColumns": "@config.lineItemColumns",
+                  "lineItems": [
+                    "object/get",
+                    "@entity.loadedRow",
+                    "@config.lineItemsField"
+                  ],
+                  "longitudeField": "@config.longitudeField",
+                  "look": "@config.recordLook",
                   "maxInlineActions": "@config.maxInlineActions",
+                  "mediaField": "@config.mediaField",
                   "sections": "@config.sections",
                   "showActions": "@config.showActions",
                   "slideOver": true,
+                  "stageField": "@config.stageField",
+                  "stages": "@config.stages",
                   "subtitle": "@entity.description",
+                  "tabs": "@config.tabs",
+                  "thread": [
+                    "object/get",
+                    "@entity.loadedRow",
+                    "@config.threadField"
+                  ],
                   "title": "@entity.name",
+                  "totals": "@config.totals",
                   "type": "detail-panel"
                 }
               ],
@@ -833,12 +1015,91 @@
             "tier": "internal"
           },
           {
+            "key": "stageField",
+            "type": "string",
+            "default": "",
+            "label": "Which field is the lifecycle stage?",
+            "description": "Name of the field holding the record's current stage; the workflow look marks it on the stepper.",
+            "synonyms": "stage field, status field, phase field, step field",
+            "tier": "presentation"
+          },
+          {
+            "key": "stages",
+            "type": "[RecordStage]",
+            "default": [],
+            "label": "What is the lifecycle, in order?",
+            "description": "The workflow look's stepper: one { value, label } per stage, value matching stageField's enum.",
+            "synonyms": "lifecycle, pipeline stages, steps, phases",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "subtitleField",
             "type": "string",
             "default": "description",
             "label": "Which field is the subtitle?",
             "description": "Name of the field shown under the title (e.g. company, category). Set to \"\" for no subtitle at all — the right choice for the document look, whose metadata lives in the properties strip, not a second line.",
             "synonyms": "subtitle field, secondary field, subheading, no subtitle",
+            "tier": "presentation"
+          },
+          {
+            "key": "tabs",
+            "type": "[RecordTab]",
+            "default": [],
+            "label": "Which tabs follow the overview?",
+            "description": "The workspace look's tabs after Overview: each lists field names, or composes a related trait as content (e.g. a company's deals list).",
+            "synonyms": "tabs, record tabs, sub pages, related lists",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "content": {
+                  "name": "content",
+                  "required": false,
+                  "type": "string"
+                },
+                "fields": {
+                  "name": "fields",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "threadField",
+            "type": "string",
+            "default": "",
+            "label": "Which relation holds the thread?",
+            "description": "Name of the hydrated relation (list it in include) whose messages the conversation look shows.",
+            "synonyms": "messages field, replies field, comments field, thread field",
             "tier": "presentation"
           },
           {
@@ -849,6 +1110,96 @@
             "description": "Name of the field on the loaded record shown as the panel title (e.g. contactName, subject, title).",
             "synonyms": "title field, heading field, name field, label field",
             "tier": "presentation"
+          },
+          {
+            "key": "titleFields",
+            "type": "[string]",
+            "default": [],
+            "label": "Which fields make up the title, in order?",
+            "description": "For records whose name is split across fields (firstName + lastName): the listed fields' values joined with spaces become the title, and override titleField. Empty = titleField alone, the default.",
+            "synonyms": "full name, name parts, composite title, first and last name",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "totals",
+            "type": "[RecordFieldSpec]",
+            "default": [],
+            "label": "Which fields are the totals?",
+            "description": "Record fields shown under the line items in order (e.g. subtotal, tax, total); the last is emphasised.",
+            "synonyms": "totals, subtotal, grand total, amount due",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "colorMap": {
+                  "name": "colorMap",
+                  "required": false,
+                  "type": "object",
+                  "items": {
+                    "type": "string",
+                    "values": [
+                      "default",
+                      "primary",
+                      "secondary",
+                      "success",
+                      "warning",
+                      "danger",
+                      "error",
+                      "info",
+                      "neutral",
+                      "destructive"
+                    ]
+                  }
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "date",
+                    "currency",
+                    "number",
+                    "boolean",
+                    "percent"
+                  ]
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "labels": {
+                  "name": "labels",
+                  "required": false,
+                  "type": "object",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "h3",
+                    "h4",
+                    "body",
+                    "caption",
+                    "badge",
+                    "small",
+                    "progress"
+                  ]
+                }
+              },
+              "type": "object"
+            }
           },
           {
             "key": "viewerRole",

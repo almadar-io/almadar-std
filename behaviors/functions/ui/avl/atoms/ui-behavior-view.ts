@@ -39,8 +39,22 @@ export type StdUiBehaviorViewEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBehaviorViewConfig {
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
   /** Default: `{"entityName":"Order","externalLinks":[{"direction":"in","eventName":"PAYMENT_OK","targetOrbital":"PaymentOrbital","traitName":"OrderFlow"}],"fields":[{"hasDefault":false,"name":"customer","required":true,"type":"string"},{"hasDefault":true,"name":"qty","required":true,"type":"number"},{"hasDefault":true,"name":"status","required":false,"type":"string"}],"orbitalName":"OrderOrbital","pages":[{"name":"Orders","route":"/orders"}],"persistence":"persistent","traitDetails":{"OrderFlow":{"emittedEvents":["ORDER_SAVED"],"linkedEntity":"Order","listenedEvents":["PAYMENT_OK"],"name":"OrderFlow","states":[{"isInitial":true,"isTerminal":false,"name":"browsing"},{"isInitial":false,"isTerminal":false,"name":"editing"},{"isInitial":false,"isTerminal":false,"name":"saving"},{"isInitial":false,"isTerminal":true,"name":"confirmed"},{"isInitial":false,"isTerminal":false,"name":"failed"}],"transitions":[{"effects":[{"args":[],"type":"render-ui"}],"event":"EDIT","from":"browsing","index":0,"to":"editing"},{"effects":[{"args":[],"type":"persist"},{"args":[],"type":"notify"}],"event":"SAVE","from":"editing","index":1,"to":"saving"},{"effects":[{"args":[],"type":"emit"},{"args":[],"type":"render-ui"}],"event":"SAVED","from":"saving","index":2,"to":"confirmed"},{"effects":[{"args":[],"type":"notify"}],"event":"SAVE_FAILED","from":"saving","index":3,"to":"failed"},{"effects":[],"event":"RETRY","from":"failed","index":4,"to":"editing"},{"effects":[{"args":[],"type":"render-ui"}],"event":"CANCEL","from":"editing","index":5,"to":"browsing"},{"effects":[{"args":[],"type":"navigate"}],"event":"DONE","from":"confirmed","index":6,"to":"browsing"}]}},"traits":[{"emits":["ORDER_SAVED"],"eventCount":7,"listens":["PAYMENT_OK"],"name":"OrderFlow","stateCount":5,"transitionCount":7}]}` */
   data?: EntityRow;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  lang?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  tabIndex?: number;
 }
 
 /**

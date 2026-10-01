@@ -6,212 +6,210 @@
     "factoryPath": "behaviors/functions/agent/atoms/std-agent-session.ts",
     "entities": [
       {
-        "name": "AgentSession",
+        "name": "AgentMessage",
         "fields": [
           {
-            "name": "orbitalName",
+            "name": "ownerId",
             "type": "string",
-            "required": false
+            "required": true,
+            "description": "Whose conversation this message belongs to (the real @user). The binding organism scopes @read to it.",
+            "synonyms": "user, owner, account"
           },
           {
-            "name": "spec",
-            "type": "object",
-            "required": false
-          },
-          {
-            "name": "history",
-            "type": "array",
-            "required": false
-          },
-          {
-            "name": "status",
+            "name": "role",
             "type": "string",
-            "required": false
+            "required": false,
+            "description": "Who said it.",
+            "synonyms": "speaker, author"
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "required": true,
+            "description": "What was said.",
+            "synonyms": "text, message, body"
+          },
+          {
+            "name": "draft",
+            "type": "string",
+            "required": false,
+            "intrinsic": true,
+            "description": "The message being typed."
           }
         ],
-        "persistence": "runtime"
+        "persistence": "persistent"
       }
     ],
     "traits": [
       {
-        "name": "SessionReader",
+        "name": "AgentThread",
         "emittedEvents": [
-          "SPEC_READ",
-          "SPEC_LOADED",
-          "HISTORY_LOADED"
+          "CONVERSE",
+          "AgentConversationLoaded",
+          "AgentMessagesLoaded",
+          "AgentMessagesLoadFailed",
+          "AgentMessageSaved",
+          "AgentMessageSaveFailed",
+          "EDIT_MESSAGE",
+          "SEND_DRAFT"
         ],
         "listenedEvents": [],
         "events": [
           {
-            "name": "SPEC_READ",
-            "direction": "emit"
+            "name": "CONVERSE",
+            "direction": "emit",
+            "description": "The conversation to answer, oldest first; the last turn is the request.",
+            "synonyms": "ask, converse, request",
+            "tier": "domain"
           },
           {
-            "name": "SPEC_LOADED",
-            "direction": "emit"
+            "name": "AgentConversationLoaded",
+            "direction": "emit",
+            "tier": "internal"
           },
           {
-            "name": "HISTORY_LOADED",
-            "direction": "emit"
+            "name": "AgentMessagesLoaded",
+            "direction": "emit",
+            "description": "The conversation finished loading.",
+            "tier": "internal"
+          },
+          {
+            "name": "AgentMessagesLoadFailed",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "AgentMessageSaved",
+            "direction": "emit",
+            "description": "A message persisted — payload is the created AgentMessage row itself.",
+            "tier": "internal"
+          },
+          {
+            "name": "AgentMessageSaveFailed",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "EDIT_MESSAGE",
+            "direction": "emit",
+            "description": "The message being typed changed.",
+            "tier": "presentation"
+          },
+          {
+            "name": "SEND_DRAFT",
+            "direction": "emit",
+            "description": "Send the typed message.",
+            "synonyms": "send, ask, submit",
+            "tier": "domain"
           },
           {
             "name": "INIT",
             "direction": "listen"
           },
           {
-            "name": "READ_SPEC",
-            "direction": "listen"
+            "name": "SEND",
+            "direction": "listen",
+            "description": "Ask the assistant something.",
+            "synonyms": "ask, message, chat"
           },
           {
-            "name": "SPEC_LOAD_FAILED",
-            "direction": "listen"
+            "name": "REPLIED",
+            "direction": "listen",
+            "description": "The assistant answered."
           },
           {
-            "name": "HISTORY_LOAD_FAILED",
-            "direction": "listen"
-          },
-          {
-            "name": "RESET",
-            "direction": "listen"
+            "name": "REPLY_FAILED",
+            "direction": "listen",
+            "description": "The assistant could not answer."
           }
         ],
-        "overridableConfigKeys": [],
+        "overridableConfigKeys": [
+          {
+            "key": "links",
+            "type": "[AgentLink]",
+            "default": [],
+            "label": "Links above the conversation",
+            "description": "Related pages (e.g. the run history), shown under the title.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "href": {
+                  "name": "href",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "placeholder",
+            "type": "string",
+            "default": "Ask the assistant…",
+            "label": "Message placeholder",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Assistant",
+            "label": "Title",
+            "description": "Heading above the conversation.",
+            "tier": "presentation"
+          }
+        ],
         "capabilities": [],
-        "linkedEntity": "AgentSession",
+        "linkedEntity": "AgentMessage",
         "transitionEvents": [
-          "HISTORY_LOADED",
-          "HISTORY_LOAD_FAILED",
+          "AgentConversationLoaded",
+          "AgentMessageSaveFailed",
+          "AgentMessageSaved",
+          "AgentMessagesLoadFailed",
+          "AgentMessagesLoaded",
+          "EDIT_MESSAGE",
           "INIT",
-          "READ_SPEC",
-          "RESET",
-          "SPEC_LOADED",
-          "SPEC_LOAD_FAILED"
+          "REPLIED",
+          "REPLY_FAILED",
+          "SEND",
+          "SEND_DRAFT"
         ],
         "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "draft"
+          ]
+        },
         "effectRow": [
           {
             "kind": "emit",
-            "resource": "SPEC_READ"
+            "resource": "CONVERSE"
           },
           {
-            "kind": "session/read-history"
+            "kind": "fetch",
+            "resource": "AgentMessage"
           },
           {
-            "kind": "session/read-spec"
+            "kind": "persist",
+            "resource": "AgentMessage"
           },
           {
-            "kind": "set",
-            "resource": "@entity.history"
-          },
-          {
-            "kind": "set",
-            "resource": "@entity.orbitalName"
-          },
-          {
-            "kind": "set",
-            "resource": "@entity.spec"
+            "kind": "render-ui",
+            "resource": "main"
           },
           {
             "kind": "set",
-            "resource": "@entity.status"
-          }
-        ]
-      },
-      {
-        "name": "SessionWriter",
-        "emittedEvents": [
-          "SPEC_WRITTEN"
-        ],
-        "listenedEvents": [],
-        "events": [
-          {
-            "name": "SPEC_WRITTEN",
-            "direction": "emit"
-          },
-          {
-            "name": "INIT",
-            "direction": "listen"
-          },
-          {
-            "name": "WRITE_SPEC",
-            "direction": "listen"
-          },
-          {
-            "name": "RESET",
-            "direction": "listen"
+            "resource": "@entity.draft"
           }
         ],
-        "overridableConfigKeys": [],
-        "capabilities": [],
-        "linkedEntity": "AgentSession",
-        "transitionEvents": [
-          "INIT",
-          "RESET",
-          "WRITE_SPEC"
-        ],
-        "definerKnobs": [],
-        "effectRow": [
-          {
-            "kind": "emit",
-            "resource": "SPEC_WRITTEN"
-          },
-          {
-            "kind": "session/write-spec"
-          },
-          {
-            "kind": "set",
-            "resource": "@entity.orbitalName"
-          },
-          {
-            "kind": "set",
-            "resource": "@entity.spec"
-          },
-          {
-            "kind": "set",
-            "resource": "@entity.status"
-          }
-        ]
-      },
-      {
-        "name": "SessionListener",
-        "emittedEvents": [],
-        "listenedEvents": [
-          "SPEC_READ",
-          "SPEC_WRITTEN"
-        ],
-        "events": [
-          {
-            "name": "INIT",
-            "direction": "listen"
-          },
-          {
-            "name": "SPEC_READ",
-            "direction": "listen"
-          },
-          {
-            "name": "SPEC_WRITTEN",
-            "direction": "listen"
-          },
-          {
-            "name": "RESET",
-            "direction": "listen"
-          }
-        ],
-        "overridableConfigKeys": [],
-        "capabilities": [],
-        "linkedEntity": "AgentSession",
-        "transitionEvents": [
-          "INIT",
-          "RESET",
-          "SPEC_READ",
-          "SPEC_WRITTEN"
-        ],
-        "definerKnobs": [],
-        "effectRow": [
-          {
-            "kind": "set",
-            "resource": "@entity.status"
-          }
+        "effectEntityRefs": [
+          "AgentMessage"
         ]
       }
     ],
@@ -219,19 +217,20 @@
       {
         "name": "AgentSessionPage",
         "defaultPath": "/agent-session",
-        "primaryEntity": "AgentSession"
+        "primaryEntity": "AgentMessage"
       }
     ],
     "emittedEvents": [
-      "HISTORY_LOADED",
-      "SPEC_LOADED",
-      "SPEC_READ",
-      "SPEC_WRITTEN"
+      "AgentConversationLoaded",
+      "AgentMessageSaveFailed",
+      "AgentMessageSaved",
+      "AgentMessagesLoadFailed",
+      "AgentMessagesLoaded",
+      "CONVERSE",
+      "EDIT_MESSAGE",
+      "SEND_DRAFT"
     ],
-    "listenedEvents": [
-      "SPEC_READ",
-      "SPEC_WRITTEN"
-    ],
+    "listenedEvents": [],
     "exposure": "both",
     "provenance": "authored",
     "sourceValid": true

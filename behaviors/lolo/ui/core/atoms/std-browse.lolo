@@ -70,7 +70,11 @@ orbital BrowseItemOrbital {
           limit: @config.pageSize
           offset: 0
         })
-        (render-ui main { rows: 4, type: skeleton })
+        (if ["=", @config.browseLook, gallery]
+          (render-ui main { type: skeleton, variant: grid, rows: 6 })
+          (if (or ["=", @config.browseLook, feed] ["=", @config.browseLook, master-detail] ["=", @config.browseLook, triage])
+            (render-ui main { type: skeleton, variant: list, rows: 6 })
+            (render-ui main { type: skeleton, variant: table, rows: 6 })))
       BrowseItemLoaded -> browsing
         (if ["=", @config.browseLook, dense]
           (render-ui main @config.denseBodyContent)
@@ -165,7 +169,11 @@ orbital BrowseItemOrbital {
           limit: @config.pageSize
           offset: 0
         })
-        (render-ui main { rows: 4, type: skeleton })
+        (if ["=", @config.browseLook, gallery]
+          (render-ui main { type: skeleton, variant: grid, rows: 6 })
+          (if (or ["=", @config.browseLook, feed] ["=", @config.browseLook, master-detail] ["=", @config.browseLook, triage])
+            (render-ui main { type: skeleton, variant: list, rows: 6 })
+            (render-ui main { type: skeleton, variant: table, rows: 6 })))
     }
 
     emits {

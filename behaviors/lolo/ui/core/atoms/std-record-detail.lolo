@@ -7,6 +7,9 @@ orbital RecordItemOrbital {
   type RecordFieldSpec = { key : string!, header : string, format : date | currency | number | boolean | percent, variant : h3 | h4 | body | caption | badge | small | progress, colorMap : Map string BadgeColor, labels : Map string string }
   type MetaFieldSpec = { key : string!, label : string, kind : text | boolean | select | readonly, options : [string], icon : string, format : date | currency | number | boolean | percent }
   type RecordSection = { title : string!, fields : [string] }
+  type RecordStage = { value : string!, label : string! }
+  type RecordTab = { id : string!, label : string!, fields : [string], content : render-ui }
+  type LineItemColumn = { key : string!, header : string, align : left | center | right, format : badge | date | currency | number | percent | boolean }
 
   type RecordItemLoaded = Event { data : RecordItem, totalCount : number } "Fired when the single record finishes loading; payload.data holds the record. totalCount is accepted so a fetch emitter shared with collection atoms still validates."
 
@@ -46,7 +49,7 @@ orbital RecordItemOrbital {
           id: ?id
           include: @config.include
         })
-        (render-ui main { rows: 4, type: skeleton })
+        (render-ui main @config.loadingContent)
       ;; Slug-routed open (/things/:slug): no id on the payload, so fetch by
       ;; the slug field instead. Filtered rather than by-id, so the success
       ;; payload is a collection — its own event keeps the two shapes honest.
@@ -58,7 +61,7 @@ orbital RecordItemOrbital {
           emit: { failure: RecordItemLoadFailed, success: RecordItemSlugLoaded }
           include: @config.include
         })
-        (render-ui main { rows: 4, type: skeleton })
+        (render-ui main @config.loadingContent)
       ;; Fallback: an init-opened surface whose INIT carried neither key —
       ;; fetch by the (missing) id so the failure surfaces as the error
       ;; state's alert + Retry instead of a silent blank page. This is the
@@ -70,7 +73,7 @@ orbital RecordItemOrbital {
           id: ?id
           include: @config.include
         })
-        (render-ui main { rows: 4, type: skeleton })
+        (render-ui main @config.loadingContent)
       ;; Event-opened overlay (openOn: event): stays blank until OPEN_VIEW,
       ;; but renders the blank EXPLICITLY — an embedded @trait.X reference to
       ;; a trait with no indexed content is flagged by the compiled client's
@@ -102,7 +105,7 @@ orbital RecordItemOrbital {
           id: ?id
           include: @config.include
         })
-        (render-ui main { rows: 4, type: skeleton })
+        (render-ui main @config.loadingContent)
     }
 
     state loading {
@@ -116,7 +119,7 @@ orbital RecordItemOrbital {
         })
         ;; Skeleton, not a blank frame: the hand-authored detail traits this
         ;; atom replaces rendered nothing until the record arrived.
-        (render-ui main { rows: 4, type: skeleton })
+        (render-ui main @config.loadingContent)
       INIT -> loading when (and ["=", (str/default ?id ""), ""] ["!=", (str/default ?slug ""), ""])
         (set @entity.slug ?slug)
         (set @entity.openDraft (str/default ?draft ""))
@@ -125,7 +128,7 @@ orbital RecordItemOrbital {
           emit: { failure: RecordItemLoadFailed, success: RecordItemSlugLoaded }
           include: @config.include
         })
-        (render-ui main { rows: 4, type: skeleton })
+        (render-ui main @config.loadingContent)
       ;; A record minted blank by a document-first create arrives with
       ;; draft=1 and lands straight in the editor — a distinct target state,
       ;; not a flag on the render, so the machine stays honest about being
@@ -134,7 +137,7 @@ orbital RecordItemOrbital {
         ;; (object/merge … {}) is a type adapter only: type_compat lacks "declared object accepts a named row type" (ledgered)
         (set @entity.loadedRow (object/merge ?data {}))
         (set @entity.id (object/get ?data id))
-        (set @entity.name (object/get ?data @config.titleField))
+        (set @entity.name (if [">", (array/len @config.titleFields), 0] (str/join (array/map @config.titleFields (fn f (str/default (object/get ?data @f) ""))) " ") (object/get ?data @config.titleField)))
         (set @entity.description (str/default (object/get ?data @config.subtitleField) ""))
         (set @entity.content (object/get ?data @config.contentField))
         (set @entity.coverUrl (str/default (object/get ?data @config.coverField) ""))
@@ -144,7 +147,7 @@ orbital RecordItemOrbital {
         ;; (object/merge … {}) is a type adapter only: type_compat lacks "declared object accepts a named row type" (ledgered)
         (set @entity.loadedRow (object/merge ?data {}))
         (set @entity.id (object/get ?data id))
-        (set @entity.name (object/get ?data @config.titleField))
+        (set @entity.name (if [">", (array/len @config.titleFields), 0] (str/join (array/map @config.titleFields (fn f (str/default (object/get ?data @f) ""))) " ") (object/get ?data @config.titleField)))
         (set @entity.description (str/default (object/get ?data @config.subtitleField) ""))
         (set @entity.content (object/get ?data @config.contentField))
         (set @entity.coverUrl (str/default (object/get ?data @config.coverField) ""))
@@ -159,7 +162,7 @@ orbital RecordItemOrbital {
       RecordItemSlugLoaded -> editing when (and [">", (array/len ?data), 0] ["=", (str/default (object/get @entity openDraft) ""), "1"])
         (set @entity.loadedRow (array/first ?data))
         (set @entity.id (object/get (array/first ?data) id))
-        (set @entity.name (object/get (array/first ?data) @config.titleField))
+        (set @entity.name (if [">", (array/len @config.titleFields), 0] (str/join (array/map @config.titleFields (fn f (str/default (object/get (array/first ?data) @f) ""))) " ") (object/get (array/first ?data) @config.titleField)))
         (set @entity.description (str/default (object/get (array/first ?data) @config.subtitleField) ""))
         (set @entity.content (object/get (array/first ?data) @config.contentField))
         (set @entity.coverUrl (str/default (object/get (array/first ?data) @config.coverField) ""))
@@ -168,7 +171,7 @@ orbital RecordItemOrbital {
       RecordItemSlugLoaded -> viewing when (and [">", (array/len ?data), 0] ["!=", (str/default (object/get @entity openDraft) ""), "1"])
         (set @entity.loadedRow (array/first ?data))
         (set @entity.id (object/get (array/first ?data) id))
-        (set @entity.name (object/get (array/first ?data) @config.titleField))
+        (set @entity.name (if [">", (array/len @config.titleFields), 0] (str/join (array/map @config.titleFields (fn f (str/default (object/get (array/first ?data) @f) ""))) " ") (object/get (array/first ?data) @config.titleField)))
         (set @entity.description (str/default (object/get (array/first ?data) @config.subtitleField) ""))
         (set @entity.content (object/get (array/first ?data) @config.contentField))
         (set @entity.coverUrl (str/default (object/get (array/first ?data) @config.coverField) ""))
@@ -205,7 +208,7 @@ orbital RecordItemOrbital {
           id: ?id
           include: @config.include
         })
-        (render-ui main { rows: 4, type: skeleton })
+        (render-ui main @config.loadingContent)
       INIT -> loading when (and ["=", (str/default ?id ""), ""] ["!=", (str/default ?slug ""), ""] ["!=", ?slug, @entity.slug])
         (set @entity.slug ?slug)
         (set @entity.openDraft (str/default ?draft ""))
@@ -214,7 +217,7 @@ orbital RecordItemOrbital {
           emit: { failure: RecordItemLoadFailed, success: RecordItemSlugLoaded }
           include: @config.include
         })
-        (render-ui main { rows: 4, type: skeleton })
+        (render-ui main @config.loadingContent)
       CONTENT_CHANGE -> editing
         (set @entity.content ?value)
         (set @entity.loadedRow (object/set @entity.loadedRow @config.contentField ?value))
@@ -259,7 +262,7 @@ orbital RecordItemOrbital {
         ;; (object/merge … {}) is a type adapter only: type_compat lacks "declared object accepts a named row type" (ledgered)
         (set @entity.loadedRow (object/merge ?data {}))
         (set @entity.id (object/get ?data id))
-        (set @entity.name (object/get ?data @config.titleField))
+        (set @entity.name (if [">", (array/len @config.titleFields), 0] (str/join (array/map @config.titleFields (fn f (str/default (object/get ?data @f) ""))) " ") (object/get ?data @config.titleField)))
         (set @entity.description (str/default (object/get ?data @config.subtitleField) ""))
         (set @entity.content (object/get ?data @config.contentField))
         (set @entity.coverUrl (str/default (object/get ?data @config.coverField) ""))
@@ -274,7 +277,7 @@ orbital RecordItemOrbital {
       RecordItemSlugLoaded -> viewing when [">", (array/len ?data), 0]
         (set @entity.loadedRow (array/first ?data))
         (set @entity.id (object/get (array/first ?data) id))
-        (set @entity.name (object/get (array/first ?data) @config.titleField))
+        (set @entity.name (if [">", (array/len @config.titleFields), 0] (str/join (array/map @config.titleFields (fn f (str/default (object/get (array/first ?data) @f) ""))) " ") (object/get (array/first ?data) @config.titleField)))
         (set @entity.description (str/default (object/get (array/first ?data) @config.subtitleField) ""))
         (set @entity.content (object/get (array/first ?data) @config.contentField))
         (set @entity.coverUrl (str/default (object/get (array/first ?data) @config.coverField) ""))
@@ -311,7 +314,7 @@ orbital RecordItemOrbital {
           id: ?id
           include: @config.include
         })
-        (render-ui main { rows: 4, type: skeleton })
+        (render-ui main @config.loadingContent)
       INIT -> loading when (and ["=", (str/default ?id ""), ""] ["!=", (str/default ?slug ""), ""])
         (set @entity.slug ?slug)
         (set @entity.openDraft (str/default ?draft ""))
@@ -320,7 +323,7 @@ orbital RecordItemOrbital {
           emit: { failure: RecordItemLoadFailed, success: RecordItemSlugLoaded }
           include: @config.include
         })
-        (render-ui main { rows: 4, type: skeleton })
+        (render-ui main @config.loadingContent)
       ;; The hand-authored traits sent a failed load back to `loading` with no
       ;; effect, so the page stayed blank forever with no way out. RETRY is the
       ;; way out.
@@ -330,7 +333,7 @@ orbital RecordItemOrbital {
           id: @entity.id
           include: @config.include
         })
-        (render-ui main { rows: 4, type: skeleton })
+        (render-ui main @config.loadingContent)
     }
 
     emits {
@@ -515,6 +518,11 @@ orbital RecordItemOrbital {
         @description "Name of the field on the loaded record shown as the panel title (e.g. contactName, subject, title)."
         @synonyms "title field, heading field, name field, label field"
         @tier "presentation"
+      titleFields : [string] = []
+        @label "Which fields make up the title, in order?"
+        @description "For records whose name is split across fields (firstName + lastName): the listed fields' values joined with spaces become the title, and override titleField. Empty = titleField alone, the default."
+        @synonyms "full name, name parts, composite title, first and last name"
+        @tier "presentation"
       subtitleField : string = description
         @label "Which field is the subtitle?"
         @description "Name of the field shown under the title (e.g. company, category). Set to \"\" for no subtitle at all — the right choice for the document look, whose metadata lives in the properties strip, not a second line."
@@ -535,6 +543,63 @@ orbital RecordItemOrbital {
         @description "Visual treatment for the record surface. panel = an inline detail-panel in the page flow (bodyContent); slide-over = the same panel as a right-hand drawer over the list behind it (slideOverBodyContent); page = a full-width record page with roomier spacing (pageBodyContent); document = a wiki-page/note/article surface — big editable title over a rich-text body, no labelled field rows, click-to-edit with autosave (documentBodyContent / documentEditingContent). Selecting a look swaps which body tree renders after the record loads; any body may still be overridden directly at the call site."
         @synonyms "detail style, drawer, slide over, full page, document, wiki page, note, article"
         @tier "presentation"
+      recordLook : "panel" | "profile" | "showcase" | "workflow" | "map" | "ledger" | "conversation" | "workspace" = panel
+        @label "Record look"
+        @description "How the record itself is arranged inside the panel/slide-over/page frame, so not every app reads as an admin form. panel = labelled field grid (default); profile = a person or member: avatar + cover hero (avatarField, coverField); showcase = image-first product or listing with a gallery (mediaField); workflow = a lifecycle stepper over the record (stageField, stages); map = a place: location map hero (latitudeField, longitudeField); ledger = an invoice/order document: line items then totals (lineItemsField, lineItemColumns, totals); conversation = a ticket or thread: the messages beside the record facts (threadField); workspace = a hub record with tabs (tabs). Regions with no data simply do not render. A region fed by a separate trait (replies with their composer, editable order lines, activity history) is composed by overriding the body and passing detail-panel's threadContent / lineItemsContent / activityContent."
+        @synonyms "record style, profile page, product page, listing page, invoice view, ticket view, timeline view, tabbed record, location page"
+        @tier "presentation"
+      avatarField : string = ""
+        @label "Which field is the avatar?"
+        @description "Name of the image field shown as the profile look's avatar; the title supplies initials when it is empty."
+        @synonyms "photo field, avatar field, picture field"
+        @tier "presentation"
+      mediaField : string = ""
+        @label "Which field holds the images?"
+        @description "Name of the field the showcase look leads with: one image URL, a list of URLs, or a list of { src, caption }."
+        @synonyms "gallery field, photos field, images field, media field"
+        @tier "presentation"
+      stageField : string = ""
+        @label "Which field is the lifecycle stage?"
+        @description "Name of the field holding the record's current stage; the workflow look marks it on the stepper."
+        @synonyms "stage field, status field, phase field, step field"
+        @tier "presentation"
+      stages : [RecordStage] = []
+        @label "What is the lifecycle, in order?"
+        @description "The workflow look's stepper: one { value, label } per stage, value matching stageField's enum."
+        @synonyms "lifecycle, pipeline stages, steps, phases"
+        @tier "presentation"
+      latitudeField : string = ""
+        @label "Which field is the latitude?"
+        @description "Name of the latitude field the map look pins."
+        @tier "presentation"
+      longitudeField : string = ""
+        @label "Which field is the longitude?"
+        @description "Name of the longitude field the map look pins."
+        @tier "presentation"
+      lineItemsField : string = ""
+        @label "Which relation holds the line items?"
+        @description "Name of the hydrated relation (list it in include) whose rows the ledger look tables."
+        @synonyms "line items field, order lines, invoice lines, child rows"
+        @tier "presentation"
+      lineItemColumns : [LineItemColumn] = []
+        @label "Which line-item columns?"
+        @description "Columns of the ledger look's line-items table."
+        @tier "presentation"
+      totals : [RecordFieldSpec] = []
+        @label "Which fields are the totals?"
+        @description "Record fields shown under the line items in order (e.g. subtotal, tax, total); the last is emphasised."
+        @synonyms "totals, subtotal, grand total, amount due"
+        @tier "presentation"
+      threadField : string = ""
+        @label "Which relation holds the thread?"
+        @description "Name of the hydrated relation (list it in include) whose messages the conversation look shows."
+        @synonyms "messages field, replies field, comments field, thread field"
+        @tier "presentation"
+      tabs : [RecordTab] = []
+        @label "Which tabs follow the overview?"
+        @description "The workspace look's tabs after Overview: each lists field names, or composes a related trait as content (e.g. a company's deals list)."
+        @synonyms "tabs, record tabs, sub pages, related lists"
+        @tier "presentation"
       contentField : string = content
         @label "Which field holds the document body?"
         @description "Name of the field on the loaded record that carries the rich-text HTML body the document look renders and edits (e.g. content, body, articleText)."
@@ -542,7 +607,7 @@ orbital RecordItemOrbital {
         @tier "presentation"
       coverField : string = ""
         @label "Which field is the cover image?"
-        @description "Name of the image-typed field on the loaded record painted as the document look's full-bleed hero banner (e.g. coverImage, heroImage). Empty = no banner, the default."
+        @description "Name of the image-typed field on the loaded record painted as the hero banner of the document look and of the profile record look (e.g. coverImage, heroImage). Empty = no banner, the default."
         @synonyms "cover field, hero image field, banner field"
         @tier "presentation"
       iconField : string = ""
@@ -571,6 +636,10 @@ orbital RecordItemOrbital {
         @label "Placeholder text"
         @description "Placeholder shown in the document body when it is empty."
         @tier "presentation"
+      loadingContent : render-ui = { type: skeleton, variant: detail }
+        @label "Loading placeholder"
+        @description "Shown while the record loads, shaped like what replaces it so the page does not jump: the detail skeleton for the panel/slide-over/page looks; a document-look consumer sets { type: skeleton, variant: text, rows: 8 }."
+        @tier "internal"
       bodyContent : render-ui = {
         children: [{
           actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
@@ -583,6 +652,19 @@ orbital RecordItemOrbital {
           showActions: @config.showActions
           subtitle: @entity.description
           title: @entity.name
+          look: @config.recordLook
+          avatarField: @config.avatarField
+          coverField: @config.coverField
+          mediaField: @config.mediaField
+          stageField: @config.stageField
+          stages: @config.stages
+          latitudeField: @config.latitudeField
+          longitudeField: @config.longitudeField
+          lineItems: (object/get @entity.loadedRow @config.lineItemsField)
+          lineItemColumns: @config.lineItemColumns
+          totals: @config.totals
+          thread: (object/get @entity.loadedRow @config.threadField)
+          tabs: @config.tabs
           type: detail-panel
         }]
         direction: vertical
@@ -605,6 +687,19 @@ orbital RecordItemOrbital {
           slideOver: true
           subtitle: @entity.description
           title: @entity.name
+          look: @config.recordLook
+          avatarField: @config.avatarField
+          coverField: @config.coverField
+          mediaField: @config.mediaField
+          stageField: @config.stageField
+          stages: @config.stages
+          latitudeField: @config.latitudeField
+          longitudeField: @config.longitudeField
+          lineItems: (object/get @entity.loadedRow @config.lineItemsField)
+          lineItemColumns: @config.lineItemColumns
+          totals: @config.totals
+          thread: (object/get @entity.loadedRow @config.threadField)
+          tabs: @config.tabs
           type: detail-panel
         }]
         direction: vertical
@@ -626,6 +721,19 @@ orbital RecordItemOrbital {
           showActions: @config.showActions
           subtitle: @entity.description
           title: @entity.name
+          look: @config.recordLook
+          avatarField: @config.avatarField
+          coverField: @config.coverField
+          mediaField: @config.mediaField
+          stageField: @config.stageField
+          stages: @config.stages
+          latitudeField: @config.latitudeField
+          longitudeField: @config.longitudeField
+          lineItems: (object/get @entity.loadedRow @config.lineItemsField)
+          lineItemColumns: @config.lineItemColumns
+          totals: @config.totals
+          thread: (object/get @entity.loadedRow @config.threadField)
+          tabs: @config.tabs
           type: detail-panel
         }]
         className: "w-full max-w-4xl"

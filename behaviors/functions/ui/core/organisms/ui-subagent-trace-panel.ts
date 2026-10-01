@@ -48,14 +48,28 @@ export interface StdUiSubagentTracePanelOpenPayload {
 export interface StdUiSubagentTracePanelConfig {
   /** Default: `{}` */
   activeFilters?: Record<string, TraitConfig>;
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
   className?: string;
   /** Default: `[]` */
   coordinatorMessages?: EntityRow[];
+  dir?: 'ltr' | 'rtl' | 'auto';
   /** Default: `1` */
   disclosureLevel?: number;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   error?: EntityRow;
   focusedOrbital?: string;
   isLoading?: boolean;
+  lang?: string;
   /** Default: `"overlay"` */
   mode?: 'overlay' | 'tab';
   /** Default: `"CLOSE"` */
@@ -64,14 +78,15 @@ export interface StdUiSubagentTracePanelConfig {
   open?: boolean;
   pageProp?: number;
   pageSize?: number;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   searchValue?: string;
   /** Default: `[]` */
   selectedIds?: string[];
   sortBy?: string;
-  /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
   /** Default: `[{"durationMs":1,"id":"Id","messages":[{"message":"Message","timestamp":1,"tool":"Tool"},{"message":"Message 2","timestamp":2,"tool":"Tool 2"}],"name":"Name","orbitalName":"Orbital Name","parentId":"Parent Id","role":"Role","status":"running","task":"Task","timeline":[]},{"durationMs":2,"id":"Id 2","messages":[{"message":"Message","timestamp":1,"tool":"Tool"},{"message":"Message 2","timestamp":2,"tool":"Tool 2"}],"name":"Name 2","orbitalName":"Orbital Name 2","parentId":"Parent Id 2","role":"Role 2","status":"complete","task":"Task 2","timeline":[]}]` */
   subagents?: EntityRow[];
+  tabIndex?: number;
   totalCount?: number;
 }
 
@@ -156,6 +171,95 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             'tier': 'presentation',
             'type': 'Map<string,string>',
           },
+          'ariaBusy': {
+            'description': 'This region is updating; assistive technology waits before announcing it.',
+            'label': 'Aria-busy',
+            'synonyms': 'aria-busy',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'ariaCurrent': {
+            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
+            'label': 'Aria-current',
+            'synonyms': 'aria-current',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'page',
+              'step',
+              'location',
+              'date',
+              'time',
+              'true',
+              'false',
+            ],
+          },
+          'ariaDescribedby': {
+            'description': 'Id of the element whose text describes this one (help text, error).',
+            'label': 'Aria-describedby',
+            'synonyms': 'aria-describedby',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'ariaExpanded': {
+            'description': 'Whether the element it controls is expanded.',
+            'label': 'Aria-expanded',
+            'synonyms': 'aria-expanded',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'ariaHidden': {
+            'description': 'Hide from assistive technology (decorative content only).',
+            'label': 'Aria-hidden',
+            'synonyms': 'aria-hidden',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'ariaLabel': {
+            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
+            'label': 'Aria-label',
+            'synonyms': 'aria-label',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'ariaLabelledby': {
+            'description': 'Id of the element whose text names this one.',
+            'label': 'Aria-labelledby',
+            'synonyms': 'aria-labelledby',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'ariaLive': {
+            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
+            'label': 'Aria-live',
+            'synonyms': 'aria-live',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'off',
+              'polite',
+              'assertive',
+            ],
+          },
+          'ariaPressed': {
+            'description': 'Toggle-button state.',
+            'label': 'Aria-pressed',
+            'synonyms': 'aria-pressed',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'true',
+              'false',
+              'mixed',
+            ],
+          },
+          'ariaSelected': {
+            'description': 'Whether this item is selected (tabs, options, grid cells).',
+            'label': 'Aria-selected',
+            'synonyms': 'aria-selected',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
           'className': {
             'description': 'Additional CSS classes',
             'label': 'Class Name',
@@ -225,10 +329,40 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             'tier': 'presentation',
             'type': '[SubagentTracePanelCoordinatorMessagesItem]',
           },
+          'dir': {
+            'description': 'Text direction of this element\'s content.',
+            'label': 'Dir',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'ltr',
+              'rtl',
+              'auto',
+            ],
+          },
           'disclosureLevel': {
             'default': 1,
             'description': 'Drives density: 1-2 → compact, 3-4 → full activity embed (when mode=\'overlay\').',
             'label': 'Disclosure Level',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'enter': {
+            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
+            'label': 'Enter',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'none',
+              'fade',
+              'rise',
+              'scale',
+              'slide',
+            ],
+          },
+          'enterDelay': {
+            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
+            'label': 'Enter Delay',
             'tier': 'presentation',
             'type': 'number',
           },
@@ -272,6 +406,12 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             'tier': 'presentation',
             'type': 'boolean',
           },
+          'lang': {
+            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
+            'label': 'Lang',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'mode': {
             'default': 'overlay',
             'description': 'Rendering mode. - `\'overlay\'` (default): floating side panel positioned absolutely over the canvas. Density follows `disclosureLevel` (compact L1/L2, rich L3+). The `open` flag actually hides the panel when false. - `\'tab\'`: full-width content for a dedicated \'trace\' supplemental tab. Always renders rich (regardless of disclosure level), always visible (the `open` flag is ignored), and includes an empty state when no subagents are present so users see the surface even before generation starts.',
@@ -310,6 +450,95 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             'tier': 'presentation',
             'type': 'number',
           },
+          'role': {
+            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
+            'label': 'Role',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'alert',
+              'alertdialog',
+              'application',
+              'article',
+              'banner',
+              'blockquote',
+              'button',
+              'caption',
+              'cell',
+              'checkbox',
+              'code',
+              'columnheader',
+              'combobox',
+              'complementary',
+              'contentinfo',
+              'definition',
+              'deletion',
+              'dialog',
+              'document',
+              'emphasis',
+              'feed',
+              'figure',
+              'form',
+              'generic',
+              'grid',
+              'gridcell',
+              'group',
+              'heading',
+              'img',
+              'insertion',
+              'link',
+              'list',
+              'listbox',
+              'listitem',
+              'log',
+              'main',
+              'marquee',
+              'math',
+              'menu',
+              'menubar',
+              'menuitem',
+              'menuitemcheckbox',
+              'menuitemradio',
+              'meter',
+              'navigation',
+              'none',
+              'note',
+              'option',
+              'paragraph',
+              'presentation',
+              'progressbar',
+              'radio',
+              'radiogroup',
+              'region',
+              'row',
+              'rowgroup',
+              'rowheader',
+              'scrollbar',
+              'search',
+              'searchbox',
+              'separator',
+              'slider',
+              'spinbutton',
+              'status',
+              'strong',
+              'subscript',
+              'superscript',
+              'switch',
+              'tab',
+              'table',
+              'tablist',
+              'tabpanel',
+              'term',
+              'textbox',
+              'time',
+              'timer',
+              'toolbar',
+              'tooltip',
+              'tree',
+              'treegrid',
+              'treeitem',
+            ],
+          },
           'searchValue': {
             'description': 'Current search query value',
             'label': 'Search Value',
@@ -333,7 +562,6 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             'type': 'string',
           },
           'sortDirection': {
-            'default': 'asc',
             'description': 'Current sort direction',
             'label': 'Sort Direction',
             'tier': 'presentation',
@@ -472,6 +700,12 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             'tier': 'presentation',
             'type': '[SubagentTracePanelSubagentsItem]',
           },
+          'tabIndex': {
+            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
+            'label': 'Tab Index',
+            'tier': 'presentation',
+            'type': 'number',
+          },
           'totalCount': {
             'description': 'Total number of items',
             'label': 'Total Count',
@@ -580,22 +814,38 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
                   'overlay',
                   {
                     'activeFilters': '@config.activeFilters',
+                    'aria-busy': '@config.ariaBusy',
+                    'aria-current': '@config.ariaCurrent',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'aria-hidden': '@config.ariaHidden',
+                    'aria-label': '@config.ariaLabel',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'aria-live': '@config.ariaLive',
+                    'aria-pressed': '@config.ariaPressed',
+                    'aria-selected': '@config.ariaSelected',
                     'className': '@config.className',
                     'coordinatorMessages': '@config.coordinatorMessages',
+                    'dir': '@config.dir',
                     'disclosureLevel': '@config.disclosureLevel',
+                    'enter': '@config.enter',
+                    'enterDelay': '@config.enterDelay',
                     'error': '@config.error',
                     'focusedOrbital': '@config.focusedOrbital',
                     'isLoading': '@config.isLoading',
+                    'lang': '@config.lang',
                     'mode': '@config.mode',
                     'onClose': '@config.onClose',
                     'open': '@config.open',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
+                    'role': '@config.role',
                     'searchValue': '@config.searchValue',
                     'selectedIds': '@config.selectedIds',
                     'sortBy': '@config.sortBy',
                     'sortDirection': '@config.sortDirection',
                     'subagents': '@config.subagents',
+                    'tabIndex': '@config.tabIndex',
                     'totalCount': '@config.totalCount',
                     'type': 'subagent-trace-panel',
                   },

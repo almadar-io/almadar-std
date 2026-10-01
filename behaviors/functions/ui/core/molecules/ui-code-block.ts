@@ -69,6 +69,16 @@ export interface StdUiCodeBlockGoToDefinitionPayload {
 export interface StdUiCodeBlockConfig {
   /** Default: `[]` */
   actions?: EntityRow[];
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
   className?: string;
   code?: string;
   /** Default: `[]` */
@@ -76,15 +86,19 @@ export interface StdUiCodeBlockConfig {
   diagnosticsCode?: string;
   /** Default: `[]` */
   diff?: EntityRow[];
+  dir?: 'ltr' | 'rtl' | 'auto';
   /** Default: `false` */
   editable?: boolean;
   editorId?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   error?: EntityRow;
   /** Default: `[]` */
   files?: EntityRow[];
   foldable?: boolean;
   /** Default: `false` */
   isLoading?: boolean;
+  lang?: string;
   /** Default: `"text"` */
   language?: string;
   lineNumbers?: boolean;
@@ -115,6 +129,7 @@ export interface StdUiCodeBlockConfig {
   /** Default: `["delete","yank","change","put","put-before","undo","redo","join","toggle-case","indent","dedent","replace"]` */
   operators?: string[];
   problems?: number;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   showCopy?: boolean;
   /** Default: `true` */
   showCopyButton?: boolean;
@@ -122,6 +137,7 @@ export interface StdUiCodeBlockConfig {
   showLanguageBadge?: boolean;
   /** Default: `false` */
   showLineNumbers?: boolean;
+  tabIndex?: number;
   title?: string;
   /** Default: `""` */
   viewerRole?: string;

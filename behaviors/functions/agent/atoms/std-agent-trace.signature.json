@@ -6,123 +6,196 @@
     "factoryPath": "behaviors/functions/agent/atoms/std-agent-trace.ts",
     "entities": [
       {
-        "name": "AgentTrace",
+        "name": "AgentRun",
         "fields": [
           {
-            "name": "event",
+            "name": "ownerId",
             "type": "string",
-            "required": false
+            "required": true,
+            "description": "Whose request this run answered (the real @user). The binding organism scopes @read to it.",
+            "synonyms": "user, owner, account"
           },
           {
-            "name": "level",
+            "name": "outcome",
             "type": "string",
-            "required": false
+            "required": false,
+            "description": "Whether the assistant answered.",
+            "synonyms": "result, status"
           },
           {
-            "name": "message",
+            "name": "reply",
             "type": "string",
-            "required": false
+            "required": false,
+            "description": "What the assistant said.",
+            "synonyms": "answer, response"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "required": false,
+            "description": "Why the run failed."
+          },
+          {
+            "name": "steps",
+            "type": "array",
+            "required": false,
+            "description": "Every tool use, in order.",
+            "synonyms": "actions, tool calls, trace"
+          },
+          {
+            "name": "promptTokens",
+            "type": "number",
+            "required": false,
+            "description": "Tokens sent to the model."
+          },
+          {
+            "name": "completionTokens",
+            "type": "number",
+            "required": false,
+            "description": "Tokens the model produced."
+          },
+          {
+            "name": "totalTokens",
+            "type": "number",
+            "required": false,
+            "description": "All tokens for the run."
+          },
+          {
+            "name": "modelCalls",
+            "type": "number",
+            "required": false,
+            "description": "Model round-trips.",
+            "synonyms": "turns, calls"
+          },
+          {
+            "name": "recordedAt",
+            "type": "number",
+            "required": false,
+            "description": "When the run finished (ms).",
+            "synonyms": "time, timestamp"
           }
         ],
-        "persistence": "runtime"
+        "persistence": "persistent"
       }
     ],
     "traits": [
       {
-        "name": "TraceEmitter",
+        "name": "AgentTraceRecorder",
         "emittedEvents": [
-          "TRACED"
+          "RUN_RECORDED"
         ],
         "listenedEvents": [],
         "events": [
           {
-            "name": "TRACED",
-            "direction": "emit"
+            "name": "RUN_RECORDED",
+            "direction": "emit",
+            "description": "A run was recorded — payload is the created AgentRun row itself.",
+            "synonyms": "recorded, logged, traced",
+            "tier": "domain"
           },
           {
             "name": "INIT",
             "direction": "listen"
           },
           {
-            "name": "EMIT_TRACE",
-            "direction": "listen"
+            "name": "REPLIED",
+            "direction": "listen",
+            "description": "Record an answered run."
           },
           {
-            "name": "LOG_TRACE",
-            "direction": "listen"
+            "name": "REPLY_FAILED",
+            "direction": "listen",
+            "description": "Record a failed run."
           }
         ],
         "overridableConfigKeys": [],
         "capabilities": [],
-        "linkedEntity": "AgentTrace",
+        "linkedEntity": "AgentRun",
         "transitionEvents": [
-          "EMIT_TRACE",
           "INIT",
-          "LOG_TRACE"
+          "REPLIED",
+          "REPLY_FAILED",
+          "RUN_RECORDED"
         ],
         "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "outcome"
+          ]
+        },
         "effectRow": [
           {
-            "kind": "emit",
-            "resource": "TRACED"
+            "kind": "persist",
+            "resource": "AgentRun"
           },
           {
             "kind": "set",
-            "resource": "@entity.event"
-          },
-          {
-            "kind": "set",
-            "resource": "@entity.level"
-          },
-          {
-            "kind": "set",
-            "resource": "@entity.message"
-          },
-          {
-            "kind": "trace/emit"
-          },
-          {
-            "kind": "trace/log"
+            "resource": "@entity.outcome"
           }
+        ],
+        "effectEntityRefs": [
+          "AgentRun"
         ]
       },
       {
-        "name": "TraceListener",
-        "emittedEvents": [],
+        "name": "AgentRunBrowse",
+        "emittedEvents": [
+          "AgentRunsLoaded",
+          "AgentRunsLoadFailed"
+        ],
         "listenedEvents": [
-          "TRACED"
+          "RUN_RECORDED"
         ],
         "events": [
+          {
+            "name": "AgentRunsLoaded",
+            "direction": "emit",
+            "description": "The run record finished loading.",
+            "tier": "internal"
+          },
+          {
+            "name": "AgentRunsLoadFailed",
+            "direction": "emit",
+            "tier": "internal"
+          },
           {
             "name": "INIT",
             "direction": "listen"
           },
           {
-            "name": "TRACED",
+            "name": "RUN_RECORDED",
             "direction": "listen"
           }
         ],
         "overridableConfigKeys": [],
         "capabilities": [],
-        "linkedEntity": "AgentTrace",
+        "linkedEntity": "AgentRun",
         "transitionEvents": [
+          "AgentRunsLoadFailed",
+          "AgentRunsLoaded",
           "INIT",
-          "TRACED"
+          "RUN_RECORDED"
         ],
         "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        },
         "effectRow": [
           {
-            "kind": "set",
-            "resource": "@entity.event"
+            "kind": "fetch",
+            "resource": "AgentRun"
           },
           {
-            "kind": "set",
-            "resource": "@entity.level"
-          },
-          {
-            "kind": "set",
-            "resource": "@entity.message"
+            "kind": "render-ui",
+            "resource": "main"
           }
+        ],
+        "effectEntityRefs": [
+          "AgentRun"
         ]
       }
     ],
@@ -130,14 +203,16 @@
       {
         "name": "AgentTracePage",
         "defaultPath": "/agent-trace",
-        "primaryEntity": "AgentTrace"
+        "primaryEntity": "AgentRun"
       }
     ],
     "emittedEvents": [
-      "TRACED"
+      "AgentRunsLoadFailed",
+      "AgentRunsLoaded",
+      "RUN_RECORDED"
     ],
     "listenedEvents": [
-      "TRACED"
+      "RUN_RECORDED"
     ],
     "exposure": "both",
     "provenance": "authored",

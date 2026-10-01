@@ -33,17 +33,10 @@ orbital RelatedItemOrbital {
           emit: { failure: RelatedItemLoadFailed, success: RelatedItemLoaded }
         })
         (render-ui main {
-          align: center
-          children: [{ type: spinner }, {
-            color: muted
-            content: "Loading related…"
-            type: typography
-            variant: caption
-          }]
-          className: py-8
-          direction: vertical
-          gap: sm
           type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
         })
       SHOW_RELATED -> loading
         (fetch RelatedItem {
@@ -51,17 +44,10 @@ orbital RelatedItemOrbital {
           filter: (or ["=", @config.relationField, ""] ["=", (object/get @entity @config.relationField), ?key])
         })
         (render-ui main {
-          align: center
-          children: [{ type: spinner }, {
-            color: muted
-            content: "Loading related…"
-            type: typography
-            variant: caption
-          }]
-          className: py-8
-          direction: vertical
-          gap: sm
           type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
         })
       RelatedItemLoaded -> loaded
         (render-ui main {
@@ -140,7 +126,12 @@ orbital RelatedItemOrbital {
         (fetch RelatedItem {
           emit: { failure: RelatedItemLoadFailed, success: RelatedItemLoaded }
         })
-        (render-ui main { type: spinner })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
+        })
       SELECT_RELATED -> loaded
         (set @entity.id ?id)
       SHOW_RELATED -> loading
@@ -148,7 +139,12 @@ orbital RelatedItemOrbital {
           emit: { failure: RelatedItemLoadFailed, success: RelatedItemLoaded }
           filter: (or ["=", @config.relationField, ""] ["=", (object/get @entity @config.relationField), ?key])
         })
-        (render-ui main { type: spinner })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
+        })
     }
 
     state error {
@@ -156,20 +152,35 @@ orbital RelatedItemOrbital {
         (fetch RelatedItem {
           emit: { failure: RelatedItemLoadFailed, success: RelatedItemLoaded }
         })
-        (render-ui main { type: spinner })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
+        })
       ;; the error screen's Retry button: INIT is lifecycle-only and the bus never
       ;; delivers it, so the affordance must target a first-class user event
       RETRY -> loading
         (fetch RelatedItem {
           emit: { failure: RelatedItemLoadFailed, success: RelatedItemLoaded }
         })
-        (render-ui main { type: spinner })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
+        })
       SHOW_RELATED -> loading
         (fetch RelatedItem {
           emit: { failure: RelatedItemLoadFailed, success: RelatedItemLoaded }
           filter: (or ["=", @config.relationField, ""] ["=", (object/get @entity @config.relationField), ?key])
         })
-        (render-ui main { type: spinner })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
+        })
     }
 
     emits {

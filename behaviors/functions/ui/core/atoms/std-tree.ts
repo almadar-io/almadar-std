@@ -716,21 +716,19 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
                     'children': [
                       {
-                        'type': 'spinner',
+                        'type': 'skeleton',
+                        'variant': 'header',
                       },
                       {
-                        'color': 'muted',
-                        'content': 'Loading tree…',
-                        'type': 'typography',
-                        'variant': 'caption',
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
                       },
                     ],
-                    'className': 'py-12',
                     'direction': 'vertical',
-                    'gap': 'md',
+                    'gap': 'lg',
                     'type': 'stack',
                   },
                 ],
@@ -1005,21 +1003,19 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
                     'children': [
                       {
-                        'type': 'spinner',
+                        'type': 'skeleton',
+                        'variant': 'header',
                       },
                       {
-                        'color': 'muted',
-                        'content': 'Loading tree…',
-                        'type': 'typography',
-                        'variant': 'caption',
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
                       },
                     ],
-                    'className': 'py-12',
                     'direction': 'vertical',
-                    'gap': 'md',
+                    'gap': 'lg',
                     'type': 'stack',
                   },
                 ],
@@ -1414,7 +1410,20 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
-                    'type': 'spinner',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1438,7 +1447,20 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
-                    'type': 'spinner',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],

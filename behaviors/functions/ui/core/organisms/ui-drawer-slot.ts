@@ -41,6 +41,8 @@ export type StdUiDrawerSlotEventKey = 'INIT';
 export interface StdUiDrawerSlotConfig {
   children?: PatternValue;
   className?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   error?: EntityRow;
   isLoading?: boolean;
   /** Default: `"right"` */
@@ -133,6 +135,25 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
             'label': 'Class Name',
             'tier': 'presentation',
             'type': 'string',
+          },
+          'enter': {
+            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
+            'label': 'Enter',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'none',
+              'fade',
+              'rise',
+              'scale',
+              'slide',
+            ],
+          },
+          'enterDelay': {
+            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
+            'label': 'Enter Delay',
+            'tier': 'presentation',
+            'type': 'number',
           },
           'error': {
             'description': 'Error state',
@@ -251,6 +272,8 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
                   {
                     'children': '@config.children',
                     'className': '@config.className',
+                    'enter': '@config.enter',
+                    'enterDelay': '@config.enterDelay',
                     'entity': 'DrawerSlotItem',
                     'error': '@config.error',
                     'isLoading': '@config.isLoading',

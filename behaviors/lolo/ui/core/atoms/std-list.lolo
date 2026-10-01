@@ -42,17 +42,10 @@ orbital ListItemOrbital {
           emit: { failure: ListItemLoadFailed, success: ListItemLoaded }
         })
         (render-ui main {
-          align: center
-          children: [{ type: spinner }, {
-            color: muted
-            content: "Loading list…"
-            type: typography
-            variant: caption
-          }]
-          className: py-12
-          direction: vertical
-          gap: md
           type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
         })
       ListItemLoaded -> browsing
         (render-ui main {
@@ -163,7 +156,12 @@ orbital ListItemOrbital {
         (fetch ListItem {
           emit: { failure: ListItemLoadFailed, success: ListItemLoaded }
         })
-        (render-ui main { type: spinner })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
+        })
       ;; REFETCH_* stays in `browsing` and DOES NOT replace the grid with a
       ;; spinner — same reasoning as std-browse's REFETCH_* arms: a skeleton
       ;; on refetch unmounts the grid and flickers every keystroke. The fetch
@@ -268,14 +266,24 @@ orbital ListItemOrbital {
         (fetch ListItem {
           emit: { failure: ListItemLoadFailed, success: ListItemLoaded }
         })
-        (render-ui main { type: spinner })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
+        })
       ;; the error screen's Retry button: INIT is lifecycle-only and the bus never
       ;; delivers it, so the affordance must target a first-class user event
       RETRY -> loading
         (fetch ListItem {
           emit: { failure: ListItemLoadFailed, success: ListItemLoaded }
         })
-        (render-ui main { type: spinner })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
+        })
     }
 
     emits {

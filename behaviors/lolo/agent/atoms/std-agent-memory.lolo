@@ -1,149 +1,199 @@
-app std-agent-memory "1.0.0"
-"Wraps memory/recall + memory/store — semantic memory for agent loops."
+app std-agent-memory "2.0.0"
+"std-agent-memory — what an in-app assistant remembers across conversations. Owns AgentMemory rows (content + its embedding, ownerId = the real @user). RECALL { messages } embeds the last turn with `call-service llm embed`, ranks the stored memories whose embedding is comparable (same length as the query's) by cosine similarity and emits RECALLED { messages, context } with the closest `recallLimit` memories joined into one context string (empty when nothing is stored); if embedding fails it emits RECALLED with an empty context, so a memory outage never blocks the assistant. REMEMBER { reply } stores the exchange it just recalled for (asked + answered) with its embedding. AgentMemoryRecall is headless (failures show as toasts); AgentMemoryBrowse is the list view. Rows are meant to be private to their owner: the binding organism declares the @read scoping."
 
-type MemoryRecord = { id: string!, content: string!, category: string!, strength: number }
+type AgentChatMessage = {
+  role : "user" | "assistant"
+  content : string!
+}
 
 orbital AgentMemoryOrbital {
+  type AgentMemoriesLoaded = Event { data : [AgentMemory] } "Fired when the stored memories finish loading"
+  type AgentMemoriesLoadFailed = Event { error : string, code : string } "Fired when the stored memories fail to load"
+  type MemoryEmbedded = Event { embeddings : [[number]] } "Fired when a memory or query has been embedded"
+  type MemoryEmbedFailed = Event { error : string } "Fired when embedding fails"
 
-  entity AgentMemory [runtime] {
-    query : string = ""
-    results : [MemoryRecord] = []
-    content : string = ""
-    category : string = ""
-    memoryId : string = ""
-    status : "idle" | "recalled" | "stored" = idle
+  entity AgentMemory [persistent: agentMemories] {
+    id : string!
+    ownerId : string! @description "Whose memory this is (the real @user). The binding organism scopes @read to it." @synonyms "user, owner, account"
+    content : string! @description "What is remembered." @synonyms "memory, note, fact"
+    embedding : [number] @description "The content's embedding, for similarity recall." = []
+    createdAt : number @description "When it was remembered (ms)." @synonyms "time, timestamp" = 0
+    pendingMessages : [AgentChatMessage] @intrinsic @description "The conversation a recall is running for." = []
+    pendingQuery : string @intrinsic @description "The turn a recall is running for." = ""
+    pendingContent : string @intrinsic @description "The exchange being remembered." = ""
+    queryVector : [number] @intrinsic @description "The recall query's embedding." = []
   }
 
-  trait MemoryRecall -> AgentMemory [lifecycle, instance] {
-    initial: idle
+  trait AgentMemoryRecall -> @rebindable AgentMemory [lifecycle] {
+    config {
+      recallLimit : number = 3
+        @label "Memories recalled per request"
+        @description "How many of the closest memories go to the model with each request."
+        @tier "policy"
+    }
+    initial: ready
 
-    state idle {
-      INIT -> idle
-        (set @entity.query "")
-        (set @entity.results [])
-        (set @entity.content "")
-        (set @entity.category "")
-        (set @entity.memoryId "")
-        (set @entity.status idle)
+    state ready {
+      INIT -> ready
+        (set @entity.pendingQuery "")
+      MEMORY_STORED -> ready
+        (set @entity.pendingContent "")
       RECALL -> recalling
-        (set @entity.query ?query)
-        (memory/recall @entity.query { emit: { success: RECALL_COMPLETE, failure: RECALL_FAILED } })
+        (set @entity.pendingMessages ?messages)
+        (set @entity.pendingQuery (object/get (array/last ?messages) content))
+        (call-service llm embed {
+          texts: [(object/get (array/last ?messages) content)]
+        } {
+          emit: { failure: MemoryEmbedFailed, success: MemoryEmbedded }
+        })
+      REMEMBER -> remembering
+        (set @entity.pendingContent (str/concat "Asked: " @entity.pendingQuery " | Answered: " ?reply))
+        (call-service llm embed {
+          texts: [(str/concat "Asked: " @entity.pendingQuery " | Answered: " ?reply)]
+        } {
+          emit: { failure: MemoryEmbedFailed, success: MemoryEmbedded }
+        })
     }
 
     state recalling {
-      RECALL_COMPLETE -> recalled
-        (set @entity.results ?result)
-        (set @entity.status recalled)
-        (emit RECALLED { results: @entity.results })
-      RECALL_FAILED -> recalled
-        (set @entity.results [])
-        (set @entity.status recalled)
-        (emit RECALLED { results: @entity.results })
+      MemoryEmbedded -> recalling
+        (set @entity.queryVector (array/first ?embeddings))
+        (fetch AgentMemory {
+          emit: { failure: AgentMemoriesLoadFailed, success: MemoriesForRecall }
+        })
+      MemoriesForRecall -> ready
+        (emit RECALLED {
+          messages: @entity.pendingMessages
+          context: (str/join (array/map (array/take (array/sort (array/map (array/filter ?data (fn item (= (array/len @item.embedding) (array/len @entity.queryVector)))) (fn item { content: @item.content, score: (array/cosine @item.embedding @entity.queryVector) })) score desc) @config.recallLimit) (fn item @item.content)) "\n")
+        })
+      MemoryEmbedFailed -> ready
+        (emit RECALLED { messages: @entity.pendingMessages, context: "" })
+        (render-ui toast {
+          message: ?error
+          type: alert
+          variant: warning
+        })
+      AgentMemoriesLoadFailed -> ready
+        (emit RECALLED { messages: @entity.pendingMessages, context: "" })
+        (render-ui toast {
+          message: ?error
+          type: alert
+          variant: warning
+        })
     }
 
-    state recalled {
-      INIT -> recalled
-        (set @entity.status recalled)
-      RESET -> idle
-        (set @entity.results [])
-        (set @entity.query "")
-        (set @entity.status idle)
+    state remembering {
+      MemoryEmbedded -> ready
+        (persist create AgentMemory {
+          ownerId: @user.id
+          content: @entity.pendingContent
+          embedding: (array/first ?embeddings)
+          createdAt: @now
+        } {
+          emit: { success: MEMORY_STORED }
+        })
+      MemoryEmbedFailed -> ready
+        (render-ui toast {
+          message: ?error
+          type: alert
+          variant: warning
+        })
     }
 
     emits {
-      RECALLED {
-        results : [MemoryRecord]!
+      RECALLED -> external {
+        messages : [AgentChatMessage]!
+        context : string!
       }
-      RECALL_COMPLETE {
-        result : [MemoryRecord]!
+        @description "The conversation, with what the assistant remembers that is closest to its last turn."
+        @synonyms "recalled, remembered, context ready"
+        @tier "domain"
+      MEMORY_STORED -> external
+        @description "A new memory was stored — payload is the created AgentMemory row itself."
+        @synonyms "remembered, stored, saved"
+        @tier "domain"
+      AgentMemoriesLoadFailed {
+        error : string
+        code : string
       }
+        @tier "internal"
+      MemoriesForRecall -> internal {
+        data : [AgentMemory]
+      }
+        @tier "internal"
+      MemoryEmbedded -> internal {
+        embeddings : [[number]]
+      }
+        @tier "internal"
+      MemoryEmbedFailed -> internal {
+        error : string
+      }
+        @tier "internal"
     }
 
     listens {
       RECALL {
-        query : string!
+        messages : [AgentChatMessage]!
       }
+        @description "Recall what is relevant to this conversation's last turn."
+      REMEMBER {
+        reply : string!
+      }
+        @description "Remember the exchange just answered."
     }
   }
 
-  trait MemoryStore -> AgentMemory [lifecycle, instance] {
-    initial: idle
+  trait AgentMemoryBrowse -> @rebindable AgentMemory [interaction, collection] {
+    initial: browsing
 
-    state idle {
-      INIT -> idle
-        (set @entity.content "")
-        (set @entity.category "")
-        (set @entity.memoryId "")
-        (set @entity.status idle)
-      STORE -> storing
-        (set @entity.content ?content)
-        (set @entity.category ?category)
-        (memory/store @entity.content @entity.category { emit: { success: STORE_COMPLETE, failure: STORE_FAILED } })
-    }
-
-    state storing {
-      STORE_COMPLETE -> stored
-        (set @entity.memoryId ?result)
-        (set @entity.status stored)
-        (emit STORED { memoryId: @entity.memoryId })
-      STORE_FAILED -> stored
-        (set @entity.memoryId "")
-        (set @entity.status stored)
-        (emit STORED { memoryId: @entity.memoryId })
-    }
-
-    state stored {
-      INIT -> stored
-        (set @entity.status stored)
-      RESET -> idle
-        (set @entity.content "")
-        (set @entity.category "")
-        (set @entity.memoryId "")
-        (set @entity.status idle)
+    state browsing {
+      INIT -> browsing
+        (fetch AgentMemory {
+          emit: { failure: AgentMemoriesLoadFailed, success: AgentMemoriesLoaded }
+        })
+        (render-ui main { type: skeleton, variant: list, rows: 6 })
+      AgentMemoriesLoaded -> browsing
+        (render-ui main {
+          emptyTitle: "Nothing remembered yet"
+          entity: (array/sort ?data createdAt desc)
+          fields: []
+          gap: sm
+          renderItem: (fn item {
+            content: @item.content
+            type: typography
+            variant: body
+          })
+          type: data-list
+        })
+      AgentMemoriesLoadFailed -> browsing
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+      MEMORY_STORED -> browsing
+        (fetch AgentMemory {
+          emit: { failure: AgentMemoriesLoadFailed, success: AgentMemoriesLoaded }
+        })
     }
 
     emits {
-      STORED {
-        memoryId : string!
+      AgentMemoriesLoaded {
+        data : [AgentMemory]
       }
-      STORE_COMPLETE {
-        result : string!
+        @description "The stored memories finished loading."
+        @tier "internal"
+      AgentMemoriesLoadFailed {
+        error : string
+        code : string
       }
+        @tier "internal"
     }
 
     listens {
-      STORE {
-        content : string!
-        category : string!
-      }
+      AgentMemoryRecall.MEMORY_STORED -> MEMORY_STORED
     }
   }
 
-  trait MemoryListener -> AgentMemory [lifecycle, instance] {
-    initial: waiting
-
-    state waiting {
-      INIT -> waiting
-        (set @entity.status idle)
-      RECALLED -> updated
-        (set @entity.status recalled)
-      STORED -> updated
-        (set @entity.status stored)
-    }
-
-    state updated {
-      INIT -> updated
-        (set @entity.status idle)
-      RESET -> waiting
-        (set @entity.status idle)
-    }
-
-    listens {
-      MemoryRecall.RECALLED -> RECALLED
-      MemoryStore.STORED -> STORED
-      RESET
-    }
-  }
-
-  page "/agent-memory" as AgentMemoryPage -> MemoryRecall, MemoryStore, MemoryListener
+  page "/agent-memory" as AgentMemoryPage -> AgentMemoryBrowse, AgentMemoryRecall
 }

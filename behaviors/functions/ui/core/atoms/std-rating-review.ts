@@ -1225,8 +1225,24 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                   'render-ui',
                   'main',
                   {
-                    'title': 'Loading reviews…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1644,8 +1660,24 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                   'render-ui',
                   'main',
                   {
-                    'title': 'Refreshing reviews…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1733,6 +1765,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                               },
                               {
                                 'action': 'RATE_DRAFT',
+                                'label': 'Your rating',
                                 'max': 5,
                                 'type': 'star-rating',
                                 'value': '@entity.draftRating',
@@ -2998,6 +3031,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                               },
                               {
                                 'action': 'RATE_DRAFT',
+                                'label': 'Your rating',
                                 'max': 5,
                                 'type': 'star-rating',
                                 'value': '@entity.draftRating',
@@ -3187,8 +3221,24 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                   'render-ui',
                   'main',
                   {
-                    'title': 'Refreshing reviews…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -3212,8 +3262,24 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                   'render-ui',
                   'main',
                   {
-                    'title': 'Retrying…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -3714,6 +3780,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                           },
                           {
                             'action': 'RATE_DRAFT',
+                            'label': 'Your rating',
                             'max': '@config.maxStars',
                             'type': 'star-rating',
                             'value': '@entity.draftRating',
@@ -3771,6 +3838,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                           },
                           {
                             'action': 'RATE_DRAFT',
+                            'label': 'Your rating',
                             'max': '@config.maxStars',
                             'type': 'star-rating',
                             'value': '@entity.draftRating',
@@ -3877,6 +3945,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                           },
                           {
                             'action': 'RATE_DRAFT',
+                            'label': 'Your rating',
                             'max': '@config.maxStars',
                             'type': 'star-rating',
                             'value': 0,
@@ -3996,6 +4065,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                           },
                           {
                             'action': 'RATE_DRAFT',
+                            'label': 'Your rating',
                             'max': '@config.maxStars',
                             'type': 'star-rating',
                             'value': 0,
@@ -4048,6 +4118,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                           },
                           {
                             'action': 'RATE_DRAFT',
+                            'label': 'Your rating',
                             'max': '@config.maxStars',
                             'type': 'star-rating',
                             'value': 0,

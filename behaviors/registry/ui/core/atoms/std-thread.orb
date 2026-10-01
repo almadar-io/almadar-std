@@ -1,5 +1,5 @@
 {
-  "description": "std-thread — forum-style nested replies with collapse. Owns ThreadPost (persistent). INIT fetches, scoped by @config.threadRootId when set (blank = every root, the default). REPLY persists a child post under @payload.parentId, stamped with the real @user identity. A consumer that mounts this as page comments forwards its own document-opened signal to SET_THREAD_ROOT { rootId }, which stamps @entity.replyRootId (scratch — the persisted threadRootId column is written only by the reply persist create) and refetches filtered by the payload; a plain INIT re-entry now also falls back through @entity.replyRootId before @config.threadRootId, so it stays scoped to the last SET_THREAD_ROOT instead of re-widening — only the after-create/after-select refetches still scope directly off their own event payload. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens. A non-empty sectionTitle switches the default bodyContent into titled-comments mode: header + post list + a standalone composer button (without it an empty thread has no REPLY emitter at all — the affordance only existed per-row).",
+  "description": "std-thread — forum-style nested replies with collapse. Owns ThreadPost (persistent). INIT fetches, scoped by @config.threadRootId when set (blank = every root, the default). The list holds top-level posts, each with its replies nested (one level). REPLY persists a child post under @payload.parentId in the same thread root, stamped with the real @user identity, and adds it to the parent's replies and replyCount. A consumer that mounts this as page comments forwards its own document-opened signal to SET_THREAD_ROOT { rootId }, which stamps @entity.replyRootId (scratch — the persisted threadRootId column is written only by the reply persist create) and refetches filtered by the payload; a plain INIT re-entry now also falls back through @entity.replyRootId before @config.threadRootId, so it stays scoped to the last SET_THREAD_ROOT instead of re-widening — only the after-create/after-select refetches still scope directly off their own event payload. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens. A non-empty sectionTitle switches the default bodyContent into titled-comments mode: header + post list + a standalone composer button (without it an empty thread has no REPLY emitter at all — the affordance only existed per-row).",
   "ledger": {
     "entries": {
       "ent_01KXG04HSZB16HRNNZWKASR1J1": {
@@ -104,6 +104,33 @@
         "bakedName": "SET_THREAD_ROOT",
         "curName": "SET_THREAD_ROOT",
         "id": "evt_01M0S6FKJ5QKA9TN648DJVXR6G",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04HSZF049W9Y5QFRH82Y8",
+        "renames": []
+      },
+      "evt_01M3VCR690C5RP9SY223R6NVPA": {
+        "bakedName": "ReplyParentLoaded",
+        "curName": "ReplyParentLoaded",
+        "id": "evt_01M3VCR690C5RP9SY223R6NVPA",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04HSZF049W9Y5QFRH82Y8",
+        "renames": []
+      },
+      "evt_01M3VCR690W8WJ8398YGRPBG52": {
+        "bakedName": "ReplyParentUpdated",
+        "curName": "ReplyParentUpdated",
+        "id": "evt_01M3VCR690W8WJ8398YGRPBG52",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04HSZF049W9Y5QFRH82Y8",
+        "renames": []
+      },
+      "evt_01M3VE0WWTV2FE10AX922WC1WB": {
+        "bakedName": "ReplyParentLoadFailed",
+        "curName": "ReplyParentLoadFailed",
+        "id": "evt_01M3VE0WWTV2FE10AX922WC1WB",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01KXG04HSZF049W9Y5QFRH82Y8",
@@ -256,6 +283,13 @@
             "description": "Thread root the reply being composed belongs to.",
             "intrinsic": true,
             "name": "replyRootId",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "Reply just created, added to its parent post's replies.",
+            "intrinsic": true,
+            "name": "lastReplyId",
             "type": "string"
           }
         ],
@@ -501,8 +535,16 @@
               "resource": "main"
             },
             {
+              "kind": "render-ui",
+              "resource": "toast"
+            },
+            {
               "kind": "set",
               "resource": "@entity.focusedRow"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.lastReplyId"
             },
             {
               "kind": "set",
@@ -655,6 +697,10 @@
                     {
                       "name": "replyRootId",
                       "type": "string"
+                    },
+                    {
+                      "name": "lastReplyId",
+                      "type": "string"
                     }
                   ],
                   "type": "[object]"
@@ -684,6 +730,111 @@
               "description": "A new post has been added to the thread — payload is the created ThreadPost row itself (flat: ?id, ?threadRootId, ?authorId, ?content, …), not wrapped under a row field.",
               "event": "ThreadPostCreated",
               "eventId": "evt_01KXG04HT2S9KW2Z1Y8QEM91RG",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "threadRootId",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "parentId",
+                  "type": "string"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "new post, added, created",
+              "tier": "domain"
+            },
+            {
+              "event": "ReplyParentLoaded",
+              "eventId": "evt_01M3VCR690C5RP9SY223R6NVPA",
+              "payloadSchema": [
+                {
+                  "entity": "ThreadPost",
+                  "name": "data",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "parentId",
+                      "type": "string"
+                    },
+                    {
+                      "name": "threadRootId",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "authorId",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "authorName",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "content",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "string"
+                    },
+                    {
+                      "name": "voteCount",
+                      "type": "number"
+                    },
+                    {
+                      "name": "replyCount",
+                      "type": "number"
+                    },
+                    {
+                      "name": "replies",
+                      "type": "[ThreadPost]"
+                    },
+                    {
+                      "name": "focusedRow",
+                      "type": "Map<string,scalar>"
+                    },
+                    {
+                      "name": "replyDraft",
+                      "type": "string"
+                    },
+                    {
+                      "name": "replyParentId",
+                      "type": "string"
+                    },
+                    {
+                      "name": "replyRootId",
+                      "type": "string"
+                    },
+                    {
+                      "name": "lastReplyId",
+                      "type": "string"
+                    }
+                  ],
+                  "required": true,
+                  "type": "object"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            },
+            {
+              "description": "Fired after a new reply is added to its parent post's replies",
+              "event": "ReplyParentUpdated",
+              "eventId": "evt_01M3VCR690W8WJ8398YGRPBG52",
               "payloadEntity": "ThreadPost",
               "payloadSchema": [
                 {
@@ -746,11 +897,26 @@
                 {
                   "name": "replyRootId",
                   "type": "string"
+                },
+                {
+                  "name": "lastReplyId",
+                  "type": "string"
                 }
               ],
               "scope": "internal",
-              "synonyms": "new post, added, created",
-              "tier": "domain"
+              "tier": "internal"
+            },
+            {
+              "event": "ReplyParentLoadFailed",
+              "eventId": "evt_01M3VE0WWTV2FE10AX922WC1WB",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
             },
             {
               "description": "Indicates a failure to create a new thread post.",
@@ -773,6 +939,7 @@
           "entityContract": {
             "provides": [
               "focusedRow",
+              "lastReplyId",
               "replyDraft",
               "replyParentId",
               "replyRootId"
@@ -865,6 +1032,10 @@
                       {
                         "name": "replyRootId",
                         "type": "string"
+                      },
+                      {
+                        "name": "lastReplyId",
+                        "type": "string"
                       }
                     ],
                     "type": "[object]"
@@ -933,6 +1104,122 @@
                 "id": "evt_01KXG04HT2S9KW2Z1Y8QEM91RG",
                 "key": "ThreadPostCreated",
                 "name": "ThreadPost created",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "threadRootId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "parentId",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "new post, added, created",
+                "tier": "domain"
+              },
+              {
+                "id": "evt_01M3VCR690C5RP9SY223R6NVPA",
+                "key": "ReplyParentLoaded",
+                "name": "Reply parent loaded",
+                "payloadSchema": [
+                  {
+                    "entity": "ThreadPost",
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "parentId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "threadRootId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "authorId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "authorName",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "content",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "string"
+                      },
+                      {
+                        "name": "voteCount",
+                        "type": "number"
+                      },
+                      {
+                        "name": "replyCount",
+                        "type": "number"
+                      },
+                      {
+                        "name": "replies",
+                        "type": "[ThreadPost]"
+                      },
+                      {
+                        "name": "focusedRow",
+                        "type": "Map<string,scalar>"
+                      },
+                      {
+                        "name": "replyDraft",
+                        "type": "string"
+                      },
+                      {
+                        "name": "replyParentId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "replyRootId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "lastReplyId",
+                        "type": "string"
+                      }
+                    ],
+                    "required": true,
+                    "type": "object"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "id": "evt_01M3VE0WWTV2FE10AX922WC1WB",
+                "key": "ReplyParentLoadFailed",
+                "name": "Reply parent load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "id": "evt_01M3VCR690W8WJ8398YGRPBG52",
+                "key": "ReplyParentUpdated",
+                "name": "Reply parent updated",
                 "payloadEntity": "ThreadPost",
                 "payloadSchema": [
                   {
@@ -995,10 +1282,13 @@
                   {
                     "name": "replyRootId",
                     "type": "string"
+                  },
+                  {
+                    "name": "lastReplyId",
+                    "type": "string"
                   }
                 ],
-                "synonyms": "new post, added, created",
-                "tier": "domain"
+                "tier": "internal"
               },
               {
                 "description": "Indicates a post or reply has been chosen for interaction.",
@@ -1096,28 +1386,44 @@
                         "success": "ThreadPostLoaded"
                       },
                       "filter": [
-                        "or",
+                        "and",
                         [
-                          "=",
+                          "or",
                           [
-                            "str/default",
-                            "@entity.replyRootId",
-                            "@config.threadRootId"
+                            "=",
+                            [
+                              "str/default",
+                              "@entity.replyRootId",
+                              "@config.threadRootId"
+                            ],
+                            ""
                           ],
-                          ""
+                          [
+                            "=",
+                            [
+                              "object/get",
+                              "@entity",
+                              "threadRootId"
+                            ],
+                            [
+                              "str/default",
+                              "@entity.replyRootId",
+                              "@config.threadRootId"
+                            ]
+                          ]
                         ],
                         [
                           "=",
                           [
-                            "object/get",
-                            "@entity",
-                            "threadRootId"
-                          ],
-                          [
                             "str/default",
-                            "@entity.replyRootId",
-                            "@config.threadRootId"
-                          ]
+                            [
+                              "object/get",
+                              "@entity",
+                              "parentId"
+                            ],
+                            ""
+                          ],
+                          ""
                         ]
                       ],
                       "include": [
@@ -1129,8 +1435,9 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "rows": 6.0,
+                      "type": "skeleton",
+                      "variant": "list"
                     }
                   ]
                 ],
@@ -1185,20 +1492,36 @@
                         "success": "ThreadPostLoaded"
                       },
                       "filter": [
-                        "or",
+                        "and",
                         [
-                          "=",
-                          "@payload.rootId",
-                          ""
+                          "or",
+                          [
+                            "=",
+                            "@payload.rootId",
+                            ""
+                          ],
+                          [
+                            "=",
+                            [
+                              "object/get",
+                              "@entity",
+                              "threadRootId"
+                            ],
+                            "@payload.rootId"
+                          ]
                         ],
                         [
                           "=",
                           [
-                            "object/get",
-                            "@entity",
-                            "threadRootId"
+                            "str/default",
+                            [
+                              "object/get",
+                              "@entity",
+                              "parentId"
+                            ],
+                            ""
                           ],
-                          "@payload.rootId"
+                          ""
                         ]
                       ],
                       "include": [
@@ -1210,8 +1533,9 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "rows": 6.0,
+                      "type": "skeleton",
+                      "variant": "list"
                     }
                   ]
                 ],
@@ -1231,28 +1555,44 @@
                         "success": "ThreadPostLoaded"
                       },
                       "filter": [
-                        "or",
+                        "and",
                         [
-                          "=",
+                          "or",
                           [
-                            "str/default",
-                            "@entity.replyRootId",
-                            "@config.threadRootId"
+                            "=",
+                            [
+                              "str/default",
+                              "@entity.replyRootId",
+                              "@config.threadRootId"
+                            ],
+                            ""
                           ],
-                          ""
+                          [
+                            "=",
+                            [
+                              "object/get",
+                              "@entity",
+                              "threadRootId"
+                            ],
+                            [
+                              "str/default",
+                              "@entity.replyRootId",
+                              "@config.threadRootId"
+                            ]
+                          ]
                         ],
                         [
                           "=",
                           [
-                            "object/get",
-                            "@entity",
-                            "threadRootId"
-                          ],
-                          [
                             "str/default",
-                            "@entity.replyRootId",
-                            "@config.threadRootId"
-                          ]
+                            [
+                              "object/get",
+                              "@entity",
+                              "parentId"
+                            ],
+                            ""
+                          ],
+                          ""
                         ]
                       ],
                       "include": [
@@ -1264,8 +1604,9 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "rows": 6.0,
+                      "type": "skeleton",
+                      "variant": "list"
                     }
                   ]
                 ],
@@ -1297,6 +1638,7 @@
                       "authorId": "@user.id",
                       "authorName": "@user.name",
                       "content": "@payload.content",
+                      "createdAt": "@now",
                       "parentId": [
                         "str/default",
                         "@payload.parentNodeId",
@@ -1304,15 +1646,11 @@
                       ],
                       "threadRootId": [
                         "str/default",
-                        "@payload.parentNodeId",
+                        "@entity.replyRootId",
                         [
                           "str/default",
-                          "@entity.replyRootId",
-                          [
-                            "str/default",
-                            "@config.threadRootId",
-                            "root"
-                          ]
+                          "@config.threadRootId",
+                          "root"
                         ]
                       ]
                     },
@@ -1353,23 +1691,6 @@
                     ]
                   ],
                   [
-                    "set",
-                    "@entity.replyRootId",
-                    [
-                      "str/default",
-                      "@payload.parentNodeId",
-                      [
-                        "str/default",
-                        "@entity.replyRootId",
-                        [
-                          "str/default",
-                          "@config.threadRootId",
-                          "root"
-                        ]
-                      ]
-                    ]
-                  ],
-                  [
                     "render-ui",
                     "main",
                     {
@@ -1380,6 +1701,7 @@
                           "variant": "h4"
                         },
                         {
+                          "aria-label": "Your reply",
                           "onChange": "EDIT_REPLY",
                           "placeholder": "Your reply…",
                           "type": "textarea"
@@ -1438,6 +1760,52 @@
                     ""
                   ],
                   [
+                    "set",
+                    "@entity.lastReplyId",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "ThreadPost",
+                    {
+                      "emit": {
+                        "failure": "ReplyParentLoadFailed",
+                        "success": "ReplyParentLoaded"
+                      },
+                      "id": "@payload.parentId"
+                    }
+                  ]
+                ],
+                "event": "ThreadPostCreated",
+                "eventId": "evt_01KXG04HT2S9KW2Z1Y8QEM91RG",
+                "from": "browsing",
+                "guard": [
+                  "not",
+                  [
+                    "=",
+                    [
+                      "str/default",
+                      "@payload.parentId",
+                      ""
+                    ],
+                    ""
+                  ]
+                ],
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.replyDraft",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.replyParentId",
+                    ""
+                  ],
+                  [
                     "fetch",
                     "ThreadPost",
                     {
@@ -1446,20 +1814,36 @@
                         "success": "ThreadPostLoaded"
                       },
                       "filter": [
-                        "or",
+                        "and",
                         [
-                          "=",
-                          "@payload.threadRootId",
-                          ""
+                          "or",
+                          [
+                            "=",
+                            "@payload.threadRootId",
+                            ""
+                          ],
+                          [
+                            "=",
+                            [
+                              "object/get",
+                              "@entity",
+                              "threadRootId"
+                            ],
+                            "@payload.threadRootId"
+                          ]
                         ],
                         [
                           "=",
                           [
-                            "object/get",
-                            "@entity",
-                            "threadRootId"
+                            "str/default",
+                            [
+                              "object/get",
+                              "@entity",
+                              "parentId"
+                            ],
+                            ""
                           ],
-                          "@payload.threadRootId"
+                          ""
                         ]
                       ],
                       "include": [
@@ -1470,6 +1854,187 @@
                 ],
                 "event": "ThreadPostCreated",
                 "eventId": "evt_01KXG04HT2S9KW2Z1Y8QEM91RG",
+                "from": "browsing",
+                "guard": [
+                  "=",
+                  [
+                    "str/default",
+                    "@payload.parentId",
+                    ""
+                  ],
+                  ""
+                ],
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "ThreadPost",
+                    {
+                      "id": "@payload.data.id",
+                      "replies": [
+                        "array/append",
+                        [
+                          "object/get",
+                          "@payload.data",
+                          "replies",
+                          []
+                        ],
+                        "@entity.lastReplyId"
+                      ],
+                      "replyCount": [
+                        "+",
+                        [
+                          "object/get",
+                          "@payload.data",
+                          "replyCount",
+                          0.0
+                        ],
+                        1.0
+                      ]
+                    },
+                    {
+                      "emit": {
+                        "failure": "ThreadPostCreateFailed",
+                        "success": "ReplyParentUpdated"
+                      }
+                    }
+                  ]
+                ],
+                "event": "ReplyParentLoaded",
+                "eventId": "evt_01M3VCR690C5RP9SY223R6NVPA",
+                "from": "browsing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "dismissible": true,
+                      "message": [
+                        "str/concat",
+                        "Couldn't attach the reply to its post — ",
+                        "@payload.error"
+                      ],
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ],
+                  [
+                    "fetch",
+                    "ThreadPost",
+                    {
+                      "emit": {
+                        "failure": "ThreadPostLoadFailed",
+                        "success": "ThreadPostLoaded"
+                      },
+                      "filter": [
+                        "and",
+                        [
+                          "or",
+                          [
+                            "=",
+                            [
+                              "str/default",
+                              "@entity.replyRootId",
+                              "@config.threadRootId"
+                            ],
+                            ""
+                          ],
+                          [
+                            "=",
+                            [
+                              "object/get",
+                              "@entity",
+                              "threadRootId"
+                            ],
+                            [
+                              "str/default",
+                              "@entity.replyRootId",
+                              "@config.threadRootId"
+                            ]
+                          ]
+                        ],
+                        [
+                          "=",
+                          [
+                            "str/default",
+                            [
+                              "object/get",
+                              "@entity",
+                              "parentId"
+                            ],
+                            ""
+                          ],
+                          ""
+                        ]
+                      ],
+                      "include": [
+                        "replies"
+                      ]
+                    }
+                  ]
+                ],
+                "event": "ReplyParentLoadFailed",
+                "eventId": "evt_01M3VE0WWTV2FE10AX922WC1WB",
+                "from": "browsing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "ThreadPost",
+                    {
+                      "emit": {
+                        "failure": "ThreadPostLoadFailed",
+                        "success": "ThreadPostLoaded"
+                      },
+                      "filter": [
+                        "and",
+                        [
+                          "or",
+                          [
+                            "=",
+                            "@payload.threadRootId",
+                            ""
+                          ],
+                          [
+                            "=",
+                            [
+                              "object/get",
+                              "@entity",
+                              "threadRootId"
+                            ],
+                            "@payload.threadRootId"
+                          ]
+                        ],
+                        [
+                          "=",
+                          [
+                            "str/default",
+                            [
+                              "object/get",
+                              "@entity",
+                              "parentId"
+                            ],
+                            ""
+                          ],
+                          ""
+                        ]
+                      ],
+                      "include": [
+                        "replies"
+                      ]
+                    }
+                  ]
+                ],
+                "event": "ReplyParentUpdated",
+                "eventId": "evt_01M3VCR690W8WJ8398YGRPBG52",
                 "from": "browsing",
                 "to": "browsing"
               },
@@ -1489,20 +2054,36 @@
                         "success": "ThreadPostLoaded"
                       },
                       "filter": [
-                        "or",
+                        "and",
                         [
-                          "=",
-                          "@payload.row.threadRootId",
-                          ""
+                          "or",
+                          [
+                            "=",
+                            "@payload.row.threadRootId",
+                            ""
+                          ],
+                          [
+                            "=",
+                            [
+                              "object/get",
+                              "@entity",
+                              "threadRootId"
+                            ],
+                            "@payload.row.threadRootId"
+                          ]
                         ],
                         [
                           "=",
                           [
-                            "object/get",
-                            "@entity",
-                            "threadRootId"
+                            "str/default",
+                            [
+                              "object/get",
+                              "@entity",
+                              "parentId"
+                            ],
+                            ""
                           ],
-                          "@payload.row.threadRootId"
+                          ""
                         ]
                       ],
                       "include": [
@@ -1539,6 +2120,7 @@
                       "authorId": "@user.id",
                       "authorName": "@user.name",
                       "content": "@entity.replyDraft",
+                      "createdAt": "@now",
                       "parentId": [
                         "str/default",
                         "@entity.replyParentId",
@@ -1647,20 +2229,36 @@
                         "success": "ThreadPostLoaded"
                       },
                       "filter": [
-                        "or",
+                        "and",
                         [
-                          "=",
-                          "@payload.rootId",
-                          ""
+                          "or",
+                          [
+                            "=",
+                            "@payload.rootId",
+                            ""
+                          ],
+                          [
+                            "=",
+                            [
+                              "object/get",
+                              "@entity",
+                              "threadRootId"
+                            ],
+                            "@payload.rootId"
+                          ]
                         ],
                         [
                           "=",
                           [
-                            "object/get",
-                            "@entity",
-                            "threadRootId"
+                            "str/default",
+                            [
+                              "object/get",
+                              "@entity",
+                              "parentId"
+                            ],
+                            ""
                           ],
-                          "@payload.rootId"
+                          ""
                         ]
                       ],
                       "include": [
@@ -1672,8 +2270,9 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "rows": 6.0,
+                      "type": "skeleton",
+                      "variant": "list"
                     }
                   ]
                 ],
@@ -1705,6 +2304,7 @@
                       "authorId": "@user.id",
                       "authorName": "@user.name",
                       "content": "@entity.replyDraft",
+                      "createdAt": "@now",
                       "parentId": [
                         "str/default",
                         "@entity.replyParentId",
@@ -1776,6 +2376,52 @@
                     ""
                   ],
                   [
+                    "set",
+                    "@entity.lastReplyId",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "ThreadPost",
+                    {
+                      "emit": {
+                        "failure": "ReplyParentLoadFailed",
+                        "success": "ReplyParentLoaded"
+                      },
+                      "id": "@payload.parentId"
+                    }
+                  ]
+                ],
+                "event": "ThreadPostCreated",
+                "eventId": "evt_01KXG04HT2S9KW2Z1Y8QEM91RG",
+                "from": "replying",
+                "guard": [
+                  "not",
+                  [
+                    "=",
+                    [
+                      "str/default",
+                      "@payload.parentId",
+                      ""
+                    ],
+                    ""
+                  ]
+                ],
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.replyDraft",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.replyParentId",
+                    ""
+                  ],
+                  [
                     "fetch",
                     "ThreadPost",
                     {
@@ -1784,20 +2430,36 @@
                         "success": "ThreadPostLoaded"
                       },
                       "filter": [
-                        "or",
+                        "and",
                         [
-                          "=",
-                          "@payload.threadRootId",
-                          ""
+                          "or",
+                          [
+                            "=",
+                            "@payload.threadRootId",
+                            ""
+                          ],
+                          [
+                            "=",
+                            [
+                              "object/get",
+                              "@entity",
+                              "threadRootId"
+                            ],
+                            "@payload.threadRootId"
+                          ]
                         ],
                         [
                           "=",
                           [
-                            "object/get",
-                            "@entity",
-                            "threadRootId"
+                            "str/default",
+                            [
+                              "object/get",
+                              "@entity",
+                              "parentId"
+                            ],
+                            ""
                           ],
-                          "@payload.threadRootId"
+                          ""
                         ]
                       ],
                       "include": [
@@ -1809,6 +2471,15 @@
                 "event": "ThreadPostCreated",
                 "eventId": "evt_01KXG04HT2S9KW2Z1Y8QEM91RG",
                 "from": "replying",
+                "guard": [
+                  "=",
+                  [
+                    "str/default",
+                    "@payload.parentId",
+                    ""
+                  ],
+                  ""
+                ],
                 "to": "browsing"
               },
               {
@@ -1844,20 +2515,36 @@
                         "success": "ThreadPostLoaded"
                       },
                       "filter": [
-                        "or",
+                        "and",
                         [
-                          "=",
-                          "@payload.rootId",
-                          ""
+                          "or",
+                          [
+                            "=",
+                            "@payload.rootId",
+                            ""
+                          ],
+                          [
+                            "=",
+                            [
+                              "object/get",
+                              "@entity",
+                              "threadRootId"
+                            ],
+                            "@payload.rootId"
+                          ]
                         ],
                         [
                           "=",
                           [
-                            "object/get",
-                            "@entity",
-                            "threadRootId"
+                            "str/default",
+                            [
+                              "object/get",
+                              "@entity",
+                              "parentId"
+                            ],
+                            ""
                           ],
-                          "@payload.rootId"
+                          ""
                         ]
                       ],
                       "include": [
@@ -1869,8 +2556,9 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "rows": 6.0,
+                      "type": "skeleton",
+                      "variant": "list"
                     }
                   ]
                 ],
@@ -1890,28 +2578,44 @@
                         "success": "ThreadPostLoaded"
                       },
                       "filter": [
-                        "or",
+                        "and",
                         [
-                          "=",
+                          "or",
                           [
-                            "str/default",
-                            "@entity.replyRootId",
-                            "@config.threadRootId"
+                            "=",
+                            [
+                              "str/default",
+                              "@entity.replyRootId",
+                              "@config.threadRootId"
+                            ],
+                            ""
                           ],
-                          ""
+                          [
+                            "=",
+                            [
+                              "object/get",
+                              "@entity",
+                              "threadRootId"
+                            ],
+                            [
+                              "str/default",
+                              "@entity.replyRootId",
+                              "@config.threadRootId"
+                            ]
+                          ]
                         ],
                         [
                           "=",
                           [
-                            "object/get",
-                            "@entity",
-                            "threadRootId"
-                          ],
-                          [
                             "str/default",
-                            "@entity.replyRootId",
-                            "@config.threadRootId"
-                          ]
+                            [
+                              "object/get",
+                              "@entity",
+                              "parentId"
+                            ],
+                            ""
+                          ],
+                          ""
                         ]
                       ],
                       "include": [
@@ -1923,8 +2627,9 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "rows": 6.0,
+                      "type": "skeleton",
+                      "variant": "list"
                     }
                   ]
                 ],
@@ -1949,20 +2654,36 @@
                         "success": "ThreadPostLoaded"
                       },
                       "filter": [
-                        "or",
+                        "and",
                         [
-                          "=",
-                          "@payload.rootId",
-                          ""
+                          "or",
+                          [
+                            "=",
+                            "@payload.rootId",
+                            ""
+                          ],
+                          [
+                            "=",
+                            [
+                              "object/get",
+                              "@entity",
+                              "threadRootId"
+                            ],
+                            "@payload.rootId"
+                          ]
                         ],
                         [
                           "=",
                           [
-                            "object/get",
-                            "@entity",
-                            "threadRootId"
+                            "str/default",
+                            [
+                              "object/get",
+                              "@entity",
+                              "parentId"
+                            ],
+                            ""
                           ],
-                          "@payload.rootId"
+                          ""
                         ]
                       ],
                       "include": [
@@ -1974,8 +2695,9 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "rows": 6.0,
+                      "type": "skeleton",
+                      "variant": "list"
                     }
                   ]
                 ],

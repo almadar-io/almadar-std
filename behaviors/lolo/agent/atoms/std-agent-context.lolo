@@ -1,155 +1,86 @@
-app std-agent-context "1.0.0"
-"Wraps llm/token-count + llm/compact — context window management."
+app std-agent-context "2.0.0"
+"std-agent-context — keeps what an in-app assistant sends the model bounded. COMPACT { messages } passes a conversation of at most `keepMessages` turns straight through as COMPACTED; a longer one has its older turns summarized with `call-service llm summarize` into one leading note and keeps the last `keepMessages` turns verbatim. If summarizing fails, the older turns are dropped and the recent ones still go through, with a visible warning — a summarizer outage never blocks the assistant. Headless. Nothing is persisted: the conversation itself lives in std-agent-session."
+
+type AgentChatMessage = {
+  role : "user" | "assistant"
+  content : string!
+}
+
 orbital AgentContextOrbital {
+  type ContextSummarized = Event { summary : string, keyPoints : [string] } "Fired when the older turns have been summarized"
+  type ContextSummarizeFailed = Event { error : string } "Fired when summarizing fails"
 
-  entity ContextWindow [runtime] {
-    tokenCount : number = 0
-    beforeTokens : number = 0
-    afterTokens : number = 0
-    status : "idle" | "counted" | "compacted" = idle
+  entity AgentContextWindow [runtime] {
+    id : string!
+    pendingMessages : [AgentChatMessage] @description "The conversation being compacted." = []
+    lastSize : number @description "Turns in the last conversation compacted." @synonyms "size, length" = 0
   }
 
-  trait ContextCounter -> ContextWindow [lifecycle, instance] {
-    initial: idle
+  trait AgentContextCompactor -> AgentContextWindow [interaction] {
+    config {
+      keepMessages : number = 12
+        @label "Turns kept verbatim"
+        @description "The most recent turns sent to the model word for word; older turns are summarized."
+        @synonyms "window, history length, context size"
+        @tier "policy"
+    }
+    initial: ready
 
-    state idle {
-      INIT -> idle
-        (set @entity.tokenCount 0)
-        (set @entity.status idle)
-      COUNT -> counting
-        (set @entity.status idle)
-        (llm/token-count { emit: { success: TOKEN_COUNTED, failure: COUNT_FAILED } })
+    state ready {
+      INIT -> ready
+        (set @entity.lastSize 0)
+      COMPACT -> ready when (<= (array/len ?messages) @config.keepMessages)
+        (set @entity.lastSize (array/len ?messages))
+        (emit COMPACTED { messages: ?messages })
+      COMPACT -> summarizing when (> (array/len ?messages) @config.keepMessages)
+        (set @entity.lastSize (array/len ?messages))
+        (set @entity.pendingMessages ?messages)
+        (call-service llm summarize {
+          text: (str/join (array/map (array/dropLast ?messages @config.keepMessages) (fn item (str/concat @item.role ": " @item.content))) "\n")
+        } {
+          emit: { failure: ContextSummarizeFailed, success: ContextSummarized }
+        })
     }
 
-    state counting {
-      TOKEN_COUNTED -> counted
-        (set @entity.tokenCount ?result)
-        (set @entity.status counted)
-        (emit COUNTED { tokenCount: @entity.tokenCount })
-      COUNT_FAILED -> idle
-        (set @entity.tokenCount 0)
-        (set @entity.status idle)
-    }
-
-    state counted {
-      INIT -> counted
-        (set @entity.status counted)
-      RESET -> idle
-        (set @entity.tokenCount 0)
-        (set @entity.status idle)
+    state summarizing {
+      ContextSummarized -> ready
+        (emit COMPACTED {
+          messages: (array/prepend (array/takeLast @entity.pendingMessages @config.keepMessages) { role: assistant, content: (str/concat "Earlier in this conversation: " ?summary) })
+        })
+      ContextSummarizeFailed -> ready
+        (emit COMPACTED { messages: (array/takeLast @entity.pendingMessages @config.keepMessages) })
+        (render-ui toast {
+          message: ?error
+          type: alert
+          variant: warning
+        })
     }
 
     emits {
-      COUNTED {
-        tokenCount : number!
+      COMPACTED -> external {
+        messages : [AgentChatMessage]!
       }
-      TOKEN_COUNTED {
-        result : number!
+        @description "The conversation, bounded: recent turns verbatim, older turns as one summary note."
+        @synonyms "compacted, trimmed, bounded"
+        @tier "domain"
+      ContextSummarized -> internal {
+        summary : string
+        keyPoints : [string]
       }
+        @tier "internal"
+      ContextSummarizeFailed -> internal {
+        error : string
+      }
+        @tier "internal"
     }
 
     listens {
-      COUNT
+      COMPACT {
+        messages : [AgentChatMessage]!
+      }
+        @description "Bound this conversation for the model."
     }
   }
 
-  trait ContextCompactor -> ContextWindow [lifecycle, instance] {
-    initial: idle
-
-    state idle {
-      INIT -> idle
-        (set @entity.beforeTokens 0)
-        (set @entity.afterTokens 0)
-        (set @entity.status idle)
-      COMPACT -> counting_before
-        (set @entity.status idle)
-        (llm/token-count { emit: { success: BEFORE_COUNTED, failure: COMPACT_COUNT_FAILED } })
-    }
-
-    state counting_before {
-      BEFORE_COUNTED -> compacting
-        (set @entity.beforeTokens ?result)
-        (llm/compact { emit: { success: COMPACTED_OK, failure: COMPACT_FAILED } })
-      COMPACT_COUNT_FAILED -> idle
-        (set @entity.beforeTokens 0)
-        (set @entity.afterTokens 0)
-        (set @entity.status idle)
-    }
-
-    state compacting {
-      COMPACTED_OK -> counting_after
-        (llm/token-count { emit: { success: AFTER_COUNTED, failure: COMPACT_COUNT_FAILED } })
-      COMPACT_FAILED -> idle
-        (set @entity.beforeTokens 0)
-        (set @entity.afterTokens 0)
-        (set @entity.status idle)
-    }
-
-    state counting_after {
-      AFTER_COUNTED -> compacted
-        (set @entity.afterTokens ?result)
-        (set @entity.status compacted)
-        (emit COMPACTED { before: @entity.beforeTokens, after: @entity.afterTokens })
-      COMPACT_COUNT_FAILED -> idle
-        (set @entity.beforeTokens 0)
-        (set @entity.afterTokens 0)
-        (set @entity.status idle)
-    }
-
-    state compacted {
-      INIT -> compacted
-        (set @entity.status compacted)
-      RESET -> idle
-        (set @entity.beforeTokens 0)
-        (set @entity.afterTokens 0)
-        (set @entity.status idle)
-    }
-
-    emits {
-      COMPACTED {
-        before : number!
-        after : number!
-      }
-      BEFORE_COUNTED {
-        result : number!
-      }
-      AFTER_COUNTED {
-        result : number!
-      }
-    }
-
-    listens {
-      COMPACT
-    }
-  }
-
-  trait ContextListener -> ContextWindow [lifecycle, instance] {
-    initial: waiting
-
-    state waiting {
-      INIT -> waiting
-        (set @entity.status idle)
-      COUNTED -> active
-        (set @entity.status counted)
-      COMPACTED -> active
-        (set @entity.status compacted)
-      RESET -> waiting
-        (set @entity.status idle)
-    }
-
-    state active {
-      INIT -> active
-        (set @entity.status idle)
-      RESET -> waiting
-        (set @entity.status idle)
-    }
-
-    listens {
-      ContextCounter.COUNTED -> COUNTED
-      ContextCompactor.COMPACTED -> COMPACTED
-      RESET
-    }
-  }
-
-  page "/agent-context" as AgentContextPage -> ContextCounter, ContextCompactor, ContextListener
+  page "/agent-context" as AgentContextPage -> AgentContextCompactor
 }

@@ -63,10 +63,21 @@ export interface StdUiDataListDataListLoadedPayload {
  */
 export interface StdUiDataListConfig {
   accepts?: string;
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
   className?: string;
   /** Default: `[]` */
   columns?: EntityRow[];
   currentUser?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
   dndItemIdField?: string;
   dndRoot?: boolean;
   dragGroup?: string;
@@ -76,6 +87,8 @@ export interface StdUiDataListConfig {
   emptyIcon?: unknown;
   emptyMessage?: string;
   emptyTitle?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   error?: EntityRow;
   /** Default: `[]` */
   fields?: EntityRow[];
@@ -90,6 +103,7 @@ export interface StdUiDataListConfig {
   itemActions?: EntityRow[];
   /** Default: `"ITEM_CLICK"` */
   itemClickEvent?: string;
+  lang?: string;
   /** Default: `"LOAD_MORE"` */
   loadMoreEvent?: string;
   /** Default: `"LONG_PRESS"` */
@@ -105,12 +119,12 @@ export interface StdUiDataListConfig {
   /** Default: `"REORDER"` */
   reorderEvent?: string;
   reorderable?: boolean;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   /** Default: `true` */
   selfFetch?: boolean;
   senderField?: string;
   senderLabelField?: string;
   sortBy?: string;
-  /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
   sortable?: boolean;
   /** Default: `[]` */
@@ -121,6 +135,7 @@ export interface StdUiDataListConfig {
   swipeRightActions?: EntityRow[];
   /** Default: `"SWIPE_RIGHT"` */
   swipeRightEvent?: string;
+  tabIndex?: number;
   /** Default: `"default"` */
   variant?: 'default' | 'card' | 'compact' | 'message';
   /** Default: `""` */

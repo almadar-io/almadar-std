@@ -39,6 +39,7 @@ export type StdUiAtlasPanelEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiAtlasPanelConfig {
+  ariaHidden?: boolean;
   asset?: EntityRow;
   /** Default: `16` */
   borderSlice?: number;
@@ -46,6 +47,8 @@ export interface StdUiAtlasPanelConfig {
   borderWidth?: number;
   children?: PatternValue;
   className?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   /** Default: `"nineSlice"` */
   mode?: 'nineSlice' | 'repeat';
   /** Default: `{}` */

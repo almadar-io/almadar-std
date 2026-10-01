@@ -159,6 +159,7 @@ export * from './ui/game/atoms/std-round-flow.js';
 export * from './infra/atoms/std-row-access-control.js';
 export * from './ui/core/atoms/std-saved-search.js';
 export * from './ui/core/atoms/std-scatter.js';
+export * from './ui/core/atoms/std-scoped-list.js';
 export * from './ui/game/atoms/std-score.js';
 export * from './ui/core/atoms/std-search.js';
 export * from './ui/core/atoms/std-selection.js';
@@ -414,8 +415,8 @@ export * from './ui/core/molecules/ui-wizard-navigation.js';
 export * from './ui/core/molecules/ui-wizard-progress.js';
 
 // Organisms
+export * from './agent/organisms/std-agent-assistant.js';
 export * from './agent/organisms/std-agent-builder.js';
-export * from './agent/organisms/std-agent-rabit.js';
 export * from './ui/game/organisms/std-arcade-board-3d.js';
 export * from './ui/game/organisms/std-crew-board-2d.js';
 export * from './ui/game/organisms/std-dungeon-board-2d.js';

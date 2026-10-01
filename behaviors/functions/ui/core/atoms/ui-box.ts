@@ -49,42 +49,49 @@ export interface StdUiBoxConfig {
   /** Default: `"ACTION"` */
   action?: string;
   actionPayload?: unknown;
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
   /** Default: `"transparent"` */
   bg?: 'transparent' | 'primary' | 'secondary' | 'muted' | 'accent' | 'surface' | 'overlay';
   /** Default: `true` */
   border?: boolean;
   children?: PatternValue;
   className?: string;
-  dir?: string;
-  /** Default: `"block"` */
+  dir?: 'ltr' | 'rtl' | 'auto';
   display?: 'block' | 'inline' | 'inline-block' | 'flex' | 'inline-flex' | 'grid';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   /** Default: `false` */
   fullHeight?: boolean;
   /** Default: `false` */
   fullWidth?: boolean;
   /** Default: `"HOVER"` */
   hoverEvent?: string;
-  /** Default: `"none"` */
+  lang?: string;
   margin?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
-  /** Default: `"none"` */
   marginX?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
-  /** Default: `"none"` */
   marginY?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
   maxWidth?: string;
-  /** Default: `"auto"` */
   overflow?: 'auto' | 'hidden' | 'visible' | 'scroll';
   /** Default: `"md"` */
   padding?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  /** Default: `"none"` */
   paddingX?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  /** Default: `"none"` */
   paddingY?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  /** Default: `"relative"` */
   position?: 'relative' | 'absolute' | 'fixed' | 'sticky';
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   /** Default: `"none"` */
   rounded?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
   /** Default: `"none"` */
   shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  tabIndex?: number;
   /** Default: `true` */
   tapReveal?: boolean;
 }

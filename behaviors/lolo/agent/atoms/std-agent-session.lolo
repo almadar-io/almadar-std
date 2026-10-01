@@ -1,143 +1,267 @@
-app std-agent-session "1.0.0"
-"Wraps session/read-spec + session/write-spec + session/read-history — orbital session data."
+app std-agent-session "2.0.0"
+"std-agent-session — the persisted conversation with an in-app assistant. Owns AgentMessage rows (role, content, ownerId stamped with the real @user, createdAt). SEND stores the user's message, reloads the thread and emits CONVERSE with the whole conversation, oldest first, for std-agent-tool-loop to answer; REPLIED stores the assistant's reply and redraws; REPLY_FAILED redraws the conversation (the tool loop shows the error). Rows are meant to be private to their owner: owner-scoped access needs an [identity] roster, so the binding organism declares the @read/@create scoping on AgentMessage — this generic atom cannot."
 
-type OrbitalSpec = { orbitalName: string, organism: string!, method: string!, deltaPrompt: string! }
-type HistoryEntry = { role: string!, content: string!, timestamp: number }
+type AgentChatMessage = {
+  role : "user" | "assistant"
+  content : string!
+}
+type AgentLink = {
+  label : string!
+  href : string!
+}
 
 orbital AgentSessionOrbital {
+  type AgentMessagesLoaded = Event { data : [AgentMessage] } "Fired when the conversation finishes loading"
+  type AgentMessagesLoadFailed = Event { error : string, code : string } "Fired when the conversation fails to load"
+  type AgentMessageSaved = Event AgentMessage "Fired after a message persists"
+  type AgentMessageSaveFailed = Event { error : string, code : string } "Fired when a message fails to persist"
 
-  entity AgentSession [runtime] {
-    orbitalName : string = ""
-    spec : OrbitalSpec = {}
-    history : [HistoryEntry] = []
-    status : "idle" | "read" | "written" = idle
+  entity AgentMessage [persistent: agentMessages] {
+    id : string!
+    ownerId : string! @description "Whose conversation this message belongs to (the real @user). The binding organism scopes @read to it." @synonyms "user, owner, account"
+    role : "user" | "assistant" @description "Who said it." @synonyms "speaker, author" = user
+    content : string! @description "What was said." @synonyms "text, message, body"
+    createdAt : number @description "When it was said (ms)." @synonyms "time, timestamp" = 0
+    draft : string @intrinsic @description "The message being typed." = ""
   }
 
-  trait SessionReader -> AgentSession [lifecycle, instance] {
-    initial: idle
+  trait AgentThread -> @rebindable AgentMessage [interaction, collection] {
+    config {
+      title : string = "Assistant"
+        @label "Title"
+        @description "Heading above the conversation."
+        @tier "presentation"
+      placeholder : string = "Ask the assistant…"
+        @label "Message placeholder"
+        @tier "presentation"
+      links : [AgentLink] = []
+        @label "Links above the conversation"
+        @description "Related pages (e.g. the run history), shown under the title."
+        @tier "presentation"
+    }
+    initial: loading
 
-    state idle {
-      INIT -> idle
-        (set @entity.orbitalName "")
-        (set @entity.spec {})
-        (set @entity.history [])
-        (set @entity.status idle)
-      READ_SPEC -> reading
-        (set @entity.orbitalName ?orbitalName)
-        (session/read-spec @entity.orbitalName { emit: { success: SPEC_LOADED, failure: SPEC_LOAD_FAILED } })
+    state loading {
+      INIT -> loading
+        (fetch AgentMessage {
+          emit: { failure: AgentMessagesLoadFailed, success: AgentMessagesLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
+        })
+      AgentMessagesLoaded -> chatting
+        (render-ui main {
+          children: [{
+            content: @config.title
+            type: typography
+            variant: h4
+          }, {
+            children: (array/map @config.links (fn item {
+              href: @item.href
+              label: @item.label
+              type: button
+              variant: ghost
+            }))
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            entity: (array/sort ?data createdAt asc)
+            fields: []
+            gap: sm
+            renderItem: (fn item {
+              children: [{
+                label: @item.role
+                size: sm
+                type: badge
+                variant: neutral
+              }, {
+                content: @item.content
+                type: typography
+                variant: body
+              }]
+              direction: vertical
+              gap: xs
+              type: stack
+            })
+            type: data-list
+          }, {
+            children: [{
+              aria-label: "Message"
+              onChange: EDIT_MESSAGE
+              placeholder: @config.placeholder
+              type: textarea
+            }, {
+              action: SEND_DRAFT
+              icon: send
+              label: Send
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      AgentMessagesLoadFailed -> chatting
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
     }
 
-    state reading {
-      SPEC_LOADED -> loadingHistory
-        (set @entity.spec ?result)
-        (session/read-history @entity.orbitalName { emit: { success: HISTORY_LOADED, failure: HISTORY_LOAD_FAILED } })
-      SPEC_LOAD_FAILED -> idle
-        (set @entity.status idle)
+    state chatting {
+      INIT -> loading
+        (fetch AgentMessage {
+          emit: { failure: AgentMessagesLoadFailed, success: AgentMessagesLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
+        })
+      EDIT_MESSAGE -> chatting
+        (set @entity.draft ?value)
+      SEND_DRAFT -> waiting when (not ["=", (str/default @entity.draft ""), ""])
+        (persist create AgentMessage {
+          ownerId: @user.id
+          role: user
+          content: @entity.draft
+          createdAt: @now
+        } {
+          emit: { failure: AgentMessageSaveFailed, success: AgentMessageSaved }
+        })
+        (set @entity.draft "")
+      SEND -> waiting when (not ["=", (str/default ?message ""), ""])
+        (persist create AgentMessage {
+          ownerId: @user.id
+          role: user
+          content: ?message
+          createdAt: @now
+        } {
+          emit: { failure: AgentMessageSaveFailed, success: AgentMessageSaved }
+        })
+      REPLIED -> loading
+        (persist create AgentMessage {
+          ownerId: @user.id
+          role: assistant
+          content: ?reply
+          createdAt: @now
+        })
+        (fetch AgentMessage {
+          emit: { failure: AgentMessagesLoadFailed, success: AgentMessagesLoaded }
+        })
+      REPLY_FAILED -> loading
+        (fetch AgentMessage {
+          emit: { failure: AgentMessagesLoadFailed, success: AgentMessagesLoaded }
+        })
     }
-
-    state loadingHistory {
-      HISTORY_LOADED -> read
-        (set @entity.history ?result)
-        (set @entity.status read)
-        (emit SPEC_READ { spec: @entity.spec, history: @entity.history })
-      HISTORY_LOAD_FAILED -> idle
-        (set @entity.status idle)
-    }
-
-    state read {
-      INIT -> read
-        (set @entity.status read)
-      RESET -> idle
-        (set @entity.spec {})
-        (set @entity.history [])
-        (set @entity.status idle)
-    }
-
-    emits {
-      SPEC_READ {
-        spec : OrbitalSpec!
-        history : [HistoryEntry]!
-      }
-      SPEC_LOADED {
-        result : OrbitalSpec!
-      }
-      HISTORY_LOADED {
-        result : [HistoryEntry]!
-      }
-    }
-
-    listens {
-      READ_SPEC {
-        orbitalName : string!
-      }
-    }
-  }
-
-  trait SessionWriter -> AgentSession [lifecycle, instance] {
-    initial: idle
-
-    state idle {
-      INIT -> idle
-        (set @entity.orbitalName "")
-        (set @entity.spec {})
-        (set @entity.status idle)
-      WRITE_SPEC -> written
-        (set @entity.orbitalName ?orbitalName)
-        (set @entity.spec ?spec)
-        (session/write-spec @entity.orbitalName @entity.spec)
-        (set @entity.status written)
-        (emit SPEC_WRITTEN { orbitalName: @entity.orbitalName })
-    }
-
-    state written {
-      INIT -> written
-        (set @entity.status written)
-      RESET -> idle
-        (set @entity.spec {})
-        (set @entity.status idle)
-    }
-
-    emits {
-      SPEC_WRITTEN {
-        orbitalName : string!
-      }
-    }
-
-    listens {
-      WRITE_SPEC {
-        orbitalName : string!
-        spec : OrbitalSpec!
-      }
-    }
-  }
-
-  trait SessionListener -> AgentSession [lifecycle, instance] {
-    initial: waiting
 
     state waiting {
-      INIT -> waiting
-        (set @entity.status idle)
-      SPEC_READ -> active
-        (set @entity.status read)
-      SPEC_WRITTEN -> active
-        (set @entity.status written)
-      RESET -> waiting
-        (set @entity.status idle)
+      AgentMessageSaved -> waiting
+        (fetch AgentMessage {
+          emit: { failure: AgentMessagesLoadFailed, success: AgentConversationLoaded }
+        })
+        (render-ui main {
+          size: sm
+          type: spinner
+        })
+      AgentConversationLoaded -> waiting
+        (emit CONVERSE {
+          messages: (array/map (array/sort ?data createdAt asc) (fn item { role: @item.role, content: @item.content }))
+        })
+      REPLIED -> loading
+        (persist create AgentMessage {
+          ownerId: @user.id
+          role: assistant
+          content: ?reply
+          createdAt: @now
+        })
+        (fetch AgentMessage {
+          emit: { failure: AgentMessagesLoadFailed, success: AgentMessagesLoaded }
+        })
+      REPLY_FAILED -> loading
+        (fetch AgentMessage {
+          emit: { failure: AgentMessagesLoadFailed, success: AgentMessagesLoaded }
+        })
+      AgentMessageSaveFailed -> chatting
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+      AgentMessagesLoadFailed -> chatting
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
     }
 
-    state active {
-      INIT -> active
-        (set @entity.status idle)
-      RESET -> waiting
-        (set @entity.status idle)
+    emits {
+      CONVERSE -> external {
+        messages : [AgentChatMessage]!
+      }
+        @description "The conversation to answer, oldest first; the last turn is the request."
+        @synonyms "ask, converse, request"
+        @tier "domain"
+      AgentConversationLoaded -> internal {
+        data : [AgentMessage]
+      }
+        @tier "internal"
+      AgentMessagesLoaded {
+        data : [AgentMessage]
+      }
+        @description "The conversation finished loading."
+        @tier "internal"
+      AgentMessagesLoadFailed {
+        error : string
+        code : string
+      }
+        @tier "internal"
+      AgentMessageSaved
+        @description "A message persisted — payload is the created AgentMessage row itself."
+        @tier "internal"
+      AgentMessageSaveFailed {
+        error : string
+        code : string
+      }
+        @tier "internal"
+      EDIT_MESSAGE {
+        value : string!
+      }
+        @description "The message being typed changed."
+        @tier "presentation"
+      SEND_DRAFT
+        @description "Send the typed message."
+        @synonyms "send, ask, submit"
+        @tier "domain"
     }
 
     listens {
-      SessionReader.SPEC_READ -> SPEC_READ
-      SessionWriter.SPEC_WRITTEN -> SPEC_WRITTEN
-      RESET
+      SEND {
+        message : string!
+      }
+        @description "Ask the assistant something."
+        @synonyms "ask, message, chat"
+      REPLIED {
+        reply : string!
+      }
+        @description "The assistant answered."
+      REPLY_FAILED {
+        error : string!
+      }
+        @description "The assistant could not answer."
     }
   }
 
-  page "/agent-session" as AgentSessionPage -> SessionReader, SessionWriter, SessionListener
+  page "/agent-session" as AgentSessionPage -> AgentThread
 }

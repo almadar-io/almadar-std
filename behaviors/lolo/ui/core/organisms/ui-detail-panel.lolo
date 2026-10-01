@@ -30,6 +30,7 @@ orbital DetailPanelOrbital {
     navigatesTo : string
     variant : "primary" | "secondary" | "ghost" | "danger"
     when : SExpr
+    payload : SExpr
     roles : [string]
   }
   type DetailPanelBackAction = {
@@ -39,13 +40,14 @@ orbital DetailPanelOrbital {
     navigatesTo : string
     variant : "primary" | "secondary" | "ghost" | "danger"
     when : SExpr
+    payload : SExpr
   }
   type DetailPanelFieldsItem = {
     name : string!
     label : string
     icon : icon
     variant : "h3" | "h4" | "body" | "caption" | "badge" | "small" | "progress"
-    format : "date" | "currency" | "number" | "boolean" | "percent"
+    format : "date" | "datetime" | "currency" | "number" | "boolean" | "percent"
     colorMap : Map string DetailPanelFieldsItemColorMapValue
     labels : Map string string
     type : string
@@ -63,9 +65,73 @@ orbital DetailPanelOrbital {
     description : string
     disabled : boolean
   }
+  type DetailPanelStagesItem = {
+    value : string!
+    label : string!
+  }
+  type DetailPanelActivityItem = {
+    id : string!
+    title : string!
+    description : string
+    date : string
+    status : "complete" | "active" | "pending" | "error"
+    icon : icon
+    tags : [string]
+  }
+  type DetailPanelLineItemColumnsItem = {
+    key : string!
+    field : string
+    header : string
+    label : string
+    width : string
+    align : "left" | "center" | "right"
+    className : string
+    weight : "normal" | "medium" | "semibold"
+    format : "badge" | "date" | "currency" | "number" | "percent" | "boolean"
+    colorMap : Map string DetailPanelLineItemColumnsItemColorMapValue
+    labels : Map string string
+    variant : "h3" | "h4"
+    icon : icon
+    sortable : boolean
+  }
+  type DetailPanelLineItemColumnsItemColorMapValue = "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "error" | "info" | "neutral" | "destructive"
+  type DetailPanelTotalsItem = {
+    name : string!
+    label : string
+    icon : icon
+    variant : "h3" | "h4" | "body" | "caption" | "badge" | "small" | "progress"
+    format : "date" | "datetime" | "currency" | "number" | "boolean" | "percent"
+    colorMap : Map string DetailPanelTotalsItemColorMapValue
+    labels : Map string string
+  }
+  type DetailPanelTotalsItemColorMapValue = "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "error" | "info" | "neutral" | "destructive"
+  type ReplyNodeRow = {
+    authorName : string
+    content : string
+    authorAvatarUrl : string
+    postedAt : string
+    voteCount : number
+    userVote : "up" | "down" | "none"
+    collapsed : boolean
+    replies : [ReplyNodeRow]
+  }
+  type DetailPanelTabsItem = {
+    id : string!
+    label : string!
+    fields : [string]
+    content : node
+  }
 
   entity DetailPanelItem [runtime] {
     id : string!
+    authorName : string = "Author Name"
+    content : string = "Content"
+    authorAvatarUrl : string = "Author Avatar Url"
+    postedAt : string = "Posted At"
+    voteCount : number = 1
+    userVote : "up" | "down" | "none" = up
+    collapsed : boolean = false
+    replies : [ReplyNodeRow] = []
   }
 
   trait DetailPanelRender -> @rebindable DetailPanelItem [interaction, instance] {
@@ -108,6 +174,39 @@ orbital DetailPanelOrbital {
           displayFields: @config.displayFields
           showActions: @config.showActions
           relationsData: @config.relationsData
+          look: @config.look
+          avatarField: @config.avatarField
+          coverField: @config.coverField
+          mediaField: @config.mediaField
+          stageField: @config.stageField
+          stages: @config.stages
+          activity: @config.activity
+          activityContent: @config.activityContent
+          latitudeField: @config.latitudeField
+          longitudeField: @config.longitudeField
+          lineItems: @entity
+          lineItemColumns: @config.lineItemColumns
+          lineItemsContent: @config.lineItemsContent
+          totals: @config.totals
+          thread: @entity
+          threadContent: @config.threadContent
+          tabs: @config.tabs
+          enter: @config.enter
+          enterDelay: @config.enterDelay
+          aria-label: @config.ariaLabel
+          aria-labelledby: @config.ariaLabelledby
+          aria-describedby: @config.ariaDescribedby
+          aria-live: @config.ariaLive
+          aria-current: @config.ariaCurrent
+          aria-pressed: @config.ariaPressed
+          aria-expanded: @config.ariaExpanded
+          aria-selected: @config.ariaSelected
+          aria-hidden: @config.ariaHidden
+          aria-busy: @config.ariaBusy
+          role: @config.role
+          lang: @config.lang
+          dir: @config.dir
+          tabIndex: @config.tabIndex
           type: detail-panel
         })
       INIT -> idle when (not (and @config.selfFetch (!= (str/default ?id "") "") (!= @config.mode "create")))
@@ -145,6 +244,39 @@ orbital DetailPanelOrbital {
           displayFields: @config.displayFields
           showActions: @config.showActions
           relationsData: @config.relationsData
+          look: @config.look
+          avatarField: @config.avatarField
+          coverField: @config.coverField
+          mediaField: @config.mediaField
+          stageField: @config.stageField
+          stages: @config.stages
+          activity: @config.activity
+          activityContent: @config.activityContent
+          latitudeField: @config.latitudeField
+          longitudeField: @config.longitudeField
+          lineItems: @entity
+          lineItemColumns: @config.lineItemColumns
+          lineItemsContent: @config.lineItemsContent
+          totals: @config.totals
+          thread: @entity
+          threadContent: @config.threadContent
+          tabs: @config.tabs
+          enter: @config.enter
+          enterDelay: @config.enterDelay
+          aria-label: @config.ariaLabel
+          aria-labelledby: @config.ariaLabelledby
+          aria-describedby: @config.ariaDescribedby
+          aria-live: @config.ariaLive
+          aria-current: @config.ariaCurrent
+          aria-pressed: @config.ariaPressed
+          aria-expanded: @config.ariaExpanded
+          aria-selected: @config.ariaSelected
+          aria-hidden: @config.ariaHidden
+          aria-busy: @config.ariaBusy
+          role: @config.role
+          lang: @config.lang
+          dir: @config.dir
+          tabIndex: @config.tabIndex
           type: detail-panel
         })
     }
@@ -185,6 +317,39 @@ orbital DetailPanelOrbital {
           displayFields: @config.displayFields
           showActions: @config.showActions
           relationsData: @config.relationsData
+          look: @config.look
+          avatarField: @config.avatarField
+          coverField: @config.coverField
+          mediaField: @config.mediaField
+          stageField: @config.stageField
+          stages: @config.stages
+          activity: @config.activity
+          activityContent: @config.activityContent
+          latitudeField: @config.latitudeField
+          longitudeField: @config.longitudeField
+          lineItems: @entity
+          lineItemColumns: @config.lineItemColumns
+          lineItemsContent: @config.lineItemsContent
+          totals: @config.totals
+          thread: @entity
+          threadContent: @config.threadContent
+          tabs: @config.tabs
+          enter: @config.enter
+          enterDelay: @config.enterDelay
+          aria-label: @config.ariaLabel
+          aria-labelledby: @config.ariaLabelledby
+          aria-describedby: @config.ariaDescribedby
+          aria-live: @config.ariaLive
+          aria-current: @config.ariaCurrent
+          aria-pressed: @config.ariaPressed
+          aria-expanded: @config.ariaExpanded
+          aria-selected: @config.ariaSelected
+          aria-hidden: @config.ariaHidden
+          aria-busy: @config.ariaBusy
+          role: @config.role
+          lang: @config.lang
+          dir: @config.dir
+          tabIndex: @config.tabIndex
           type: detail-panel
         })
       DetailPanelLoaded -> idle
@@ -222,6 +387,39 @@ orbital DetailPanelOrbital {
           displayFields: @config.displayFields
           showActions: @config.showActions
           relationsData: @config.relationsData
+          look: @config.look
+          avatarField: @config.avatarField
+          coverField: @config.coverField
+          mediaField: @config.mediaField
+          stageField: @config.stageField
+          stages: @config.stages
+          activity: @config.activity
+          activityContent: @config.activityContent
+          latitudeField: @config.latitudeField
+          longitudeField: @config.longitudeField
+          lineItems: @entity
+          lineItemColumns: @config.lineItemColumns
+          lineItemsContent: @config.lineItemsContent
+          totals: @config.totals
+          thread: @entity
+          threadContent: @config.threadContent
+          tabs: @config.tabs
+          enter: @config.enter
+          enterDelay: @config.enterDelay
+          aria-label: @config.ariaLabel
+          aria-labelledby: @config.ariaLabelledby
+          aria-describedby: @config.ariaDescribedby
+          aria-live: @config.ariaLive
+          aria-current: @config.ariaCurrent
+          aria-pressed: @config.ariaPressed
+          aria-expanded: @config.ariaExpanded
+          aria-selected: @config.ariaSelected
+          aria-hidden: @config.ariaHidden
+          aria-busy: @config.ariaBusy
+          role: @config.role
+          lang: @config.lang
+          dir: @config.dir
+          tabIndex: @config.tabIndex
           type: detail-panel
         })
     }
@@ -261,7 +459,7 @@ orbital DetailPanelOrbital {
         @label "Sort By"
         @description "Current sort field"
         @tier "presentation"
-      sortDirection : "asc" | "desc" = asc
+      sortDirection : "asc" | "desc"
         @label "Sort Direction"
         @description "Current sort direction"
         @tier "presentation"
@@ -338,7 +536,7 @@ orbital DetailPanelOrbital {
         @label "Slide Over"
         @description "slideOver prop"
         @tier "presentation"
-      fields : [DetailPanelFieldsItem] = [{ name: "Name", label: "Label", icon: "circle", variant: h3, format: date, type: "Type", values: ["Item", "Item 2"], relation: { entity: "Entity", cardinality: one } }, { name: "Name 2", label: "Label 2", icon: "circle", variant: h4, format: currency, type: "Type 2", values: ["Item", "Item 2"], relation: { entity: "Entity 2", cardinality: many } }]
+      fields : [DetailPanelFieldsItem] = [{ name: "Name", label: "Label", icon: "circle", variant: h3, format: date, type: "Type", values: ["Item", "Item 2"], relation: { entity: "Entity", cardinality: one } }, { name: "Name 2", label: "Label 2", icon: "circle", variant: h4, format: datetime, type: "Type 2", values: ["Item", "Item 2"], relation: { entity: "Entity 2", cardinality: many } }]
         @label "Fields"
         @description "Fields to display: field names, or declared fields ({ name, label, variant, format, colorMap, labels })"
         @tier "presentation"
@@ -350,7 +548,7 @@ orbital DetailPanelOrbital {
         @label "Mode"
         @description "Display mode (passed by compiler)"
         @tier "presentation"
-      position : "left" | "right" = left
+      position : "left" | "right"
         @label "Position"
         @description "Panel position (for drawer/sidebar placement)"
         @tier "presentation"
@@ -369,6 +567,140 @@ orbital DetailPanelOrbital {
       relationsData : Map string [DetailPanelRelationsDataValueItem] = {}
         @label "Relations Data"
         @description "Relation display data: { fieldName: [{value, label}] } — injected server-side by the runtime (relation-option injection) or bound by compiled codegen; resolves stored foreign ids to display names."
+        @tier "presentation"
+      look : "panel" | "profile" | "showcase" | "workflow" | "map" | "ledger" | "conversation" | "workspace" = panel
+        @label "Look"
+        @description "Page variant: panel (labelled fields, default), profile (person/member hero), showcase (image-first product/listing), workflow (lifecycle stepper + activity), map (location hero), ledger (document with line items + totals), conversation (thread beside the record), workspace (tabbed record)."
+        @tier "presentation"
+      avatarField : string
+        @label "Avatar Field"
+        @description "Record field holding the avatar image. The profile look always shows an avatar, with the title's initials when this is unset or empty."
+        @tier "presentation"
+      coverField : string
+        @label "Cover Field"
+        @description "Record field holding the cover image (profile)."
+        @tier "presentation"
+      mediaField : string
+        @label "Media Field"
+        @description "Record field holding the image, or list of images, the showcase look leads with."
+        @tier "presentation"
+      stageField : string
+        @label "Stage Field"
+        @description "Record field holding the current lifecycle stage (workflow)."
+        @tier "presentation"
+      stages : [DetailPanelStagesItem] = []
+        @label "Stages"
+        @description "The lifecycle in order, `{ value, label }` per stage (workflow)."
+        @tier "presentation"
+      activity : [DetailPanelActivityItem] = []
+        @label "Activity"
+        @description "Activity entries shown under the record (workflow)."
+        @tier "presentation"
+      activityContent : node
+        @label "Activity Content"
+        @description "Activity composed in instead of `activity` — e.g. the record's own history trait (workflow)."
+        @tier "presentation"
+      latitudeField : string
+        @label "Latitude Field"
+        @description "Record fields holding the location (map)."
+        @tier "presentation"
+      longitudeField : string
+        @label "Longitude Field"
+        @description "longitudeField prop"
+        @tier "presentation"
+      lineItemColumns : [DetailPanelLineItemColumnsItem] = []
+        @label "Line Item Columns"
+        @description "Columns of the line-items table (ledger)."
+        @tier "presentation"
+      lineItemsContent : node
+        @label "Line Items Content"
+        @description "Line items composed in instead of `lineItems` — e.g. the child rows' own trait (ledger)."
+        @tier "presentation"
+      totals : [DetailPanelTotalsItem] = []
+        @label "Totals"
+        @description "Record fields shown as the document's totals, in order (ledger)."
+        @tier "presentation"
+      threadContent : node
+        @label "Thread Content"
+        @description "The thread composed in instead of `thread` — e.g. the replies' own trait with its composer (conversation)."
+        @tier "presentation"
+      tabs : [DetailPanelTabsItem] = []
+        @label "Tabs"
+        @description "Tabs after the overview tab, each listing declared field names (workspace)."
+        @tier "presentation"
+      enter : "none" | "fade" | "rise" | "scale" | "slide"
+        @label "Enter"
+        @description "How this element animates in when it mounts (theme-styled); overrides the theme's default slot entry. `none` opts out."
+        @tier "presentation"
+      enterDelay : number
+        @label "Enter Delay"
+        @description "Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating."
+        @tier "presentation"
+      ariaLabel : string
+        @label "Aria-label"
+        @description "Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control)."
+        @synonyms "aria-label"
+        @tier "presentation"
+      ariaLabelledby : string
+        @label "Aria-labelledby"
+        @description "Id of the element whose text names this one."
+        @synonyms "aria-labelledby"
+        @tier "presentation"
+      ariaDescribedby : string
+        @label "Aria-describedby"
+        @description "Id of the element whose text describes this one (help text, error)."
+        @synonyms "aria-describedby"
+        @tier "presentation"
+      ariaLive : "off" | "polite" | "assertive"
+        @label "Aria-live"
+        @description "Announce changes to this region: polite waits for a pause, assertive interrupts."
+        @synonyms "aria-live"
+        @tier "presentation"
+      ariaCurrent : "page" | "step" | "location" | "date" | "time" | "true" | "false"
+        @label "Aria-current"
+        @description "Marks the current item in a set: the current page, step, location, date or time."
+        @synonyms "aria-current"
+        @tier "presentation"
+      ariaPressed : "true" | "false" | "mixed"
+        @label "Aria-pressed"
+        @description "Toggle-button state."
+        @synonyms "aria-pressed"
+        @tier "presentation"
+      ariaExpanded : boolean
+        @label "Aria-expanded"
+        @description "Whether the element it controls is expanded."
+        @synonyms "aria-expanded"
+        @tier "presentation"
+      ariaSelected : boolean
+        @label "Aria-selected"
+        @description "Whether this item is selected (tabs, options, grid cells)."
+        @synonyms "aria-selected"
+        @tier "presentation"
+      ariaHidden : boolean
+        @label "Aria-hidden"
+        @description "Hide from assistive technology (decorative content only)."
+        @synonyms "aria-hidden"
+        @tier "presentation"
+      ariaBusy : boolean
+        @label "Aria-busy"
+        @description "This region is updating; assistive technology waits before announcing it."
+        @synonyms "aria-busy"
+        @tier "presentation"
+      role : "alert" | "alertdialog" | "application" | "article" | "banner" | "blockquote" | "button" | "caption" | "cell" | "checkbox" | "code" | "columnheader" | "combobox" | "complementary" | "contentinfo" | "definition" | "deletion" | "dialog" | "document" | "emphasis" | "feed" | "figure" | "form" | "generic" | "grid" | "gridcell" | "group" | "heading" | "img" | "insertion" | "link" | "list" | "listbox" | "listitem" | "log" | "main" | "marquee" | "math" | "menu" | "menubar" | "menuitem" | "menuitemcheckbox" | "menuitemradio" | "meter" | "navigation" | "none" | "note" | "option" | "paragraph" | "presentation" | "progressbar" | "radio" | "radiogroup" | "region" | "row" | "rowgroup" | "rowheader" | "scrollbar" | "search" | "searchbox" | "separator" | "slider" | "spinbutton" | "status" | "strong" | "subscript" | "superscript" | "switch" | "tab" | "table" | "tablist" | "tabpanel" | "term" | "textbox" | "time" | "timer" | "toolbar" | "tooltip" | "tree" | "treegrid" | "treeitem"
+        @label "Role"
+        @description "WAI-ARIA role when the element's native semantics don't describe it."
+        @tier "presentation"
+      lang : string
+        @label "Lang"
+        @description "Language of this element's content (BCP 47, e.g. ar, sl, en)."
+        @tier "presentation"
+      dir : "ltr" | "rtl" | "auto"
+        @label "Dir"
+        @description "Text direction of this element's content."
+        @tier "presentation"
+      tabIndex : number
+        @label "Tab Index"
+        @description "0 puts the element in the Tab order; -1 makes it focusable only programmatically."
         @tier "presentation"
       viewerRole : string = ""
         @label "Viewer's role"

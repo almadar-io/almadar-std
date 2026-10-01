@@ -1,0 +1,143 @@
+app std-scoped-list "1.0.0"
+"std-scoped-list — the rows that belong to one parent record, scoped at runtime. SET_SCOPE { value } (forward the parent's own loaded event, e.g. a detail page's `TaskDetailLoaded -> SET_SCOPE with { value: ?data.id }`) lists only the rows whose `scopeField` equals that value; the scope is kept, so a later INIT (a reload after a row is created, edited or removed) lists the same parent's rows again. Before a scope arrives the list shows every row, or with `whenUnscoped: nothing` its empty state. Rows render through data-list (fields, row actions filtered by viewerRole, click event, sortBy). Opt in where a list must follow a parent picked elsewhere on the page: the bound entity carries the scope as an @intrinsic field — std-browse stays the general list."
+
+type FieldSpec = { name : string!, label : string, variant : h3 | h4 | body | caption | badge | small | progress, icon : string, format : date | currency | number | boolean | percent }
+type ItemAction = { label : string!, event : event, variant : primary | secondary | ghost | danger, icon : string, roles : [string] }
+
+orbital ScopedListOrbital {
+  type ScopedListLoaded = Event { data : [ScopedListItem] } "Fired when the scoped rows finish loading"
+  type ScopedListLoadFailed = Event { error : string } "Fired when the scoped rows fail to load"
+
+  entity ScopedListItem [runtime] {
+    id : string!
+    name : string! @description "The row's title." @synonyms "title, label"
+    parentId : string @description "The parent record this row belongs to (the default scopeField)." @synonyms "parent, owner id" = ""
+    scopeValue : string @intrinsic @description "The parent the list is scoped to; blank until SET_SCOPE." = ""
+  }
+
+  trait ScopedListBrowse -> @rebindable ScopedListItem [interaction, collection] {
+    initial: listing
+
+    state listing {
+      INIT -> listing
+        (fetch ScopedListItem {
+          emit: { failure: ScopedListLoadFailed, success: ScopedListLoaded }
+          filter: (or (and ["=", (str/default @entity.scopeValue ""), ""] ["=", @config.whenUnscoped, "everything"]) (and ["!=", (str/default @entity.scopeValue ""), ""] ["=", (object/get @entity @config.scopeField), @entity.scopeValue]))
+        })
+      SET_SCOPE -> listing
+        (set @entity.scopeValue ?value)
+        (fetch ScopedListItem {
+          emit: { failure: ScopedListLoadFailed, success: ScopedListLoaded }
+          filter: (or (and ["=", ?value, ""] ["=", @config.whenUnscoped, "everything"]) (and ["!=", ?value, ""] ["=", (object/get @entity @config.scopeField), ?value]))
+        })
+      ScopedListLoaded -> listing
+        (render-ui main {
+          entity: ?data
+          fields: @config.fields
+          itemActions: (array/filter @config.itemActions (fn item (or (= (array/len (object/get @item roles [])) 0) (array/includes (object/get @item roles []) @config.viewerRole))))
+          itemClickEvent: @config.itemClickEvent
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          emptyTitle: @config.emptyTitle
+          emptyDescription: @config.emptyDescription
+          emptyIcon: @config.emptyIcon
+          gap: @config.gap
+          type: data-list
+        })
+      ScopedListLoadFailed -> listing
+        (render-ui main { message: ?error, title: "Couldn't load this list", type: alert, variant: error })
+    }
+
+    emits {
+      ScopedListLoaded -> external {
+        data : [ScopedListItem]
+      }
+        @description "The scoped rows loaded; mirror them in another view (e.g. a sortable list)."
+        @synonyms "loaded, rows ready"
+        @tier "domain"
+      ScopedListLoadFailed -> internal {
+        error : string
+      }
+        @tier "internal"
+      VIEW -> external {
+        id : string!
+        row : ScopedListItem!
+      }
+        @description "A row was opened."
+        @synonyms "open, view, select"
+        @tier "presentation"
+      EDIT -> external {
+        id : string!
+        row : ScopedListItem!
+      }
+        @description "A row's edit action was chosen."
+        @synonyms "edit, change"
+        @tier "presentation"
+      DELETE -> external {
+        id : string!
+        row : ScopedListItem!
+      }
+        @description "A row's delete action was chosen."
+        @synonyms "remove, delete"
+        @tier "presentation"
+    }
+
+    listens {
+      SET_SCOPE {
+        value : string!
+      }
+        @description "Scope the list to the rows of this parent; kept for later reloads."
+        @synonyms "scope, select parent, open parent"
+        @tier "domain"
+    }
+
+    config {
+      scopeField : string = "parentId"
+        @label "Which field names the parent?"
+        @description "The row field holding the parent's id; SET_SCOPE's value is matched against it."
+        @synonyms "parent field, foreign key, owner field"
+        @tier "domain"
+      whenUnscoped : "everything" | "nothing" = everything
+        @label "What does the list show before a parent is picked?"
+        @description "everything = every row until SET_SCOPE narrows it; nothing = the empty state, so a detail page never shows other parents' rows while it loads."
+        @synonyms "unscoped, before selection, default scope"
+        @tier "policy"
+      fields : [FieldSpec] = [{ name: name, label: Name, variant: h4 }]
+        @label "Which fields does each row show?"
+        @tier "presentation"
+      itemActions : [ItemAction] = []
+        @label "Row actions"
+        @description "Actions offered on each row; give an item `roles` to show it only to those viewer roles."
+        @tier "presentation"
+      itemClickEvent : event = VIEW
+        @label "Event a row click fires"
+        @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The signed-in viewer's role that each action's `roles` is checked against (e.g. `viewerRole: @user.role`)."
+        @tier "policy"
+      sortBy : string = ""
+        @label "Sort rows by"
+        @description "Field the rows are ordered by; blank keeps the stored order."
+        @synonyms "order by, sort field"
+        @tier "presentation"
+      sortDirection : "asc" | "desc" = asc
+        @label "Sort direction"
+        @tier "presentation"
+      emptyTitle : string = "Nothing here yet"
+        @label "Empty-state title"
+        @tier "presentation"
+      emptyDescription : string = ""
+        @label "Empty-state description"
+        @tier "presentation"
+      emptyIcon : icon = inbox
+        @label "Empty-state icon"
+        @tier "presentation"
+      gap : "none" | "sm" | "md" | "lg" = sm
+        @label "Gap between rows"
+        @tier "presentation"
+    }
+  }
+
+  page "/scoped-list" as ScopedListPage -> ScopedListBrowse
+}

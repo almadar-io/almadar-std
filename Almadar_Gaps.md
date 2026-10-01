@@ -8,10 +8,11 @@ Every open gap this repo owns lives here. This file is the source of truth; the 
 - **Close by deleting.** Remove the entry in the same commit as the fix. There is no "closed" section; git history is the record.
 - **Cross-repo gaps don't go here.** If fixing it needs another repo, describe it in your report or PR body; the monorepo coordinator files it.
 
-Next code: `G-STD-036`
+Next code: `G-STD-039`
 
 ## Open gaps
 
+- **G-STD-037** — `std-app-layout` always passes `notifications` (default `[]`, typed `[NotificationSpec]`) to `dashboard-layout`, and `DashboardLayout` shows the bell whenever it receives an array, so every app on this layout renders a notifications bell even when it has no notifications; a call site cannot turn it off (`notifications: null` is `ORB_T_CONFIG_SHAPE_MISMATCH`). Found 2026-10-01 wrapping `docs/outreach/substack/counter-llm-manifesto.lolo`. Needs an explicit knob (e.g. `showNotifications`) on the atom, forwarded to the pattern. `behaviors/lolo/ui/core/atoms/std-app-layout.lolo` [mechanical] — prevention rung: 3 (a dead affordance a page walk can see)
 ### Std tier (`@almadar/std`)
 
 

@@ -31,19 +31,7 @@ orbital CalendarEventOrbital {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
         })
-        (render-ui main {
-          align: center
-          children: [{ type: spinner }, {
-            color: muted
-            content: "Loading calendar…"
-            type: typography
-            variant: caption
-          }]
-          className: py-12
-          direction: vertical
-          gap: md
-          type: stack
-        })
+        (render-ui main { type: skeleton, variant: card })
       CalendarEventLoaded -> month-view
         (if ["=", @config.calendarLook, agenda-list]
           (render-ui main @config.agendaListBodyContent)
@@ -87,7 +75,7 @@ orbital CalendarEventOrbital {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
         })
-        (render-ui main { type: spinner })
+        (render-ui main { type: skeleton, variant: card })
       SELECT_DAY -> loading
         (set @entity.selectedRange ?value)
         ;; filter reads the candidate ROW's configured start column — never a
@@ -133,7 +121,7 @@ orbital CalendarEventOrbital {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
         })
-        (render-ui main { type: spinner })
+        (render-ui main { type: skeleton, variant: card })
       ;; the error screen's Retry button: INIT is lifecycle-only and the bus never
       ;; delivers it, so the affordance must target a first-class user event
       RETRY -> loading
@@ -141,7 +129,7 @@ orbital CalendarEventOrbital {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
         })
-        (render-ui main { type: spinner })
+        (render-ui main { type: skeleton, variant: card })
     }
 
     emits {

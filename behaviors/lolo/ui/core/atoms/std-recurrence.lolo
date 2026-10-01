@@ -42,8 +42,10 @@ orbital RecurrenceOrbital {
           emit: { failure: RecurrenceLoadFailed, success: RecurrenceLoaded }
         })
         (render-ui main {
-          title: "Loading schedule…"
-          type: loading-state
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: card }, { type: skeleton, variant: list, rows: 6 }]
         })
       RecurrenceLoaded -> viewing
         (set @entity.frequency (object/get (array/first ?data) frequency weekly))
@@ -176,8 +178,10 @@ orbital RecurrenceOrbital {
           emit: { failure: RecurrenceLoadFailed, success: RecurrenceLoaded }
         })
         (render-ui main {
-          title: "Refreshing…"
-          type: loading-state
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: card }, { type: skeleton, variant: list, rows: 6 }]
         })
       RecurrenceSaveFailed -> error
         (set @entity.errorMessage ?error)
@@ -322,17 +326,15 @@ orbital RecurrenceOrbital {
         (persist update RecurrenceView ?data {
           emit: { failure: RecurrenceSaveFailed, success: RecurrenceSaved }
         })
-        (render-ui main {
-          title: "Saving rule…"
-          type: loading-state
-        })
       CANCEL_RULE -> loading
         (fetch RecurrenceView {
           emit: { failure: RecurrenceLoadFailed, success: RecurrenceLoaded }
         })
         (render-ui main {
-          title: "Cancelling…"
-          type: loading-state
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: card }, { type: skeleton, variant: list, rows: 6 }]
         })
     }
 
@@ -340,10 +342,6 @@ orbital RecurrenceOrbital {
       SKIP_OCCURRENCE -> loading
         (persist update RecurrenceView { id: ?id, status: skipped } {
           emit: { failure: RecurrenceSaveFailed, success: RecurrenceSaved }
-        })
-        (render-ui main {
-          title: "Skipping…"
-          type: loading-state
         })
       RESCHEDULE_OCCURRENCE -> loading
         (set @entity.rescheduleDate ?newDate)
@@ -363,8 +361,10 @@ orbital RecurrenceOrbital {
           emit: { failure: RecurrenceLoadFailed, success: RecurrenceLoaded }
         })
         (render-ui main {
-          title: "Closing…"
-          type: loading-state
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: card }, { type: skeleton, variant: list, rows: 6 }]
         })
     }
 
@@ -374,16 +374,20 @@ orbital RecurrenceOrbital {
           emit: { failure: RecurrenceLoadFailed, success: RecurrenceLoaded }
         })
         (render-ui main {
-          title: "Restarting…"
-          type: loading-state
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: card }, { type: skeleton, variant: list, rows: 6 }]
         })
     }
 
     state error {
       INIT -> loading
         (render-ui main {
-          title: "Retrying…"
-          type: loading-state
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: card }, { type: skeleton, variant: list, rows: 6 }]
         })
     }
 

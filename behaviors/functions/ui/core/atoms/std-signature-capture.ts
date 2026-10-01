@@ -683,22 +683,8 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
-                    'children': [
-                      {
-                        'type': 'spinner',
-                      },
-                      {
-                        'color': 'muted',
-                        'content': 'Loading…',
-                        'type': 'typography',
-                        'variant': 'caption',
-                      },
-                    ],
-                    'className': 'py-12',
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
+                    'type': 'skeleton',
+                    'variant': 'card',
                   },
                 ],
               ],

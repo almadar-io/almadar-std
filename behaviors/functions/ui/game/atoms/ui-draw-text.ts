@@ -39,11 +39,8 @@ export type StdUiDrawTextEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawTextConfig {
-  /** Default: `"center"` */
   align?: 'center' | 'end' | 'left' | 'right' | 'start';
-  /** Default: `"top-left"` */
   anchor?: 'top-left' | 'ground' | 'center';
-  /** Default: `"alphabetic"` */
   baseline?: 'alphabetic' | 'bottom' | 'hanging' | 'ideographic' | 'middle' | 'top';
   /** Default: `""` */
   color?: string;

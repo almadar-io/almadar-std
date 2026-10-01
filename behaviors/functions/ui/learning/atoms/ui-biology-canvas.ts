@@ -48,6 +48,16 @@ export interface StdUiBiologyCanvasShapeClickPayload {
 export interface StdUiBiologyCanvasConfig {
   /** Default: `false` */
   animate?: boolean;
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
   backgroundColor?: string;
   /** Default: `[]` */
   bands?: EntityRow[];
@@ -55,8 +65,11 @@ export interface StdUiBiologyCanvasConfig {
   className?: string;
   /** Default: `[]` */
   compartments?: EntityRow[];
+  dir?: 'ltr' | 'rtl' | 'auto';
   /** Default: `[]` */
   edges?: EntityRow[];
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   error?: EntityRow;
   /** Default: `400` */
   height?: number;
@@ -64,6 +77,7 @@ export interface StdUiBiologyCanvasConfig {
   helix3d?: EntityRow;
   interactive?: boolean;
   isLoading?: boolean;
+  lang?: string;
   lighting?: EntityRow;
   /** Default: `"2d"` */
   mode?: '2d' | '3d';
@@ -74,6 +88,7 @@ export interface StdUiBiologyCanvasConfig {
   post?: EntityRow;
   /** Default: `[]` */
   readouts?: EntityRow[];
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   shadows?: boolean;
   /** Default: `[]` */
   shapes?: EntityRow[];
@@ -82,6 +97,7 @@ export interface StdUiBiologyCanvasConfig {
   stageStyle?: 'timeline' | 'ring';
   /** Default: `[]` */
   stages?: EntityRow[];
+  tabIndex?: number;
   title?: string;
   /** Default: `[]` */
   traces?: EntityRow[];

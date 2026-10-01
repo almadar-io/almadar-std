@@ -1065,8 +1065,19 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   'render-ui',
                   'main',
                   {
-                    'title': 'Loading transaction…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -2649,8 +2660,19 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   'render-ui',
                   'main',
                   {
-                    'title': 'Returning…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -2802,8 +2824,19 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   'render-ui',
                   'main',
                   {
-                    'title': 'Returning…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -3030,8 +3063,19 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   'render-ui',
                   'main',
                   {
-                    'title': 'Starting new transaction…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -3055,8 +3099,19 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   'render-ui',
                   'main',
                   {
-                    'title': 'Starting new transaction…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -3080,8 +3135,19 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   'render-ui',
                   'main',
                   {
-                    'title': 'Starting new transaction…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -3105,8 +3171,19 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   'render-ui',
                   'main',
                   {
-                    'title': 'Retrying…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],

@@ -41,6 +41,8 @@ export type StdUiErrorBoundaryEventKey = 'INIT';
 export interface StdUiErrorBoundaryConfig {
   children?: PatternValue;
   className?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
 }
 
 /**

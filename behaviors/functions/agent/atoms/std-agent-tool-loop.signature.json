@@ -6,32 +6,25 @@
     "factoryPath": "behaviors/functions/agent/atoms/std-agent-tool-loop.ts",
     "entities": [
       {
-        "name": "ToolLoop",
+        "name": "AgentTurn",
         "fields": [
-          {
-            "name": "messages",
-            "type": "array",
-            "required": false
-          },
-          {
-            "name": "tools",
-            "type": "array",
-            "required": false
-          },
-          {
-            "name": "response",
-            "type": "string",
-            "required": false
-          },
-          {
-            "name": "iterations",
-            "type": "number",
-            "required": false
-          },
           {
             "name": "status",
             "type": "string",
-            "required": false
+            "required": false,
+            "description": "Where the current turn is."
+          },
+          {
+            "name": "reply",
+            "type": "string",
+            "required": false,
+            "description": "The last reply."
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "required": false,
+            "description": "Why the last turn failed."
           }
         ],
         "persistence": "runtime"
@@ -39,125 +32,127 @@
     ],
     "traits": [
       {
-        "name": "ToolLoopExecution",
+        "name": "AgentToolLoop",
         "emittedEvents": [
-          "LOOP_STEP",
-          "TOOLS_CALLED_1",
-          "TOOLS_CALLED_2"
+          "REPLIED",
+          "REPLY_FAILED",
+          "ANSWERED",
+          "ASK_FAILED"
         ],
         "listenedEvents": [],
         "events": [
           {
-            "name": "LOOP_STEP",
-            "direction": "emit"
+            "name": "REPLIED",
+            "direction": "emit",
+            "description": "The assistant answered; carries every tool step it took and the tokens it used.",
+            "synonyms": "answered, responded, done",
+            "tier": "domain"
           },
           {
-            "name": "TOOLS_CALLED_1",
-            "direction": "emit"
+            "name": "REPLY_FAILED",
+            "direction": "emit",
+            "description": "The assistant could not answer (model unavailable, or out of steps).",
+            "synonyms": "failed, error, gave up",
+            "tier": "domain"
           },
           {
-            "name": "TOOLS_CALLED_2",
-            "direction": "emit"
+            "name": "ANSWERED",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "ASK_FAILED",
+            "direction": "emit",
+            "tier": "internal"
           },
           {
             "name": "INIT",
             "direction": "listen"
           },
           {
-            "name": "EXECUTE",
-            "direction": "listen"
-          },
-          {
-            "name": "TOOLS_FAILED_1",
-            "direction": "listen"
-          },
-          {
-            "name": "TOOLS_FAILED_2",
-            "direction": "listen"
-          },
-          {
-            "name": "CONTINUE",
-            "direction": "listen"
-          },
-          {
-            "name": "RESET",
-            "direction": "listen"
+            "name": "CONVERSE",
+            "direction": "listen",
+            "description": "Answer this conversation; the last turn is the request. `context` is what the assistant remembers that may be relevant.",
+            "synonyms": "ask, chat, request"
           }
         ],
-        "overridableConfigKeys": [],
+        "overridableConfigKeys": [
+          {
+            "key": "instructions",
+            "type": "string",
+            "default": "You operate this app for the signed-in user. Use the tools to act and to look things up; when a tool reports that something was refused or denied, say so plainly.",
+            "label": "How should the assistant behave?",
+            "description": "Standing instructions sent with every conversation.",
+            "synonyms": "system prompt, persona, guidance",
+            "tier": "domain"
+          },
+          {
+            "key": "maxSteps",
+            "type": "number",
+            "default": 8,
+            "label": "Model round-trips per request",
+            "description": "How many model calls one request may take before it fails.",
+            "tier": "policy"
+          },
+          {
+            "key": "tools",
+            "type": "[AgentTool]",
+            "default": [],
+            "label": "What may the assistant do?",
+            "description": "The declared inputs it may fire (`{ event: Trait.EVENT }`) and the entities it may read (`{ read: Entity }`), as the signed-in user.",
+            "synonyms": "allowlist, abilities, actions, permissions",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "event": {
+                  "name": "event",
+                  "required": false,
+                  "type": "event"
+                },
+                "read": {
+                  "name": "read",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
         "capabilities": [],
-        "linkedEntity": "ToolLoop",
+        "linkedEntity": "AgentTurn",
         "transitionEvents": [
-          "CONTINUE",
-          "EXECUTE",
-          "INIT",
-          "RESET",
-          "TOOLS_CALLED_1",
-          "TOOLS_CALLED_2",
-          "TOOLS_FAILED_1",
-          "TOOLS_FAILED_2"
+          "ANSWERED",
+          "ASK_FAILED",
+          "CONVERSE",
+          "INIT"
         ],
         "definerKnobs": [],
         "effectRow": [
+          {
+            "kind": "call-service",
+            "resource": "llm.call-tools"
+          },
           {
             "kind": "emit",
-            "resource": "LOOP_STEP"
+            "resource": "REPLIED"
           },
           {
-            "kind": "llm/call-tools"
+            "kind": "emit",
+            "resource": "REPLY_FAILED"
           },
           {
-            "kind": "set",
-            "resource": "@entity.iterations"
-          },
-          {
-            "kind": "set",
-            "resource": "@entity.messages"
+            "kind": "render-ui",
+            "resource": "toast"
           },
           {
             "kind": "set",
-            "resource": "@entity.response"
+            "resource": "@entity.error"
           },
           {
             "kind": "set",
-            "resource": "@entity.status"
+            "resource": "@entity.reply"
           },
-          {
-            "kind": "set",
-            "resource": "@entity.tools"
-          }
-        ]
-      },
-      {
-        "name": "ToolLoopListener",
-        "emittedEvents": [],
-        "listenedEvents": [
-          "LOOP_STEP"
-        ],
-        "events": [
-          {
-            "name": "INIT",
-            "direction": "listen"
-          },
-          {
-            "name": "LOOP_STEP",
-            "direction": "listen"
-          },
-          {
-            "name": "RESET",
-            "direction": "listen"
-          }
-        ],
-        "overridableConfigKeys": [],
-        "capabilities": [],
-        "linkedEntity": "ToolLoop",
-        "transitionEvents": [
-          "INIT",
-          "LOOP_STEP",
-          "RESET"
-        ],
-        "definerKnobs": [],
-        "effectRow": [
           {
             "kind": "set",
             "resource": "@entity.status"
@@ -169,17 +164,16 @@
       {
         "name": "AgentToolLoopPage",
         "defaultPath": "/agent-tool-loop",
-        "primaryEntity": "ToolLoop"
+        "primaryEntity": "AgentTurn"
       }
     ],
     "emittedEvents": [
-      "LOOP_STEP",
-      "TOOLS_CALLED_1",
-      "TOOLS_CALLED_2"
+      "ANSWERED",
+      "ASK_FAILED",
+      "REPLIED",
+      "REPLY_FAILED"
     ],
-    "listenedEvents": [
-      "LOOP_STEP"
-    ],
+    "listenedEvents": [],
     "exposure": "both",
     "provenance": "authored",
     "sourceValid": true

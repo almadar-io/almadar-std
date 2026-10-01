@@ -55,16 +55,30 @@ export interface StdUiAlgoGraphCanvasNodeClickPayload {
 export interface StdUiAlgoGraphCanvasConfig {
   /** Default: `false` */
   animate?: boolean;
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
   backgroundColor?: string;
   className?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
   /** Default: `[]` */
   edges?: EntityRow[];
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   error?: EntityRow;
   /** Default: `400` */
   height?: number;
   /** Default: `false` */
   interactive?: boolean;
   isLoading?: boolean;
+  lang?: string;
   /** Default: `"manual"` */
   layout?: 'manual' | 'tree' | 'layered' | 'circle';
   /** Default: `[]` */
@@ -73,9 +87,11 @@ export interface StdUiAlgoGraphCanvasConfig {
   onNodeClick?: string;
   /** Default: `"SHAPE_CLICK"` */
   onShapeClick?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   root?: string;
   /** Default: `[]` */
   shapes?: EntityRow[];
+  tabIndex?: number;
   title?: string;
   /** Default: `600` */
   width?: number;

@@ -51,10 +51,11 @@ export interface StdUiInputConfig {
   className?: string;
   clearable?: boolean;
   disabled?: boolean;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   error?: string;
   helperText?: string;
   icon?: unknown;
-  /** Default: `"text"` */
   inputType?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'datetime-local' | 'time' | 'checkbox' | 'select' | 'textarea';
   label?: string;
   leftIcon?: unknown;

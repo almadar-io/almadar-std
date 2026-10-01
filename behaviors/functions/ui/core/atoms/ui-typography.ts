@@ -39,28 +39,37 @@ export type StdUiTypographyEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiTypographyConfig {
-  /** Default: `"left"` */
   align?: 'left' | 'center' | 'right';
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
   children?: PatternValue;
   className?: string;
   /** Default: `"primary"` */
   color?: 'primary' | 'secondary' | 'muted' | 'error' | 'success' | 'warning' | 'inherit';
   content?: PatternValue;
-  /** Default: `"none"` */
+  dir?: 'ltr' | 'rtl' | 'auto';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   format?: 'none' | 'date' | 'time' | 'datetime' | 'number' | 'currency' | 'percent';
+  lang?: string;
   level?: number;
-  /** Default: `"visible"` */
   overflow?: 'visible' | 'hidden' | 'wrap' | 'clamp-2' | 'clamp-3';
-  role?: string;
-  /** Default: `"none"` */
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   size?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
   /** Default: `{}` */
   style?: Record<string, TraitConfig>;
+  tabIndex?: number;
   /** Default: `false` */
   truncate?: boolean;
-  /** Default: `"h1"` */
   variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'heading' | 'subheading' | 'body1' | 'body2' | 'body' | 'caption' | 'overline' | 'small' | 'large' | 'label';
-  /** Default: `"none"` */
   weight?: 'none' | 'light' | 'normal' | 'medium' | 'semibold' | 'bold';
 }
 

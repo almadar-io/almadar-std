@@ -6,27 +6,20 @@
     "factoryPath": "behaviors/functions/agent/atoms/std-agent-context.ts",
     "entities": [
       {
-        "name": "ContextWindow",
+        "name": "AgentContextWindow",
         "fields": [
           {
-            "name": "tokenCount",
-            "type": "number",
-            "required": false
+            "name": "pendingMessages",
+            "type": "array",
+            "required": false,
+            "description": "The conversation being compacted."
           },
           {
-            "name": "beforeTokens",
+            "name": "lastSize",
             "type": "number",
-            "required": false
-          },
-          {
-            "name": "afterTokens",
-            "type": "number",
-            "required": false
-          },
-          {
-            "name": "status",
-            "type": "string",
-            "required": false
+            "required": false,
+            "description": "Turns in the last conversation compacted.",
+            "synonyms": "size, length"
           }
         ],
         "persistence": "runtime"
@@ -34,87 +27,30 @@
     ],
     "traits": [
       {
-        "name": "ContextCounter",
-        "emittedEvents": [
-          "COUNTED",
-          "TOKEN_COUNTED"
-        ],
-        "listenedEvents": [],
-        "events": [
-          {
-            "name": "COUNTED",
-            "direction": "emit"
-          },
-          {
-            "name": "TOKEN_COUNTED",
-            "direction": "emit"
-          },
-          {
-            "name": "INIT",
-            "direction": "listen"
-          },
-          {
-            "name": "COUNT",
-            "direction": "listen"
-          },
-          {
-            "name": "COUNT_FAILED",
-            "direction": "listen"
-          },
-          {
-            "name": "RESET",
-            "direction": "listen"
-          }
-        ],
-        "overridableConfigKeys": [],
-        "capabilities": [],
-        "linkedEntity": "ContextWindow",
-        "transitionEvents": [
-          "COUNT",
-          "COUNT_FAILED",
-          "INIT",
-          "RESET",
-          "TOKEN_COUNTED"
-        ],
-        "definerKnobs": [],
-        "effectRow": [
-          {
-            "kind": "emit",
-            "resource": "COUNTED"
-          },
-          {
-            "kind": "llm/token-count"
-          },
-          {
-            "kind": "set",
-            "resource": "@entity.status"
-          },
-          {
-            "kind": "set",
-            "resource": "@entity.tokenCount"
-          }
-        ]
-      },
-      {
-        "name": "ContextCompactor",
+        "name": "AgentContextCompactor",
         "emittedEvents": [
           "COMPACTED",
-          "BEFORE_COUNTED",
-          "AFTER_COUNTED"
+          "ContextSummarized",
+          "ContextSummarizeFailed"
         ],
         "listenedEvents": [],
         "events": [
           {
             "name": "COMPACTED",
-            "direction": "emit"
+            "direction": "emit",
+            "description": "The conversation, bounded: recent turns verbatim, older turns as one summary note.",
+            "synonyms": "compacted, trimmed, bounded",
+            "tier": "domain"
           },
           {
-            "name": "BEFORE_COUNTED",
-            "direction": "emit"
+            "name": "ContextSummarized",
+            "direction": "emit",
+            "tier": "internal"
           },
           {
-            "name": "AFTER_COUNTED",
-            "direction": "emit"
+            "name": "ContextSummarizeFailed",
+            "direction": "emit",
+            "tier": "internal"
           },
           {
             "name": "INIT",
@@ -122,103 +58,50 @@
           },
           {
             "name": "COMPACT",
-            "direction": "listen"
-          },
-          {
-            "name": "COMPACT_COUNT_FAILED",
-            "direction": "listen"
-          },
-          {
-            "name": "COMPACTED_OK",
-            "direction": "listen"
-          },
-          {
-            "name": "COMPACT_FAILED",
-            "direction": "listen"
-          },
-          {
-            "name": "RESET",
-            "direction": "listen"
+            "direction": "listen",
+            "description": "Bound this conversation for the model."
           }
         ],
-        "overridableConfigKeys": [],
+        "overridableConfigKeys": [
+          {
+            "key": "keepMessages",
+            "type": "number",
+            "default": 12,
+            "label": "Turns kept verbatim",
+            "description": "The most recent turns sent to the model word for word; older turns are summarized.",
+            "synonyms": "window, history length, context size",
+            "tier": "policy"
+          }
+        ],
         "capabilities": [],
-        "linkedEntity": "ContextWindow",
+        "linkedEntity": "AgentContextWindow",
         "transitionEvents": [
-          "AFTER_COUNTED",
-          "BEFORE_COUNTED",
           "COMPACT",
-          "COMPACTED_OK",
-          "COMPACT_COUNT_FAILED",
-          "COMPACT_FAILED",
-          "INIT",
-          "RESET"
+          "ContextSummarizeFailed",
+          "ContextSummarized",
+          "INIT"
         ],
         "definerKnobs": [],
         "effectRow": [
+          {
+            "kind": "call-service",
+            "resource": "llm.summarize"
+          },
           {
             "kind": "emit",
             "resource": "COMPACTED"
           },
           {
-            "kind": "llm/compact"
-          },
-          {
-            "kind": "llm/token-count"
-          },
-          {
-            "kind": "set",
-            "resource": "@entity.afterTokens"
+            "kind": "render-ui",
+            "resource": "toast"
           },
           {
             "kind": "set",
-            "resource": "@entity.beforeTokens"
+            "resource": "@entity.lastSize"
           },
           {
             "kind": "set",
-            "resource": "@entity.status"
-          }
-        ]
-      },
-      {
-        "name": "ContextListener",
-        "emittedEvents": [],
-        "listenedEvents": [
-          "COUNTED",
-          "COMPACTED"
-        ],
-        "events": [
-          {
-            "name": "INIT",
-            "direction": "listen"
-          },
-          {
-            "name": "COUNTED",
-            "direction": "listen"
-          },
-          {
-            "name": "COMPACTED",
-            "direction": "listen"
-          },
-          {
-            "name": "RESET",
-            "direction": "listen"
-          }
-        ],
-        "overridableConfigKeys": [],
-        "capabilities": [],
-        "linkedEntity": "ContextWindow",
-        "transitionEvents": [
-          "COMPACTED",
-          "COUNTED",
-          "INIT",
-          "RESET"
-        ],
-        "definerKnobs": [],
-        "effectRow": [
-          {
-            "kind": "set",
-            "resource": "@entity.status"
+            "resource": "@entity.pendingMessages"
           }
         ]
       }
@@ -227,20 +110,15 @@
       {
         "name": "AgentContextPage",
         "defaultPath": "/agent-context",
-        "primaryEntity": "ContextWindow"
+        "primaryEntity": "AgentContextWindow"
       }
     ],
     "emittedEvents": [
-      "AFTER_COUNTED",
-      "BEFORE_COUNTED",
       "COMPACTED",
-      "COUNTED",
-      "TOKEN_COUNTED"
+      "ContextSummarizeFailed",
+      "ContextSummarized"
     ],
-    "listenedEvents": [
-      "COMPACTED",
-      "COUNTED"
-    ],
+    "listenedEvents": [],
     "exposure": "both",
     "provenance": "authored",
     "sourceValid": true

@@ -78,9 +78,20 @@ export interface StdUiTableViewTableViewLoadedPayload {
  */
 export interface StdUiTableViewConfig {
   accepts?: string;
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
   className?: string;
   /** Default: `[]` */
   columns?: EntityRow[];
+  dir?: 'ltr' | 'rtl' | 'auto';
   dndItemIdField?: string;
   dndRoot?: boolean;
   dragGroup?: string;
@@ -90,6 +101,8 @@ export interface StdUiTableViewConfig {
   emptyIcon?: unknown;
   emptyMessage?: string;
   emptyTitle?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   error?: EntityRow;
   /** Default: `[]` */
   fields?: EntityRow[];
@@ -100,6 +113,7 @@ export interface StdUiTableViewConfig {
   itemActions?: EntityRow[];
   /** Default: `"ITEM_CLICK"` */
   itemClickEvent?: string;
+  lang?: string;
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';
   maxInlineActions?: number;
@@ -109,6 +123,7 @@ export interface StdUiTableViewConfig {
   /** Default: `{}` */
   relationsData?: Record<string, TraitConfig>;
   reorderEvent?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   /** Default: `"SELECT"` */
   selectEvent?: string;
   /** Default: `false` */
@@ -118,11 +133,11 @@ export interface StdUiTableViewConfig {
   /** Default: `true` */
   selfFetch?: boolean;
   sortColumn?: string;
-  /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
   /** Default: `"SORT"` */
   sortEvent?: string;
   sortable?: boolean;
+  tabIndex?: number;
   /** Default: `""` */
   viewerRole?: string;
 }

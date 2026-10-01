@@ -39,11 +39,25 @@ export type StdUiControlButtonEventKey = 'INIT' | 'PRESS' | 'RELEASE';
  * without modifying its state-machine topology.
  */
 export interface StdUiControlButtonConfig {
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
   assetUrl?: EntityRow;
   className?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
   disabled?: boolean;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   icon?: unknown;
   label?: string;
+  lang?: string;
   /** Default: `"PRESS"` */
   onPress?: string;
   /** Default: `"RELEASE"` */
@@ -53,10 +67,12 @@ export interface StdUiControlButtonConfig {
   pressed?: boolean;
   /** Default: `"RELEASE"` */
   releaseEvent?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   /** Default: `"circle"` */
   shape?: string;
   /** Default: `"md"` */
   size?: string;
+  tabIndex?: number;
   /** Default: `"secondary"` */
   variant?: string;
 }

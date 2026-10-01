@@ -1,0 +1,137 @@
+app std-agent-assistant "1.0.0"
+"std-agent-assistant — an in-app assistant that operates the running app for the signed-in user. One request flows down a chain of std agent atoms on the bus: the conversation (std-agent-session) SENDs → CONVERSE → std-agent-context bounds it → std-agent-memory adds what it recalls → std-agent-tool-loop answers it through `call-service llm call-tools`, firing only the inputs and reading only the entities the `tools` allowlist names, as the signed-in user → REPLIED goes back to the conversation, to memory (remembered) and to std-agent-trace (the run record). Import the orbital and supply the allowlist: `orbital Assistant = Agent.orbitals.AgentAssistantOrbital { config { tools: [{ event: TaskOrbital.TaskPersistor.DO_CREATE }, { read: Task }], instructions: \"…\" } }`. The conversation, memory and run records live in AgentRecordsOrbital; retarget them onto your own owner-scoped entities (`ownerId` a relation to your [identity] roster, with @read/@create) with `entities { AgentMessage: …, AgentMemory: …, AgentRun: … }`."
+
+type AgentTool = {
+  event : event
+  read : string
+}
+type AgentLink = {
+  label : string!
+  href : string!
+}
+
+orbital AgentAssistantOrbital {
+  uses Session from "std/behaviors/std-agent-session"
+  uses Context from "std/behaviors/std-agent-context"
+  uses Memory from "std/behaviors/std-agent-memory"
+  uses Loop from "std/behaviors/std-agent-tool-loop"
+  uses Trace from "std/behaviors/std-agent-trace"
+
+  config {
+    tools : [AgentTool] = []
+      @label "What may the assistant do?"
+      @description "The declared inputs it may fire (`{ event: Trait.EVENT }` / `{ event: Orbital.Trait.EVENT }`) and the entities it may read (`{ read: Entity }`), as the signed-in user."
+      @synonyms "allowlist, abilities, actions, permissions"
+      @tier "domain"
+    instructions : string = "You operate this app for the signed-in user. Use the tools to act and to look things up; when a tool reports that something was refused or denied, say so plainly."
+      @label "How should the assistant behave?"
+      @description "Standing instructions sent with every request."
+      @synonyms "system prompt, persona, guidance"
+      @tier "domain"
+    maxSteps : number = 8
+      @label "Model round-trips per request"
+      @tier "policy"
+    keepMessages : number = 12
+      @label "Turns kept verbatim"
+      @tier "policy"
+    recallLimit : number = 3
+      @label "Memories recalled per request"
+      @tier "policy"
+    links : [AgentLink] = [{ label: "Run history", href: "/assistant/runs" }, { label: "What I remember", href: "/assistant/memory" }]
+      @label "Links above the conversation"
+      @description "The pages showing the assistant's run history and memory."
+      @tier "presentation"
+  }
+
+  entity AgentAssistant [runtime] {
+    id : string!
+  }
+
+  trait AssistantThread = Session.traits.AgentThread -> AgentMessage {
+    config {
+      links: @config.links
+    }
+    events {
+      CONVERSE: REQUEST_CONTEXT
+    }
+    listens {
+      SEND {
+        message : string!
+      }
+      AssistantLoop.REPLIED -> REPLIED
+      AssistantLoop.REPLY_FAILED -> REPLY_FAILED
+    }
+  }
+
+  trait AssistantContext = Context.traits.AgentContextCompactor {
+    config {
+      keepMessages: @config.keepMessages
+    }
+    listens {
+      AssistantThread.REQUEST_CONTEXT -> COMPACT
+    }
+  }
+
+  trait AssistantMemory = Memory.traits.AgentMemoryRecall -> AgentMemory {
+    config {
+      recallLimit: @config.recallLimit
+    }
+    listens {
+      AssistantContext.COMPACTED -> RECALL
+      AssistantLoop.REPLIED -> REMEMBER
+    }
+  }
+
+  trait AssistantLoop = Loop.traits.AgentToolLoop {
+    config {
+      tools: @config.tools
+      instructions: @config.instructions
+      maxSteps: @config.maxSteps
+    }
+    listens {
+      AssistantMemory.RECALLED -> CONVERSE
+    }
+  }
+
+  trait AssistantTrace = Trace.traits.AgentTraceRecorder -> AgentRun {
+    listens {
+      AssistantLoop.REPLIED -> REPLIED
+      AssistantLoop.REPLY_FAILED -> REPLY_FAILED
+    }
+  }
+
+  page "/assistant" as AssistantPage -> AssistantThread, AssistantContext, AssistantMemory, AssistantLoop, AssistantTrace
+}
+
+;; The assistant's records live outside AgentAssistantOrbital, so a consumer
+;; importing that orbital retargets them onto its own owner-scoped entities:
+;; `entities { AgentMessage: MyMessage, AgentMemory: MyMemory, AgentRun: MyRun }`.
+orbital AgentRecordsOrbital {
+  uses Memory from "std/behaviors/std-agent-memory"
+  uses Trace from "std/behaviors/std-agent-trace"
+
+  entity AgentRun [persistent: agentRuns] {
+    id : string!
+  }
+  entity AgentMessage [persistent: agentMessages] {
+    id : string!
+  }
+  entity AgentMemory [persistent: agentMemories] {
+    id : string!
+  }
+
+  trait AgentRunHistory = Trace.traits.AgentRunBrowse -> AgentRun {
+    listens {
+      AgentAssistantOrbital.AssistantTrace.RUN_RECORDED -> RUN_RECORDED
+    }
+  }
+
+  trait AgentMemoryList = Memory.traits.AgentMemoryBrowse -> AgentMemory {
+    listens {
+      AgentAssistantOrbital.AssistantMemory.MEMORY_STORED -> MEMORY_STORED
+    }
+  }
+
+  page "/assistant/runs" as AssistantRunsPage -> AgentRunHistory
+  page "/assistant/memory" as AssistantMemoryPage -> AgentMemoryList
+}

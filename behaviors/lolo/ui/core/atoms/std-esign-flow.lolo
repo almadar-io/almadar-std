@@ -37,17 +37,10 @@ orbital SignatureSessionOrbital {
           emit: { failure: SignatureSessionLoadFailed, success: SignatureSessionLoaded }
         })
         (render-ui main {
-          align: center
-          children: [{ type: spinner }, {
-            color: muted
-            content: "Loading signature requests…"
-            type: typography
-            variant: caption
-          }]
-          className: py-12
-          direction: vertical
-          gap: md
           type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: grid, rows: 6 }]
         })
       SignatureSessionLoaded -> browsing
         (render-ui main {
@@ -139,7 +132,12 @@ orbital SignatureSessionOrbital {
         (fetch SignatureSession {
           emit: { failure: SignatureSessionLoadFailed, success: SignatureSessionLoaded }
         })
-        (render-ui main { type: spinner })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: grid, rows: 6 }]
+        })
     }
 
     state error {
@@ -147,14 +145,24 @@ orbital SignatureSessionOrbital {
         (fetch SignatureSession {
           emit: { failure: SignatureSessionLoadFailed, success: SignatureSessionLoaded }
         })
-        (render-ui main { type: spinner })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: grid, rows: 6 }]
+        })
       ;; the error screen's Retry button: INIT is lifecycle-only and the bus never
       ;; delivers it, so the affordance must target a first-class user event
       RETRY -> loading
         (fetch SignatureSession {
           emit: { failure: SignatureSessionLoadFailed, success: SignatureSessionLoaded }
         })
-        (render-ui main { type: spinner })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: grid, rows: 6 }]
+        })
     }
 
     emits {

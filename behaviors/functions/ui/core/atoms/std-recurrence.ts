@@ -958,8 +958,24 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
                   'render-ui',
                   'main',
                   {
-                    'title': 'Loading schedule…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1295,8 +1311,24 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
                   'render-ui',
                   'main',
                   {
-                    'title': 'Refreshing…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1549,14 +1581,6 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
                     },
                   },
                 ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'title': 'Saving rule…',
-                    'type': 'loading-state',
-                  },
-                ],
               ],
               'event': 'SAVE_RULE',
               'from': 'defining_rule',
@@ -1578,8 +1602,24 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
                   'render-ui',
                   'main',
                   {
-                    'title': 'Cancelling…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1602,14 +1642,6 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
                       'failure': 'RecurrenceSaveFailed',
                       'success': 'RecurrenceSaved',
                     },
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'title': 'Skipping…',
-                    'type': 'loading-state',
                   },
                 ],
               ],
@@ -1669,8 +1701,24 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
                   'render-ui',
                   'main',
                   {
-                    'title': 'Closing…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1694,8 +1742,24 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
                   'render-ui',
                   'main',
                   {
-                    'title': 'Restarting…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1709,8 +1773,24 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
                   'render-ui',
                   'main',
                   {
-                    'title': 'Retrying…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],

@@ -1,64 +1,157 @@
-app std-agent-trace "1.0.0"
-"Wraps trace/emit + trace/log — observability for agent loops."
-orbital AgentTraceOrbital {
+app std-agent-trace "2.0.0"
+"std-agent-trace — the persisted record of what an in-app assistant did. Each REPLIED (from std-agent-tool-loop) stores one AgentRun row: the reply, every tool step (which input or entity, the arguments, whether it took effect and why not), the tokens and the model calls; each REPLY_FAILED stores a failed run with its error. The record verification grades and later optimisation reads, in one format for tests and production. AgentTraceRecorder is headless; AgentRunBrowse is the run list. Rows carry ownerId (the real @user); the binding organism scopes @read."
 
-  entity AgentTrace [runtime] {
-    event : string = ""
-    level : string = "info"
-    message : string = ""
+type AgentStep = {
+  kind : "input" | "read" | "invalid"
+  target : string!
+  args : string!
+  ok : boolean!
+  detail : string
+}
+type AgentUsage = {
+  promptTokens : number!
+  completionTokens : number!
+  totalTokens : number!
+  modelCalls : number!
+}
+
+orbital AgentTraceOrbital {
+  type AgentRunsLoaded = Event { data : [AgentRun] } "Fired when the run record finishes loading"
+  type AgentRunsLoadFailed = Event { error : string, code : string } "Fired when the run record fails to load"
+
+  entity AgentRun [persistent: agentRuns] {
+    id : string!
+    ownerId : string! @description "Whose request this run answered (the real @user). The binding organism scopes @read to it." @synonyms "user, owner, account"
+    outcome : "answered" | "failed" @description "Whether the assistant answered." @synonyms "result, status" = answered
+    reply : string @description "What the assistant said." @synonyms "answer, response" = ""
+    error : string @description "Why the run failed." = ""
+    steps : [AgentStep] @description "Every tool use, in order." @synonyms "actions, tool calls, trace" = []
+    promptTokens : number @description "Tokens sent to the model." = 0
+    completionTokens : number @description "Tokens the model produced." = 0
+    totalTokens : number @description "All tokens for the run." = 0
+    modelCalls : number @description "Model round-trips." @synonyms "turns, calls" = 0
+    recordedAt : number @description "When the run finished (ms)." @synonyms "time, timestamp" = 0
   }
 
-  trait TraceEmitter -> AgentTrace [lifecycle, instance] {
-    initial: idle
+  trait AgentTraceRecorder -> @rebindable AgentRun [lifecycle] {
+    initial: recording
 
-    state idle {
-      INIT -> idle
-        (set @entity.event "")
-        (set @entity.level "info")
-        (set @entity.message "")
-      EMIT_TRACE -> idle
-        (set @entity.event ?event)
-        (trace/emit @entity.event)
-        (emit TRACED)
-      LOG_TRACE -> idle
-        (set @entity.level ?level)
-        (set @entity.message ?message)
-        (trace/log @entity.level @entity.message)
-        (emit TRACED)
+    state recording {
+      INIT -> recording
+        (set @entity.outcome answered)
+      REPLIED -> recording
+        (persist create AgentRun {
+          ownerId: @user.id
+          outcome: answered
+          reply: ?reply
+          steps: ?steps
+          promptTokens: ?usage.promptTokens
+          completionTokens: ?usage.completionTokens
+          totalTokens: ?usage.totalTokens
+          modelCalls: ?usage.modelCalls
+          recordedAt: @now
+        } {
+          emit: { success: RUN_RECORDED }
+        })
+      REPLY_FAILED -> recording
+        (persist create AgentRun {
+          ownerId: @user.id
+          outcome: failed
+          error: ?error
+          recordedAt: @now
+        } {
+          emit: { success: RUN_RECORDED }
+        })
+      RUN_RECORDED -> recording
+        (set @entity.outcome answered)
     }
 
     emits {
-      TRACED
+      RUN_RECORDED -> external
+        @description "A run was recorded — payload is the created AgentRun row itself."
+        @synonyms "recorded, logged, traced"
+        @tier "domain"
     }
 
     listens {
-      EMIT_TRACE {
-        event : string!
+      REPLIED {
+        reply : string!
+        steps : [AgentStep]!
+        usage : AgentUsage!
       }
-      LOG_TRACE {
-        level : string!
-        message : string!
+        @description "Record an answered run."
+      REPLY_FAILED {
+        error : string!
       }
+        @description "Record a failed run."
     }
   }
 
-  trait TraceListener -> AgentTrace [lifecycle, instance] {
-    initial: ready
+  trait AgentRunBrowse -> @rebindable AgentRun [interaction, collection] {
+    initial: browsing
 
-    state ready {
-      INIT -> ready
-        (set @entity.event "")
-        (set @entity.level "info")
-        (set @entity.message "")
-      TRACED -> ready
-        (set @entity.event "")
-        (set @entity.message "")
+    state browsing {
+      INIT -> browsing
+        (fetch AgentRun {
+          emit: { failure: AgentRunsLoadFailed, success: AgentRunsLoaded }
+        })
+        (render-ui main { type: skeleton, variant: list, rows: 6 })
+      AgentRunsLoaded -> browsing
+        (render-ui main {
+          emptyTitle: "No runs yet"
+          entity: (array/sort ?data recordedAt desc)
+          fields: []
+          gap: sm
+          renderItem: (fn item {
+            children: [{
+              label: @item.outcome
+              size: sm
+              type: badge
+              variant: neutral
+            }, {
+              content: @item.reply
+              type: typography
+              variant: body
+            }, {
+              content: (str/concat @item.modelCalls " model calls, " @item.totalTokens " tokens")
+              type: typography
+              variant: caption
+            }]
+            direction: vertical
+            gap: xs
+            type: stack
+          })
+          type: data-list
+        })
+      AgentRunsLoadFailed -> browsing
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+      RUN_RECORDED -> browsing
+        (fetch AgentRun {
+          emit: { failure: AgentRunsLoadFailed, success: AgentRunsLoaded }
+        })
+    }
+
+    emits {
+      AgentRunsLoaded {
+        data : [AgentRun]
+      }
+        @description "The run record finished loading."
+        @tier "internal"
+      AgentRunsLoadFailed {
+        error : string
+        code : string
+      }
+        @tier "internal"
     }
 
     listens {
-      TraceEmitter.TRACED -> TRACED
+      AgentTraceRecorder.RUN_RECORDED -> RUN_RECORDED
     }
   }
 
-  page "/agent-trace" as AgentTracePage -> TraceEmitter, TraceListener
+  page "/agent-trace" as AgentTracePage -> AgentRunBrowse, AgentTraceRecorder
 }

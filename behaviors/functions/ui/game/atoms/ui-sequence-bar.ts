@@ -57,11 +57,25 @@ export interface StdUiSequenceBarSlotRemovePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSequenceBarConfig {
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
   /** Default: `{}` */
   categoryColors?: Record<string, TraitConfig>;
   className?: string;
   /** Default: `-1` */
   currentStep?: number;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
+  lang?: string;
   /** Default: `1` */
   maxSlots?: number;
   /** Default: `"SLOT_DROP"` */
@@ -70,6 +84,7 @@ export interface StdUiSequenceBarConfig {
   onSlotRemove?: string;
   /** Default: `false` */
   playing?: boolean;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   /** Default: `"lg"` */
   size?: 'sm' | 'md' | 'lg';
   /** Default: `"SLOT_DROP"` */
@@ -80,6 +95,7 @@ export interface StdUiSequenceBarConfig {
   slotRemoveEvent?: string;
   /** Default: `[{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","iconUrl":{"animations":["static"],"aspect":"1:1","category":"iconUrl","dimension":"2d","name":"iconUrl","role":"ui","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/ui/star.png"},"id":"Id","name":"Name","stateMachine":{"currentState":"Current State","description":"Description","name":"Name","states":["Item","Item 2"],"transitions":[{"event":"Event","from":"From","guardHint":"Guard Hint","to":"To"},{"event":"Event 2","from":"From 2","guardHint":"Guard Hint 2","to":"To 2"}]}},{"category":"Category 2","description":"Description 2","iconEmoji":"Icon Emoji 2","iconUrl":{"animations":["static"],"aspect":"1:1","category":"iconUrl","dimension":"2d","name":"iconUrl","role":"ui","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/ui/star.png"},"id":"Id 2","name":"Name 2","stateMachine":{"currentState":"Current State 2","description":"Description 2","name":"Name 2","states":["Item","Item 2"],"transitions":[{"event":"Event","from":"From","guardHint":"Guard Hint","to":"To"},{"event":"Event 2","from":"From 2","guardHint":"Guard Hint 2","to":"To 2"}]}}]` */
   slots?: EntityRow[];
+  tabIndex?: number;
 }
 
 /**

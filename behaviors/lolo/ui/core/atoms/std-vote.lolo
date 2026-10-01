@@ -25,19 +25,7 @@ orbital VoteOrbital {
         (fetch Vote {
           emit: { failure: VoteLoadFailed, success: VoteLoaded }
         })
-        (render-ui main {
-          align: center
-          children: [{ type: spinner }, {
-            color: muted
-            content: "Loading votes…"
-            type: typography
-            variant: caption
-          }]
-          className: py-12
-          direction: vertical
-          gap: md
-          type: stack
-        })
+        (render-ui main { type: skeleton, variant: card })
       VoteLoaded -> idle
         (render-ui main {
           count: 0
@@ -61,19 +49,6 @@ orbital VoteOrbital {
         (set @entity.targetId ?targetId)
         (persist update Vote (object/set ?data targetId ?targetId) {
           emit: { failure: VoteCastFailed, success: VoteCasted }
-        })
-        (render-ui main {
-          align: center
-          children: [{ type: spinner }, {
-            color: muted
-            content: "Recording your vote…"
-            type: typography
-            variant: caption
-          }]
-          className: py-12
-          direction: vertical
-          gap: md
-          type: stack
         })
       VOTE -> voting when ["=", ?next, @entity.direction]
         (set @entity.direction none)
@@ -143,19 +118,7 @@ orbital VoteOrbital {
         (fetch Vote {
           emit: { failure: VoteLoadFailed, success: VoteLoaded }
         })
-        (render-ui main {
-          align: center
-          children: [{ type: spinner }, {
-            color: muted
-            content: "Loading votes…"
-            type: typography
-            variant: caption
-          }]
-          className: py-12
-          direction: vertical
-          gap: md
-          type: stack
-        })
+        (render-ui main { type: skeleton, variant: card })
     }
 
     emits {

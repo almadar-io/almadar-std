@@ -109,7 +109,9 @@ export interface StdRecordDetailConfig {
   allowEdit?: boolean;
   /** Default: `"Saves as you type"` */
   autosaveHint?: string;
-  /** Default: `{"children":[{"actions":["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"closeEvent":"@config.closeEvent","entity":"@entity.loadedRow","fields":"@config.fields","initialData":"@entity.loadedRow","maxInlineActions":"@config.maxInlineActions","sections":"@config.sections","showActions":"@config.showActions","subtitle":"@entity.description","title":"@entity.name","type":"detail-panel"}],"direction":"vertical","gap":"lg","type":"stack"}` */
+  /** Default: `""` */
+  avatarField?: string;
+  /** Default: `{"children":[{"actions":["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"avatarField":"@config.avatarField","closeEvent":"@config.closeEvent","coverField":"@config.coverField","entity":"@entity.loadedRow","fields":"@config.fields","initialData":"@entity.loadedRow","latitudeField":"@config.latitudeField","lineItemColumns":"@config.lineItemColumns","lineItems":["object/get","@entity.loadedRow","@config.lineItemsField"],"longitudeField":"@config.longitudeField","look":"@config.recordLook","maxInlineActions":"@config.maxInlineActions","mediaField":"@config.mediaField","sections":"@config.sections","showActions":"@config.showActions","stageField":"@config.stageField","stages":"@config.stages","subtitle":"@entity.description","tabs":"@config.tabs","thread":["object/get","@entity.loadedRow","@config.threadField"],"title":"@entity.name","totals":"@config.totals","type":"detail-panel"}],"direction":"vertical","gap":"lg","type":"stack"}` */
   bodyContent?: unknown;
   /** Default: `""` */
   closeEvent?: string;
@@ -133,24 +135,50 @@ export interface StdRecordDetailConfig {
   iconField?: string;
   /** Default: `[]` */
   include?: string[];
+  /** Default: `""` */
+  latitudeField?: string;
+  /** Default: `[]` */
+  lineItemColumns?: EntityRow[];
+  /** Default: `""` */
+  lineItemsField?: string;
+  /** Default: `{"type":"skeleton","variant":"detail"}` */
+  loadingContent?: unknown;
+  /** Default: `""` */
+  longitudeField?: string;
   /** Default: `3` */
   maxInlineActions?: number;
+  /** Default: `""` */
+  mediaField?: string;
   /** Default: `"init"` */
   openOn?: 'init' | 'event';
-  /** Default: `{"children":[{"actions":["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"closeEvent":"@config.closeEvent","entity":"@entity.loadedRow","fields":"@config.fields","initialData":"@entity.loadedRow","maxInlineActions":"@config.maxInlineActions","sections":"@config.sections","showActions":"@config.showActions","subtitle":"@entity.description","title":"@entity.name","type":"detail-panel"}],"className":"w-full max-w-4xl","direction":"vertical","gap":"lg","type":"stack"}` */
+  /** Default: `{"children":[{"actions":["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"avatarField":"@config.avatarField","closeEvent":"@config.closeEvent","coverField":"@config.coverField","entity":"@entity.loadedRow","fields":"@config.fields","initialData":"@entity.loadedRow","latitudeField":"@config.latitudeField","lineItemColumns":"@config.lineItemColumns","lineItems":["object/get","@entity.loadedRow","@config.lineItemsField"],"longitudeField":"@config.longitudeField","look":"@config.recordLook","maxInlineActions":"@config.maxInlineActions","mediaField":"@config.mediaField","sections":"@config.sections","showActions":"@config.showActions","stageField":"@config.stageField","stages":"@config.stages","subtitle":"@entity.description","tabs":"@config.tabs","thread":["object/get","@entity.loadedRow","@config.threadField"],"title":"@entity.name","totals":"@config.totals","type":"detail-panel"}],"className":"w-full max-w-4xl","direction":"vertical","gap":"lg","type":"stack"}` */
   pageBodyContent?: unknown;
   /** Default: `"Start writing…"` */
   placeholder?: string;
+  /** Default: `"panel"` */
+  recordLook?: 'panel' | 'profile' | 'showcase' | 'workflow' | 'map' | 'ledger' | 'conversation' | 'workspace';
   /** Default: `[]` */
   sections?: EntityRow[];
   /** Default: `true` */
   showActions?: boolean;
-  /** Default: `{"children":[{"actions":["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"closeEvent":"@config.closeEvent","entity":"@entity.loadedRow","fields":"@config.fields","initialData":"@entity.loadedRow","maxInlineActions":"@config.maxInlineActions","sections":"@config.sections","showActions":"@config.showActions","slideOver":true,"subtitle":"@entity.description","title":"@entity.name","type":"detail-panel"}],"direction":"vertical","gap":"none","type":"stack"}` */
+  /** Default: `{"children":[{"actions":["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"avatarField":"@config.avatarField","closeEvent":"@config.closeEvent","coverField":"@config.coverField","entity":"@entity.loadedRow","fields":"@config.fields","initialData":"@entity.loadedRow","latitudeField":"@config.latitudeField","lineItemColumns":"@config.lineItemColumns","lineItems":["object/get","@entity.loadedRow","@config.lineItemsField"],"longitudeField":"@config.longitudeField","look":"@config.recordLook","maxInlineActions":"@config.maxInlineActions","mediaField":"@config.mediaField","sections":"@config.sections","showActions":"@config.showActions","slideOver":true,"stageField":"@config.stageField","stages":"@config.stages","subtitle":"@entity.description","tabs":"@config.tabs","thread":["object/get","@entity.loadedRow","@config.threadField"],"title":"@entity.name","totals":"@config.totals","type":"detail-panel"}],"direction":"vertical","gap":"none","type":"stack"}` */
   slideOverBodyContent?: unknown;
+  /** Default: `""` */
+  stageField?: string;
+  /** Default: `[]` */
+  stages?: EntityRow[];
   /** Default: `"description"` */
   subtitleField?: string;
+  /** Default: `[]` */
+  tabs?: EntityRow[];
+  /** Default: `""` */
+  threadField?: string;
   /** Default: `"name"` */
   titleField?: string;
+  /** Default: `[]` */
+  titleFields?: string[];
+  /** Default: `[]` */
+  totals?: EntityRow[];
   /** Default: `""` */
   viewerRole?: string;
 }
@@ -467,6 +495,14 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
             'tier': 'presentation',
             'type': 'string',
           },
+          'avatarField': {
+            'default': '',
+            'description': 'Name of the image field shown as the profile look\'s avatar; the title supplies initials when it is empty.',
+            'label': 'Which field is the avatar?',
+            'synonyms': 'photo field, avatar field, picture field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'bodyContent': {
             'default': {
               'children': [
@@ -505,15 +541,36 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                       ],
                     ],
                   ],
+                  'avatarField': '@config.avatarField',
                   'closeEvent': '@config.closeEvent',
+                  'coverField': '@config.coverField',
                   'entity': '@entity.loadedRow',
                   'fields': '@config.fields',
                   'initialData': '@entity.loadedRow',
+                  'latitudeField': '@config.latitudeField',
+                  'lineItemColumns': '@config.lineItemColumns',
+                  'lineItems': [
+                    'object/get',
+                    '@entity.loadedRow',
+                    '@config.lineItemsField',
+                  ],
+                  'longitudeField': '@config.longitudeField',
+                  'look': '@config.recordLook',
                   'maxInlineActions': '@config.maxInlineActions',
+                  'mediaField': '@config.mediaField',
                   'sections': '@config.sections',
                   'showActions': '@config.showActions',
+                  'stageField': '@config.stageField',
+                  'stages': '@config.stages',
                   'subtitle': '@entity.description',
+                  'tabs': '@config.tabs',
+                  'thread': [
+                    'object/get',
+                    '@entity.loadedRow',
+                    '@config.threadField',
+                  ],
                   'title': '@entity.name',
+                  'totals': '@config.totals',
                   'type': 'detail-panel',
                 },
               ],
@@ -544,7 +601,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
           },
           'coverField': {
             'default': '',
-            'description': 'Name of the image-typed field on the loaded record painted as the document look\'s full-bleed hero banner (e.g. coverImage, heroImage). Empty = no banner, the default.',
+            'description': 'Name of the image-typed field on the loaded record painted as the hero banner of the document look and of the profile record look (e.g. coverImage, heroImage). Empty = no banner, the default.',
             'label': 'Which field is the cover image?',
             'synonyms': 'cover field, hero image field, banner field',
             'tier': 'presentation',
@@ -818,6 +875,83 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
             'tier': 'internal',
             'type': '[string]',
           },
+          'latitudeField': {
+            'default': '',
+            'description': 'Name of the latitude field the map look pins.',
+            'label': 'Which field is the latitude?',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'lineItemColumns': {
+            'default': [],
+            'description': 'Columns of the ledger look\'s line-items table.',
+            'items': {
+              'properties': {
+                'align': {
+                  'name': 'align',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'left',
+                    'center',
+                    'right',
+                  ],
+                },
+                'format': {
+                  'name': 'format',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'badge',
+                    'date',
+                    'currency',
+                    'number',
+                    'percent',
+                    'boolean',
+                  ],
+                },
+                'header': {
+                  'name': 'header',
+                  'required': false,
+                  'type': 'string',
+                },
+                'key': {
+                  'name': 'key',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Which line-item columns?',
+            'tier': 'presentation',
+            'type': '[LineItemColumn]',
+          },
+          'lineItemsField': {
+            'default': '',
+            'description': 'Name of the hydrated relation (list it in include) whose rows the ledger look tables.',
+            'label': 'Which relation holds the line items?',
+            'synonyms': 'line items field, order lines, invoice lines, child rows',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'loadingContent': {
+            'default': {
+              'type': 'skeleton',
+              'variant': 'detail',
+            },
+            'description': 'Shown while the record loads, shaped like what replaces it so the page does not jump: the detail skeleton for the panel/slide-over/page looks; a document-look consumer sets { type: skeleton, variant: text, rows: 8 }.',
+            'label': 'Loading placeholder',
+            'tier': 'internal',
+            'type': 'render-ui',
+          },
+          'longitudeField': {
+            'default': '',
+            'description': 'Name of the longitude field the map look pins.',
+            'label': 'Which field is the longitude?',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'maxInlineActions': {
             'default': 3,
             'description': 'Actions beyond this count collapse into a \'⋯\' overflow menu.',
@@ -825,6 +959,14 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
             'synonyms': 'inline actions limit, overflow threshold',
             'tier': 'presentation',
             'type': 'number',
+          },
+          'mediaField': {
+            'default': '',
+            'description': 'Name of the field the showcase look leads with: one image URL, a list of URLs, or a list of { src, caption }.',
+            'label': 'Which field holds the images?',
+            'synonyms': 'gallery field, photos field, images field, media field',
+            'tier': 'presentation',
+            'type': 'string',
           },
           'openOn': {
             'default': 'init',
@@ -876,15 +1018,36 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                       ],
                     ],
                   ],
+                  'avatarField': '@config.avatarField',
                   'closeEvent': '@config.closeEvent',
+                  'coverField': '@config.coverField',
                   'entity': '@entity.loadedRow',
                   'fields': '@config.fields',
                   'initialData': '@entity.loadedRow',
+                  'latitudeField': '@config.latitudeField',
+                  'lineItemColumns': '@config.lineItemColumns',
+                  'lineItems': [
+                    'object/get',
+                    '@entity.loadedRow',
+                    '@config.lineItemsField',
+                  ],
+                  'longitudeField': '@config.longitudeField',
+                  'look': '@config.recordLook',
                   'maxInlineActions': '@config.maxInlineActions',
+                  'mediaField': '@config.mediaField',
                   'sections': '@config.sections',
                   'showActions': '@config.showActions',
+                  'stageField': '@config.stageField',
+                  'stages': '@config.stages',
                   'subtitle': '@entity.description',
+                  'tabs': '@config.tabs',
+                  'thread': [
+                    'object/get',
+                    '@entity.loadedRow',
+                    '@config.threadField',
+                  ],
                   'title': '@entity.name',
+                  'totals': '@config.totals',
                   'type': 'detail-panel',
                 },
               ],
@@ -904,6 +1067,24 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
             'label': 'Placeholder text',
             'tier': 'presentation',
             'type': 'string',
+          },
+          'recordLook': {
+            'default': 'panel',
+            'description': 'How the record itself is arranged inside the panel/slide-over/page frame, so not every app reads as an admin form. panel = labelled field grid (default); profile = a person or member: avatar + cover hero (avatarField, coverField); showcase = image-first product or listing with a gallery (mediaField); workflow = a lifecycle stepper over the record (stageField, stages); map = a place: location map hero (latitudeField, longitudeField); ledger = an invoice/order document: line items then totals (lineItemsField, lineItemColumns, totals); conversation = a ticket or thread: the messages beside the record facts (threadField); workspace = a hub record with tabs (tabs). Regions with no data simply do not render. A region fed by a separate trait (replies with their composer, editable order lines, activity history) is composed by overriding the body and passing detail-panel\'s threadContent / lineItemsContent / activityContent.',
+            'label': 'Record look',
+            'synonyms': 'record style, profile page, product page, listing page, invoice view, ticket view, timeline view, tabbed record, location page',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'panel',
+              'profile',
+              'showcase',
+              'workflow',
+              'map',
+              'ledger',
+              'conversation',
+              'workspace',
+            ],
           },
           'sections': {
             'default': [],
@@ -977,16 +1158,37 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                       ],
                     ],
                   ],
+                  'avatarField': '@config.avatarField',
                   'closeEvent': '@config.closeEvent',
+                  'coverField': '@config.coverField',
                   'entity': '@entity.loadedRow',
                   'fields': '@config.fields',
                   'initialData': '@entity.loadedRow',
+                  'latitudeField': '@config.latitudeField',
+                  'lineItemColumns': '@config.lineItemColumns',
+                  'lineItems': [
+                    'object/get',
+                    '@entity.loadedRow',
+                    '@config.lineItemsField',
+                  ],
+                  'longitudeField': '@config.longitudeField',
+                  'look': '@config.recordLook',
                   'maxInlineActions': '@config.maxInlineActions',
+                  'mediaField': '@config.mediaField',
                   'sections': '@config.sections',
                   'showActions': '@config.showActions',
                   'slideOver': true,
+                  'stageField': '@config.stageField',
+                  'stages': '@config.stages',
                   'subtitle': '@entity.description',
+                  'tabs': '@config.tabs',
+                  'thread': [
+                    'object/get',
+                    '@entity.loadedRow',
+                    '@config.threadField',
+                  ],
                   'title': '@entity.name',
+                  'totals': '@config.totals',
                   'type': 'detail-panel',
                 },
               ],
@@ -999,11 +1201,86 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
             'tier': 'internal',
             'type': 'render-ui',
           },
+          'stageField': {
+            'default': '',
+            'description': 'Name of the field holding the record\'s current stage; the workflow look marks it on the stepper.',
+            'label': 'Which field is the lifecycle stage?',
+            'synonyms': 'stage field, status field, phase field, step field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'stages': {
+            'default': [],
+            'description': 'The workflow look\'s stepper: one { value, label } per stage, value matching stageField\'s enum.',
+            'items': {
+              'properties': {
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'value': {
+                  'name': 'value',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'What is the lifecycle, in order?',
+            'synonyms': 'lifecycle, pipeline stages, steps, phases',
+            'tier': 'presentation',
+            'type': '[RecordStage]',
+          },
           'subtitleField': {
             'default': 'description',
             'description': 'Name of the field shown under the title (e.g. company, category). Set to "" for no subtitle at all — the right choice for the document look, whose metadata lives in the properties strip, not a second line.',
             'label': 'Which field is the subtitle?',
             'synonyms': 'subtitle field, secondary field, subheading, no subtitle',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'tabs': {
+            'default': [],
+            'description': 'The workspace look\'s tabs after Overview: each lists field names, or composes a related trait as content (e.g. a company\'s deals list).',
+            'items': {
+              'properties': {
+                'content': {
+                  'name': 'content',
+                  'required': false,
+                  'type': 'string',
+                },
+                'fields': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'fields',
+                  'required': false,
+                  'type': 'array',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Which tabs follow the overview?',
+            'synonyms': 'tabs, record tabs, sub pages, related lists',
+            'tier': 'presentation',
+            'type': '[RecordTab]',
+          },
+          'threadField': {
+            'default': '',
+            'description': 'Name of the hydrated relation (list it in include) whose messages the conversation look shows.',
+            'label': 'Which relation holds the thread?',
+            'synonyms': 'messages field, replies field, comments field, thread field',
             'tier': 'presentation',
             'type': 'string',
           },
@@ -1014,6 +1291,94 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
             'synonyms': 'title field, heading field, name field, label field',
             'tier': 'presentation',
             'type': 'string',
+          },
+          'titleFields': {
+            'default': [],
+            'description': 'For records whose name is split across fields (firstName + lastName): the listed fields\' values joined with spaces become the title, and override titleField. Empty = titleField alone, the default.',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Which fields make up the title, in order?',
+            'synonyms': 'full name, name parts, composite title, first and last name',
+            'tier': 'presentation',
+            'type': '[string]',
+          },
+          'totals': {
+            'default': [],
+            'description': 'Record fields shown under the line items in order (e.g. subtotal, tax, total); the last is emphasised.',
+            'items': {
+              'properties': {
+                'colorMap': {
+                  'items': {
+                    'type': 'string',
+                    'values': [
+                      'default',
+                      'primary',
+                      'secondary',
+                      'success',
+                      'warning',
+                      'danger',
+                      'error',
+                      'info',
+                      'neutral',
+                      'destructive',
+                    ],
+                  },
+                  'name': 'colorMap',
+                  'required': false,
+                  'type': 'object',
+                },
+                'format': {
+                  'name': 'format',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'date',
+                    'currency',
+                    'number',
+                    'boolean',
+                    'percent',
+                  ],
+                },
+                'header': {
+                  'name': 'header',
+                  'required': false,
+                  'type': 'string',
+                },
+                'key': {
+                  'name': 'key',
+                  'required': true,
+                  'type': 'string',
+                },
+                'labels': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'labels',
+                  'required': false,
+                  'type': 'object',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'h3',
+                    'h4',
+                    'body',
+                    'caption',
+                    'badge',
+                    'small',
+                    'progress',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Which fields are the totals?',
+            'synonyms': 'totals, subtotal, grand total, amount due',
+            'tier': 'presentation',
+            'type': '[RecordFieldSpec]',
           },
           'viewerRole': {
             'default': '',
@@ -1967,10 +2332,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                 [
                   'render-ui',
                   'main',
-                  {
-                    'rows': 4,
-                    'type': 'skeleton',
-                  },
+                  '@config.loadingContent',
                 ],
               ],
               'event': 'INIT',
@@ -2033,10 +2395,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                 [
                   'render-ui',
                   'main',
-                  {
-                    'rows': 4,
-                    'type': 'skeleton',
-                  },
+                  '@config.loadingContent',
                 ],
               ],
               'event': 'INIT',
@@ -2095,10 +2454,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                 [
                   'render-ui',
                   'main',
-                  {
-                    'rows': 4,
-                    'type': 'skeleton',
-                  },
+                  '@config.loadingContent',
                 ],
               ],
               'event': 'INIT',
@@ -2185,10 +2541,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                 [
                   'render-ui',
                   'main',
-                  {
-                    'rows': 4,
-                    'type': 'skeleton',
-                  },
+                  '@config.loadingContent',
                 ],
               ],
               'event': 'OPEN_VIEW',
@@ -2226,10 +2579,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                 [
                   'render-ui',
                   'main',
-                  {
-                    'rows': 4,
-                    'type': 'skeleton',
-                  },
+                  '@config.loadingContent',
                 ],
               ],
               'event': 'INIT',
@@ -2284,10 +2634,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                 [
                   'render-ui',
                   'main',
-                  {
-                    'rows': 4,
-                    'type': 'skeleton',
-                  },
+                  '@config.loadingContent',
                 ],
               ],
               'event': 'INIT',
@@ -2339,9 +2686,41 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                   'set',
                   '@entity.name',
                   [
-                    'object/get',
-                    '@payload.data',
-                    '@config.titleField',
+                    'if',
+                    [
+                      '>',
+                      [
+                        'array/len',
+                        '@config.titleFields',
+                      ],
+                      0,
+                    ],
+                    [
+                      'str/join',
+                      [
+                        'array/map',
+                        '@config.titleFields',
+                        [
+                          'fn',
+                          'f',
+                          [
+                            'str/default',
+                            [
+                              'object/get',
+                              '@payload.data',
+                              '@f',
+                            ],
+                            '',
+                          ],
+                        ],
+                      ],
+                      ' ',
+                    ],
+                    [
+                      'object/get',
+                      '@payload.data',
+                      '@config.titleField',
+                    ],
                   ],
                 ],
                 [
@@ -2439,9 +2818,41 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                   'set',
                   '@entity.name',
                   [
-                    'object/get',
-                    '@payload.data',
-                    '@config.titleField',
+                    'if',
+                    [
+                      '>',
+                      [
+                        'array/len',
+                        '@config.titleFields',
+                      ],
+                      0,
+                    ],
+                    [
+                      'str/join',
+                      [
+                        'array/map',
+                        '@config.titleFields',
+                        [
+                          'fn',
+                          'f',
+                          [
+                            'str/default',
+                            [
+                              'object/get',
+                              '@payload.data',
+                              '@f',
+                            ],
+                            '',
+                          ],
+                        ],
+                      ],
+                      ' ',
+                    ],
+                    [
+                      'object/get',
+                      '@payload.data',
+                      '@config.titleField',
+                    ],
                   ],
                 ],
                 [
@@ -2580,12 +2991,47 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                   'set',
                   '@entity.name',
                   [
-                    'object/get',
+                    'if',
                     [
-                      'array/first',
-                      '@payload.data',
+                      '>',
+                      [
+                        'array/len',
+                        '@config.titleFields',
+                      ],
+                      0,
                     ],
-                    '@config.titleField',
+                    [
+                      'str/join',
+                      [
+                        'array/map',
+                        '@config.titleFields',
+                        [
+                          'fn',
+                          'f',
+                          [
+                            'str/default',
+                            [
+                              'object/get',
+                              [
+                                'array/first',
+                                '@payload.data',
+                              ],
+                              '@f',
+                            ],
+                            '',
+                          ],
+                        ],
+                      ],
+                      ' ',
+                    ],
+                    [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      '@config.titleField',
+                    ],
                   ],
                 ],
                 [
@@ -2708,12 +3154,47 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                   'set',
                   '@entity.name',
                   [
-                    'object/get',
+                    'if',
                     [
-                      'array/first',
-                      '@payload.data',
+                      '>',
+                      [
+                        'array/len',
+                        '@config.titleFields',
+                      ],
+                      0,
                     ],
-                    '@config.titleField',
+                    [
+                      'str/join',
+                      [
+                        'array/map',
+                        '@config.titleFields',
+                        [
+                          'fn',
+                          'f',
+                          [
+                            'str/default',
+                            [
+                              'object/get',
+                              [
+                                'array/first',
+                                '@payload.data',
+                              ],
+                              '@f',
+                            ],
+                            '',
+                          ],
+                        ],
+                      ],
+                      ' ',
+                    ],
+                    [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      '@config.titleField',
+                    ],
                   ],
                 ],
                 [
@@ -2922,10 +3403,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                 [
                   'render-ui',
                   'main',
-                  {
-                    'rows': 4,
-                    'type': 'skeleton',
-                  },
+                  '@config.loadingContent',
                 ],
               ],
               'event': 'INIT',
@@ -2988,10 +3466,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                 [
                   'render-ui',
                   'main',
-                  {
-                    'rows': 4,
-                    'type': 'skeleton',
-                  },
+                  '@config.loadingContent',
                 ],
               ],
               'event': 'INIT',
@@ -3252,9 +3727,41 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                   'set',
                   '@entity.name',
                   [
-                    'object/get',
-                    '@payload.data',
-                    '@config.titleField',
+                    'if',
+                    [
+                      '>',
+                      [
+                        'array/len',
+                        '@config.titleFields',
+                      ],
+                      0,
+                    ],
+                    [
+                      'str/join',
+                      [
+                        'array/map',
+                        '@config.titleFields',
+                        [
+                          'fn',
+                          'f',
+                          [
+                            'str/default',
+                            [
+                              'object/get',
+                              '@payload.data',
+                              '@f',
+                            ],
+                            '',
+                          ],
+                        ],
+                      ],
+                      ' ',
+                    ],
+                    [
+                      'object/get',
+                      '@payload.data',
+                      '@config.titleField',
+                    ],
                   ],
                 ],
                 [
@@ -3380,12 +3887,47 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                   'set',
                   '@entity.name',
                   [
-                    'object/get',
+                    'if',
                     [
-                      'array/first',
-                      '@payload.data',
+                      '>',
+                      [
+                        'array/len',
+                        '@config.titleFields',
+                      ],
+                      0,
                     ],
-                    '@config.titleField',
+                    [
+                      'str/join',
+                      [
+                        'array/map',
+                        '@config.titleFields',
+                        [
+                          'fn',
+                          'f',
+                          [
+                            'str/default',
+                            [
+                              'object/get',
+                              [
+                                'array/first',
+                                '@payload.data',
+                              ],
+                              '@f',
+                            ],
+                            '',
+                          ],
+                        ],
+                      ],
+                      ' ',
+                    ],
+                    [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      '@config.titleField',
+                    ],
                   ],
                 ],
                 [
@@ -3624,10 +4166,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                 [
                   'render-ui',
                   'main',
-                  {
-                    'rows': 4,
-                    'type': 'skeleton',
-                  },
+                  '@config.loadingContent',
                 ],
               ],
               'event': 'INIT',
@@ -3682,10 +4221,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                 [
                   'render-ui',
                   'main',
-                  {
-                    'rows': 4,
-                    'type': 'skeleton',
-                  },
+                  '@config.loadingContent',
                 ],
               ],
               'event': 'INIT',
@@ -3730,10 +4266,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                 [
                   'render-ui',
                   'main',
-                  {
-                    'rows': 4,
-                    'type': 'skeleton',
-                  },
+                  '@config.loadingContent',
                 ],
               ],
               'event': 'RETRY',

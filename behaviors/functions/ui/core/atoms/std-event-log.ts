@@ -1091,8 +1091,20 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'title': 'Loading activity…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1462,8 +1474,20 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'title': 'Refreshing…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -2235,14 +2259,6 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                     },
                   },
                 ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'title': 'Saving entry…',
-                    'type': 'loading-state',
-                  },
-                ],
               ],
               'event': 'SAVE_BACKFILL',
               'from': 'backfilling',
@@ -2371,8 +2387,20 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'title': 'Retrying…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],

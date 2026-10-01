@@ -47,6 +47,8 @@ export interface StdProseConfig {
   eyebrow?: string;
   /** Default: `""` */
   heading?: string;
+  /** Default: `"h2"` */
+  headingLevel?: 'h1' | 'h2';
   /** Default: `""` */
   meta?: string;
   /** Default: `"plain"` */

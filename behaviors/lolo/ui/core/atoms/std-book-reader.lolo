@@ -258,7 +258,8 @@ orbital BookReaderOrbital {
                   label: (object/get @chapter title "")
                   action: OPEN_CHAPTER
                   actionPayload: { index: @index }
-                  className: (if (== @index @entity.chapterIndex) "text-foreground font-semibold" "")
+                  aria-current: (if (== @index @entity.chapterIndex) "page" "false")
+                  className: (if (== @index @entity.chapterIndex) "h-auto justify-start text-start text-foreground font-semibold" "h-auto justify-start text-start")
                 }))
               }]
             }, {
@@ -266,16 +267,23 @@ orbital BookReaderOrbital {
               direction: vertical
               gap: lg
               children: [{
-                type: typography
-                content: @entity.progressLabel
-                variant: caption
-                color: muted
-              }, {
-                type: typography
-                content: @entity.chapterTitle
-                variant: h2
-                weight: bold
-                className: "tracking-tight"
+                type: stack
+                direction: vertical
+                gap: lg
+                role: status
+                children: [{
+                  type: typography
+                  content: @entity.progressLabel
+                  variant: caption
+                  color: muted
+                }, {
+                  type: typography
+                  content: @entity.chapterTitle
+                  variant: h1
+                  size: "3xl"
+                  weight: bold
+                  className: "tracking-tight"
+                }]
               }, {
                 type: markdown-content
                 content: @entity.chapterContent

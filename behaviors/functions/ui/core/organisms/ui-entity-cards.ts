@@ -66,14 +66,27 @@ export interface StdUiEntityCardsConfig {
   activeFilters?: Record<string, TraitConfig>;
   /** Default: `"stretch"` */
   alignItems?: 'start' | 'center' | 'end' | 'stretch';
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
   children?: PatternValue;
   className?: string;
   /** Default: `[]` */
   columns?: EntityRow[];
+  dir?: 'ltr' | 'rtl' | 'auto';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   error?: EntityRow;
   /** Default: `[]` */
   fieldNames?: string[];
-  /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","variant":"h3"},{"format":"currency","icon":"circle","label":"Label 2","name":"Name 2","variant":"h4"}]` */
+  /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","variant":"h3"},{"format":"datetime","icon":"circle","label":"Label 2","name":"Name 2","variant":"h4"}]` */
   fields?: EntityRow[];
   /** Default: `"md"` */
   gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
@@ -84,11 +97,13 @@ export interface StdUiEntityCardsConfig {
   itemActions?: EntityRow[];
   /** Default: `"ITEM_CLICK"` */
   itemClickEvent?: string;
+  lang?: string;
   maxCols?: number;
   /** Default: `280` */
   minCardWidth?: number;
   pageProp?: number;
   pageSize?: number;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   searchValue?: string;
   /** Default: `[]` */
   selectedIds?: string[];
@@ -98,8 +113,8 @@ export interface StdUiEntityCardsConfig {
   /** Default: `true` */
   showTotal?: boolean;
   sortBy?: string;
-  /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
+  tabIndex?: number;
   totalCount?: number;
   variant?: string;
   /** Default: `""` */
@@ -200,6 +215,95 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
               'stretch',
             ],
           },
+          'ariaBusy': {
+            'description': 'This region is updating; assistive technology waits before announcing it.',
+            'label': 'Aria-busy',
+            'synonyms': 'aria-busy',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'ariaCurrent': {
+            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
+            'label': 'Aria-current',
+            'synonyms': 'aria-current',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'page',
+              'step',
+              'location',
+              'date',
+              'time',
+              'true',
+              'false',
+            ],
+          },
+          'ariaDescribedby': {
+            'description': 'Id of the element whose text describes this one (help text, error).',
+            'label': 'Aria-describedby',
+            'synonyms': 'aria-describedby',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'ariaExpanded': {
+            'description': 'Whether the element it controls is expanded.',
+            'label': 'Aria-expanded',
+            'synonyms': 'aria-expanded',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'ariaHidden': {
+            'description': 'Hide from assistive technology (decorative content only).',
+            'label': 'Aria-hidden',
+            'synonyms': 'aria-hidden',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'ariaLabel': {
+            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
+            'label': 'Aria-label',
+            'synonyms': 'aria-label',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'ariaLabelledby': {
+            'description': 'Id of the element whose text names this one.',
+            'label': 'Aria-labelledby',
+            'synonyms': 'aria-labelledby',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'ariaLive': {
+            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
+            'label': 'Aria-live',
+            'synonyms': 'aria-live',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'off',
+              'polite',
+              'assertive',
+            ],
+          },
+          'ariaPressed': {
+            'description': 'Toggle-button state.',
+            'label': 'Aria-pressed',
+            'synonyms': 'aria-pressed',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'true',
+              'false',
+              'mixed',
+            ],
+          },
+          'ariaSelected': {
+            'description': 'Whether this item is selected (tabs, options, grid cells).',
+            'label': 'Aria-selected',
+            'synonyms': 'aria-selected',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
           'children': {
             'description': 'Children elements (cards) - optional when using entity prop',
             'label': 'Children',
@@ -243,6 +347,7 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                   'type': 'string',
                   'values': [
                     'date',
+                    'datetime',
                     'currency',
                     'number',
                     'boolean',
@@ -293,6 +398,36 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
             'tier': 'presentation',
             'type': '[EntityCardsColumnsItem]',
           },
+          'dir': {
+            'description': 'Text direction of this element\'s content.',
+            'label': 'Dir',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'ltr',
+              'rtl',
+              'auto',
+            ],
+          },
+          'enter': {
+            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
+            'label': 'Enter',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'none',
+              'fade',
+              'rise',
+              'scale',
+              'slide',
+            ],
+          },
+          'enterDelay': {
+            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
+            'label': 'Enter Delay',
+            'tier': 'presentation',
+            'type': 'number',
+          },
           'error': {
             'description': 'Error state (UiError)',
             'label': 'Error',
@@ -341,7 +476,7 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                 'variant': 'h3',
               },
               {
-                'format': 'currency',
+                'format': 'datetime',
                 'icon': 'circle',
                 'label': 'Label 2',
                 'name': 'Name 2',
@@ -377,6 +512,7 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                   'type': 'string',
                   'values': [
                     'date',
+                    'datetime',
                     'currency',
                     'number',
                     'boolean',
@@ -480,6 +616,11 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                   'required': false,
                   'type': 'string',
                 },
+                'payload': {
+                  'name': 'payload',
+                  'required': false,
+                  'type': 'object',
+                },
                 'placement': {
                   'name': 'placement',
                   'required': false,
@@ -517,6 +658,12 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
             'tier': 'presentation',
             'type': 'event',
           },
+          'lang': {
+            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
+            'label': 'Lang',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'maxCols': {
             'description': 'Maximum number of columns',
             'label': 'Max Cols',
@@ -542,6 +689,95 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
             'label': 'Page Size',
             'tier': 'presentation',
             'type': 'number',
+          },
+          'role': {
+            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
+            'label': 'Role',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'alert',
+              'alertdialog',
+              'application',
+              'article',
+              'banner',
+              'blockquote',
+              'button',
+              'caption',
+              'cell',
+              'checkbox',
+              'code',
+              'columnheader',
+              'combobox',
+              'complementary',
+              'contentinfo',
+              'definition',
+              'deletion',
+              'dialog',
+              'document',
+              'emphasis',
+              'feed',
+              'figure',
+              'form',
+              'generic',
+              'grid',
+              'gridcell',
+              'group',
+              'heading',
+              'img',
+              'insertion',
+              'link',
+              'list',
+              'listbox',
+              'listitem',
+              'log',
+              'main',
+              'marquee',
+              'math',
+              'menu',
+              'menubar',
+              'menuitem',
+              'menuitemcheckbox',
+              'menuitemradio',
+              'meter',
+              'navigation',
+              'none',
+              'note',
+              'option',
+              'paragraph',
+              'presentation',
+              'progressbar',
+              'radio',
+              'radiogroup',
+              'region',
+              'row',
+              'rowgroup',
+              'rowheader',
+              'scrollbar',
+              'search',
+              'searchbox',
+              'separator',
+              'slider',
+              'spinbutton',
+              'status',
+              'strong',
+              'subscript',
+              'superscript',
+              'switch',
+              'tab',
+              'table',
+              'tablist',
+              'tabpanel',
+              'term',
+              'textbox',
+              'time',
+              'timer',
+              'toolbar',
+              'tooltip',
+              'tree',
+              'treegrid',
+              'treeitem',
+            ],
           },
           'searchValue': {
             'description': 'Current search query value',
@@ -586,7 +822,6 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
             'type': 'string',
           },
           'sortDirection': {
-            'default': 'asc',
             'description': 'Current sort direction',
             'label': 'Sort Direction',
             'tier': 'presentation',
@@ -595,6 +830,12 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
               'asc',
               'desc',
             ],
+          },
+          'tabIndex': {
+            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
+            'label': 'Tab Index',
+            'tier': 'presentation',
+            'type': 'number',
           },
           'totalCount': {
             'description': 'Total number of items',
@@ -782,9 +1023,22 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                   {
                     'activeFilters': '@config.activeFilters',
                     'alignItems': '@config.alignItems',
+                    'aria-busy': '@config.ariaBusy',
+                    'aria-current': '@config.ariaCurrent',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'aria-hidden': '@config.ariaHidden',
+                    'aria-label': '@config.ariaLabel',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'aria-live': '@config.ariaLive',
+                    'aria-pressed': '@config.ariaPressed',
+                    'aria-selected': '@config.ariaSelected',
                     'children': '@config.children',
                     'className': '@config.className',
                     'columns': '@config.columns',
+                    'dir': '@config.dir',
+                    'enter': '@config.enter',
+                    'enterDelay': '@config.enterDelay',
                     'entity': '@entity',
                     'error': '@config.error',
                     'fieldNames': '@config.fieldNames',
@@ -827,16 +1081,19 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                       ],
                     ],
                     'itemClickEvent': '@config.itemClickEvent',
+                    'lang': '@config.lang',
                     'maxCols': '@config.maxCols',
                     'minCardWidth': '@config.minCardWidth',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
+                    'role': '@config.role',
                     'searchValue': '@config.searchValue',
                     'selectedIds': '@config.selectedIds',
                     'showAvatar': '@config.showAvatar',
                     'showTotal': '@config.showTotal',
                     'sortBy': '@config.sortBy',
                     'sortDirection': '@config.sortDirection',
+                    'tabIndex': '@config.tabIndex',
                     'totalCount': '@config.totalCount',
                     'type': 'entity-cards',
                     'variant': '@config.variant',
@@ -856,9 +1113,22 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                   {
                     'activeFilters': '@config.activeFilters',
                     'alignItems': '@config.alignItems',
+                    'aria-busy': '@config.ariaBusy',
+                    'aria-current': '@config.ariaCurrent',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'aria-hidden': '@config.ariaHidden',
+                    'aria-label': '@config.ariaLabel',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'aria-live': '@config.ariaLive',
+                    'aria-pressed': '@config.ariaPressed',
+                    'aria-selected': '@config.ariaSelected',
                     'children': '@config.children',
                     'className': '@config.className',
                     'columns': '@config.columns',
+                    'dir': '@config.dir',
+                    'enter': '@config.enter',
+                    'enterDelay': '@config.enterDelay',
                     'entity': '@entity',
                     'error': '@config.error',
                     'fieldNames': '@config.fieldNames',
@@ -901,16 +1171,19 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                       ],
                     ],
                     'itemClickEvent': '@config.itemClickEvent',
+                    'lang': '@config.lang',
                     'maxCols': '@config.maxCols',
                     'minCardWidth': '@config.minCardWidth',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
+                    'role': '@config.role',
                     'searchValue': '@config.searchValue',
                     'selectedIds': '@config.selectedIds',
                     'showAvatar': '@config.showAvatar',
                     'showTotal': '@config.showTotal',
                     'sortBy': '@config.sortBy',
                     'sortDirection': '@config.sortDirection',
+                    'tabIndex': '@config.tabIndex',
                     'totalCount': '@config.totalCount',
                     'type': 'entity-cards',
                     'variant': '@config.variant',
@@ -933,9 +1206,22 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                   {
                     'activeFilters': '@config.activeFilters',
                     'alignItems': '@config.alignItems',
+                    'aria-busy': '@config.ariaBusy',
+                    'aria-current': '@config.ariaCurrent',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'aria-hidden': '@config.ariaHidden',
+                    'aria-label': '@config.ariaLabel',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'aria-live': '@config.ariaLive',
+                    'aria-pressed': '@config.ariaPressed',
+                    'aria-selected': '@config.ariaSelected',
                     'children': '@config.children',
                     'className': '@config.className',
                     'columns': '@config.columns',
+                    'dir': '@config.dir',
+                    'enter': '@config.enter',
+                    'enterDelay': '@config.enterDelay',
                     'entity': '@payload.data',
                     'error': '@config.error',
                     'fieldNames': '@config.fieldNames',
@@ -978,16 +1264,19 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                       ],
                     ],
                     'itemClickEvent': '@config.itemClickEvent',
+                    'lang': '@config.lang',
                     'maxCols': '@config.maxCols',
                     'minCardWidth': '@config.minCardWidth',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
+                    'role': '@config.role',
                     'searchValue': '@config.searchValue',
                     'selectedIds': '@config.selectedIds',
                     'showAvatar': '@config.showAvatar',
                     'showTotal': '@config.showTotal',
                     'sortBy': '@config.sortBy',
                     'sortDirection': '@config.sortDirection',
+                    'tabIndex': '@config.tabIndex',
                     'totalCount': '@config.totalCount',
                     'type': 'entity-cards',
                     'variant': '@config.variant',

@@ -57,9 +57,20 @@ export interface StdUiControlGridDirectionPayload {
 export interface StdUiControlGridConfig {
   /** Default: `"ACTION"` */
   actionEvent?: string;
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
   /** Default: `[]` */
   buttons?: EntityRow[];
   className?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
   /** Default: `{"item":{"animations":["static"],"aspect":"1:1","category":"item","dimension":"2d","name":"item","role":"item","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/features/sword.png"}}` */
   directionAssets?: Record<string, TraitConfig>;
   /** Default: `"DIRECTION"` */
@@ -69,18 +80,23 @@ export interface StdUiControlGridConfig {
   /** Default: `{"item":"INIT"}` */
   directionReleaseEvents?: Record<string, TraitConfig>;
   disabled?: boolean;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   /** Default: `false` */
   includeDiagonals?: boolean;
   /** Default: `"dpad"` */
   kind?: 'dpad' | 'actions';
+  lang?: string;
   /** Default: `"horizontal"` */
   layout?: 'horizontal' | 'vertical' | 'diamond';
   /** Default: `"ACTION"` */
   onAction?: string;
   /** Default: `"DIRECTION"` */
   onDirection?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  tabIndex?: number;
   /** Default: `"auto"` */
   visibility?: 'auto' | 'always';
 }

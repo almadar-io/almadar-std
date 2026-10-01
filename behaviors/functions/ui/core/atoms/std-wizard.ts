@@ -871,8 +871,20 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
-                    'title': 'Loading wizard…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'fields': 3,
+                        'type': 'skeleton',
+                        'variant': 'form',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1205,8 +1217,20 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
-                    'title': 'Refreshing…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'fields': 3,
+                        'type': 'skeleton',
+                        'variant': 'form',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1975,8 +1999,20 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
-                    'title': 'Restarting…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'fields': 3,
+                        'type': 'skeleton',
+                        'variant': 'form',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -2010,8 +2046,20 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
-                    'title': 'Restarting…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'fields': 3,
+                        'type': 'skeleton',
+                        'variant': 'form',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -2025,8 +2073,20 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
-                    'title': 'Retrying…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'fields': 3,
+                        'type': 'skeleton',
+                        'variant': 'form',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],

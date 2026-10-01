@@ -709,8 +709,20 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
                   'render-ui',
                   'main',
                   {
-                    'size': 'md',
-                    'type': 'spinner',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'grid',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -815,8 +827,20 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
                   'render-ui',
                   'main',
                   {
-                    'size': 'md',
-                    'type': 'spinner',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'grid',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],

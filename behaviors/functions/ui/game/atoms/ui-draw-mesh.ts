@@ -48,7 +48,6 @@ export interface StdUiDrawMeshConfig {
   material?: EntityRow;
   opacity?: number;
   outline?: EntityRow;
-  /** Default: `"bottom"` */
   pivot?: 'bottom' | 'center';
   /** Default: `{"x":1,"y":1,"z":1}` */
   position?: EntityRow;

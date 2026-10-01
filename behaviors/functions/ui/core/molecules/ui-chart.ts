@@ -41,21 +41,33 @@ export type StdUiChartEventKey = 'INIT';
 export interface StdUiChartConfig {
   /** Default: `[]` */
   actions?: EntityRow[];
-  /** Default: `"bar"` */
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
   chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'scatter' | 'histogram';
   className?: string;
   /** Default: `[]` */
   data?: EntityRow[];
+  dir?: 'ltr' | 'rtl' | 'auto';
   drillEvent?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
   error?: EntityRow;
   /** Default: `200` */
   height?: number;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `"bar-vertical"` */
+  lang?: string;
   look?: 'bar-vertical' | 'bar-horizontal' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram';
-  /** Default: `"day"` */
   period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   /** Default: `[]` */
   scatterData?: EntityRow[];
   /** Default: `[]` */
@@ -67,6 +79,7 @@ export interface StdUiChartConfig {
   /** Default: `"none"` */
   stack?: 'none' | 'stack' | 'normalize';
   subtitle?: string;
+  tabIndex?: number;
   /** Default: `false` */
   timeAxis?: boolean;
   title?: string;
