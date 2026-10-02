@@ -89,6 +89,7 @@ export interface StdUiHeaderConfig {
   showMenuToggle?: boolean;
   /** Default: `false` */
   showSearch?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `true` */
   sticky?: boolean;
   tabIndex?: number;

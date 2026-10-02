@@ -72,6 +72,9 @@ export interface StdUiBranchingLogicBuilderConfig {
   rules?: EntityRow[];
   /** Default: `"RULES_CHANGE"` */
   rulesChangeEvent?: string;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  /** Default: `"auto"` */
+  surface?: 'auto' | 'none';
   tabIndex?: number;
 }
 

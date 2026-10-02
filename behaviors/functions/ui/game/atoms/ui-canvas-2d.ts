@@ -130,6 +130,7 @@ export interface StdUiCanvas2dConfig {
   selectedId?: string;
   /** Default: `true` */
   showMinimap?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
   /** Default: `"TILE_CLICK"` */
   tileClickEvent?: string;

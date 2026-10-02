@@ -59,6 +59,7 @@ export interface StdUiOptionConstraintGroupConfig {
   /** Default: `"CHANGE"` */
   changeEvent?: string;
   className?: string;
+  constraint?: EntityRow;
   description?: string;
   dir?: 'ltr' | 'rtl' | 'auto';
   enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
@@ -75,6 +76,7 @@ export interface StdUiOptionConstraintGroupConfig {
   selected?: string[];
   /** Default: `"md"` */
   size?: 'sm' | 'md';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
   /** Default: `""` */
   title?: string;

@@ -71,6 +71,7 @@ export interface StdUiMeterConfig {
   showValue?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
   /** Default: `[]` */
   thresholds?: EntityRow[];

@@ -93,6 +93,7 @@ export interface StdUiBiologyCanvasConfig {
   /** Default: `[]` */
   shapes?: EntityRow[];
   showGrid?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `"timeline"` */
   stageStyle?: 'timeline' | 'ring';
   /** Default: `[]` */

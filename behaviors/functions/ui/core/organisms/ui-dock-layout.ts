@@ -130,6 +130,7 @@ export interface StdUiDockLayoutConfig {
   sidebarMinSize?: number;
   /** Default: `20` */
   sidebarWidth?: number;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   statusBar?: PatternValue;
   statusBarClassName?: string;
   tabIndex?: number;
@@ -309,7 +310,7 @@ export function stdUiDockLayoutDockLayoutOrbital(params: StdUiDockLayoutDockLayo
             'type': 'string',
           },
           'bottomPanelCollapsed': {
-            'description': 'Whether `bottomPanel` is collapsed. @default false',
+            'description': 'Whether `bottomPanel` is collapsed (controlled; the layout keeps its own state when omitted).',
             'label': 'Bottom Panel Collapsed',
             'tier': 'presentation',
             'type': 'boolean',
@@ -556,7 +557,7 @@ export function stdUiDockLayoutDockLayoutOrbital(params: StdUiDockLayoutDockLayo
             'type': 'string',
           },
           'secondarySidebarCollapsed': {
-            'description': 'Whether `secondarySidebar` is collapsed. @default false',
+            'description': 'Whether `secondarySidebar` is collapsed (controlled; the layout keeps its own state when omitted).',
             'label': 'Secondary Sidebar Collapsed',
             'tier': 'presentation',
             'type': 'boolean',
@@ -593,7 +594,7 @@ export function stdUiDockLayoutDockLayoutOrbital(params: StdUiDockLayoutDockLayo
             'type': 'string',
           },
           'sidebarCollapsed': {
-            'description': 'Whether `sidebar` is collapsed. @default false',
+            'description': 'Whether `sidebar` is collapsed (controlled; the layout keeps its own state when omitted).',
             'label': 'Sidebar Collapsed',
             'tier': 'presentation',
             'type': 'boolean',
@@ -611,6 +612,24 @@ export function stdUiDockLayoutDockLayoutOrbital(params: StdUiDockLayoutDockLayo
             'label': 'Sidebar Width',
             'tier': 'presentation',
             'type': 'number',
+          },
+          'skeleton': {
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
+            'label': 'Skeleton',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'header',
+              'table',
+              'list',
+              'grid',
+              'detail',
+              'stats',
+              'form',
+              'card',
+              'text',
+              'none',
+            ],
           },
           'statusBar': {
             'description': 'Slim strip pinned to the bottom of the frame, below the bottom panel.',
@@ -843,6 +862,7 @@ export function stdUiDockLayoutDockLayoutOrbital(params: StdUiDockLayoutDockLayo
                     'sidebarCollapsed': '@config.sidebarCollapsed',
                     'sidebarMinSize': '@config.sidebarMinSize',
                     'sidebarWidth': '@config.sidebarWidth',
+                    'skeleton': '@config.skeleton',
                     'statusBar': '@config.statusBar',
                     'statusBarClassName': '@config.statusBarClassName',
                     'tabIndex': '@config.tabIndex',

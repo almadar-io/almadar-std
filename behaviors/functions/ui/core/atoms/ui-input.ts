@@ -69,6 +69,7 @@ export interface StdUiInputConfig {
   rightIcon?: unknown;
   /** Default: `3` */
   rows?: number;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   value?: unknown;
 }
 

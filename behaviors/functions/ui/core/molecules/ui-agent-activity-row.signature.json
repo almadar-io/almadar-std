@@ -1,0 +1,904 @@
+[
+  {
+    "organism": "ui-agent-activity-row",
+    "orbital": "AgentActivityRowOrbital",
+    "tier": "molecules",
+    "factoryPath": "behaviors/functions/ui/core/molecules/ui-agent-activity-row.ts",
+    "entities": [
+      {
+        "name": "AgentActivityRowItem",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "AgentActivityRowRender",
+        "emittedEvents": [
+          "JUMP"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "JUMP",
+            "direction": "emit",
+            "description": "'Jump to' affordance — rendered only when supplied and the activity names an orbital.",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "activity",
+            "type": "AgentActivityRowActivity",
+            "default": {},
+            "label": "Activity",
+            "description": "activity prop",
+            "tier": "presentation",
+            "properties": {
+              "AgentActivityRowActivityAnalysis": {
+                "name": "AgentActivityRowActivityAnalysis",
+                "properties": {
+                  "complexity": {
+                    "name": "complexity",
+                    "required": false,
+                    "properties": {
+                      "category": {
+                        "name": "category",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "reasoning": {
+                        "name": "reasoning",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "deletes": {
+                    "name": "deletes",
+                    "required": true,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "organism": {
+                    "name": "organism",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "organismReason": {
+                    "name": "organismReason",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "renames": {
+                    "name": "renames",
+                    "required": true,
+                    "type": "array",
+                    "items": {
+                      "properties": {
+                        "from": {
+                          "name": "from",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "to": {
+                          "name": "to",
+                          "required": true,
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "analysis"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "AgentActivityRowActivityCancelled": {
+                "name": "AgentActivityRowActivityCancelled",
+                "properties": {
+                  "message": {
+                    "name": "message",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "cancelled"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "AgentActivityRowActivityClarificationQuestion": {
+                "name": "AgentActivityRowActivityClarificationQuestion",
+                "properties": {
+                  "candidates": {
+                    "name": "candidates",
+                    "required": true,
+                    "type": "array",
+                    "items": {
+                      "properties": {
+                        "description": {
+                          "name": "description",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "id": {
+                          "name": "id",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "label": {
+                          "name": "label",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "whyThisFits": {
+                          "name": "whyThisFits",
+                          "required": true,
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "level": {
+                    "name": "level",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "organism",
+                      "molecule",
+                      "atom_trait"
+                    ]
+                  },
+                  "question": {
+                    "name": "question",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "scope": {
+                    "name": "scope",
+                    "required": true,
+                    "properties": {
+                      "orbitalName": {
+                        "name": "orbitalName",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "traitName": {
+                        "name": "traitName",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "skipDefault": {
+                    "name": "skipDefault",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "clarification_question"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "AgentActivityRowActivityCoordinatorDecision": {
+                "name": "AgentActivityRowActivityCoordinatorDecision",
+                "properties": {
+                  "organism": {
+                    "name": "organism",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "priorOrganism": {
+                    "name": "priorOrganism",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "reason": {
+                    "name": "reason",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "coordinator_decision"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "AgentActivityRowActivityDone": {
+                "name": "AgentActivityRowActivityDone",
+                "properties": {
+                  "orbitalCount": {
+                    "name": "orbitalCount",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "done"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "AgentActivityRowActivityError": {
+                "name": "AgentActivityRowActivityError",
+                "properties": {
+                  "code": {
+                    "name": "code",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "message": {
+                    "name": "message",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "error"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "AgentActivityRowActivityFileOperation": {
+                "name": "AgentActivityRowActivityFileOperation",
+                "properties": {
+                  "operation": {
+                    "name": "operation",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "ls",
+                      "read_file",
+                      "write_file",
+                      "edit_file"
+                    ]
+                  },
+                  "path": {
+                    "name": "path",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "success": {
+                    "name": "success",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "file_operation"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "AgentActivityRowActivityLlmResponse": {
+                "name": "AgentActivityRowActivityLlmResponse",
+                "properties": {
+                  "content": {
+                    "name": "content",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "llm": {
+                    "name": "llm",
+                    "required": false,
+                    "properties": {
+                      "attempt": {
+                        "name": "attempt",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "cachedPromptTokens": {
+                        "name": "cachedPromptTokens",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "completionTokens": {
+                        "name": "completionTokens",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "costUSD": {
+                        "name": "costUSD",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "durationMs": {
+                        "name": "durationMs",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "model": {
+                        "name": "model",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "promptTokens": {
+                        "name": "promptTokens",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "provider": {
+                        "name": "provider",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "service": {
+                        "name": "service",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "systemPrompt": {
+                        "name": "systemPrompt",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "toolCallsJson": {
+                        "name": "toolCallsJson",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "userPrompt": {
+                        "name": "userPrompt",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "llm_response"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "AgentActivityRowActivityMessage": {
+                "name": "AgentActivityRowActivityMessage",
+                "properties": {
+                  "content": {
+                    "name": "content",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "isStreaming": {
+                    "name": "isStreaming",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "role": {
+                    "name": "role",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "user",
+                      "assistant",
+                      "system"
+                    ]
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "message"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "AgentActivityRowActivityOrbitalDone": {
+                "name": "AgentActivityRowActivityOrbitalDone",
+                "properties": {
+                  "orbitalName": {
+                    "name": "orbitalName",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "traitCount": {
+                    "name": "traitCount",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "transitionCount": {
+                    "name": "transitionCount",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "orbital_done"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "AgentActivityRowActivityOrbitalStarted": {
+                "name": "AgentActivityRowActivityOrbitalStarted",
+                "properties": {
+                  "orbitalName": {
+                    "name": "orbitalName",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "orbital_started"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "AgentActivityRowActivityPendingQuestion": {
+                "name": "AgentActivityRowActivityPendingQuestion",
+                "properties": {
+                  "orbitalName": {
+                    "name": "orbitalName",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "question": {
+                    "name": "question",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "questionId": {
+                    "name": "questionId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "pending_question"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "AgentActivityRowActivityPlanCommitted": {
+                "name": "AgentActivityRowActivityPlanCommitted",
+                "properties": {
+                  "orbitals": {
+                    "name": "orbitals",
+                    "required": true,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "plan_committed"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "AgentActivityRowActivitySchemaChange": {
+                "name": "AgentActivityRowActivitySchemaChange",
+                "properties": {
+                  "changeKind": {
+                    "name": "changeKind",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "orbital-added",
+                      "orbital-removed",
+                      "entity-fields-changed",
+                      "trait-added",
+                      "trait-removed",
+                      "trait-config-changed",
+                      "state-machine-changed",
+                      "guard-changed",
+                      "effect-changed",
+                      "render-ui-changed",
+                      "event-wiring-changed",
+                      "page-changed",
+                      "theme-changed",
+                      "behavior-composed"
+                    ]
+                  },
+                  "orbitalName": {
+                    "name": "orbitalName",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "traitName": {
+                    "name": "traitName",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "transitionEvent": {
+                    "name": "transitionEvent",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "schema_change"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "AgentActivityRowActivitySchemaDiff": {
+                "name": "AgentActivityRowActivitySchemaDiff",
+                "properties": {
+                  "filePath": {
+                    "name": "filePath",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "hunks": {
+                    "name": "hunks",
+                    "required": true,
+                    "type": "array",
+                    "items": {
+                      "properties": {
+                        "lines": {
+                          "name": "lines",
+                          "required": true,
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "content": {
+                                "name": "content",
+                                "required": true,
+                                "type": "string"
+                              },
+                              "type": {
+                                "name": "type",
+                                "required": true,
+                                "type": "string",
+                                "values": [
+                                  "add",
+                                  "remove",
+                                  "context"
+                                ]
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "newLines": {
+                          "name": "newLines",
+                          "required": true,
+                          "type": "number"
+                        },
+                        "newStart": {
+                          "name": "newStart",
+                          "required": true,
+                          "type": "number"
+                        },
+                        "oldLines": {
+                          "name": "oldLines",
+                          "required": true,
+                          "type": "number"
+                        },
+                        "oldStart": {
+                          "name": "oldStart",
+                          "required": true,
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "schema_diff"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "AgentActivityRowActivityToolCall": {
+                "name": "AgentActivityRowActivityToolCall",
+                "properties": {
+                  "argsText": {
+                    "name": "argsText",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "isExecuting": {
+                    "name": "isExecuting",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "kind": {
+                    "name": "kind",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "input",
+                      "read",
+                      "invalid"
+                    ]
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "tool": {
+                    "name": "tool",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "tool_call"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "AgentActivityRowActivityToolResult": {
+                "name": "AgentActivityRowActivityToolResult",
+                "properties": {
+                  "detail": {
+                    "name": "detail",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "kind": {
+                    "name": "kind",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "input",
+                      "read",
+                      "invalid"
+                    ]
+                  },
+                  "resultText": {
+                    "name": "resultText",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "rows": {
+                    "name": "rows",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "success": {
+                    "name": "success",
+                    "required": true,
+                    "type": "boolean"
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "tool": {
+                    "name": "tool",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "tool_result"
+                    ]
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          {
+            "key": "facts",
+            "type": "AgentActivityRowFacts",
+            "default": {
+              "readyCount": 1,
+              "settled": false
+            },
+            "label": "Facts",
+            "description": "What the row knows from its list (`activityRowFacts`).",
+            "tier": "presentation",
+            "properties": {
+              "readyCount": {
+                "name": "readyCount",
+                "required": true,
+                "type": "number"
+              },
+              "settled": {
+                "name": "settled",
+                "required": true,
+                "type": "boolean"
+              }
+            }
+          },
+          {
+            "key": "onJump",
+            "type": "event",
+            "default": "JUMP",
+            "label": "On Jump",
+            "description": "'Jump to' affordance — rendered only when supplied and the activity names an orbital.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "AgentActivityRowItem",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": [
+          "onJump"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        },
+        "effectRow": [
+          {
+            "kind": "render-ui",
+            "resource": "main"
+          }
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "AgentActivityRowPage",
+        "defaultPath": "/agent-activity-row",
+        "primaryEntity": "AgentActivityRowItem"
+      }
+    ],
+    "emittedEvents": [
+      "JUMP"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

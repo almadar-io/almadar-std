@@ -93,6 +93,7 @@ export interface StdUiPositionedCanvasConfig {
   selectedId?: string;
   /** Default: `true` */
   selfFetch?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
   /** Default: `800` */
   width?: number;

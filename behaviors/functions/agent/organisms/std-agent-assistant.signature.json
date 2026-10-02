@@ -16,10 +16,53 @@
         "name": "AssistantThread",
         "emittedEvents": [],
         "listenedEvents": [
+          "SEND",
+          "REPLIED"
+        ],
+        "overridableConfigKeys": [],
+        "capabilities": [],
+        "ref": "Session.traits.AgentThread",
+        "linkedEntity": "AgentMessage",
+        "eventRenames": {
+          "CONVERSE": "REQUEST_CONTEXT"
+        },
+        "transitionEvents": [
+          "AgentConversationLoaded",
+          "AgentMessageSaveFailed",
+          "AgentMessageSaved",
+          "AgentMessagesLoadFailed",
+          "INIT",
+          "REPLIED",
+          "SEND"
+        ],
+        "effectEntityRefs": [
+          "AgentMessage"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      },
+      {
+        "name": "AssistantConversation",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "AgentMessagesLoaded",
+          "THREAD_FAILED",
+          "STEP",
           "REPLIED",
           "REPLY_FAILED"
         ],
         "overridableConfigKeys": [
+          {
+            "key": "emptyTitle",
+            "type": "string",
+            "default": "Ask me to do something in this app",
+            "label": "Empty conversation title",
+            "tier": "presentation"
+          },
           {
             "key": "links",
             "type": "[AgentLink]",
@@ -40,7 +83,7 @@
               "type": "object"
             },
             "label": "Links above the conversation",
-            "description": "Related pages (e.g. the run history), shown under the title.",
+            "description": "Related pages (e.g. the run history).",
             "tier": "presentation"
           },
           {
@@ -49,45 +92,94 @@
             "default": "Ask the assistant…",
             "label": "Message placeholder",
             "tier": "presentation"
-          },
-          {
-            "key": "title",
-            "type": "string",
-            "default": "Assistant",
-            "label": "Title",
-            "description": "Heading above the conversation.",
-            "tier": "presentation"
           }
         ],
         "capabilities": [],
-        "ref": "Session.traits.AgentThread",
-        "linkedEntity": "AgentMessage",
-        "eventRenames": {
-          "CONVERSE": "REQUEST_CONTEXT"
-        },
+        "ref": "Session.traits.AgentConversation",
         "transitionEvents": [
-          "AgentConversationLoaded",
-          "AgentMessageSaveFailed",
-          "AgentMessageSaved",
-          "AgentMessagesLoadFailed",
-          "AgentMessagesLoaded",
-          "EDIT_MESSAGE",
+          "ASK",
           "INIT",
           "REPLIED",
           "REPLY_FAILED",
-          "SEND",
-          "SEND_DRAFT"
-        ],
-        "effectEntityRefs": [
-          "AgentMessage"
+          "STEP",
+          "THREAD_LOADED"
         ],
         "definerKnobs": [],
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
           "provides": [
-            "draft"
+            "entries",
+            "working"
           ]
+        }
+      },
+      {
+        "name": "AssistantDock",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "closeLabel",
+            "type": "string",
+            "default": "Close panel",
+            "label": "Close button label",
+            "tier": "presentation"
+          },
+          {
+            "key": "contentTrait",
+            "type": "trait",
+            "default": "@trait.AssistantConversation",
+            "label": "What does the panel hold?",
+            "description": "The trait the panel shows when it is open.",
+            "synonyms": "panel content, body, assistant, chat",
+            "tier": "presentation"
+          },
+          {
+            "key": "icon",
+            "type": "icon",
+            "default": "message-circle",
+            "label": "Button icon",
+            "tier": "presentation"
+          },
+          {
+            "key": "label",
+            "type": "string",
+            "default": "@config.buttonLabel",
+            "label": "Button label",
+            "description": "What the floating button does, read to screen readers and shown as its tooltip.",
+            "synonyms": "aria label, button name, tooltip",
+            "tier": "presentation"
+          },
+          {
+            "key": "panelSlot",
+            "type": "slot",
+            "default": "dock",
+            "label": "Where the panel opens",
+            "description": "`dock` pushes the page aside (a side sheet on small screens); `drawer` slides over it.",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "@config.title",
+            "label": "Panel title",
+            "description": "Heading at the top of the open panel.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Launcher.traits.PanelLauncher",
+        "transitionEvents": [
+          "CLOSE",
+          "INIT",
+          "OPEN"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
         }
       },
       {
@@ -260,13 +352,25 @@
     ],
     "emittedEvents": [],
     "listenedEvents": [
+      "AgentMessagesLoaded",
       "COMPACTED",
       "RECALLED",
       "REPLIED",
       "REPLY_FAILED",
-      "REQUEST_CONTEXT"
+      "REQUEST_CONTEXT",
+      "SEND",
+      "STEP",
+      "THREAD_FAILED"
     ],
     "config": [
+      {
+        "key": "buttonLabel",
+        "type": "string",
+        "default": "Open the assistant",
+        "label": "Button label",
+        "description": "What the floating button does, read to screen readers and shown as its tooltip.",
+        "tier": "presentation"
+      },
       {
         "key": "instructions",
         "type": "string",
@@ -328,6 +432,13 @@
         "default": 3,
         "label": "Memories recalled per request",
         "tier": "policy"
+      },
+      {
+        "key": "title",
+        "type": "string",
+        "default": "Assistant",
+        "label": "Panel title",
+        "tier": "presentation"
       },
       {
         "key": "tools",

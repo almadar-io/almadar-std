@@ -127,6 +127,7 @@ export interface StdUiGraphCanvasConfig {
   showLabels?: boolean;
   /** Default: `[]` */
   similarity?: EntityRow[];
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
   title?: string;
   /** Default: `""` */

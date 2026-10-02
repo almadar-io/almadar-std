@@ -74,6 +74,7 @@ export interface StdUiCarouselConfig {
   showArrows?: boolean;
   /** Default: `true` */
   showDots?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `"SLIDE_CHANGE"` */
   slideChangeEvent?: string;
   slideChangePayload?: unknown;

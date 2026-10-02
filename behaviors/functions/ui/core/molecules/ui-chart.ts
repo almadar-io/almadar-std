@@ -76,9 +76,13 @@ export interface StdUiChartConfig {
   showLegend?: boolean;
   /** Default: `false` */
   showValues?: boolean;
+  /** Default: `"card"` */
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `"none"` */
   stack?: 'none' | 'stack' | 'normalize';
   subtitle?: string;
+  /** Default: `"auto"` */
+  surface?: 'auto' | 'none';
   tabIndex?: number;
   /** Default: `false` */
   timeAxis?: boolean;

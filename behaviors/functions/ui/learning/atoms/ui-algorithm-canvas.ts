@@ -93,6 +93,7 @@ export interface StdUiAlgorithmCanvasConfig {
   rowLabels?: EntityRow[];
   /** Default: `[]` */
   shapes?: EntityRow[];
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `"horizontal"` */
   slotOrientation?: 'horizontal' | 'vertical';
   /** Default: `[]` */

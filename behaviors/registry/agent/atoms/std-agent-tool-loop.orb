@@ -1,5 +1,5 @@
 {
-  "description": "std-agent-tool-loop — answers a conversation by operating the running app as the caller, through `call-service llm call-tools`. The `tools` allowlist names declared external inputs (addressed like a listens source: `Trait.EVENT`, `Orbital.Trait.EVENT`) and entities to read; each input fires as the signed-in user through the ordinary dispatch (guards and entity policies apply) and each read returns only the rows the caller may read. Headless: the conversation UI (std-agent-session) shows the reply; a failure shows as a toast. CONVERSE carries the conversation (and optionally what std-agent-memory recalled); REPLIED carries the reply, every tool step and the token usage; REPLY_FAILED carries the error. Compose with std-agent-session (the conversation) and std-agent-trace (the step record).",
+  "description": "std-agent-tool-loop — answers a conversation by operating the running app as the caller, through `call-service llm call-tools`. The `tools` allowlist names declared external inputs (addressed like a listens source: `Trait.EVENT`, `Orbital.Trait.EVENT`) and entities to read; each input fires as the signed-in user through the ordinary dispatch (guards and entity policies apply) and each read returns only the rows the caller may read. Headless: the conversation UI (std-agent-session) shows the reply; a failure shows as a toast. CONVERSE carries the conversation (and optionally what std-agent-memory recalled); STEP carries each step live while it works (a model call, a tool it used, what the app answered) to the asking tab; REPLIED carries the reply, every step and the token usage; REPLY_FAILED carries the error. Compose with std-agent-session (the conversation) and std-agent-trace (the step record).",
   "ledger": {
     "entries": {
       "ent_01M3TYMQFVS7RJC2HPKXYEF2VR": {
@@ -59,6 +59,15 @@
         "bakedName": "INIT",
         "curName": "INIT",
         "id": "evt_01M3TYMQFVZA5GN37VNWYNEAZ3",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3TYMQFVRCVPTPEX7MQ97HQP",
+        "renames": []
+      },
+      "evt_01M3WC4PHR1BMBKEGXAB5KXXA9": {
+        "bakedName": "STEP",
+        "curName": "STEP",
+        "id": "evt_01M3WC4PHR1BMBKEGXAB5KXXA9",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01M3TYMQFVRCVPTPEX7MQ97HQP",
@@ -220,6 +229,181 @@
           ],
           "emits": [
             {
+              "description": "One thing the assistant just did, live while it works: a model call, a tool it used, or what the app answered. Delivered to the asking tab only.",
+              "event": "STEP",
+              "eventId": "evt_01M3WC4PHR1BMBKEGXAB5KXXA9",
+              "payloadSchema": [
+                {
+                  "name": "activity",
+                  "properties": [
+                    {
+                      "name": "AgentToolCallActivity",
+                      "properties": [
+                        {
+                          "name": "type",
+                          "required": true,
+                          "type": "string"
+                        },
+                        {
+                          "name": "tool",
+                          "required": true,
+                          "type": "string"
+                        },
+                        {
+                          "name": "kind",
+                          "type": "AgentToolKind"
+                        },
+                        {
+                          "name": "argsText",
+                          "required": true,
+                          "type": "string"
+                        },
+                        {
+                          "name": "timestamp",
+                          "required": true,
+                          "type": "number"
+                        },
+                        {
+                          "name": "isExecuting",
+                          "type": "boolean"
+                        }
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "name": "AgentToolResultActivity",
+                      "properties": [
+                        {
+                          "name": "type",
+                          "required": true,
+                          "type": "string"
+                        },
+                        {
+                          "name": "tool",
+                          "required": true,
+                          "type": "string"
+                        },
+                        {
+                          "name": "kind",
+                          "type": "AgentToolKind"
+                        },
+                        {
+                          "name": "success",
+                          "required": true,
+                          "type": "boolean"
+                        },
+                        {
+                          "name": "detail",
+                          "type": "string"
+                        },
+                        {
+                          "name": "rows",
+                          "type": "number"
+                        },
+                        {
+                          "name": "resultText",
+                          "required": true,
+                          "type": "string"
+                        },
+                        {
+                          "name": "timestamp",
+                          "required": true,
+                          "type": "number"
+                        }
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "name": "AgentLlmResponseActivity",
+                      "properties": [
+                        {
+                          "name": "type",
+                          "required": true,
+                          "type": "string"
+                        },
+                        {
+                          "name": "content",
+                          "required": true,
+                          "type": "string"
+                        },
+                        {
+                          "name": "llm",
+                          "properties": [
+                            {
+                              "name": "service",
+                              "required": true,
+                              "type": "string"
+                            },
+                            {
+                              "name": "provider",
+                              "required": true,
+                              "type": "string"
+                            },
+                            {
+                              "name": "model",
+                              "required": true,
+                              "type": "string"
+                            },
+                            {
+                              "name": "systemPrompt",
+                              "required": true,
+                              "type": "string"
+                            },
+                            {
+                              "name": "userPrompt",
+                              "required": true,
+                              "type": "string"
+                            },
+                            {
+                              "name": "toolCallsJson",
+                              "type": "string"
+                            },
+                            {
+                              "name": "attempt",
+                              "type": "number"
+                            },
+                            {
+                              "name": "durationMs",
+                              "required": true,
+                              "type": "number"
+                            },
+                            {
+                              "name": "promptTokens",
+                              "type": "number"
+                            },
+                            {
+                              "name": "completionTokens",
+                              "type": "number"
+                            },
+                            {
+                              "name": "cachedPromptTokens",
+                              "type": "number"
+                            },
+                            {
+                              "name": "costUSD",
+                              "type": "number"
+                            }
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "name": "timestamp",
+                          "required": true,
+                          "type": "number"
+                        }
+                      ],
+                      "type": "object"
+                    }
+                  ],
+                  "required": true,
+                  "type": "union"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "progress, activity, trace step, working",
+              "tier": "domain"
+            },
+            {
               "description": "The assistant answered; carries every tool step it took and the tokens it used.",
               "event": "REPLIED",
               "eventId": "evt_01M3TYMQFV2QMJB3DDDPEZGXMD",
@@ -230,35 +414,9 @@
                   "type": "string"
                 },
                 {
-                  "entity": "AgentStep",
                   "name": "steps",
-                  "properties": [
-                    {
-                      "name": "kind",
-                      "type": "string"
-                    },
-                    {
-                      "name": "target",
-                      "required": true,
-                      "type": "string"
-                    },
-                    {
-                      "name": "args",
-                      "required": true,
-                      "type": "string"
-                    },
-                    {
-                      "name": "ok",
-                      "required": true,
-                      "type": "boolean"
-                    },
-                    {
-                      "name": "detail",
-                      "type": "string"
-                    }
-                  ],
                   "required": true,
-                  "type": "[object]"
+                  "type": "[AgentActivity]"
                 },
                 {
                   "name": "usage",
@@ -317,35 +475,9 @@
                   "type": "string"
                 },
                 {
-                  "entity": "AgentStep",
                   "name": "steps",
-                  "properties": [
-                    {
-                      "name": "kind",
-                      "type": "string"
-                    },
-                    {
-                      "name": "target",
-                      "required": true,
-                      "type": "string"
-                    },
-                    {
-                      "name": "args",
-                      "required": true,
-                      "type": "string"
-                    },
-                    {
-                      "name": "ok",
-                      "required": true,
-                      "type": "boolean"
-                    },
-                    {
-                      "name": "detail",
-                      "type": "string"
-                    }
-                  ],
                   "required": true,
-                  "type": "[object]"
+                  "type": "[AgentActivity]"
                 },
                 {
                   "name": "usage",
@@ -447,35 +579,9 @@
                     "type": "string"
                   },
                   {
-                    "entity": "AgentStep",
                     "name": "steps",
-                    "properties": [
-                      {
-                        "name": "kind",
-                        "type": "string"
-                      },
-                      {
-                        "name": "target",
-                        "required": true,
-                        "type": "string"
-                      },
-                      {
-                        "name": "args",
-                        "required": true,
-                        "type": "string"
-                      },
-                      {
-                        "name": "ok",
-                        "required": true,
-                        "type": "boolean"
-                      },
-                      {
-                        "name": "detail",
-                        "type": "string"
-                      }
-                    ],
                     "required": true,
-                    "type": "[object]"
+                    "type": "[AgentActivity]"
                   },
                   {
                     "name": "usage",
@@ -521,6 +627,181 @@
                 "tier": "internal"
               },
               {
+                "description": "One thing the assistant just did, live while it works: a model call, a tool it used, or what the app answered. Delivered to the asking tab only.",
+                "id": "evt_01M3WC4PHR1BMBKEGXAB5KXXA9",
+                "key": "STEP",
+                "name": "Step",
+                "payloadSchema": [
+                  {
+                    "name": "activity",
+                    "properties": [
+                      {
+                        "name": "AgentToolCallActivity",
+                        "properties": [
+                          {
+                            "name": "type",
+                            "required": true,
+                            "type": "string"
+                          },
+                          {
+                            "name": "tool",
+                            "required": true,
+                            "type": "string"
+                          },
+                          {
+                            "name": "kind",
+                            "type": "AgentToolKind"
+                          },
+                          {
+                            "name": "argsText",
+                            "required": true,
+                            "type": "string"
+                          },
+                          {
+                            "name": "timestamp",
+                            "required": true,
+                            "type": "number"
+                          },
+                          {
+                            "name": "isExecuting",
+                            "type": "boolean"
+                          }
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "name": "AgentToolResultActivity",
+                        "properties": [
+                          {
+                            "name": "type",
+                            "required": true,
+                            "type": "string"
+                          },
+                          {
+                            "name": "tool",
+                            "required": true,
+                            "type": "string"
+                          },
+                          {
+                            "name": "kind",
+                            "type": "AgentToolKind"
+                          },
+                          {
+                            "name": "success",
+                            "required": true,
+                            "type": "boolean"
+                          },
+                          {
+                            "name": "detail",
+                            "type": "string"
+                          },
+                          {
+                            "name": "rows",
+                            "type": "number"
+                          },
+                          {
+                            "name": "resultText",
+                            "required": true,
+                            "type": "string"
+                          },
+                          {
+                            "name": "timestamp",
+                            "required": true,
+                            "type": "number"
+                          }
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "name": "AgentLlmResponseActivity",
+                        "properties": [
+                          {
+                            "name": "type",
+                            "required": true,
+                            "type": "string"
+                          },
+                          {
+                            "name": "content",
+                            "required": true,
+                            "type": "string"
+                          },
+                          {
+                            "name": "llm",
+                            "properties": [
+                              {
+                                "name": "service",
+                                "required": true,
+                                "type": "string"
+                              },
+                              {
+                                "name": "provider",
+                                "required": true,
+                                "type": "string"
+                              },
+                              {
+                                "name": "model",
+                                "required": true,
+                                "type": "string"
+                              },
+                              {
+                                "name": "systemPrompt",
+                                "required": true,
+                                "type": "string"
+                              },
+                              {
+                                "name": "userPrompt",
+                                "required": true,
+                                "type": "string"
+                              },
+                              {
+                                "name": "toolCallsJson",
+                                "type": "string"
+                              },
+                              {
+                                "name": "attempt",
+                                "type": "number"
+                              },
+                              {
+                                "name": "durationMs",
+                                "required": true,
+                                "type": "number"
+                              },
+                              {
+                                "name": "promptTokens",
+                                "type": "number"
+                              },
+                              {
+                                "name": "completionTokens",
+                                "type": "number"
+                              },
+                              {
+                                "name": "cachedPromptTokens",
+                                "type": "number"
+                              },
+                              {
+                                "name": "costUSD",
+                                "type": "number"
+                              }
+                            ],
+                            "type": "object"
+                          },
+                          {
+                            "name": "timestamp",
+                            "required": true,
+                            "type": "number"
+                          }
+                        ],
+                        "type": "object"
+                      }
+                    ],
+                    "required": true,
+                    "type": "union"
+                  }
+                ],
+                "synonyms": "progress, activity, trace step, working",
+                "tier": "domain"
+              },
+              {
                 "description": "The assistant answered; carries every tool step it took and the tokens it used.",
                 "id": "evt_01M3TYMQFV2QMJB3DDDPEZGXMD",
                 "key": "REPLIED",
@@ -532,35 +813,9 @@
                     "type": "string"
                   },
                   {
-                    "entity": "AgentStep",
                     "name": "steps",
-                    "properties": [
-                      {
-                        "name": "kind",
-                        "type": "string"
-                      },
-                      {
-                        "name": "target",
-                        "required": true,
-                        "type": "string"
-                      },
-                      {
-                        "name": "args",
-                        "required": true,
-                        "type": "string"
-                      },
-                      {
-                        "name": "ok",
-                        "required": true,
-                        "type": "boolean"
-                      },
-                      {
-                        "name": "detail",
-                        "type": "string"
-                      }
-                    ],
                     "required": true,
-                    "type": "[object]"
+                    "type": "[AgentActivity]"
                   },
                   {
                     "name": "usage",
@@ -670,6 +925,7 @@
                     {
                       "emit": {
                         "failure": "ASK_FAILED",
+                        "onMessage": "STEP",
                         "success": "ANSWERED"
                       }
                     }
@@ -757,29 +1013,137 @@
             "type": "string"
           }
         ],
-        "AgentStep": [
+        "AgentLlmCall": [
           {
-            "name": "kind",
-            "type": "string"
-          },
-          {
-            "name": "target",
+            "name": "service",
             "required": true,
             "type": "string"
           },
           {
-            "name": "args",
+            "name": "provider",
             "required": true,
             "type": "string"
           },
           {
-            "name": "ok",
+            "name": "model",
             "required": true,
-            "type": "boolean"
+            "type": "string"
           },
           {
-            "name": "detail",
+            "name": "systemPrompt",
+            "required": true,
             "type": "string"
+          },
+          {
+            "name": "userPrompt",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "toolCallsJson",
+            "type": "string"
+          },
+          {
+            "name": "attempt",
+            "type": "number"
+          },
+          {
+            "name": "durationMs",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "promptTokens",
+            "type": "number"
+          },
+          {
+            "name": "completionTokens",
+            "type": "number"
+          },
+          {
+            "name": "cachedPromptTokens",
+            "type": "number"
+          },
+          {
+            "name": "costUSD",
+            "type": "number"
+          }
+        ],
+        "AgentLlmResponseActivity": [
+          {
+            "name": "type",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "content",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "llm",
+            "properties": [
+              {
+                "name": "service",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "name": "provider",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "name": "model",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "name": "systemPrompt",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "name": "userPrompt",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "name": "toolCallsJson",
+                "type": "string"
+              },
+              {
+                "name": "attempt",
+                "type": "number"
+              },
+              {
+                "name": "durationMs",
+                "required": true,
+                "type": "number"
+              },
+              {
+                "name": "promptTokens",
+                "type": "number"
+              },
+              {
+                "name": "completionTokens",
+                "type": "number"
+              },
+              {
+                "name": "cachedPromptTokens",
+                "type": "number"
+              },
+              {
+                "name": "costUSD",
+                "type": "number"
+              }
+            ],
+            "type": "object"
+          },
+          {
+            "name": "timestamp",
+            "required": true,
+            "type": "number"
           }
         ],
         "AgentTool": [
@@ -790,6 +1154,75 @@
           {
             "name": "read",
             "type": "string"
+          }
+        ],
+        "AgentToolCallActivity": [
+          {
+            "name": "type",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "tool",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "type": "AgentToolKind"
+          },
+          {
+            "name": "argsText",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "isExecuting",
+            "type": "boolean"
+          }
+        ],
+        "AgentToolResultActivity": [
+          {
+            "name": "type",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "tool",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "type": "AgentToolKind"
+          },
+          {
+            "name": "success",
+            "required": true,
+            "type": "boolean"
+          },
+          {
+            "name": "detail",
+            "type": "string"
+          },
+          {
+            "name": "rows",
+            "type": "number"
+          },
+          {
+            "name": "resultText",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "required": true,
+            "type": "number"
           }
         ],
         "AgentUsage": [

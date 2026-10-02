@@ -85,6 +85,7 @@ export interface StdUiCommitRowConfig {
   selected?: boolean;
   /** Default: `""` */
   sha?: string;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
   timestamp?: string;
 }

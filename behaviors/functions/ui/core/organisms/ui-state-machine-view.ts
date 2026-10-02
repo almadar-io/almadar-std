@@ -71,6 +71,7 @@ export interface StdUiStateMachineViewConfig {
   ariaSelected?: boolean;
   className?: string;
   dir?: 'ltr' | 'rtl' | 'auto';
+  /** Default: `"ltr"` */
   direction?: 'ltr' | 'rtl';
   enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   enterDelay?: number;
@@ -80,13 +81,16 @@ export interface StdUiStateMachineViewConfig {
   /** Default: `false` */
   isLoading?: boolean;
   lang?: string;
+  /** Default: `"pill"` */
   nodeShape?: 'pill' | 'gear';
   /** Default: `"TRANSITION_CLICK"` */
   onTransitionClick?: string;
   pendingSourceState?: string;
   role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   selectedState?: string;
+  /** Default: `true` */
   showHeader?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `"STATE_CLICK"` */
   stateClickEvent?: string;
   tabIndex?: number;
@@ -287,6 +291,7 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
             ],
           },
           'direction': {
+            'default': 'ltr',
             'description': 'Flow direction. @default \'ltr\'',
             'label': 'Direction',
             'tier': 'presentation',
@@ -367,6 +372,7 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
             'type': 'string',
           },
           'nodeShape': {
+            'default': 'pill',
             'description': 'Node silhouette. @default \'pill\'',
             'label': 'Node Shape',
             'tier': 'presentation',
@@ -485,10 +491,29 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
             'type': 'string',
           },
           'showHeader': {
+            'default': true,
             'description': 'Show the trait header (name, entity, listens/emits). @default true',
             'label': 'Show Header',
             'tier': 'presentation',
             'type': 'boolean',
+          },
+          'skeleton': {
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
+            'label': 'Skeleton',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'header',
+              'table',
+              'list',
+              'grid',
+              'detail',
+              'stats',
+              'form',
+              'card',
+              'text',
+              'none',
+            ],
           },
           'stateClickEvent': {
             'default': 'STATE_CLICK',
@@ -838,6 +863,7 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                     'role': '@config.role',
                     'selectedState': '@config.selectedState',
                     'showHeader': '@config.showHeader',
+                    'skeleton': '@config.skeleton',
                     'stateClickEvent': '@config.stateClickEvent',
                     'tabIndex': '@config.tabIndex',
                     'trait': '@config.traitProp',

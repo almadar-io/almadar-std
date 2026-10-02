@@ -32,6 +32,7 @@ orbital DocumentViewerOrbital {
     state idle {
       INIT -> idle
         (render-ui main {
+          surface: @config.surface
           title: @config.title
           src: @config.src
           content: @config.content
@@ -49,6 +50,7 @@ orbital DocumentViewerOrbital {
           className: @config.className
           enter: @config.enter
           enterDelay: @config.enterDelay
+          skeleton: @config.skeleton
           aria-label: @config.ariaLabel
           aria-labelledby: @config.ariaLabelledby
           aria-describedby: @config.ariaDescribedby
@@ -68,6 +70,10 @@ orbital DocumentViewerOrbital {
     }
 
     config {
+      surface : "auto" | "none" = auto
+        @label "Surface"
+        @description "Content surface: `auto` paints the theme's surface behind this block unless it already sits on one (a card, dialog or another block); `none` opts out."
+        @tier "presentation"
       title : string
         @label "Title"
         @description "Document title"
@@ -135,6 +141,10 @@ orbital DocumentViewerOrbital {
       enterDelay : number
         @label "Enter Delay"
         @description "Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating."
+        @tier "presentation"
+      skeleton : "header" | "table" | "list" | "grid" | "detail" | "stats" | "form" | "card" | "text" | "none"
+        @label "Skeleton"
+        @description "Skeleton shown while this element's server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`."
         @tier "presentation"
       ariaLabel : string
         @label "Aria-label"

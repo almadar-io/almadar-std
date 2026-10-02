@@ -51,6 +51,7 @@ export interface StdUiAtlasImageConfig {
   fit?: 'contain' | 'cover' | 'fill';
   height?: number;
   size?: number;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `{}` */
   style?: Record<string, TraitConfig>;
   width?: number;

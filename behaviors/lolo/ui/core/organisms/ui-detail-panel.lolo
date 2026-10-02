@@ -46,8 +46,8 @@ orbital DetailPanelOrbital {
     name : string!
     label : string
     icon : icon
-    variant : "h3" | "h4" | "body" | "caption" | "badge" | "small" | "progress"
-    format : "date" | "datetime" | "currency" | "number" | "boolean" | "percent"
+    variant : "h3" | "h4" | "overline" | "avatar" | "body" | "caption" | "badge" | "small" | "progress"
+    format : "date" | "time" | "datetime" | "currency" | "number" | "boolean" | "percent"
     colorMap : Map string DetailPanelFieldsItemColorMapValue
     labels : Map string string
     type : string
@@ -99,8 +99,8 @@ orbital DetailPanelOrbital {
     name : string!
     label : string
     icon : icon
-    variant : "h3" | "h4" | "body" | "caption" | "badge" | "small" | "progress"
-    format : "date" | "datetime" | "currency" | "number" | "boolean" | "percent"
+    variant : "h3" | "h4" | "overline" | "avatar" | "body" | "caption" | "badge" | "small" | "progress"
+    format : "date" | "time" | "datetime" | "currency" | "number" | "boolean" | "percent"
     colorMap : Map string DetailPanelTotalsItemColorMapValue
     labels : Map string string
   }
@@ -152,6 +152,7 @@ orbital DetailPanelOrbital {
           totalCount: @config.totalCount
           activeFilters: @config.activeFilters
           selectedIds: @config.selectedIds
+          skeleton: @config.skeleton
           entity: @entity
           title: @config.title
           onTitleCommit: @config.onTitleCommit
@@ -165,6 +166,7 @@ orbital DetailPanelOrbital {
           closeEvent: @config.closeEvent
           footer: @config.footer
           slideOver: @config.slideOver
+          surface: @config.surface
           fields: @config.fields
           fieldNames: @config.fieldNames
           initialData: @entity
@@ -222,6 +224,7 @@ orbital DetailPanelOrbital {
           totalCount: @config.totalCount
           activeFilters: @config.activeFilters
           selectedIds: @config.selectedIds
+          skeleton: @config.skeleton
           entity: @entity
           title: @config.title
           onTitleCommit: @config.onTitleCommit
@@ -235,6 +238,7 @@ orbital DetailPanelOrbital {
           closeEvent: @config.closeEvent
           footer: @config.footer
           slideOver: @config.slideOver
+          surface: @config.surface
           fields: @config.fields
           fieldNames: @config.fieldNames
           initialData: @entity
@@ -295,6 +299,7 @@ orbital DetailPanelOrbital {
           totalCount: @config.totalCount
           activeFilters: @config.activeFilters
           selectedIds: @config.selectedIds
+          skeleton: @config.skeleton
           entity: @entity
           title: @config.title
           onTitleCommit: @config.onTitleCommit
@@ -308,6 +313,7 @@ orbital DetailPanelOrbital {
           closeEvent: @config.closeEvent
           footer: @config.footer
           slideOver: @config.slideOver
+          surface: @config.surface
           fields: @config.fields
           fieldNames: @config.fieldNames
           initialData: @entity
@@ -365,6 +371,7 @@ orbital DetailPanelOrbital {
           totalCount: @config.totalCount
           activeFilters: @config.activeFilters
           selectedIds: @config.selectedIds
+          skeleton: @config.skeleton
           entity: @payload.data
           title: @config.title
           onTitleCommit: @config.onTitleCommit
@@ -378,6 +385,7 @@ orbital DetailPanelOrbital {
           closeEvent: @config.closeEvent
           footer: @config.footer
           slideOver: @config.slideOver
+          surface: @config.surface
           fields: @config.fields
           fieldNames: @config.fieldNames
           initialData: @payload.data
@@ -488,6 +496,10 @@ orbital DetailPanelOrbital {
         @label "Selected Ids"
         @description "Currently selected item IDs"
         @tier "presentation"
+      skeleton : "header" | "table" | "list" | "grid" | "detail" | "stats" | "form" | "card" | "text" | "none" = detail
+        @label "Skeleton"
+        @description "Skeleton drawn while loading, and the shape an empty slot shows while this element's server render is in flight (`none` opts out)."
+        @tier "presentation"
       title : string
         @label "Title"
         @description "title prop"
@@ -536,7 +548,11 @@ orbital DetailPanelOrbital {
         @label "Slide Over"
         @description "slideOver prop"
         @tier "presentation"
-      fields : [DetailPanelFieldsItem] = [{ name: "Name", label: "Label", icon: "circle", variant: h3, format: date, type: "Type", values: ["Item", "Item 2"], relation: { entity: "Entity", cardinality: one } }, { name: "Name 2", label: "Label 2", icon: "circle", variant: h4, format: datetime, type: "Type 2", values: ["Item", "Item 2"], relation: { entity: "Entity 2", cardinality: many } }]
+      surface : "auto" | "none" = auto
+        @label "Surface"
+        @description "Content surface: `auto` paints the theme's surface behind this block unless it already sits on one (a card, dialog or another block); `none` opts out. Inline mode only; the slide-over is itself a surface."
+        @tier "presentation"
+      fields : [DetailPanelFieldsItem] = [{ name: "Name", label: "Label", icon: "circle", variant: h3, format: date, type: "Type", values: ["Item", "Item 2"], relation: { entity: "Entity", cardinality: one } }, { name: "Name 2", label: "Label 2", icon: "circle", variant: h4, format: time, type: "Type 2", values: ["Item", "Item 2"], relation: { entity: "Entity 2", cardinality: many } }]
         @label "Fields"
         @description "Fields to display: field names, or declared fields ({ name, label, variant, format, colorMap, labels })"
         @tier "presentation"

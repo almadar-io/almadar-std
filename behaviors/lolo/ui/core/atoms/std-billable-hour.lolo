@@ -59,17 +59,26 @@ orbital BillableHourOrbital {
         })
       BillableHourLoaded -> browsing
         (render-ui main {
-          children: [{
-            align: center
-            children: [{ name: clock, size: lg, type: icon }, {
-              content: @config.title
-              type: typography
-              variant: h3
-            }]
-            direction: horizontal
-            gap: sm
+          children: [(if @config.showHeader {
+            children: [{
+              align: center
+              children: [{ name: clock, size: lg, type: icon }, {
+                content: @config.title
+                type: typography
+                variant: h3
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, { type: divider }]
+            direction: vertical
+            gap: md
             type: stack
-          }, { type: divider }, {
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), {
             children: [@trait.DenseHoursTable]
             className: overflow-x-auto
             direction: vertical
@@ -367,6 +376,10 @@ orbital BillableHourOrbital {
     }
 
     config {
+      showHeader : boolean = true
+        @label "Show the list's own title row?"
+        @description "Off when the page already carries a page header naming the same thing, so the page shows one title."
+        @tier "presentation"
       title : string = "Time Entries"
         @label "Section title"
         @description "Heading shown above the time-entries list"

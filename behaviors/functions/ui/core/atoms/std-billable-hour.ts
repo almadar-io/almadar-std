@@ -598,6 +598,13 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
             'tier': 'presentation',
             'type': '[ItemAction]',
           },
+          'showHeader': {
+            'default': true,
+            'description': 'Off when the page already carries a page header naming the same thing, so the page shows one title.',
+            'label': 'Show the list\'s own title row?',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
           'statLook': {
             'default': 'elevated',
             'description': 'Layer 2 visual treatment for stat / KPI cards.',
@@ -1137,27 +1144,43 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
                   'main',
                   {
                     'children': [
-                      {
-                        'align': 'center',
-                        'children': [
-                          {
-                            'name': 'clock',
-                            'size': 'lg',
-                            'type': 'icon',
-                          },
-                          {
-                            'content': '@config.title',
-                            'type': 'typography',
-                            'variant': 'h3',
-                          },
-                        ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
-                      },
-                      {
-                        'type': 'divider',
-                      },
+                      [
+                        'if',
+                        '@config.showHeader',
+                        {
+                          'children': [
+                            {
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'name': 'clock',
+                                  'size': 'lg',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'content': '@config.title',
+                                  'type': 'typography',
+                                  'variant': 'h3',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'gap': 'md',
+                          'type': 'stack',
+                        },
+                        {
+                          'children': [],
+                          'gap': 'none',
+                          'type': 'stack',
+                        },
+                      ],
                       {
                         'children': [
                           '@trait.DenseHoursTable',

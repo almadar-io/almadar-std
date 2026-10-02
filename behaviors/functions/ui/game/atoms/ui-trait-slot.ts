@@ -115,6 +115,7 @@ export interface StdUiTraitSlotConfig {
   showTooltip?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `1` */
   slotNumber?: number;
   tabIndex?: number;

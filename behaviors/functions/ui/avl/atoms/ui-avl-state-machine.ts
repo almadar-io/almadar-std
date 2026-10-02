@@ -87,6 +87,7 @@ export interface StdUiAvlStateMachineConfig {
   selectedState?: string;
   /** Default: `true` */
   showHeader?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `"STATE_CLICK"` */
   stateClickEvent?: string;
   tabIndex?: number;

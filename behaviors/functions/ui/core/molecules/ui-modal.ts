@@ -84,6 +84,7 @@ export interface StdUiModalConfig {
   showCloseButton?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `true` */
   swipeDownToClose?: boolean;
   tabIndex?: number;

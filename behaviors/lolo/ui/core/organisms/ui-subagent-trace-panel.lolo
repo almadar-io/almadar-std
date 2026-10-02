@@ -18,11 +18,233 @@ orbital SubagentTracePanelOrbital {
     task : string!
     messages : [SubagentTracePanelSubagentsItemMessagesItem]!
     durationMs : number
+    timeline : [SubagentTracePanelSubagentsItemTimelineItem]
   }
   type SubagentTracePanelSubagentsItemMessagesItem = {
     message : string!
     tool : string
     timestamp : number!
+  }
+  type SubagentTracePanelSubagentsItemTimelineItem = SubagentTracePanelSubagentsItemTimelineItemMessage | SubagentTracePanelSubagentsItemTimelineItemToolCall | SubagentTracePanelSubagentsItemTimelineItemToolResult | SubagentTracePanelSubagentsItemTimelineItemFileOperation | SubagentTracePanelSubagentsItemTimelineItemSchemaDiff | SubagentTracePanelSubagentsItemTimelineItemError | SubagentTracePanelSubagentsItemTimelineItemMilestone
+  type SubagentTracePanelSubagentsItemTimelineItemMessage = {
+    type : "message"!
+    role : "user" | "assistant" | "system" | "tool"!
+    content : string!
+    timestamp : number!
+    isStreaming : boolean
+    label : string
+  }
+  type SubagentTracePanelSubagentsItemTimelineItemToolCall = {
+    type : "tool_call"!
+    tool : string!
+    argsText : string!
+    timestamp : number!
+    isExecuting : boolean
+  }
+  type SubagentTracePanelSubagentsItemTimelineItemToolResult = {
+    type : "tool_result"!
+    tool : string!
+    resultText : string!
+    success : boolean!
+    timestamp : number!
+    durationMs : number
+  }
+  type SubagentTracePanelSubagentsItemTimelineItemFileOperation = {
+    type : "file_operation"!
+    operation : "ls" | "read_file" | "write_file" | "edit_file"!
+    path : string!
+    success : boolean
+    timestamp : number!
+  }
+  type SubagentTracePanelSubagentsItemTimelineItemSchemaDiff = {
+    type : "schema_diff"!
+    filePath : string!
+    hunks : [SubagentTracePanelSubagentsItemTimelineItemSchemaDiffHunksItem]!
+    timestamp : number!
+  }
+  type SubagentTracePanelSubagentsItemTimelineItemSchemaDiffHunksItem = {
+    oldStart : number!
+    oldLines : number!
+    newStart : number!
+    newLines : number!
+    lines : [SubagentTracePanelSubagentsItemTimelineItemSchemaDiffHunksItemLinesItem]!
+  }
+  type SubagentTracePanelSubagentsItemTimelineItemSchemaDiffHunksItemLinesItem = {
+    type : "add" | "remove" | "context"!
+    content : string!
+  }
+  type SubagentTracePanelSubagentsItemTimelineItemError = {
+    type : "error"!
+    message : string!
+    code : string
+    timestamp : number!
+  }
+  type SubagentTracePanelSubagentsItemTimelineItemMilestone = {
+    type : "milestone"!
+    milestone : string!
+    summary : string
+    timestamp : number!
+  }
+  type SubagentTracePanelCoordinatorActivitiesItem = SubagentTracePanelCoordinatorActivitiesItemMessage | SubagentTracePanelCoordinatorActivitiesItemToolCall | SubagentTracePanelCoordinatorActivitiesItemToolResult | SubagentTracePanelCoordinatorActivitiesItemFileOperation | SubagentTracePanelCoordinatorActivitiesItemSchemaDiff | SubagentTracePanelCoordinatorActivitiesItemError | SubagentTracePanelCoordinatorActivitiesItemCoordinatorDecision | SubagentTracePanelCoordinatorActivitiesItemPlanCommitted | SubagentTracePanelCoordinatorActivitiesItemPendingQuestion | SubagentTracePanelCoordinatorActivitiesItemClarificationQuestion | SubagentTracePanelCoordinatorActivitiesItemAnalysis | SubagentTracePanelCoordinatorActivitiesItemOrbitalStarted | SubagentTracePanelCoordinatorActivitiesItemOrbitalDone | SubagentTracePanelCoordinatorActivitiesItemSchemaChange | SubagentTracePanelCoordinatorActivitiesItemDone | SubagentTracePanelCoordinatorActivitiesItemCancelled | SubagentTracePanelCoordinatorActivitiesItemLlmResponse
+  type SubagentTracePanelCoordinatorActivitiesItemMessage = {
+    type : "message"!
+    role : "user" | "assistant" | "system"!
+    content : string!
+    timestamp : number!
+    isStreaming : boolean
+  }
+  type SubagentTracePanelCoordinatorActivitiesItemToolCall = {
+    type : "tool_call"!
+    tool : string!
+    kind : "input" | "read" | "invalid"
+    argsText : string!
+    timestamp : number!
+    isExecuting : boolean
+  }
+  type SubagentTracePanelCoordinatorActivitiesItemToolResult = {
+    type : "tool_result"!
+    tool : string!
+    kind : "input" | "read" | "invalid"
+    success : boolean!
+    detail : string
+    rows : number
+    resultText : string!
+    timestamp : number!
+  }
+  type SubagentTracePanelCoordinatorActivitiesItemFileOperation = {
+    type : "file_operation"!
+    operation : "ls" | "read_file" | "write_file" | "edit_file"!
+    path : string!
+    success : boolean
+    timestamp : number!
+  }
+  type SubagentTracePanelCoordinatorActivitiesItemSchemaDiff = {
+    type : "schema_diff"!
+    filePath : string!
+    hunks : [SubagentTracePanelCoordinatorActivitiesItemSchemaDiffHunksItem]!
+    timestamp : number!
+  }
+  type SubagentTracePanelCoordinatorActivitiesItemSchemaDiffHunksItem = {
+    oldStart : number!
+    oldLines : number!
+    newStart : number!
+    newLines : number!
+    lines : [SubagentTracePanelCoordinatorActivitiesItemSchemaDiffHunksItemLinesItem]!
+  }
+  type SubagentTracePanelCoordinatorActivitiesItemSchemaDiffHunksItemLinesItem = {
+    type : "add" | "remove" | "context"!
+    content : string!
+  }
+  type SubagentTracePanelCoordinatorActivitiesItemError = {
+    type : "error"!
+    message : string!
+    code : string
+    timestamp : number!
+  }
+  type SubagentTracePanelCoordinatorActivitiesItemCoordinatorDecision = {
+    type : "coordinator_decision"!
+    organism : string!
+    reason : string!
+    priorOrganism : string
+    timestamp : number!
+  }
+  type SubagentTracePanelCoordinatorActivitiesItemPlanCommitted = {
+    type : "plan_committed"!
+    orbitals : [string]!
+    timestamp : number!
+  }
+  type SubagentTracePanelCoordinatorActivitiesItemPendingQuestion = {
+    type : "pending_question"!
+    questionId : string!
+    question : string!
+    orbitalName : string
+    timestamp : number!
+  }
+  type SubagentTracePanelCoordinatorActivitiesItemClarificationQuestion = {
+    type : "clarification_question"!
+    level : "organism" | "molecule" | "atom_trait"!
+    scope : SubagentTracePanelCoordinatorActivitiesItemClarificationQuestionScope!
+    question : string!
+    candidates : [SubagentTracePanelCoordinatorActivitiesItemClarificationQuestionCandidatesItem]!
+    skipDefault : string!
+    timestamp : number!
+  }
+  type SubagentTracePanelCoordinatorActivitiesItemClarificationQuestionScope = {
+    orbitalName : string
+    traitName : string
+  }
+  type SubagentTracePanelCoordinatorActivitiesItemClarificationQuestionCandidatesItem = {
+    id : string!
+    label : string!
+    description : string!
+    whyThisFits : string!
+  }
+  type SubagentTracePanelCoordinatorActivitiesItemAnalysis = {
+    type : "analysis"!
+    organism : string!
+    organismReason : string
+    complexity : SubagentTracePanelCoordinatorActivitiesItemAnalysisComplexity
+    renames : [SubagentTracePanelCoordinatorActivitiesItemAnalysisRenamesItem]!
+    deletes : [string]!
+    timestamp : number!
+  }
+  type SubagentTracePanelCoordinatorActivitiesItemAnalysisComplexity = {
+    category : string!
+    reasoning : string!
+  }
+  type SubagentTracePanelCoordinatorActivitiesItemAnalysisRenamesItem = {
+    from : string!
+    to : string!
+  }
+  type SubagentTracePanelCoordinatorActivitiesItemOrbitalStarted = {
+    type : "orbital_started"!
+    orbitalName : string!
+    timestamp : number!
+  }
+  type SubagentTracePanelCoordinatorActivitiesItemOrbitalDone = {
+    type : "orbital_done"!
+    orbitalName : string!
+    traitCount : number
+    transitionCount : number
+    timestamp : number!
+  }
+  type SubagentTracePanelCoordinatorActivitiesItemSchemaChange = {
+    type : "schema_change"!
+    changeKind : "orbital-added" | "orbital-removed" | "entity-fields-changed" | "trait-added" | "trait-removed" | "trait-config-changed" | "state-machine-changed" | "guard-changed" | "effect-changed" | "render-ui-changed" | "event-wiring-changed" | "page-changed" | "theme-changed" | "behavior-composed"!
+    orbitalName : string!
+    traitName : string
+    transitionEvent : string
+    timestamp : number!
+  }
+  type SubagentTracePanelCoordinatorActivitiesItemDone = {
+    type : "done"!
+    orbitalCount : number!
+    timestamp : number!
+  }
+  type SubagentTracePanelCoordinatorActivitiesItemCancelled = {
+    type : "cancelled"!
+    message : string!
+    timestamp : number!
+  }
+  type SubagentTracePanelCoordinatorActivitiesItemLlmResponse = {
+    type : "llm_response"!
+    content : string!
+    llm : SubagentTracePanelCoordinatorActivitiesItemLlmResponseLlm
+    timestamp : number!
+  }
+  type SubagentTracePanelCoordinatorActivitiesItemLlmResponseLlm = {
+    service : string!
+    provider : string!
+    model : string!
+    systemPrompt : string!
+    userPrompt : string!
+    toolCallsJson : string
+    attempt : number
+    durationMs : number!
+    promptTokens : number
+    completionTokens : number
+    cachedPromptTokens : number
+    costUSD : number
   }
   type SubagentTracePanelCoordinatorMessagesItem = {
     role : "system" | "user" | "assistant" | "tool"!
@@ -69,10 +291,12 @@ orbital SubagentTracePanelOrbital {
           disclosureLevel: @config.disclosureLevel
           open: @config.open
           onClose: @config.onClose
+          coordinatorActivities: @config.coordinatorActivities
           coordinatorMessages: @config.coordinatorMessages
           mode: @config.mode
           enter: @config.enter
           enterDelay: @config.enterDelay
+          skeleton: @config.skeleton
           aria-label: @config.ariaLabel
           aria-labelledby: @config.ariaLabelledby
           aria-describedby: @config.ariaDescribedby
@@ -178,6 +402,10 @@ orbital SubagentTracePanelOrbital {
         @label "On Close"
         @description "Optional dismiss handler."
         @tier "presentation"
+      coordinatorActivities : [SubagentTracePanelCoordinatorActivitiesItem] = []
+        @label "Coordinator Activities"
+        @description "Full coordinator activities (tool calls, results, messages, errors)."
+        @tier "presentation"
       coordinatorMessages : [SubagentTracePanelCoordinatorMessagesItem] = []
         @label "Coordinator Messages"
         @description "Canonical Coordinator conversation — same shape live and on reload. When present, takes precedence over `coordinatorActivities` for the Coordinator section."
@@ -193,6 +421,10 @@ orbital SubagentTracePanelOrbital {
       enterDelay : number
         @label "Enter Delay"
         @description "Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating."
+        @tier "presentation"
+      skeleton : "header" | "table" | "list" | "grid" | "detail" | "stats" | "form" | "card" | "text" | "none"
+        @label "Skeleton"
+        @description "Skeleton shown while this element's server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`."
         @tier "presentation"
       ariaLabel : string
         @label "Aria-label"

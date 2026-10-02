@@ -132,11 +132,15 @@ export interface StdUiTableViewConfig {
   selectedIds?: string[];
   /** Default: `true` */
   selfFetch?: boolean;
+  /** Default: `"table"` */
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   sortColumn?: string;
   sortDirection?: 'asc' | 'desc';
   /** Default: `"SORT"` */
   sortEvent?: string;
   sortable?: boolean;
+  /** Default: `"auto"` */
+  surface?: 'auto' | 'none';
   tabIndex?: number;
   /** Default: `""` */
   viewerRole?: string;

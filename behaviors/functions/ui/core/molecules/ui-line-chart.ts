@@ -69,6 +69,7 @@ export interface StdUiLineChartConfig {
   showGrid?: boolean;
   /** Default: `false` */
   showValues?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
   /** Default: `400` */
   width?: number;

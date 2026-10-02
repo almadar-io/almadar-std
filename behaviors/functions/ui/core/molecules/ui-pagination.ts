@@ -91,6 +91,7 @@ export interface StdUiPaginationConfig {
   showPageSize?: boolean;
   /** Default: `false` */
   showTotal?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
   totalItems?: number;
   /** Default: `1` */

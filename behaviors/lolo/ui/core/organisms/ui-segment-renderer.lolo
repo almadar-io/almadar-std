@@ -3,8 +3,9 @@ app ui-segment-renderer "1.0.0"
 ;; @pattern "segment-renderer"
 orbital SegmentRendererOrbital {
   type SegmentRendererSegmentsItem = {
-    type : "markdown"!
-    content : string!
+    type : "quiz"!
+    question : string!
+    answer : string!
   }
   type SegmentRendererUserProgress = {
     activationResponse : string
@@ -28,6 +29,7 @@ orbital SegmentRendererOrbital {
           userProgress: @config.userProgress
           enter: @config.enter
           enterDelay: @config.enterDelay
+          skeleton: @config.skeleton
           aria-label: @config.ariaLabel
           aria-labelledby: @config.ariaLabelledby
           aria-describedby: @config.ariaDescribedby
@@ -47,7 +49,7 @@ orbital SegmentRendererOrbital {
     }
 
     config {
-      segments : [SegmentRendererSegmentsItem] = [{ type: markdown, content: "Content" }, { type: markdown, content: "Content 2" }]
+      segments : [SegmentRendererSegmentsItem] = [{ type: quiz, question: "Question", answer: "Answer" }, { type: quiz, question: "Question 2", answer: "Answer 2" }]
         @label "Segments"
         @description "Parsed lesson segments (see `parseLessonSegments`)"
         @tier "presentation"
@@ -70,6 +72,10 @@ orbital SegmentRendererOrbital {
       enterDelay : number
         @label "Enter Delay"
         @description "Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating."
+        @tier "presentation"
+      skeleton : "header" | "table" | "list" | "grid" | "detail" | "stats" | "form" | "card" | "text" | "none"
+        @label "Skeleton"
+        @description "Skeleton shown while this element's server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`."
         @tier "presentation"
       ariaLabel : string
         @label "Aria-label"

@@ -75,6 +75,7 @@ export interface StdUiMatrixQuestionConfig {
   rows?: EntityRow[];
   /** Default: `"md"` */
   size?: 'sm' | 'md';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
   title?: string;
   /** Default: `{}` */

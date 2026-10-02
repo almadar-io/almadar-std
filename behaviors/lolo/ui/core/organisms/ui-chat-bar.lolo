@@ -36,8 +36,10 @@ orbital ChatBarOrbital {
           runningIndicator: @config.runningIndicator
           placeholder: @config.placeholder
           context: @config.context
+          sendEvent: @config.sendEvent
           enter: @config.enter
           enterDelay: @config.enterDelay
+          skeleton: @config.skeleton
           aria-label: @config.ariaLabel
           aria-labelledby: @config.ariaLabelledby
           aria-describedby: @config.ariaDescribedby
@@ -54,6 +56,12 @@ orbital ChatBarOrbital {
           tabIndex: @config.tabIndex
           type: chat-bar
         })
+    }
+
+    emits {
+      @config.sendEvent -> external { }
+        @description "The event a message is sent as — `UI:{sendEvent}` with `{ message }`, from Enter or the send button. @default 'CHAT_SEND'"
+        @tier "essential"
     }
 
     config {
@@ -126,6 +134,10 @@ orbital ChatBarOrbital {
         @label "Context"
         @description "Agent context description"
         @tier "presentation"
+      sendEvent : event = "SEND"
+        @label "Send Event"
+        @description "The event a message is sent as — `UI:{sendEvent}` with `{ message }`, from Enter or the send button. @default 'CHAT_SEND'"
+        @tier "presentation"
       enter : "none" | "fade" | "rise" | "scale" | "slide"
         @label "Enter"
         @description "How this element animates in when it mounts (theme-styled); overrides the theme's default slot entry. `none` opts out."
@@ -133,6 +145,10 @@ orbital ChatBarOrbital {
       enterDelay : number
         @label "Enter Delay"
         @description "Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating."
+        @tier "presentation"
+      skeleton : "header" | "table" | "list" | "grid" | "detail" | "stats" | "form" | "card" | "text" | "none"
+        @label "Skeleton"
+        @description "Skeleton shown while this element's server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`."
         @tier "presentation"
       ariaLabel : string
         @label "Aria-label"

@@ -124,9 +124,13 @@ export interface StdUiDataListConfig {
   selfFetch?: boolean;
   senderField?: string;
   senderLabelField?: string;
+  /** Default: `"list"` */
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
   sortable?: boolean;
+  /** Default: `"auto"` */
+  surface?: 'auto' | 'none';
   /** Default: `[]` */
   swipeLeftActions?: EntityRow[];
   /** Default: `"SWIPE_LEFT"` */

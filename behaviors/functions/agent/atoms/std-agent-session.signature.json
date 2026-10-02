@@ -28,13 +28,6 @@
             "required": true,
             "description": "What was said.",
             "synonyms": "text, message, body"
-          },
-          {
-            "name": "draft",
-            "type": "string",
-            "required": false,
-            "intrinsic": true,
-            "description": "The message being typed."
           }
         ],
         "persistence": "persistent"
@@ -44,28 +37,31 @@
       {
         "name": "AgentThread",
         "emittedEvents": [
+          "THREAD_FAILED",
           "CONVERSE",
-          "AgentConversationLoaded",
           "AgentMessagesLoaded",
           "AgentMessagesLoadFailed",
+          "AgentConversationLoaded",
           "AgentMessageSaved",
-          "AgentMessageSaveFailed",
-          "EDIT_MESSAGE",
-          "SEND_DRAFT"
+          "AgentMessageSaveFailed"
         ],
-        "listenedEvents": [],
+        "listenedEvents": [
+          "SEND"
+        ],
         "events": [
+          {
+            "name": "THREAD_FAILED",
+            "direction": "emit",
+            "description": "The conversation could not be loaded or a message could not be stored.",
+            "synonyms": "failed, error",
+            "tier": "domain"
+          },
           {
             "name": "CONVERSE",
             "direction": "emit",
             "description": "The conversation to answer, oldest first; the last turn is the request.",
             "synonyms": "ask, converse, request",
             "tier": "domain"
-          },
-          {
-            "name": "AgentConversationLoaded",
-            "direction": "emit",
-            "tier": "internal"
           },
           {
             "name": "AgentMessagesLoaded",
@@ -75,6 +71,12 @@
           },
           {
             "name": "AgentMessagesLoadFailed",
+            "direction": "emit",
+            "description": "The conversation could not be loaded.",
+            "tier": "internal"
+          },
+          {
+            "name": "AgentConversationLoaded",
             "direction": "emit",
             "tier": "internal"
           },
@@ -87,20 +89,8 @@
           {
             "name": "AgentMessageSaveFailed",
             "direction": "emit",
+            "description": "The message could not be stored.",
             "tier": "internal"
-          },
-          {
-            "name": "EDIT_MESSAGE",
-            "direction": "emit",
-            "description": "The message being typed changed.",
-            "tier": "presentation"
-          },
-          {
-            "name": "SEND_DRAFT",
-            "direction": "emit",
-            "description": "Send the typed message.",
-            "synonyms": "send, ask, submit",
-            "tier": "domain"
           },
           {
             "name": "INIT",
@@ -109,8 +99,98 @@
           {
             "name": "SEND",
             "direction": "listen",
-            "description": "Ask the assistant something.",
+            "description": "Store the user's message and ask the assistant.",
             "synonyms": "ask, message, chat"
+          },
+          {
+            "name": "REPLIED",
+            "direction": "listen",
+            "description": "Store the assistant's answer."
+          }
+        ],
+        "overridableConfigKeys": [],
+        "capabilities": [],
+        "linkedEntity": "AgentMessage",
+        "transitionEvents": [
+          "AgentConversationLoaded",
+          "AgentMessageSaveFailed",
+          "AgentMessageSaved",
+          "AgentMessagesLoadFailed",
+          "INIT",
+          "REPLIED",
+          "SEND"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "CONVERSE"
+          },
+          {
+            "kind": "emit",
+            "resource": "THREAD_FAILED"
+          },
+          {
+            "kind": "fetch",
+            "resource": "AgentMessage"
+          },
+          {
+            "kind": "persist",
+            "resource": "AgentMessage"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "toast"
+          }
+        ],
+        "effectEntityRefs": [
+          "AgentMessage"
+        ]
+      },
+      {
+        "name": "AgentConversation",
+        "emittedEvents": [
+          "SEND",
+          "ASK"
+        ],
+        "listenedEvents": [
+          "AgentMessagesLoaded",
+          "THREAD_FAILED"
+        ],
+        "events": [
+          {
+            "name": "SEND",
+            "direction": "emit",
+            "description": "The user asked something; AgentThread stores it and asks the assistant.",
+            "synonyms": "ask, send, submit",
+            "tier": "domain"
+          },
+          {
+            "name": "ASK",
+            "direction": "emit",
+            "description": "Send the typed message.",
+            "synonyms": "send, ask, submit",
+            "tier": "presentation"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "THREAD_LOADED",
+            "direction": "listen",
+            "description": "Show the stored conversation."
+          },
+          {
+            "name": "STEP",
+            "direction": "listen",
+            "description": "One step the assistant just took, shown as it happens.",
+            "synonyms": "progress, activity, working"
           },
           {
             "name": "REPLIED",
@@ -125,11 +205,18 @@
         ],
         "overridableConfigKeys": [
           {
+            "key": "emptyTitle",
+            "type": "string",
+            "default": "Ask me to do something in this app",
+            "label": "Empty conversation title",
+            "tier": "presentation"
+          },
+          {
             "key": "links",
             "type": "[AgentLink]",
             "default": [],
             "label": "Links above the conversation",
-            "description": "Related pages (e.g. the run history), shown under the title.",
+            "description": "Related pages (e.g. the run history).",
             "tier": "presentation",
             "items": {
               "properties": {
@@ -153,51 +240,31 @@
             "default": "Ask the assistant…",
             "label": "Message placeholder",
             "tier": "presentation"
-          },
-          {
-            "key": "title",
-            "type": "string",
-            "default": "Assistant",
-            "label": "Title",
-            "description": "Heading above the conversation.",
-            "tier": "presentation"
           }
         ],
         "capabilities": [],
-        "linkedEntity": "AgentMessage",
+        "linkedEntity": "AgentConversationView",
         "transitionEvents": [
-          "AgentConversationLoaded",
-          "AgentMessageSaveFailed",
-          "AgentMessageSaved",
-          "AgentMessagesLoadFailed",
-          "AgentMessagesLoaded",
-          "EDIT_MESSAGE",
+          "ASK",
           "INIT",
           "REPLIED",
           "REPLY_FAILED",
-          "SEND",
-          "SEND_DRAFT"
+          "STEP",
+          "THREAD_LOADED"
         ],
         "definerKnobs": [],
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
           "provides": [
-            "draft"
+            "entries",
+            "working"
           ]
         },
         "effectRow": [
           {
             "kind": "emit",
-            "resource": "CONVERSE"
-          },
-          {
-            "kind": "fetch",
-            "resource": "AgentMessage"
-          },
-          {
-            "kind": "persist",
-            "resource": "AgentMessage"
+            "resource": "SEND"
           },
           {
             "kind": "render-ui",
@@ -205,11 +272,12 @@
           },
           {
             "kind": "set",
-            "resource": "@entity.draft"
+            "resource": "@entity.entries"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.working"
           }
-        ],
-        "effectEntityRefs": [
-          "AgentMessage"
         ]
       }
     ],
@@ -221,16 +289,21 @@
       }
     ],
     "emittedEvents": [
+      "ASK",
       "AgentConversationLoaded",
       "AgentMessageSaveFailed",
       "AgentMessageSaved",
       "AgentMessagesLoadFailed",
       "AgentMessagesLoaded",
       "CONVERSE",
-      "EDIT_MESSAGE",
-      "SEND_DRAFT"
+      "SEND",
+      "THREAD_FAILED"
     ],
-    "listenedEvents": [],
+    "listenedEvents": [
+      "AgentMessagesLoaded",
+      "SEND",
+      "THREAD_FAILED"
+    ],
     "exposure": "both",
     "provenance": "authored",
     "sourceValid": true

@@ -95,6 +95,7 @@ export interface StdUiVersionDiffConfig {
   selectAfterEvent?: string;
   /** Default: `"SELECT_BEFORE"` */
   selectBeforeEvent?: string;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
   /** Default: `"side-by-side"` */
   view?: 'side-by-side' | 'inline';

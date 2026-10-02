@@ -51,6 +51,7 @@ export interface StdUiAvlGlyphConfig {
   ariaSelected?: boolean;
   className?: string;
   dir?: 'ltr' | 'rtl' | 'auto';
+  /** Default: `"set"` */
   effectType?: string;
   enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   enterDelay?: number;
@@ -63,6 +64,7 @@ export interface StdUiAvlGlyphConfig {
   showCaption?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
 }
 

@@ -114,6 +114,7 @@ export interface StdUiMathCanvasConfig {
   showGrid?: boolean;
   /** Default: `false` */
   showTickLabels?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
   /** Default: `10` */
   tickLabelFontSize?: number;

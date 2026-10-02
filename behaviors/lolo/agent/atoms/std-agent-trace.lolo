@@ -1,13 +1,46 @@
 app std-agent-trace "2.0.0"
-"std-agent-trace — the persisted record of what an in-app assistant did. Each REPLIED (from std-agent-tool-loop) stores one AgentRun row: the reply, every tool step (which input or entity, the arguments, whether it took effect and why not), the tokens and the model calls; each REPLY_FAILED stores a failed run with its error. The record verification grades and later optimisation reads, in one format for tests and production. AgentTraceRecorder is headless; AgentRunBrowse is the run list. Rows carry ownerId (the real @user); the binding organism scopes @read."
+"std-agent-trace — the persisted record of what an in-app assistant did. Each REPLIED (from std-agent-tool-loop) stores one AgentRun row: the reply, every step (each model call, each tool used with its arguments, whether it took effect and why not), the tokens and the model calls; each REPLY_FAILED stores a failed run with its error. The record verification grades and later optimisation reads, in one format for tests and production. AgentTraceRecorder is headless; AgentRunBrowse is the run list. Rows carry ownerId (the real @user); the binding organism scopes @read."
 
-type AgentStep = {
-  kind : "input" | "read" | "invalid"
-  target : string!
-  args : string!
-  ok : boolean!
-  detail : string
+type AgentToolKind = "input" | "read" | "invalid"
+type AgentToolCallActivity = {
+  type : "tool_call"!
+  tool : string!
+  kind : AgentToolKind
+  argsText : string!
+  timestamp : number!
+  isExecuting : boolean
 }
+type AgentToolResultActivity = {
+  type : "tool_result"!
+  tool : string!
+  kind : AgentToolKind
+  success : boolean!
+  detail : string
+  rows : number
+  resultText : string!
+  timestamp : number!
+}
+type AgentLlmCall = {
+  service : string!
+  provider : string!
+  model : string!
+  systemPrompt : string!
+  userPrompt : string!
+  toolCallsJson : string
+  attempt : number
+  durationMs : number!
+  promptTokens : number
+  completionTokens : number
+  cachedPromptTokens : number
+  costUSD : number
+}
+type AgentLlmResponseActivity = {
+  type : "llm_response"!
+  content : string!
+  llm : AgentLlmCall
+  timestamp : number!
+}
+type AgentActivity = AgentToolCallActivity | AgentToolResultActivity | AgentLlmResponseActivity
 type AgentUsage = {
   promptTokens : number!
   completionTokens : number!
@@ -25,7 +58,7 @@ orbital AgentTraceOrbital {
     outcome : "answered" | "failed" @description "Whether the assistant answered." @synonyms "result, status" = answered
     reply : string @description "What the assistant said." @synonyms "answer, response" = ""
     error : string @description "Why the run failed." = ""
-    steps : [AgentStep] @description "Every tool use, in order." @synonyms "actions, tool calls, trace" = []
+    steps : [AgentActivity] @description "Every step, in order: each model call, each tool used and what the app answered." @synonyms "actions, tool calls, trace" = []
     promptTokens : number @description "Tokens sent to the model." = 0
     completionTokens : number @description "Tokens the model produced." = 0
     totalTokens : number @description "All tokens for the run." = 0
@@ -76,7 +109,7 @@ orbital AgentTraceOrbital {
     listens {
       REPLIED {
         reply : string!
-        steps : [AgentStep]!
+        steps : [AgentActivity]!
         usage : AgentUsage!
       }
         @description "Record an answered run."
@@ -116,6 +149,10 @@ orbital AgentTraceOrbital {
               content: (str/concat @item.modelCalls " model calls, " @item.totalTokens " tokens")
               type: typography
               variant: caption
+            }, {
+              activities: @item.steps
+              followLatest: false
+              type: agent-activity-feed
             }]
             direction: vertical
             gap: xs

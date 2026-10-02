@@ -70,8 +70,11 @@ export interface StdUiDashboardGridConfig {
   searchValue?: string;
   /** Default: `[]` */
   selectedIds?: string[];
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
+  /** Default: `"auto"` */
+  surface?: 'auto' | 'none';
   tabIndex?: number;
   totalCount?: number;
 }
@@ -504,6 +507,24 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
             'tier': 'presentation',
             'type': '[string]',
           },
+          'skeleton': {
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
+            'label': 'Skeleton',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'header',
+              'table',
+              'list',
+              'grid',
+              'detail',
+              'stats',
+              'form',
+              'card',
+              'text',
+              'none',
+            ],
+          },
           'sortBy': {
             'description': 'Current sort field',
             'label': 'Sort By',
@@ -518,6 +539,17 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
             'values': [
               'asc',
               'desc',
+            ],
+          },
+          'surface': {
+            'default': 'auto',
+            'description': 'Content surface: `auto` paints the theme\'s surface behind this block unless it already sits on one (a card, dialog or another block); `none` opts out. Each cell is a tile.',
+            'label': 'Surface',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'auto',
+              'none',
             ],
           },
           'tabIndex': {
@@ -593,8 +625,10 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
                     'role': '@config.role',
                     'searchValue': '@config.searchValue',
                     'selectedIds': '@config.selectedIds',
+                    'skeleton': '@config.skeleton',
                     'sortBy': '@config.sortBy',
                     'sortDirection': '@config.sortDirection',
+                    'surface': '@config.surface',
                     'tabIndex': '@config.tabIndex',
                     'totalCount': '@config.totalCount',
                     'type': 'dashboard-grid',

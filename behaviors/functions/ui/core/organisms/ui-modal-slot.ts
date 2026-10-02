@@ -47,6 +47,7 @@ export interface StdUiModalSlotConfig {
   isLoading?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   sourceTrait?: string;
   title?: string;
 }
@@ -201,6 +202,24 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
               'full',
             ],
           },
+          'skeleton': {
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
+            'label': 'Skeleton',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'header',
+              'table',
+              'list',
+              'grid',
+              'detail',
+              'stats',
+              'form',
+              'card',
+              'text',
+              'none',
+            ],
+          },
           'sourceTrait': {
             'description': 'Source trait name for qualified event emission',
             'label': 'Source Trait',
@@ -265,6 +284,7 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
                     'error': '@config.error',
                     'isLoading': '@config.isLoading',
                     'size': '@config.size',
+                    'skeleton': '@config.skeleton',
                     'sourceTrait': '@config.sourceTrait',
                     'title': '@config.title',
                     'type': 'modal-slot',

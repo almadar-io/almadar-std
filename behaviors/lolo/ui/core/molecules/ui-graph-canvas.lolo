@@ -13,9 +13,15 @@ orbital GraphCanvasOrbital {
     x : number
     y : number
   }
-  type GraphCanvasNodesItemMark = {
+  type GraphCanvasNodesItemMark = GraphCanvasNodesItemMarkSuggested | GraphCanvasNodesItemMarkProposed
+  type GraphCanvasNodesItemMarkSuggested = {
     kind : "suggested"!
     suggestionId : string!
+  }
+  type GraphCanvasNodesItemMarkProposed = {
+    kind : "proposed"!
+    suggestionId : string!
+    tint : string
   }
   type GraphCanvasEdgesItem = {
     source : string!
@@ -60,9 +66,15 @@ orbital GraphCanvasOrbital {
     x : number
     y : number
   }
-  type GraphCanvasNODECLICKNodeMark = {
+  type GraphCanvasNODECLICKNodeMark = GraphCanvasNODECLICKNodeMarkSuggested | GraphCanvasNODECLICKNodeMarkProposed
+  type GraphCanvasNODECLICKNodeMarkSuggested = {
     kind : "suggested"!
     suggestionId : string!
+  }
+  type GraphCanvasNODECLICKNodeMarkProposed = {
+    kind : "proposed"!
+    suggestionId : string!
+    tint : string
   }
   type GraphCanvasMARKCLICKNode = {
     id : string!
@@ -75,9 +87,15 @@ orbital GraphCanvasOrbital {
     x : number
     y : number
   }
-  type GraphCanvasMARKCLICKNodeMark = {
+  type GraphCanvasMARKCLICKNodeMark = GraphCanvasMARKCLICKNodeMarkSuggested | GraphCanvasMARKCLICKNodeMarkProposed
+  type GraphCanvasMARKCLICKNodeMarkSuggested = {
     kind : "suggested"!
     suggestionId : string!
+  }
+  type GraphCanvasMARKCLICKNodeMarkProposed = {
+    kind : "proposed"!
+    suggestionId : string!
+    tint : string
   }
   type GraphCanvasNODEDOUBLECLICKNode = {
     id : string!
@@ -90,9 +108,15 @@ orbital GraphCanvasOrbital {
     x : number
     y : number
   }
-  type GraphCanvasNODEDOUBLECLICKNodeMark = {
+  type GraphCanvasNODEDOUBLECLICKNodeMark = GraphCanvasNODEDOUBLECLICKNodeMarkSuggested | GraphCanvasNODEDOUBLECLICKNodeMarkProposed
+  type GraphCanvasNODEDOUBLECLICKNodeMarkSuggested = {
     kind : "suggested"!
     suggestionId : string!
+  }
+  type GraphCanvasNODEDOUBLECLICKNodeMarkProposed = {
+    kind : "proposed"!
+    suggestionId : string!
+    tint : string
   }
   type GraphCanvasBADGECLICKNode = {
     id : string!
@@ -105,9 +129,15 @@ orbital GraphCanvasOrbital {
     x : number
     y : number
   }
-  type GraphCanvasBADGECLICKNodeMark = {
+  type GraphCanvasBADGECLICKNodeMark = GraphCanvasBADGECLICKNodeMarkSuggested | GraphCanvasBADGECLICKNodeMarkProposed
+  type GraphCanvasBADGECLICKNodeMarkSuggested = {
     kind : "suggested"!
     suggestionId : string!
+  }
+  type GraphCanvasBADGECLICKNodeMarkProposed = {
+    kind : "proposed"!
+    suggestionId : string!
+    tint : string
   }
 
   entity GraphCanvasItem [runtime] {
@@ -147,6 +177,7 @@ orbital GraphCanvasOrbital {
           className: @config.className
           enter: @config.enter
           enterDelay: @config.enterDelay
+          skeleton: @config.skeleton
           aria-label: @config.ariaLabel
           aria-labelledby: @config.ariaLabelledby
           aria-describedby: @config.ariaDescribedby
@@ -297,6 +328,10 @@ orbital GraphCanvasOrbital {
       enterDelay : number
         @label "Enter Delay"
         @description "Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating."
+        @tier "presentation"
+      skeleton : "header" | "table" | "list" | "grid" | "detail" | "stats" | "form" | "card" | "text" | "none"
+        @label "Skeleton"
+        @description "Skeleton shown while this element's server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`."
         @tier "presentation"
       ariaLabel : string
         @label "Aria-label"

@@ -67,6 +67,7 @@ export interface StdUiProgressBarConfig {
   showPercentage?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `5` */
   steps?: number;
   tabIndex?: number;

@@ -60,6 +60,7 @@ export interface StdUiActivationBlockConfig {
   /** Default: `"SAVE_ACTIVATION"` */
   saveEvent?: string;
   savedResponse?: string;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
 }
 

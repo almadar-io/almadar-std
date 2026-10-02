@@ -43,10 +43,12 @@ export interface StdBrowseConfig {
   itemActions?: unknown;
   /** Default: `"@config.itemClickEvent"` */
   itemClickEvent?: unknown;
-  /** Default: `"@config.maxInlineActions"` */
+  /** Default: `0` */
   maxInlineActions?: unknown;
   /** Default: `false` */
   selfFetch?: unknown;
+  /** Default: `"none"` */
+  surface?: unknown;
   /** Default: `"compact"` */
   variant?: unknown;
   /** Default: `"@config.viewerRole"` */
@@ -267,11 +269,15 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
             'type': 'unknown',
           },
           'maxInlineActions': {
-            'default': '@config.maxInlineActions',
+            'default': 0,
             'type': 'unknown',
           },
           'selfFetch': {
             'default': false,
+            'type': 'unknown',
+          },
+          'surface': {
+            'default': 'none',
             'type': 'unknown',
           },
           'variant': {
@@ -300,13 +306,6 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
       {
         'category': 'interaction',
         'config': {
-          'badgeBinding': {
-            'default': '@item.status',
-            'description': 'Binding path for the status/badge slot.',
-            'label': 'Badge field binding',
-            'tier': 'internal',
-            'type': 'string',
-          },
           'bodyContent': {
             'default': {
               'children': [
@@ -409,6 +408,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                   'itemClickEvent': '@config.itemClickEvent',
                   'maxInlineActions': '@config.maxInlineActions',
                   'pageSize': '@config.displayPageSize',
+                  'surface': '@config.surface',
                   'type': 'data-grid',
                 },
               ],
@@ -442,13 +442,6 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
               'master-detail',
               'triage',
             ],
-          },
-          'categoryBinding': {
-            'default': '@item.category',
-            'description': 'Binding path for the category/tag slot.',
-            'label': 'Category field binding',
-            'tier': 'internal',
-            'type': 'string',
           },
           'cols': {
             'default': 1,
@@ -696,6 +689,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                       'maxInlineActions': '@config.maxInlineActions',
                       'pageSize': '@config.displayPageSize',
                       'selectable': '@config.selectable',
+                      'surface': 'none',
                       'type': 'table-view',
                     },
                   ],
@@ -705,7 +699,16 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                   'type': 'stack',
                 },
               ],
-              'className': 'rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm overflow-hidden',
+              'className': [
+                'if',
+                [
+                  '=',
+                  '@config.surface',
+                  'auto',
+                ],
+                'surface-content overflow-hidden',
+                '',
+              ],
               'direction': 'vertical',
               'gap': 'none',
               'type': 'stack',
@@ -714,13 +717,6 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
             'label': 'Dense look body',
             'tier': 'internal',
             'type': 'render-ui',
-          },
-          'descriptionBinding': {
-            'default': '@item.description',
-            'description': 'Binding path for the card body/subtitle slot.',
-            'label': 'Description field binding',
-            'tier': 'internal',
-            'type': 'string',
           },
           'detailActions': {
             'default': [
@@ -833,6 +829,8 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                   'type': 'string',
                   'values': [
                     'date',
+                    'time',
+                    'datetime',
                     'currency',
                     'number',
                     'boolean',
@@ -879,6 +877,8 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                   'values': [
                     'h3',
                     'h4',
+                    'overline',
+                    'avatar',
                     'body',
                     'caption',
                     'badge',
@@ -990,8 +990,8 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                   'emptyIcon': '@config.emptyIcon',
                   'emptyTitle': '@config.emptyTitle',
                   'entity': '@payload.data',
-                  'fields': [],
-                  'gap': 'md',
+                  'fields': '@config.fields',
+                  'gap': 'none',
                   'itemActions': [
                     'array/filter',
                     '@config.itemActions',
@@ -1027,94 +1027,39 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                     ],
                   ],
                   'itemClickEvent': '@config.itemClickEvent',
-                  'renderItem': [
-                    'fn',
-                    'item',
-                    {
-                      'children': [
-                        {
-                          'align': 'start',
-                          'children': [
-                            {
-                              'className': 'rounded-full flex-shrink-0',
-                              'fallback': '@config.titleBinding',
-                              'size': 'md',
-                              'type': 'avatar',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'align': 'center',
-                                  'children': [
-                                    {
-                                      'className': 'truncate',
-                                      'content': '@config.titleBinding',
-                                      'type': 'typography',
-                                      'variant': 'body',
-                                      'weight': 'medium',
-                                    },
-                                    {
-                                      'label': '@config.categoryBinding',
-                                      'size': 'sm',
-                                      'type': 'badge',
-                                      'variant': 'neutral',
-                                    },
-                                  ],
-                                  'className': 'flex-wrap',
-                                  'direction': 'horizontal',
-                                  'gap': 'xs',
-                                  'type': 'stack',
-                                },
-                                {
-                                  'className': 'text-[var(--color-foreground)] whitespace-pre-wrap break-words leading-relaxed',
-                                  'content': '@config.descriptionBinding',
-                                  'type': 'typography',
-                                  'variant': 'body',
-                                },
-                                {
-                                  'align': 'center',
-                                  'children': [
-                                    {
-                                      'color': 'muted',
-                                      'content': '@config.metaBinding',
-                                      'format': '@config.metaFormat',
-                                      'type': 'typography',
-                                      'variant': 'caption',
-                                    },
-                                    {
-                                      'label': '@config.badgeBinding',
-                                      'size': 'sm',
-                                      'type': 'badge',
-                                      'variant': 'default',
-                                    },
-                                  ],
-                                  'className': 'pt-1',
-                                  'direction': 'horizontal',
-                                  'gap': 'sm',
-                                  'justify': 'between',
-                                  'type': 'stack',
-                                },
-                              ],
-                              'className': 'flex-1 min-w-0',
-                              'direction': 'vertical',
-                              'gap': 'xs',
-                              'type': 'stack',
-                            },
-                          ],
-                          'className': 'p-card-md',
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'type': 'stack',
-                        },
-                      ],
-                      'className': 'rounded-lg bg-[var(--color-card)] border border-[var(--color-border)] shadow-sm transition-all duration-normal hover:shadow-main hover:border-[var(--color-border-strong)] hover:-translate-y-px',
-                      'look': 'flat-bordered',
-                      'padding': 'none',
-                      'type': 'card',
-                    },
+                  'look': [
+                    'if',
+                    [
+                      '=',
+                      '@config.feedSurface',
+                      'cards',
+                    ],
+                    'card-rows',
+                    'borderless',
+                  ],
+                  'maxInlineActions': '@config.maxInlineActions',
+                  'pageSize': '@config.displayPageSize',
+                  'surface': [
+                    'if',
+                    [
+                      '=',
+                      '@config.feedSurface',
+                      'plain',
+                    ],
+                    'none',
+                    '@config.surface',
                   ],
                   'type': 'data-list',
-                  'variant': 'card',
+                  'variant': [
+                    'if',
+                    [
+                      '=',
+                      '@config.feedSurface',
+                      'divided',
+                    ],
+                    'card',
+                    'default',
+                  ],
                 },
               ],
               'className': 'w-full',
@@ -1122,10 +1067,23 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
               'gap': 'lg',
               'type': 'stack',
             },
-            'description': 'Render-ui SExpr rendered after rows load when browseLook = feed. Chronological card-per-item stream with avatar, title, meta, body, timestamp; composes titleBinding/descriptionBinding/categoryBinding/badgeBinding/metaBinding/searchPlaceholder/itemActions. Folded from std-browse-feed (Phase 5.B).',
+            'description': 'Render-ui SExpr rendered after rows load when browseLook = feed. Chronological item stream on the same `fields` contract every look reads (roles: overline, h3/h4, caption, small/body, badge, avatar), separated per feedSurface. Folded from std-browse-feed (Phase 5.B).',
             'label': 'Feed look body',
             'tier': 'internal',
             'type': 'render-ui',
+          },
+          'feedSurface': {
+            'default': 'cards',
+            'description': 'browseLook = feed only. cards = each item its own raised card with space between (community posts, listings); divided = one surface with hairline rows (inboxes, answer lists, notes); plain = no chrome, items on the page background (editorial article lists, changelogs). What each item shows comes from `fields`: overline = eyebrow above the title, h3/h4 = title (its `icon` becomes a leading tile), caption = prose, small/body = meta line, badge = pill, avatar = leading initials.',
+            'label': 'How are feed items separated?',
+            'synonyms': 'feed style, item chrome, card per item, divided list, editorial list, rows or cards',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'cards',
+              'divided',
+              'plain',
+            ],
           },
           'fields': {
             'default': [
@@ -1174,6 +1132,8 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                   'type': 'string',
                   'values': [
                     'date',
+                    'time',
+                    'datetime',
                     'currency',
                     'number',
                     'boolean',
@@ -1220,6 +1180,8 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                   'values': [
                     'h3',
                     'h4',
+                    'overline',
+                    'avatar',
                     'body',
                     'caption',
                     'badge',
@@ -1386,6 +1348,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                   'itemClickEvent': '@config.itemClickEvent',
                   'maxInlineActions': '@config.maxInlineActions',
                   'minCardWidth': 260,
+                  'surface': '@config.surface',
                   'type': 'data-grid',
                 },
               ],
@@ -1590,7 +1553,16 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                   'type': 'master-detail-layout',
                 },
               ],
-              'className': 'rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm overflow-hidden',
+              'className': [
+                'if',
+                [
+                  '=',
+                  '@config.surface',
+                  'auto',
+                ],
+                'surface-content overflow-hidden',
+                '',
+              ],
               'direction': 'vertical',
               'gap': 'none',
               'type': 'stack',
@@ -1698,6 +1670,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                     'fields': '@config.detailFields',
                     'initialData': '@payload.row',
                     'showActions': true,
+                    'surface': 'none',
                     'type': 'detail-panel',
                   },
                   'hasSelection': true,
@@ -1713,7 +1686,16 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                   'type': 'master-detail-layout',
                 },
               ],
-              'className': 'rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm overflow-hidden',
+              'className': [
+                'if',
+                [
+                  '=',
+                  '@config.surface',
+                  'auto',
+                ],
+                'surface-content overflow-hidden',
+                '',
+              ],
               'direction': 'vertical',
               'gap': 'none',
               'type': 'stack',
@@ -1730,27 +1712,6 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
             'synonyms': 'inline actions limit, overflow threshold, max buttons per row',
             'tier': 'presentation',
             'type': 'number',
-          },
-          'metaBinding': {
-            'default': '@item.createdAt',
-            'description': 'Binding path for the secondary meta slot (timestamp / category). Hosts binding a count or other non-date value should label it in the binding itself (e.g. (str/concat "Vehicles: " @item.vehicleCount)) and set metaFormat: none.',
-            'label': 'Meta field binding',
-            'tier': 'internal',
-            'type': 'string',
-          },
-          'metaFormat': {
-            'default': 'date',
-            'description': 'Typography format for the feed meta slot — date by default so the createdAt binding renders human-readable instead of raw ISO; set none for non-date bindings.',
-            'label': 'Meta value format',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'none',
-              'date',
-              'time',
-              'datetime',
-              'number',
-            ],
           },
           'pageSize': {
             'default': 10,
@@ -1792,12 +1753,17 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
             'tier': 'presentation',
             'type': 'boolean',
           },
-          'titleBinding': {
-            'default': '@item.name',
-            'description': 'Binding path for the card title slot (e.g. @item.dishName).',
-            'label': 'Title field binding',
-            'tier': 'internal',
+          'surface': {
+            'default': 'auto',
+            'description': 'auto (default) draws the theme\'s content surface behind every look — on a patterned page background the list reads as one block; the theme decides how that surface looks. none places the list directly on the page (e.g. a list already inside a card or panel you composed).',
+            'label': 'Paint a surface behind the list?',
+            'synonyms': 'card background, panel, container, list background, no background, transparent, bare',
+            'tier': 'presentation',
             'type': 'string',
+            'values': [
+              'auto',
+              'none',
+            ],
           },
           'triageBodyContent': {
             'default': {
@@ -1901,6 +1867,8 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                       ],
                       'itemClickEvent': '@config.itemClickEvent',
                       'maxInlineActions': '@config.maxInlineActions',
+                      'pageSize': '@config.displayPageSize',
+                      'surface': 'none',
                       'type': 'data-list',
                       'variant': 'compact',
                     },
@@ -1911,7 +1879,16 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                   'type': 'stack',
                 },
               ],
-              'className': 'rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm overflow-hidden',
+              'className': [
+                'if',
+                [
+                  '=',
+                  '@config.surface',
+                  'auto',
+                ],
+                'surface-content overflow-hidden',
+                '',
+              ],
               'direction': 'vertical',
               'gap': 'none',
               'type': 'stack',

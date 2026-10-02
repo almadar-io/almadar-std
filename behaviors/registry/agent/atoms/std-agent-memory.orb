@@ -815,8 +815,20 @@
                     "set",
                     "@entity.queryVector",
                     [
-                      "array/first",
-                      "@payload.embeddings"
+                      "if",
+                      [
+                        "=",
+                        [
+                          "array/len",
+                          "@payload.embeddings"
+                        ],
+                        0.0
+                      ],
+                      [],
+                      [
+                        "array/first",
+                        "@payload.embeddings"
+                      ]
                     ]
                   ],
                   [
@@ -858,14 +870,25 @@
                                     "fn",
                                     "item",
                                     [
-                                      "=",
+                                      "and",
                                       [
-                                        "array/len",
-                                        "@item.embedding"
+                                        ">",
+                                        [
+                                          "array/len",
+                                          "@entity.queryVector"
+                                        ],
+                                        0.0
                                       ],
                                       [
-                                        "array/len",
-                                        "@entity.queryVector"
+                                        "=",
+                                        [
+                                          "array/len",
+                                          "@item.embedding"
+                                        ],
+                                        [
+                                          "array/len",
+                                          "@entity.queryVector"
+                                        ]
                                       ]
                                     ]
                                   ]

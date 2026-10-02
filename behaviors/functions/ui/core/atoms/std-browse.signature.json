@@ -59,12 +59,17 @@
           {
             "key": "maxInlineActions",
             "type": "unknown",
-            "default": "@config.maxInlineActions"
+            "default": 0
           },
           {
             "key": "selfFetch",
             "type": "unknown",
             "default": false
+          },
+          {
+            "key": "surface",
+            "type": "unknown",
+            "default": "none"
           },
           {
             "key": "variant",
@@ -174,14 +179,6 @@
         ],
         "overridableConfigKeys": [
           {
-            "key": "badgeBinding",
-            "type": "string",
-            "default": "@item.status",
-            "label": "Badge field binding",
-            "description": "Binding path for the status/badge slot.",
-            "tier": "internal"
-          },
-          {
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
@@ -285,6 +282,7 @@
                   "itemClickEvent": "@config.itemClickEvent",
                   "maxInlineActions": "@config.maxInlineActions",
                   "pageSize": "@config.displayPageSize",
+                  "surface": "@config.surface",
                   "type": "data-grid"
                 }
               ],
@@ -319,14 +317,6 @@
               "master-detail",
               "triage"
             ]
-          },
-          {
-            "key": "categoryBinding",
-            "type": "string",
-            "default": "@item.category",
-            "label": "Category field binding",
-            "description": "Binding path for the category/tag slot.",
-            "tier": "internal"
           },
           {
             "key": "cols",
@@ -578,6 +568,7 @@
                       "maxInlineActions": "@config.maxInlineActions",
                       "pageSize": "@config.displayPageSize",
                       "selectable": "@config.selectable",
+                      "surface": "none",
                       "type": "table-view"
                     }
                   ],
@@ -587,21 +578,22 @@
                   "type": "stack"
                 }
               ],
-              "className": "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm overflow-hidden",
+              "className": [
+                "if",
+                [
+                  "=",
+                  "@config.surface",
+                  "auto"
+                ],
+                "surface-content overflow-hidden",
+                ""
+              ],
               "direction": "vertical",
               "gap": "none",
               "type": "stack"
             },
             "label": "Dense look body",
             "description": "Render-ui SExpr rendered after rows load when browseLook = dense. Spreadsheet-style sticky-header data-table with a search bar; composes columns/itemActions/maxInlineActions/displayPageSize/searchPlaceholder. Folded from std-browse-dense (Phase 5.B). Inlined directly (not via a composed sibling trait) 2026-09-08 — see the table-default body's note for why.",
-            "tier": "internal"
-          },
-          {
-            "key": "descriptionBinding",
-            "type": "string",
-            "default": "@item.description",
-            "label": "Description field binding",
-            "description": "Binding path for the card body/subtitle slot.",
             "tier": "internal"
           },
           {
@@ -722,6 +714,8 @@
                   "type": "string",
                   "values": [
                     "date",
+                    "time",
+                    "datetime",
                     "currency",
                     "number",
                     "boolean",
@@ -768,6 +762,8 @@
                   "values": [
                     "h3",
                     "h4",
+                    "overline",
+                    "avatar",
                     "body",
                     "caption",
                     "badge",
@@ -881,8 +877,8 @@
                   "emptyIcon": "@config.emptyIcon",
                   "emptyTitle": "@config.emptyTitle",
                   "entity": "@payload.data",
-                  "fields": [],
-                  "gap": "md",
+                  "fields": "@config.fields",
+                  "gap": "none",
                   "itemActions": [
                     "array/filter",
                     "@config.itemActions",
@@ -918,94 +914,39 @@
                     ]
                   ],
                   "itemClickEvent": "@config.itemClickEvent",
-                  "renderItem": [
-                    "fn",
-                    "item",
-                    {
-                      "children": [
-                        {
-                          "align": "start",
-                          "children": [
-                            {
-                              "className": "rounded-full flex-shrink-0",
-                              "fallback": "@config.titleBinding",
-                              "size": "md",
-                              "type": "avatar"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "className": "truncate",
-                                      "content": "@config.titleBinding",
-                                      "type": "typography",
-                                      "variant": "body",
-                                      "weight": "medium"
-                                    },
-                                    {
-                                      "label": "@config.categoryBinding",
-                                      "size": "sm",
-                                      "type": "badge",
-                                      "variant": "neutral"
-                                    }
-                                  ],
-                                  "className": "flex-wrap",
-                                  "direction": "horizontal",
-                                  "gap": "xs",
-                                  "type": "stack"
-                                },
-                                {
-                                  "className": "text-[var(--color-foreground)] whitespace-pre-wrap break-words leading-relaxed",
-                                  "content": "@config.descriptionBinding",
-                                  "type": "typography",
-                                  "variant": "body"
-                                },
-                                {
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "color": "muted",
-                                      "content": "@config.metaBinding",
-                                      "format": "@config.metaFormat",
-                                      "type": "typography",
-                                      "variant": "caption"
-                                    },
-                                    {
-                                      "label": "@config.badgeBinding",
-                                      "size": "sm",
-                                      "type": "badge",
-                                      "variant": "default"
-                                    }
-                                  ],
-                                  "className": "pt-1",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "justify": "between",
-                                  "type": "stack"
-                                }
-                              ],
-                              "className": "flex-1 min-w-0",
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
-                            }
-                          ],
-                          "className": "p-card-md",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "type": "stack"
-                        }
-                      ],
-                      "className": "rounded-lg bg-[var(--color-card)] border border-[var(--color-border)] shadow-sm transition-all duration-normal hover:shadow-main hover:border-[var(--color-border-strong)] hover:-translate-y-px",
-                      "look": "flat-bordered",
-                      "padding": "none",
-                      "type": "card"
-                    }
+                  "look": [
+                    "if",
+                    [
+                      "=",
+                      "@config.feedSurface",
+                      "cards"
+                    ],
+                    "card-rows",
+                    "borderless"
+                  ],
+                  "maxInlineActions": "@config.maxInlineActions",
+                  "pageSize": "@config.displayPageSize",
+                  "surface": [
+                    "if",
+                    [
+                      "=",
+                      "@config.feedSurface",
+                      "plain"
+                    ],
+                    "none",
+                    "@config.surface"
                   ],
                   "type": "data-list",
-                  "variant": "card"
+                  "variant": [
+                    "if",
+                    [
+                      "=",
+                      "@config.feedSurface",
+                      "divided"
+                    ],
+                    "card",
+                    "default"
+                  ]
                 }
               ],
               "className": "w-full",
@@ -1014,8 +955,22 @@
               "type": "stack"
             },
             "label": "Feed look body",
-            "description": "Render-ui SExpr rendered after rows load when browseLook = feed. Chronological card-per-item stream with avatar, title, meta, body, timestamp; composes titleBinding/descriptionBinding/categoryBinding/badgeBinding/metaBinding/searchPlaceholder/itemActions. Folded from std-browse-feed (Phase 5.B).",
+            "description": "Render-ui SExpr rendered after rows load when browseLook = feed. Chronological item stream on the same `fields` contract every look reads (roles: overline, h3/h4, caption, small/body, badge, avatar), separated per feedSurface. Folded from std-browse-feed (Phase 5.B).",
             "tier": "internal"
+          },
+          {
+            "key": "feedSurface",
+            "type": "string",
+            "default": "cards",
+            "label": "How are feed items separated?",
+            "description": "browseLook = feed only. cards = each item its own raised card with space between (community posts, listings); divided = one surface with hairline rows (inboxes, answer lists, notes); plain = no chrome, items on the page background (editorial article lists, changelogs). What each item shows comes from `fields`: overline = eyebrow above the title, h3/h4 = title (its `icon` becomes a leading tile), caption = prose, small/body = meta line, badge = pill, avatar = leading initials.",
+            "synonyms": "feed style, item chrome, card per item, divided list, editorial list, rows or cards",
+            "tier": "presentation",
+            "enumValues": [
+              "cards",
+              "divided",
+              "plain"
+            ]
           },
           {
             "key": "fields",
@@ -1069,6 +1024,8 @@
                   "type": "string",
                   "values": [
                     "date",
+                    "time",
+                    "datetime",
                     "currency",
                     "number",
                     "boolean",
@@ -1115,6 +1072,8 @@
                   "values": [
                     "h3",
                     "h4",
+                    "overline",
+                    "avatar",
                     "body",
                     "caption",
                     "badge",
@@ -1281,6 +1240,7 @@
                   "itemClickEvent": "@config.itemClickEvent",
                   "maxInlineActions": "@config.maxInlineActions",
                   "minCardWidth": 260,
+                  "surface": "@config.surface",
                   "type": "data-grid"
                 }
               ],
@@ -1493,7 +1453,16 @@
                   "type": "master-detail-layout"
                 }
               ],
-              "className": "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm overflow-hidden",
+              "className": [
+                "if",
+                [
+                  "=",
+                  "@config.surface",
+                  "auto"
+                ],
+                "surface-content overflow-hidden",
+                ""
+              ],
               "direction": "vertical",
               "gap": "none",
               "type": "stack"
@@ -1602,6 +1571,7 @@
                     "fields": "@config.detailFields",
                     "initialData": "@payload.row",
                     "showActions": true,
+                    "surface": "none",
                     "type": "detail-panel"
                   },
                   "hasSelection": true,
@@ -1617,7 +1587,16 @@
                   "type": "master-detail-layout"
                 }
               ],
-              "className": "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm overflow-hidden",
+              "className": [
+                "if",
+                [
+                  "=",
+                  "@config.surface",
+                  "auto"
+                ],
+                "surface-content overflow-hidden",
+                ""
+              ],
               "direction": "vertical",
               "gap": "none",
               "type": "stack"
@@ -1634,29 +1613,6 @@
             "description": "Actions beyond this count collapse into a '⋯' overflow menu. Set 2–3 for dense tables.",
             "synonyms": "inline actions limit, overflow threshold, max buttons per row",
             "tier": "presentation"
-          },
-          {
-            "key": "metaBinding",
-            "type": "string",
-            "default": "@item.createdAt",
-            "label": "Meta field binding",
-            "description": "Binding path for the secondary meta slot (timestamp / category). Hosts binding a count or other non-date value should label it in the binding itself (e.g. (str/concat \"Vehicles: \" @item.vehicleCount)) and set metaFormat: none.",
-            "tier": "internal"
-          },
-          {
-            "key": "metaFormat",
-            "type": "string",
-            "default": "date",
-            "label": "Meta value format",
-            "description": "Typography format for the feed meta slot — date by default so the createdAt binding renders human-readable instead of raw ISO; set none for non-date bindings.",
-            "tier": "presentation",
-            "enumValues": [
-              "none",
-              "date",
-              "time",
-              "datetime",
-              "number"
-            ]
           },
           {
             "key": "pageSize",
@@ -1704,12 +1660,17 @@
             "tier": "presentation"
           },
           {
-            "key": "titleBinding",
+            "key": "surface",
             "type": "string",
-            "default": "@item.name",
-            "label": "Title field binding",
-            "description": "Binding path for the card title slot (e.g. @item.dishName).",
-            "tier": "internal"
+            "default": "auto",
+            "label": "Paint a surface behind the list?",
+            "description": "auto (default) draws the theme's content surface behind every look — on a patterned page background the list reads as one block; the theme decides how that surface looks. none places the list directly on the page (e.g. a list already inside a card or panel you composed).",
+            "synonyms": "card background, panel, container, list background, no background, transparent, bare",
+            "tier": "presentation",
+            "enumValues": [
+              "auto",
+              "none"
+            ]
           },
           {
             "key": "triageBodyContent",
@@ -1815,6 +1776,8 @@
                       ],
                       "itemClickEvent": "@config.itemClickEvent",
                       "maxInlineActions": "@config.maxInlineActions",
+                      "pageSize": "@config.displayPageSize",
+                      "surface": "none",
                       "type": "data-list",
                       "variant": "compact"
                     }
@@ -1825,7 +1788,16 @@
                   "type": "stack"
                 }
               ],
-              "className": "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm overflow-hidden",
+              "className": [
+                "if",
+                [
+                  "=",
+                  "@config.surface",
+                  "auto"
+                ],
+                "surface-content overflow-hidden",
+                ""
+              ],
               "direction": "vertical",
               "gap": "none",
               "type": "stack"

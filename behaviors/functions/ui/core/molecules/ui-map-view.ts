@@ -99,6 +99,9 @@ export interface StdUiMapViewConfig {
   showAttribution?: boolean;
   /** Default: `false` */
   showClickedPin?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  /** Default: `"auto"` */
+  surface?: 'auto' | 'none';
   tabIndex?: number;
   /** Default: `13` */
   zoom?: number;

@@ -87,6 +87,7 @@ export interface StdUiRangeSliderConfig {
   showTooltip?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `1` */
   step?: number;
   tabIndex?: number;

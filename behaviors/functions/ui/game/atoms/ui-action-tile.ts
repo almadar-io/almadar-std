@@ -72,6 +72,7 @@ export interface StdUiActionTileConfig {
   selectedIds?: string[];
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
   tabIndex?: number;

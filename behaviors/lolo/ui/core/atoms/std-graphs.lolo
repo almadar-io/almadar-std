@@ -1,5 +1,5 @@
 app std-graphs "2.0.0"
-"std-graphs — embeddable chart atom. ITEMS_LOADED keeps the rows whose @config.filterField equals @config.filterValue (blank = all), groups them by @config.categoryField, or (timeAxis=true) by the @config.period bucket of @config.timeField — rows without a time value have no place on a time axis and are left out — and aggregates per bucket. Multi-series rendering via @config.series (preformatted ChartSeries shape). Histograms via chartType=histogram pass pre-binned @payload.data through unchanged. Stacked / 100% stacked bars via @config.stack. Post-process sort + limit. Clicking a data point emits UI:@config.drillEvent with { label, value, seriesLabel? }. Drop into a dashboard alongside std-stats / std-browse."
+"std-graphs — embeddable chart atom. ITEMS_LOADED keeps the rows whose @config.filterField equals @config.filterValue (blank = all), groups them by @config.categoryField, or (timeAxis=true) by the @config.period bucket of @config.timeField — rows without a time value (or, by category, without a category value) have no bucket to land in and are left out — and aggregates per bucket. Multi-series rendering via @config.series (preformatted ChartSeries shape). Histograms via chartType=histogram pass pre-binned @payload.data through unchanged. Stacked / 100% stacked bars via @config.stack. Post-process sort + limit. Clicking a data point emits UI:@config.drillEvent with { label, value, seriesLabel? }. Drop into a dashboard alongside std-stats / std-browse."
 type ObjectSpec = { id : string, label : string, value : string }
 orbital GraphItemOrbital {
     type ChartPoint = { label : string!, value : number! }
@@ -38,7 +38,7 @@ orbital GraphItemOrbital {
           (set @entity.chartData (if ["=", @config.chartType, histogram] (array/map @rows (fn p {
           label: (object/get @p label)
           value: (object/get @p value)
-        })) (array/map (object/entries (if @config.timeAxis (array/groupBy (array/map (array/filter @rows (fn row (object/get @row @config.timeField))) (fn row (object/set @row "periodStart" (time/startOf (time/parse (object/get @row @config.timeField)) @config.period)))) "periodStart") (array/groupBy @rows @config.categoryField))) (fn entry {
+        })) (array/map (object/entries (if @config.timeAxis (array/groupBy (array/map (array/filter @rows (fn row (object/get @row @config.timeField))) (fn row (object/set @row "periodStart" (time/startOf (time/parse (object/get @row @config.timeField)) @config.period)))) "periodStart") (array/groupBy (array/filter @rows (fn row (object/get @row @config.categoryField))) @config.categoryField))) (fn entry {
           label: (object/get @entry "0")
           value: (if ["=", @config.aggregation, sum] (array/sum (object/get @entry "1") @config.valueField) (if ["=", @config.aggregation, avg] (array/avg (object/get @entry "1") @config.valueField) (if ["=", @config.aggregation, min] (array/min (object/get @entry "1") @config.valueField) (if ["=", @config.aggregation, max] (array/max (object/get @entry "1") @config.valueField) (array/len (object/get @entry "1"))))))
         })))))

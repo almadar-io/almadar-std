@@ -1,0 +1,231 @@
+app ui-agent-chat-feed "1.0.0"
+"AgentChatFeed — UI factory (1:1 with the @almadar/ui agent-chat-feed pattern)."
+;; @pattern "agent-chat-feed"
+orbital AgentChatFeedOrbital {
+  type AgentChatFeedActivitiesItem = AgentChatFeedActivitiesItemMessage | AgentChatFeedActivitiesItemToolCall | AgentChatFeedActivitiesItemToolResult | AgentChatFeedActivitiesItemFileOperation | AgentChatFeedActivitiesItemSchemaDiff | AgentChatFeedActivitiesItemError | AgentChatFeedActivitiesItemCoordinatorDecision | AgentChatFeedActivitiesItemPlanCommitted | AgentChatFeedActivitiesItemPendingQuestion | AgentChatFeedActivitiesItemClarificationQuestion | AgentChatFeedActivitiesItemAnalysis | AgentChatFeedActivitiesItemOrbitalStarted | AgentChatFeedActivitiesItemOrbitalDone | AgentChatFeedActivitiesItemSchemaChange | AgentChatFeedActivitiesItemDone | AgentChatFeedActivitiesItemCancelled | AgentChatFeedActivitiesItemLlmResponse
+  type AgentChatFeedActivitiesItemMessage = {
+    type : "message"!
+    role : "user" | "assistant" | "system"!
+    content : string!
+    timestamp : number!
+    isStreaming : boolean
+  }
+  type AgentChatFeedActivitiesItemToolCall = {
+    type : "tool_call"!
+    tool : string!
+    kind : "input" | "read" | "invalid"
+    argsText : string!
+    timestamp : number!
+    isExecuting : boolean
+  }
+  type AgentChatFeedActivitiesItemToolResult = {
+    type : "tool_result"!
+    tool : string!
+    kind : "input" | "read" | "invalid"
+    success : boolean!
+    detail : string
+    rows : number
+    resultText : string!
+    timestamp : number!
+  }
+  type AgentChatFeedActivitiesItemFileOperation = {
+    type : "file_operation"!
+    operation : "ls" | "read_file" | "write_file" | "edit_file"!
+    path : string!
+    success : boolean
+    timestamp : number!
+  }
+  type AgentChatFeedActivitiesItemSchemaDiff = {
+    type : "schema_diff"!
+    filePath : string!
+    hunks : [AgentChatFeedActivitiesItemSchemaDiffHunksItem]!
+    timestamp : number!
+  }
+  type AgentChatFeedActivitiesItemSchemaDiffHunksItem = {
+    oldStart : number!
+    oldLines : number!
+    newStart : number!
+    newLines : number!
+    lines : [AgentChatFeedActivitiesItemSchemaDiffHunksItemLinesItem]!
+  }
+  type AgentChatFeedActivitiesItemSchemaDiffHunksItemLinesItem = {
+    type : "add" | "remove" | "context"!
+    content : string!
+  }
+  type AgentChatFeedActivitiesItemError = {
+    type : "error"!
+    message : string!
+    code : string
+    timestamp : number!
+  }
+  type AgentChatFeedActivitiesItemCoordinatorDecision = {
+    type : "coordinator_decision"!
+    organism : string!
+    reason : string!
+    priorOrganism : string
+    timestamp : number!
+  }
+  type AgentChatFeedActivitiesItemPlanCommitted = {
+    type : "plan_committed"!
+    orbitals : [string]!
+    timestamp : number!
+  }
+  type AgentChatFeedActivitiesItemPendingQuestion = {
+    type : "pending_question"!
+    questionId : string!
+    question : string!
+    orbitalName : string
+    timestamp : number!
+  }
+  type AgentChatFeedActivitiesItemClarificationQuestion = {
+    type : "clarification_question"!
+    level : "organism" | "molecule" | "atom_trait"!
+    scope : AgentChatFeedActivitiesItemClarificationQuestionScope!
+    question : string!
+    candidates : [AgentChatFeedActivitiesItemClarificationQuestionCandidatesItem]!
+    skipDefault : string!
+    timestamp : number!
+  }
+  type AgentChatFeedActivitiesItemClarificationQuestionScope = {
+    orbitalName : string
+    traitName : string
+  }
+  type AgentChatFeedActivitiesItemClarificationQuestionCandidatesItem = {
+    id : string!
+    label : string!
+    description : string!
+    whyThisFits : string!
+  }
+  type AgentChatFeedActivitiesItemAnalysis = {
+    type : "analysis"!
+    organism : string!
+    organismReason : string
+    complexity : AgentChatFeedActivitiesItemAnalysisComplexity
+    renames : [AgentChatFeedActivitiesItemAnalysisRenamesItem]!
+    deletes : [string]!
+    timestamp : number!
+  }
+  type AgentChatFeedActivitiesItemAnalysisComplexity = {
+    category : string!
+    reasoning : string!
+  }
+  type AgentChatFeedActivitiesItemAnalysisRenamesItem = {
+    from : string!
+    to : string!
+  }
+  type AgentChatFeedActivitiesItemOrbitalStarted = {
+    type : "orbital_started"!
+    orbitalName : string!
+    timestamp : number!
+  }
+  type AgentChatFeedActivitiesItemOrbitalDone = {
+    type : "orbital_done"!
+    orbitalName : string!
+    traitCount : number
+    transitionCount : number
+    timestamp : number!
+  }
+  type AgentChatFeedActivitiesItemSchemaChange = {
+    type : "schema_change"!
+    changeKind : "orbital-added" | "orbital-removed" | "entity-fields-changed" | "trait-added" | "trait-removed" | "trait-config-changed" | "state-machine-changed" | "guard-changed" | "effect-changed" | "render-ui-changed" | "event-wiring-changed" | "page-changed" | "theme-changed" | "behavior-composed"!
+    orbitalName : string!
+    traitName : string
+    transitionEvent : string
+    timestamp : number!
+  }
+  type AgentChatFeedActivitiesItemDone = {
+    type : "done"!
+    orbitalCount : number!
+    timestamp : number!
+  }
+  type AgentChatFeedActivitiesItemCancelled = {
+    type : "cancelled"!
+    message : string!
+    timestamp : number!
+  }
+  type AgentChatFeedActivitiesItemLlmResponse = {
+    type : "llm_response"!
+    content : string!
+    llm : AgentChatFeedActivitiesItemLlmResponseLlm
+    timestamp : number!
+  }
+  type AgentChatFeedActivitiesItemLlmResponseLlm = {
+    service : string!
+    provider : string!
+    model : string!
+    systemPrompt : string!
+    userPrompt : string!
+    toolCallsJson : string
+    attempt : number
+    durationMs : number!
+    promptTokens : number
+    completionTokens : number
+    cachedPromptTokens : number
+    costUSD : number
+  }
+
+  entity AgentChatFeedItem [runtime] {
+    id : string!
+  }
+
+  trait AgentChatFeedRender -> @rebindable AgentChatFeedItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          activities: @config.activities
+          emptyTitle: @config.emptyTitle
+          rawLlmPreferenceKey: @config.rawLlmPreferenceKey
+          idPrefix: @config.idPrefix
+          working: @config.working
+          className: @config.className
+          enter: @config.enter
+          enterDelay: @config.enterDelay
+          skeleton: @config.skeleton
+          type: agent-chat-feed
+        })
+    }
+
+    config {
+      activities : [AgentChatFeedActivitiesItem] = []
+        @label "Activities"
+        @description "Activities already selected by the host's manifest audience."
+        @tier "presentation"
+      emptyTitle : string = ""
+        @label "Empty Title"
+        @description "emptyTitle prop"
+        @tier "presentation"
+      rawLlmPreferenceKey : string = ""
+        @label "Raw Llm Preference Key"
+        @description "localStorage key remembering the Raw LLM switch for this host."
+        @tier "presentation"
+      idPrefix : string = ""
+        @label "Id Prefix"
+        @description "Prefix for the toolbar test id and the switch's element id."
+        @tier "presentation"
+      working : boolean = false
+        @label "Working"
+        @description "The agent is running — the feed shows it is thinking."
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      enter : "none" | "fade" | "rise" | "scale" | "slide"
+        @label "Enter"
+        @description "How this element animates in when it mounts (theme-styled); overrides the theme's default slot entry. `none` opts out."
+        @tier "presentation"
+      enterDelay : number
+        @label "Enter Delay"
+        @description "Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating."
+        @tier "presentation"
+      skeleton : "header" | "table" | "list" | "grid" | "detail" | "stats" | "form" | "card" | "text" | "none"
+        @label "Skeleton"
+        @description "Skeleton shown while this element's server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`."
+        @tier "presentation"
+    }
+  }
+
+  page "/agent-chat-feed" as AgentChatFeedPage -> AgentChatFeedRender
+}

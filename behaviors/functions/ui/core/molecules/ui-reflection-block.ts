@@ -62,6 +62,7 @@ export interface StdUiReflectionBlockConfig {
   /** Default: `"SAVE_REFLECTION"` */
   saveEvent?: string;
   savedNote?: string;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
 }
 

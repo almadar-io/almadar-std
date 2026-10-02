@@ -78,6 +78,7 @@ export interface StdUiQrScannerConfig {
   showCameraControls?: boolean;
   /** Default: `true` */
   showOverlay?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
 }
 

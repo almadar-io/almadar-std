@@ -1,14 +1,71 @@
-app std-agent-session "2.0.0"
-"std-agent-session — the persisted conversation with an in-app assistant. Owns AgentMessage rows (role, content, ownerId stamped with the real @user, createdAt). SEND stores the user's message, reloads the thread and emits CONVERSE with the whole conversation, oldest first, for std-agent-tool-loop to answer; REPLIED stores the assistant's reply and redraws; REPLY_FAILED redraws the conversation (the tool loop shows the error). Rows are meant to be private to their owner: owner-scoped access needs an [identity] roster, so the binding organism declares the @read/@create scoping on AgentMessage — this generic atom cannot."
+app std-agent-session "3.0.0"
+"std-agent-session — the conversation with an in-app assistant. AgentThread owns the persisted AgentMessage rows (role, content, ownerId stamped with the real @user, createdAt): SEND stores the user's message, reloads the thread and emits CONVERSE with the whole conversation, oldest first, for std-agent-tool-loop to answer; REPLIED stores the reply. AgentConversation is what the user sees, in the browser: the thread as chat bubbles with every step the assistant takes interleaved live (STEP: each model call, each tool it used and what the app answered), a thinking row while it works, and a chat bar. Rows are meant to be private to their owner: owner-scoped access needs an [identity] roster, so the binding organism declares the @read/@create scoping on AgentMessage — this generic atom cannot."
 
 type AgentChatMessage = {
-  role : "user" | "assistant"
+  role : "user" | "assistant"!
   content : string!
 }
 type AgentLink = {
   label : string!
   href : string!
 }
+type AgentThreadRow = {
+  role : "user" | "assistant"!
+  content : string!
+  createdAt : number
+}
+type AgentToolKind = "input" | "read" | "invalid"
+type AgentMessageEntry = {
+  type : "message"!
+  role : "user" | "assistant"!
+  content : string!
+  timestamp : number!
+}
+type AgentErrorEntry = {
+  type : "error"!
+  message : string!
+  timestamp : number!
+}
+type AgentToolCallActivity = {
+  type : "tool_call"!
+  tool : string!
+  kind : AgentToolKind
+  argsText : string!
+  timestamp : number!
+  isExecuting : boolean
+}
+type AgentToolResultActivity = {
+  type : "tool_result"!
+  tool : string!
+  kind : AgentToolKind
+  success : boolean!
+  detail : string
+  rows : number
+  resultText : string!
+  timestamp : number!
+}
+type AgentLlmCall = {
+  service : string!
+  provider : string!
+  model : string!
+  systemPrompt : string!
+  userPrompt : string!
+  toolCallsJson : string
+  attempt : number
+  durationMs : number!
+  promptTokens : number
+  completionTokens : number
+  cachedPromptTokens : number
+  costUSD : number
+}
+type AgentLlmResponseActivity = {
+  type : "llm_response"!
+  content : string!
+  llm : AgentLlmCall
+  timestamp : number!
+}
+type AgentActivity = AgentToolCallActivity | AgentToolResultActivity | AgentLlmResponseActivity
+type AgentFeedEntry = AgentMessageEntry | AgentToolCallActivity | AgentToolResultActivity | AgentLlmResponseActivity | AgentErrorEntry
 
 orbital AgentSessionOrbital {
   type AgentMessagesLoaded = Event { data : [AgentMessage] } "Fired when the conversation finishes loading"
@@ -22,43 +79,134 @@ orbital AgentSessionOrbital {
     role : "user" | "assistant" @description "Who said it." @synonyms "speaker, author" = user
     content : string! @description "What was said." @synonyms "text, message, body"
     createdAt : number @description "When it was said (ms)." @synonyms "time, timestamp" = 0
-    draft : string @intrinsic @description "The message being typed." = ""
   }
 
-  trait AgentThread -> @rebindable AgentMessage [interaction, collection] {
-    config {
-      title : string = "Assistant"
-        @label "Title"
-        @description "Heading above the conversation."
-        @tier "presentation"
-      placeholder : string = "Ask the assistant…"
-        @label "Message placeholder"
-        @tier "presentation"
-      links : [AgentLink] = []
-        @label "Links above the conversation"
-        @description "Related pages (e.g. the run history), shown under the title."
-        @tier "presentation"
-    }
-    initial: loading
+  entity AgentConversationView [runtime] {
+    id : string!
+    entries : [AgentFeedEntry] @description "The conversation as shown: messages with the assistant's steps between them." = []
+    working : boolean @description "The assistant is answering." = false
+  }
 
-    state loading {
-      INIT -> loading
+  trait AgentThread -> @rebindable AgentMessage [lifecycle] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
         (fetch AgentMessage {
           emit: { failure: AgentMessagesLoadFailed, success: AgentMessagesLoaded }
         })
-        (render-ui main {
-          type: stack
-          direction: vertical
-          gap: lg
-          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
+      SEND -> ready when (not ["=", (str/default ?message ""), ""])
+        (persist create AgentMessage {
+          ownerId: @user.id
+          role: user
+          content: ?message
+          createdAt: @now
+        } {
+          emit: { failure: AgentMessageSaveFailed, success: AgentMessageSaved }
         })
-      AgentMessagesLoaded -> chatting
+      AgentMessageSaved -> ready
+        (fetch AgentMessage {
+          emit: { failure: AgentMessagesLoadFailed, success: AgentConversationLoaded }
+        })
+      AgentConversationLoaded -> ready
+        (emit CONVERSE {
+          messages: (array/map (array/sort ?data createdAt asc) (fn item { role: @item.role, content: @item.content }))
+        })
+      REPLIED -> ready
+        (persist create AgentMessage {
+          ownerId: @user.id
+          role: assistant
+          content: ?reply
+          createdAt: @now
+        })
+      AgentMessagesLoadFailed -> ready
+        (emit THREAD_FAILED { error: ?error })
+        (render-ui toast {
+          message: ?error
+          type: alert
+          variant: error
+        })
+      AgentMessageSaveFailed -> ready
+        (emit THREAD_FAILED { error: ?error })
+        (render-ui toast {
+          message: ?error
+          type: alert
+          variant: error
+        })
+    }
+
+    emits {
+      THREAD_FAILED -> external {
+        error : string!
+      }
+        @description "The conversation could not be loaded or a message could not be stored."
+        @synonyms "failed, error"
+        @tier "domain"
+      CONVERSE -> external {
+        messages : [AgentChatMessage]!
+      }
+        @description "The conversation to answer, oldest first; the last turn is the request."
+        @synonyms "ask, converse, request"
+        @tier "domain"
+      AgentMessagesLoaded -> external {
+        data : [AgentMessage]
+      }
+        @description "The conversation finished loading."
+        @tier "internal"
+      AgentMessagesLoadFailed -> external {
+        error : string
+        code : string
+      }
+        @description "The conversation could not be loaded."
+        @tier "internal"
+      AgentConversationLoaded -> internal {
+        data : [AgentMessage]
+      }
+        @tier "internal"
+      AgentMessageSaved
+        @description "A message persisted — payload is the created AgentMessage row itself."
+        @tier "internal"
+      AgentMessageSaveFailed -> external {
+        error : string
+        code : string
+      }
+        @description "The message could not be stored."
+        @tier "internal"
+    }
+
+    listens {
+      AgentConversation.SEND -> SEND
+      SEND {
+        message : string!
+      }
+        @description "Store the user's message and ask the assistant."
+        @synonyms "ask, message, chat"
+      REPLIED {
+        reply : string!
+      }
+        @description "Store the assistant's answer."
+    }
+  }
+
+  trait AgentConversation -> @rebindable AgentConversationView [interaction, instance] {
+    config {
+      placeholder : string = "Ask the assistant…"
+        @label "Message placeholder"
+        @tier "presentation"
+      emptyTitle : string = "Ask me to do something in this app"
+        @label "Empty conversation title"
+        @tier "presentation"
+      links : [AgentLink] = []
+        @label "Links above the conversation"
+        @description "Related pages (e.g. the run history)."
+        @tier "presentation"
+    }
+    initial: idle
+
+    state idle {
+      INIT -> idle
         (render-ui main {
           children: [{
-            content: @config.title
-            type: typography
-            variant: h4
-          }, {
             children: (array/map @config.links (fn item {
               href: @item.href
               label: @item.label
@@ -69,189 +217,211 @@ orbital AgentSessionOrbital {
             gap: sm
             type: stack
           }, {
-            entity: (array/sort ?data createdAt asc)
-            fields: []
-            gap: sm
-            renderItem: (fn item {
-              children: [{
-                label: @item.role
-                size: sm
-                type: badge
-                variant: neutral
-              }, {
-                content: @item.content
-                type: typography
-                variant: body
-              }]
-              direction: vertical
-              gap: xs
-              type: stack
-            })
-            type: data-list
+            activities: @entity.entries
+            className: flex-1
+            emptyTitle: @config.emptyTitle
+            idPrefix: agent-conversation
+            rawLlmPreferenceKey: agent-conversation-raw-llm
+            type: agent-chat-feed
+            working: @entity.working
           }, {
-            children: [{
-              aria-label: "Message"
-              onChange: EDIT_MESSAGE
-              placeholder: @config.placeholder
-              type: textarea
-            }, {
-              action: SEND_DRAFT
-              icon: send
-              label: Send
+            placeholder: @config.placeholder
+            sendEvent: ASK
+            type: chat-bar
+          }]
+          className: "h-full min-h-0 flex-1"
+          direction: vertical
+          gap: sm
+          type: stack
+        })
+      THREAD_LOADED -> idle
+        (set @entity.entries (array/map (array/sort ?data createdAt asc) (fn item { type: message, role: @item.role, content: @item.content, timestamp: @item.createdAt })))
+        (render-ui main {
+          children: [{
+            children: (array/map @config.links (fn item {
+              href: @item.href
+              label: @item.label
               type: button
-              variant: primary
-            }]
+              variant: ghost
+            }))
             direction: horizontal
             gap: sm
             type: stack
+          }, {
+            activities: @entity.entries
+            className: flex-1
+            emptyTitle: @config.emptyTitle
+            idPrefix: agent-conversation
+            rawLlmPreferenceKey: agent-conversation-raw-llm
+            type: agent-chat-feed
+            working: @entity.working
+          }, {
+            placeholder: @config.placeholder
+            sendEvent: ASK
+            type: chat-bar
           }]
+          className: "h-full min-h-0 flex-1"
           direction: vertical
-          gap: md
+          gap: sm
           type: stack
         })
-      AgentMessagesLoadFailed -> chatting
+      ASK -> idle when (and (not @entity.working) (not ["=", (str/default ?message ""), ""]))
+        (set @entity.entries (array/append @entity.entries { type: message, role: user, content: ?message, timestamp: @now }))
+        (set @entity.working true)
+        (emit SEND { message: ?message })
         (render-ui main {
-          message: ?error
-          type: alert
-          variant: error
-        })
-    }
-
-    state chatting {
-      INIT -> loading
-        (fetch AgentMessage {
-          emit: { failure: AgentMessagesLoadFailed, success: AgentMessagesLoaded }
-        })
-        (render-ui main {
-          type: stack
+          children: [{
+            children: (array/map @config.links (fn item {
+              href: @item.href
+              label: @item.label
+              type: button
+              variant: ghost
+            }))
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            activities: @entity.entries
+            className: flex-1
+            emptyTitle: @config.emptyTitle
+            idPrefix: agent-conversation
+            rawLlmPreferenceKey: agent-conversation-raw-llm
+            type: agent-chat-feed
+            working: @entity.working
+          }, {
+            placeholder: @config.placeholder
+            sendEvent: ASK
+            type: chat-bar
+          }]
+          className: "h-full min-h-0 flex-1"
           direction: vertical
-          gap: lg
-          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
+          gap: sm
+          type: stack
         })
-      EDIT_MESSAGE -> chatting
-        (set @entity.draft ?value)
-      SEND_DRAFT -> waiting when (not ["=", (str/default @entity.draft ""), ""])
-        (persist create AgentMessage {
-          ownerId: @user.id
-          role: user
-          content: @entity.draft
-          createdAt: @now
-        } {
-          emit: { failure: AgentMessageSaveFailed, success: AgentMessageSaved }
-        })
-        (set @entity.draft "")
-      SEND -> waiting when (not ["=", (str/default ?message ""), ""])
-        (persist create AgentMessage {
-          ownerId: @user.id
-          role: user
-          content: ?message
-          createdAt: @now
-        } {
-          emit: { failure: AgentMessageSaveFailed, success: AgentMessageSaved }
-        })
-      REPLIED -> loading
-        (persist create AgentMessage {
-          ownerId: @user.id
-          role: assistant
-          content: ?reply
-          createdAt: @now
-        })
-        (fetch AgentMessage {
-          emit: { failure: AgentMessagesLoadFailed, success: AgentMessagesLoaded }
-        })
-      REPLY_FAILED -> loading
-        (fetch AgentMessage {
-          emit: { failure: AgentMessagesLoadFailed, success: AgentMessagesLoaded }
-        })
-    }
-
-    state waiting {
-      AgentMessageSaved -> waiting
-        (fetch AgentMessage {
-          emit: { failure: AgentMessagesLoadFailed, success: AgentConversationLoaded }
-        })
+      STEP -> idle
+        (set @entity.entries (array/append @entity.entries ?activity))
         (render-ui main {
-          size: sm
-          type: spinner
+          children: [{
+            children: (array/map @config.links (fn item {
+              href: @item.href
+              label: @item.label
+              type: button
+              variant: ghost
+            }))
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            activities: @entity.entries
+            className: flex-1
+            emptyTitle: @config.emptyTitle
+            idPrefix: agent-conversation
+            rawLlmPreferenceKey: agent-conversation-raw-llm
+            type: agent-chat-feed
+            working: @entity.working
+          }, {
+            placeholder: @config.placeholder
+            sendEvent: ASK
+            type: chat-bar
+          }]
+          className: "h-full min-h-0 flex-1"
+          direction: vertical
+          gap: sm
+          type: stack
         })
-      AgentConversationLoaded -> waiting
-        (emit CONVERSE {
-          messages: (array/map (array/sort ?data createdAt asc) (fn item { role: @item.role, content: @item.content }))
-        })
-      REPLIED -> loading
-        (persist create AgentMessage {
-          ownerId: @user.id
-          role: assistant
-          content: ?reply
-          createdAt: @now
-        })
-        (fetch AgentMessage {
-          emit: { failure: AgentMessagesLoadFailed, success: AgentMessagesLoaded }
-        })
-      REPLY_FAILED -> loading
-        (fetch AgentMessage {
-          emit: { failure: AgentMessagesLoadFailed, success: AgentMessagesLoaded }
-        })
-      AgentMessageSaveFailed -> chatting
+      REPLIED -> idle
+        (set @entity.entries (array/append @entity.entries { type: message, role: assistant, content: ?reply, timestamp: @now }))
+        (set @entity.working false)
         (render-ui main {
-          message: ?error
-          type: alert
-          variant: error
+          children: [{
+            children: (array/map @config.links (fn item {
+              href: @item.href
+              label: @item.label
+              type: button
+              variant: ghost
+            }))
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            activities: @entity.entries
+            className: flex-1
+            emptyTitle: @config.emptyTitle
+            idPrefix: agent-conversation
+            rawLlmPreferenceKey: agent-conversation-raw-llm
+            type: agent-chat-feed
+            working: @entity.working
+          }, {
+            placeholder: @config.placeholder
+            sendEvent: ASK
+            type: chat-bar
+          }]
+          className: "h-full min-h-0 flex-1"
+          direction: vertical
+          gap: sm
+          type: stack
         })
-      AgentMessagesLoadFailed -> chatting
+      REPLY_FAILED -> idle
+        (set @entity.entries (array/append @entity.entries { type: error, message: ?error, timestamp: @now }))
+        (set @entity.working false)
         (render-ui main {
-          message: ?error
-          type: alert
-          variant: error
+          children: [{
+            children: (array/map @config.links (fn item {
+              href: @item.href
+              label: @item.label
+              type: button
+              variant: ghost
+            }))
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            activities: @entity.entries
+            className: flex-1
+            emptyTitle: @config.emptyTitle
+            idPrefix: agent-conversation
+            rawLlmPreferenceKey: agent-conversation-raw-llm
+            type: agent-chat-feed
+            working: @entity.working
+          }, {
+            placeholder: @config.placeholder
+            sendEvent: ASK
+            type: chat-bar
+          }]
+          className: "h-full min-h-0 flex-1"
+          direction: vertical
+          gap: sm
+          type: stack
         })
     }
 
     emits {
-      CONVERSE -> external {
-        messages : [AgentChatMessage]!
+      SEND -> external {
+        message : string!
       }
-        @description "The conversation to answer, oldest first; the last turn is the request."
-        @synonyms "ask, converse, request"
+        @description "The user asked something; AgentThread stores it and asks the assistant."
+        @synonyms "ask, send, submit"
         @tier "domain"
-      AgentConversationLoaded -> internal {
-        data : [AgentMessage]
+      ASK {
+        message : string!
       }
-        @tier "internal"
-      AgentMessagesLoaded {
-        data : [AgentMessage]
-      }
-        @description "The conversation finished loading."
-        @tier "internal"
-      AgentMessagesLoadFailed {
-        error : string
-        code : string
-      }
-        @tier "internal"
-      AgentMessageSaved
-        @description "A message persisted — payload is the created AgentMessage row itself."
-        @tier "internal"
-      AgentMessageSaveFailed {
-        error : string
-        code : string
-      }
-        @tier "internal"
-      EDIT_MESSAGE {
-        value : string!
-      }
-        @description "The message being typed changed."
-        @tier "presentation"
-      SEND_DRAFT
         @description "Send the typed message."
         @synonyms "send, ask, submit"
-        @tier "domain"
+        @tier "presentation"
     }
 
     listens {
-      SEND {
-        message : string!
+      AgentThread.AgentMessagesLoaded -> THREAD_LOADED
+      AgentThread.THREAD_FAILED -> REPLY_FAILED
+      THREAD_LOADED {
+        data : [AgentThreadRow]
       }
-        @description "Ask the assistant something."
-        @synonyms "ask, message, chat"
+        @description "Show the stored conversation."
+      STEP {
+        activity : AgentActivity!
+      }
+        @description "One step the assistant just took, shown as it happens."
+        @synonyms "progress, activity, working"
       REPLIED {
         reply : string!
       }
@@ -263,5 +433,5 @@ orbital AgentSessionOrbital {
     }
   }
 
-  page "/agent-session" as AgentSessionPage -> AgentThread
+  page "/agent-session" as AgentSessionPage -> AgentConversation, AgentThread
 }

@@ -100,6 +100,7 @@ export interface StdUiPhysicsCanvasConfig {
   showGrid?: boolean;
   /** Default: `true` */
   showVelocity?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   surface3d?: EntityRow;
   tabIndex?: number;
   title?: string;

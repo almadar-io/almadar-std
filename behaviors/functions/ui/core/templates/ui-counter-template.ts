@@ -71,6 +71,7 @@ export interface StdUiCounterTemplateConfig {
   showReset?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
   title?: string;
   variant?: 'minimal' | 'standard' | 'full';

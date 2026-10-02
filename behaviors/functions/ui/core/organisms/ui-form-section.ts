@@ -113,9 +113,13 @@ export interface StdUiFormSectionConfig {
   showCancel?: boolean;
   /** Default: `true` */
   showSubmit?: boolean;
+  /** Default: `"form"` */
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `"SUBMIT"` */
   submitEvent?: string;
   submitLabel?: string;
+  /** Default: `"auto"` */
+  surface?: 'auto' | 'none';
   tabIndex?: number;
   title?: string;
   /** Default: `[]` */
@@ -1463,6 +1467,25 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'tier': 'presentation',
             'type': 'boolean',
           },
+          'skeleton': {
+            'default': 'form',
+            'description': 'The shape an empty slot shows while this form\'s server render is in flight (`none` opts out). @default \'form\'',
+            'label': 'Skeleton',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'header',
+              'table',
+              'list',
+              'grid',
+              'detail',
+              'stats',
+              'form',
+              'card',
+              'text',
+              'none',
+            ],
+          },
           'submitEvent': {
             'default': 'SUBMIT',
             'description': 'Event dispatch props (for trait state machine integration)',
@@ -1475,6 +1498,17 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'label': 'Submit Label',
             'tier': 'presentation',
             'type': 'string',
+          },
+          'surface': {
+            'default': 'auto',
+            'description': 'Content surface: `auto` paints the theme\'s surface (with card padding) behind this block unless it already sits on one (a card, dialog or another block); `none` opts out.',
+            'label': 'Surface',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'auto',
+              'none',
+            ],
           },
           'tabIndex': {
             'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
@@ -1874,8 +1908,10 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                     'sections': '@config.sections',
                     'showCancel': '@config.showCancel',
                     'showSubmit': '@config.showSubmit',
+                    'skeleton': '@config.skeleton',
                     'submitEvent': '@config.submitEvent',
                     'submitLabel': '@config.submitLabel',
+                    'surface': '@config.surface',
                     'tabIndex': '@config.tabIndex',
                     'title': '@config.title',
                     'type': 'form-section',
@@ -1952,8 +1988,10 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                     'sections': '@config.sections',
                     'showCancel': '@config.showCancel',
                     'showSubmit': '@config.showSubmit',
+                    'skeleton': '@config.skeleton',
                     'submitEvent': '@config.submitEvent',
                     'submitLabel': '@config.submitLabel',
+                    'surface': '@config.surface',
                     'tabIndex': '@config.tabIndex',
                     'title': '@config.title',
                     'type': 'form-section',
@@ -2033,8 +2071,10 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                     'sections': '@config.sections',
                     'showCancel': '@config.showCancel',
                     'showSubmit': '@config.showSubmit',
+                    'skeleton': '@config.skeleton',
                     'submitEvent': '@config.submitEvent',
                     'submitLabel': '@config.submitLabel',
+                    'surface': '@config.surface',
                     'tabIndex': '@config.tabIndex',
                     'title': '@config.title',
                     'type': 'form-section',
@@ -2093,8 +2133,10 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                     'sections': '@config.sections',
                     'showCancel': '@config.showCancel',
                     'showSubmit': '@config.showSubmit',
+                    'skeleton': '@config.skeleton',
                     'submitEvent': '@config.submitEvent',
                     'submitLabel': '@config.submitLabel',
+                    'surface': '@config.surface',
                     'tabIndex': '@config.tabIndex',
                     'title': '@config.title',
                     'type': 'form-section',

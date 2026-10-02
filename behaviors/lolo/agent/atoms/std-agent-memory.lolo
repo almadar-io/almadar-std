@@ -57,14 +57,14 @@ orbital AgentMemoryOrbital {
 
     state recalling {
       MemoryEmbedded -> recalling
-        (set @entity.queryVector (array/first ?embeddings))
+        (set @entity.queryVector (if (= (array/len ?embeddings) 0) [] (array/first ?embeddings)))
         (fetch AgentMemory {
           emit: { failure: AgentMemoriesLoadFailed, success: MemoriesForRecall }
         })
       MemoriesForRecall -> ready
         (emit RECALLED {
           messages: @entity.pendingMessages
-          context: (str/join (array/map (array/take (array/sort (array/map (array/filter ?data (fn item (= (array/len @item.embedding) (array/len @entity.queryVector)))) (fn item { content: @item.content, score: (array/cosine @item.embedding @entity.queryVector) })) score desc) @config.recallLimit) (fn item @item.content)) "\n")
+          context: (str/join (array/map (array/take (array/sort (array/map (array/filter ?data (fn item (and (> (array/len @entity.queryVector) 0) (= (array/len @item.embedding) (array/len @entity.queryVector))))) (fn item { content: @item.content, score: (array/cosine @item.embedding @entity.queryVector) })) score desc) @config.recallLimit) (fn item @item.content)) "\n")
         })
       MemoryEmbedFailed -> ready
         (emit RECALLED { messages: @entity.pendingMessages, context: "" })

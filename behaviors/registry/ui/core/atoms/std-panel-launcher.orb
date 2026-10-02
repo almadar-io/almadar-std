@@ -1,0 +1,312 @@
+{
+  "description": "std-panel-launcher — a floating button on the page that opens a side panel holding one trait (an assistant, a help panel, a cart). Closed: the button floats bottom-right. Open: the panel shows `contentTrait` under `title` and the button steps aside; the panel's close button (or Escape on small screens) brings the button back. The panel slot defaults to `dock`, which pushes the page aside on wide screens and becomes a side sheet below 1024px. List the trait on every page that should carry the button — it never injects itself.",
+  "ledger": {
+    "entries": {
+      "ent_01M3WBAV2PJNY2ACS5PHE6N0AA": {
+        "bakedName": "PanelLauncherView",
+        "curName": "PanelLauncherView",
+        "id": "ent_01M3WBAV2PJNY2ACS5PHE6N0AA",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01M3WBAV2P3BNZ0MEAYB63SNE6": {
+        "bakedName": "CLOSE",
+        "curName": "CLOSE",
+        "id": "evt_01M3WBAV2P3BNZ0MEAYB63SNE6",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3WBAV2P82ATESF1QEKT8CWS",
+        "renames": []
+      },
+      "evt_01M3WBAV2P4BPXCKRY9TXD0WVW": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M3WBAV2P4BPXCKRY9TXD0WVW",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3WBAV2P82ATESF1QEKT8CWS",
+        "renames": []
+      },
+      "evt_01M3WBAV2P90F9YFP7AD881QG6": {
+        "bakedName": "OPEN",
+        "curName": "OPEN",
+        "id": "evt_01M3WBAV2P90F9YFP7AD881QG6",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3WBAV2P82ATESF1QEKT8CWS",
+        "renames": []
+      },
+      "orb_01M3WBAV2PZ1ERRJH9ATZH3PKE": {
+        "bakedName": "PanelLauncherOrbital",
+        "curName": "PanelLauncherOrbital",
+        "id": "orb_01M3WBAV2PZ1ERRJH9ATZH3PKE",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01M3WBAV2PRS42Z6KEPS3P4GAR": {
+        "bakedName": "PanelLauncherPage",
+        "curName": "PanelLauncherPage",
+        "id": "pag_01M3WBAV2PRS42Z6KEPS3P4GAR",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M3WBAV2P82ATESF1QEKT8CWS": {
+        "bakedName": "PanelLauncher",
+        "curName": "PanelLauncher",
+        "id": "trt_01M3WBAV2P82ATESF1QEKT8CWS",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "std-panel-launcher",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "id": "ent_01M3WBAV2PJNY2ACS5PHE6N0AA",
+        "name": "PanelLauncherView",
+        "persistence": "runtime"
+      },
+      "id": "orb_01M3WBAV2PZ1ERRJH9ATZH3PKE",
+      "name": "PanelLauncherOrbital",
+      "pages": [
+        {
+          "id": "pag_01M3WBAV2PRS42Z6KEPS3P4GAR",
+          "name": "PanelLauncherPage",
+          "path": "/panel-launcher",
+          "traits": [
+            {
+              "ref": "PanelLauncher",
+              "refId": "trt_01M3WBAV2P82ATESF1QEKT8CWS"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "closeLabel": {
+              "default": "Close panel",
+              "label": "Close button label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "contentTrait": {
+              "description": "The trait the panel shows when it is open.",
+              "label": "What does the panel hold?",
+              "synonyms": "panel content, body, assistant, chat",
+              "tier": "presentation",
+              "type": "trait"
+            },
+            "icon": {
+              "default": "message-circle",
+              "label": "Button icon",
+              "tier": "presentation",
+              "type": "icon"
+            },
+            "label": {
+              "default": "Open panel",
+              "description": "What the floating button does, read to screen readers and shown as its tooltip.",
+              "label": "Button label",
+              "synonyms": "aria label, button name, tooltip",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "panelSlot": {
+              "default": "dock",
+              "description": "`dock` pushes the page aside (a side sheet on small screens); `drawer` slides over it.",
+              "label": "Where the panel opens",
+              "tier": "presentation",
+              "type": "slot"
+            },
+            "title": {
+              "default": "Panel",
+              "description": "Heading at the top of the open panel.",
+              "label": "Panel title",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "effectRow": [
+            {
+              "kind": "render-ui",
+              "resolved": false,
+              "resource": "@config.panelSlot"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "floating"
+            }
+          ],
+          "emits": [
+            {
+              "description": "Open the panel.",
+              "event": "OPEN",
+              "eventId": "evt_01M3WBAV2P90F9YFP7AD881QG6",
+              "synonyms": "show, launch, expand",
+              "tier": "presentation"
+            },
+            {
+              "description": "Close the panel.",
+              "event": "CLOSE",
+              "eventId": "evt_01M3WBAV2P3BNZ0MEAYB63SNE6",
+              "synonyms": "hide, dismiss, collapse",
+              "tier": "presentation"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "entityRefIds": {
+            "PanelLauncherView": "ent_01M3WBAV2PJNY2ACS5PHE6N0AA"
+          },
+          "id": "trt_01M3WBAV2P82ATESF1QEKT8CWS",
+          "linkedEntity": "PanelLauncherView",
+          "linkedEntityId": "ent_01M3WBAV2PJNY2ACS5PHE6N0AA",
+          "name": "PanelLauncher",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M3WBAV2P4BPXCKRY9TXD0WVW",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Open the panel.",
+                "id": "evt_01M3WBAV2P90F9YFP7AD881QG6",
+                "key": "OPEN",
+                "name": "Open",
+                "synonyms": "show, launch, expand",
+                "tier": "presentation"
+              },
+              {
+                "description": "Close the panel.",
+                "id": "evt_01M3WBAV2P3BNZ0MEAYB63SNE6",
+                "key": "CLOSE",
+                "name": "Close",
+                "synonyms": "hide, dismiss, collapse",
+                "tier": "presentation"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "closed"
+              },
+              {
+                "name": "open"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "floating",
+                    {
+                      "action": "OPEN",
+                      "icon": "@config.icon",
+                      "label": "@config.label",
+                      "type": "floating-action-button"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M3WBAV2P4BPXCKRY9TXD0WVW",
+                "from": "closed",
+                "to": "closed"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "floating",
+                    null
+                  ],
+                  [
+                    "render-ui",
+                    "@config.panelSlot",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "content": "@config.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "action": "CLOSE",
+                              "aria-label": "@config.closeLabel",
+                              "icon": "x",
+                              "type": "button",
+                              "variant": "ghost"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "type": "stack"
+                        },
+                        "@config.contentTrait"
+                      ],
+                      "className": "h-full min-h-0 p-4",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "OPEN",
+                "eventId": "evt_01M3WBAV2P90F9YFP7AD881QG6",
+                "from": "closed",
+                "to": "open"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "@config.panelSlot",
+                    null
+                  ],
+                  [
+                    "render-ui",
+                    "floating",
+                    {
+                      "action": "OPEN",
+                      "icon": "@config.icon",
+                      "label": "@config.label",
+                      "type": "floating-action-button"
+                    }
+                  ]
+                ],
+                "event": "CLOSE",
+                "eventId": "evt_01M3WBAV2P3BNZ0MEAYB63SNE6",
+                "from": "open",
+                "to": "closed"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}

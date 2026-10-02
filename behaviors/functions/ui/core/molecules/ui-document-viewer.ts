@@ -74,8 +74,11 @@ export interface StdUiDocumentViewerConfig {
   showPrint?: boolean;
   /** Default: `true` */
   showToolbar?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"` */
   src?: unknown;
+  /** Default: `"auto"` */
+  surface?: 'auto' | 'none';
   tabIndex?: number;
   title?: string;
   totalPages?: number;

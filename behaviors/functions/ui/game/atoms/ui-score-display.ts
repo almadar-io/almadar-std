@@ -62,6 +62,7 @@ export interface StdUiScoreDisplayConfig {
   score?: number;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg' | 'xl';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
   /** Default: `1` */
   value?: number;

@@ -137,6 +137,7 @@ export interface StdUiCodeBlockConfig {
   showLanguageBadge?: boolean;
   /** Default: `false` */
   showLineNumbers?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
   title?: string;
   /** Default: `""` */

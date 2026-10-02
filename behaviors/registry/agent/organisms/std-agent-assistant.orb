@@ -1,5 +1,5 @@
 {
-  "description": "std-agent-assistant — an in-app assistant that operates the running app for the signed-in user. One request flows down a chain of std agent atoms on the bus: the conversation (std-agent-session) SENDs → CONVERSE → std-agent-context bounds it → std-agent-memory adds what it recalls → std-agent-tool-loop answers it through `call-service llm call-tools`, firing only the inputs and reading only the entities the `tools` allowlist names, as the signed-in user → REPLIED goes back to the conversation, to memory (remembered) and to std-agent-trace (the run record). Import the orbital and supply the allowlist: `orbital Assistant = Agent.orbitals.AgentAssistantOrbital { config { tools: [{ event: TaskOrbital.TaskPersistor.DO_CREATE }, { read: Task }], instructions: \"…\" } }`. The conversation, memory and run records live in AgentRecordsOrbital; retarget them onto your own owner-scoped entities (`ownerId` a relation to your [identity] roster, with @read/@create) with `entities { AgentMessage: …, AgentMemory: …, AgentRun: … }`.",
+  "description": "std-agent-assistant — an in-app assistant that operates the running app for the signed-in user. A floating button opens it in a side panel docked beside the page (std-panel-launcher; a side sheet on small screens), where the conversation shows every step the assistant takes live as it works. List AssistantDock with the assistant's traits on each page that should carry the button. One request flows down a chain of std agent atoms on the bus: the conversation (std-agent-session) SENDs → CONVERSE → std-agent-context bounds it → std-agent-memory adds what it recalls → std-agent-tool-loop answers it through `call-service llm call-tools`, firing only the inputs and reading only the entities the `tools` allowlist names, as the signed-in user → REPLIED goes back to the conversation, to memory (remembered) and to std-agent-trace (the run record). Import the orbital and supply the allowlist: `orbital Assistant = Agent.orbitals.AgentAssistantOrbital { config { tools: [{ event: TaskOrbital.TaskPersistor.DO_CREATE }, { read: Task }], instructions: \"…\" } }`. The conversation, memory and run records live in AgentRecordsOrbital; retarget them onto your own owner-scoped entities (`ownerId` a relation to your [identity] roster, with @read/@create) with `entities { AgentMessage: …, AgentMemory: …, AgentRun: … }`.",
   "ledger": {
     "entries": {
       "ent_01M3TZ0DZDY909P5HZH4V2D7MY": {
@@ -129,6 +129,22 @@
         "kind": "trait",
         "owner": "workspace",
         "renames": []
+      },
+      "trt_01M3WD0HMAAMMG2VCZ9KXKYC0V": {
+        "bakedName": "AssistantDock",
+        "curName": "AssistantDock",
+        "id": "trt_01M3WD0HMAAMMG2VCZ9KXKYC0V",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M3WD0HMAF5RY9APZS2H3AJ46": {
+        "bakedName": "AssistantConversation",
+        "curName": "AssistantConversation",
+        "id": "trt_01M3WD0HMAF5RY9APZS2H3AJ46",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
       }
     },
     "schemaVersion": 1
@@ -137,6 +153,13 @@
   "orbitals": [
     {
       "config": {
+        "buttonLabel": {
+          "default": "Open the assistant",
+          "description": "What the floating button does, read to screen readers and shown as its tooltip.",
+          "label": "Button label",
+          "tier": "presentation",
+          "type": "string"
+        },
         "instructions": {
           "default": "You operate this app for the signed-in user. Use the tools to act and to look things up; when a tool reports that something was refused or denied, say so plainly.",
           "description": "Standing instructions sent with every request.",
@@ -194,6 +217,12 @@
           "tier": "policy",
           "type": "number"
         },
+        "title": {
+          "default": "Assistant",
+          "label": "Panel title",
+          "tier": "presentation",
+          "type": "string"
+        },
         "tools": {
           "default": [],
           "description": "The declared inputs it may fire (`{ event: Trait.EVENT }` / `{ event: Orbital.Trait.EVENT }`) and the entities it may read (`{ read: Entity }`), as the signed-in user.",
@@ -239,6 +268,10 @@
           "path": "/assistant",
           "traits": [
             {
+              "ref": "AssistantDock",
+              "refId": "trt_01M3WD0HMAAMMG2VCZ9KXKYC0V"
+            },
+            {
               "ref": "AssistantThread",
               "refId": "trt_01M3TZ0DZDK3ZYFHBSBZMWW4V7"
             },
@@ -263,18 +296,65 @@
       ],
       "traits": [
         {
-          "config": {
-            "links": {
-              "default": "@config.links",
-              "type": "unknown"
-            }
-          },
           "events": {
             "CONVERSE": "REQUEST_CONTEXT"
           },
           "id": "trt_01M3TZ0DZDK3ZYFHBSBZMWW4V7",
           "linkedEntity": "AgentMessage",
           "listens": [
+            {
+              "event": "SEND",
+              "source": {
+                "kind": "trait",
+                "trait": "AssistantConversation"
+              },
+              "triggers": "SEND"
+            },
+            {
+              "event": "REPLIED",
+              "source": {
+                "kind": "trait",
+                "trait": "AssistantLoop"
+              },
+              "triggers": "REPLIED"
+            }
+          ],
+          "name": "AssistantThread",
+          "ref": "Session.traits.AgentThread"
+        },
+        {
+          "config": {
+            "links": {
+              "default": "@config.links",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01M3WD0HMAF5RY9APZS2H3AJ46",
+          "listens": [
+            {
+              "event": "AgentMessagesLoaded",
+              "source": {
+                "kind": "trait",
+                "trait": "AssistantThread"
+              },
+              "triggers": "THREAD_LOADED"
+            },
+            {
+              "event": "THREAD_FAILED",
+              "source": {
+                "kind": "trait",
+                "trait": "AssistantThread"
+              },
+              "triggers": "REPLY_FAILED"
+            },
+            {
+              "event": "STEP",
+              "source": {
+                "kind": "trait",
+                "trait": "AssistantLoop"
+              },
+              "triggers": "STEP"
+            },
             {
               "event": "REPLIED",
               "source": {
@@ -292,8 +372,31 @@
               "triggers": "REPLY_FAILED"
             }
           ],
-          "name": "AssistantThread",
-          "ref": "Session.traits.AgentThread"
+          "name": "AssistantConversation",
+          "ref": "Session.traits.AgentConversation"
+        },
+        {
+          "config": {
+            "contentTrait": {
+              "default": "@trait.AssistantConversation",
+              "type": "unknown"
+            },
+            "icon": {
+              "default": "message-circle",
+              "type": "unknown"
+            },
+            "label": {
+              "default": "@config.buttonLabel",
+              "type": "unknown"
+            },
+            "title": {
+              "default": "@config.title",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01M3WD0HMAAMMG2VCZ9KXKYC0V",
+          "name": "AssistantDock",
+          "ref": "Launcher.traits.PanelLauncher"
         },
         {
           "config": {
@@ -444,6 +547,10 @@
         {
           "as": "Trace",
           "from": "std/behaviors/std-agent-trace"
+        },
+        {
+          "as": "Launcher",
+          "from": "std/behaviors/std-panel-launcher"
         }
       ]
     },
@@ -590,5 +697,5 @@
     }
   ],
   "schemaVersion": 1,
-  "version": "1.0.0"
+  "version": "2.0.0"
 }

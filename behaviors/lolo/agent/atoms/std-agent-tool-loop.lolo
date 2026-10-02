@@ -1,5 +1,5 @@
 app std-agent-tool-loop "2.0.0"
-"std-agent-tool-loop — answers a conversation by operating the running app as the caller, through `call-service llm call-tools`. The `tools` allowlist names declared external inputs (addressed like a listens source: `Trait.EVENT`, `Orbital.Trait.EVENT`) and entities to read; each input fires as the signed-in user through the ordinary dispatch (guards and entity policies apply) and each read returns only the rows the caller may read. Headless: the conversation UI (std-agent-session) shows the reply; a failure shows as a toast. CONVERSE carries the conversation (and optionally what std-agent-memory recalled); REPLIED carries the reply, every tool step and the token usage; REPLY_FAILED carries the error. Compose with std-agent-session (the conversation) and std-agent-trace (the step record)."
+"std-agent-tool-loop — answers a conversation by operating the running app as the caller, through `call-service llm call-tools`. The `tools` allowlist names declared external inputs (addressed like a listens source: `Trait.EVENT`, `Orbital.Trait.EVENT`) and entities to read; each input fires as the signed-in user through the ordinary dispatch (guards and entity policies apply) and each read returns only the rows the caller may read. Headless: the conversation UI (std-agent-session) shows the reply; a failure shows as a toast. CONVERSE carries the conversation (and optionally what std-agent-memory recalled); STEP carries each step live while it works (a model call, a tool it used, what the app answered) to the asking tab; REPLIED carries the reply, every step and the token usage; REPLY_FAILED carries the error. Compose with std-agent-session (the conversation) and std-agent-trace (the step record)."
 
 type AgentTool = {
   event : event
@@ -9,13 +9,46 @@ type AgentChatMessage = {
   role : "user" | "assistant"
   content : string!
 }
-type AgentStep = {
-  kind : "input" | "read" | "invalid"
-  target : string!
-  args : string!
-  ok : boolean!
-  detail : string
+type AgentToolKind = "input" | "read" | "invalid"
+type AgentToolCallActivity = {
+  type : "tool_call"!
+  tool : string!
+  kind : AgentToolKind
+  argsText : string!
+  timestamp : number!
+  isExecuting : boolean
 }
+type AgentToolResultActivity = {
+  type : "tool_result"!
+  tool : string!
+  kind : AgentToolKind
+  success : boolean!
+  detail : string
+  rows : number
+  resultText : string!
+  timestamp : number!
+}
+type AgentLlmCall = {
+  service : string!
+  provider : string!
+  model : string!
+  systemPrompt : string!
+  userPrompt : string!
+  toolCallsJson : string
+  attempt : number
+  durationMs : number!
+  promptTokens : number
+  completionTokens : number
+  cachedPromptTokens : number
+  costUSD : number
+}
+type AgentLlmResponseActivity = {
+  type : "llm_response"!
+  content : string!
+  llm : AgentLlmCall
+  timestamp : number!
+}
+type AgentActivity = AgentToolCallActivity | AgentToolResultActivity | AgentLlmResponseActivity
 type AgentUsage = {
   promptTokens : number!
   completionTokens : number!
@@ -61,7 +94,7 @@ orbital AgentToolLoopOrbital {
           instructions: (if ["=", (str/default ?context ""), ""] @config.instructions (str/concat @config.instructions "\n\nWhat you remember that may be relevant:\n" ?context))
           maxSteps: @config.maxSteps
         } {
-          emit: { failure: ASK_FAILED, success: ANSWERED }
+          emit: { failure: ASK_FAILED, success: ANSWERED, onMessage: STEP }
         })
     }
 
@@ -82,9 +115,15 @@ orbital AgentToolLoopOrbital {
     }
 
     emits {
+      STEP -> external {
+        activity : AgentActivity!
+      }
+        @description "One thing the assistant just did, live while it works: a model call, a tool it used, or what the app answered. Delivered to the asking tab only."
+        @synonyms "progress, activity, trace step, working"
+        @tier "domain"
       REPLIED -> external {
         reply : string!
-        steps : [AgentStep]!
+        steps : [AgentActivity]!
         usage : AgentUsage!
       }
         @description "The assistant answered; carries every tool step it took and the tokens it used."
@@ -98,7 +137,7 @@ orbital AgentToolLoopOrbital {
         @tier "domain"
       ANSWERED -> internal {
         reply : string!
-        steps : [AgentStep]!
+        steps : [AgentActivity]!
         usage : AgentUsage!
       }
         @tier "internal"

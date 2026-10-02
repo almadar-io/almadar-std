@@ -75,6 +75,7 @@ export interface StdUiSvgLobeConfig {
   ry?: number;
   /** Default: `2` */
   shells?: number;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
   /** Default: `100` */
   width?: number;

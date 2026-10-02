@@ -147,6 +147,7 @@ export interface StdUiCanvasConfig {
   showGrid?: boolean;
   showMinimap?: boolean;
   showTileInfo?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
   /** Default: `"TILE_CLICK"` */
   tileClickEvent?: string;

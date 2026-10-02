@@ -43,6 +43,7 @@ export interface StdUiErrorBoundaryConfig {
   className?: string;
   enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   enterDelay?: number;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
 }
 
 /**

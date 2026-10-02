@@ -8,10 +8,6 @@ orbital ContentRendererOrbital {
     code : string
     stack : string
   }
-  type ContentRendererSegmentsItem = {
-    type : "markdown"!
-    content : string!
-  }
 
   entity ContentRendererItem [runtime] {
     id : string!
@@ -35,10 +31,10 @@ orbital ContentRendererOrbital {
           activeFilters: @config.activeFilters
           selectedIds: @config.selectedIds
           content: @config.content
-          segments: @config.segments
           direction: @config.direction
           enter: @config.enter
           enterDelay: @config.enterDelay
+          skeleton: @config.skeleton
           aria-label: @config.ariaLabel
           aria-labelledby: @config.ariaLabelledby
           aria-describedby: @config.ariaDescribedby
@@ -107,10 +103,6 @@ orbital ContentRendererOrbital {
         @label "Content"
         @description "Raw content string — auto-parsed into segments"
         @tier "presentation"
-      segments : [ContentRendererSegmentsItem] = []
-        @label "Segments"
-        @description "Pre-parsed segments (overrides content)"
-        @tier "presentation"
       direction : "rtl" | "ltr"
         @label "Direction"
         @description "Text direction for markdown"
@@ -122,6 +114,10 @@ orbital ContentRendererOrbital {
       enterDelay : number
         @label "Enter Delay"
         @description "Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating."
+        @tier "presentation"
+      skeleton : "header" | "table" | "list" | "grid" | "detail" | "stats" | "form" | "card" | "text" | "none"
+        @label "Skeleton"
+        @description "Skeleton shown while this element's server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`."
         @tier "presentation"
       ariaLabel : string
         @label "Aria-label"

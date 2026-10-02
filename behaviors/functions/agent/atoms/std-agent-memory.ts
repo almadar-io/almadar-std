@@ -846,8 +846,20 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   'set',
                   '@entity.queryVector',
                   [
-                    'array/first',
-                    '@payload.embeddings',
+                    'if',
+                    [
+                      '=',
+                      [
+                        'array/len',
+                        '@payload.embeddings',
+                      ],
+                      0,
+                    ],
+                    [],
+                    [
+                      'array/first',
+                      '@payload.embeddings',
+                    ],
                   ],
                 ],
                 [
@@ -888,14 +900,25 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                                   'fn',
                                   'item',
                                   [
-                                    '=',
+                                    'and',
                                     [
-                                      'array/len',
-                                      '@item.embedding',
+                                      '>',
+                                      [
+                                        'array/len',
+                                        '@entity.queryVector',
+                                      ],
+                                      0,
                                     ],
                                     [
-                                      'array/len',
-                                      '@entity.queryVector',
+                                      '=',
+                                      [
+                                        'array/len',
+                                        '@item.embedding',
+                                      ],
+                                      [
+                                        'array/len',
+                                        '@entity.queryVector',
+                                      ],
                                     ],
                                   ],
                                 ],

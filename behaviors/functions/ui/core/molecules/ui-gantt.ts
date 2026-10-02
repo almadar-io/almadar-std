@@ -90,12 +90,15 @@ export interface StdUiGanttConfig {
   selfFetch?: boolean;
   /** Default: `true` */
   showToday?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `"start"` */
   startField?: string;
   /** Default: `{"item":"default"}` */
   statusColorMap?: Record<string, TraitConfig>;
   /** Default: `"status"` */
   statusField?: string;
+  /** Default: `"auto"` */
+  surface?: 'auto' | 'none';
   tabIndex?: number;
   /** Default: `"title"` */
   titleField?: string;

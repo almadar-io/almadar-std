@@ -285,11 +285,6 @@ import {
   isStdLifecycleLifecycleOrbitalParams,
 } from './infra/atoms/std-lifecycle.js';
 import {
-  stdListListItemOrbital,
-  StdListListItemOrbitalManifest,
-  isStdListListItemOrbitalParams,
-} from './ui/core/atoms/std-list.js';
-import {
   stdMarketBoard3dMarketBoard3DOrbital,
   StdMarketBoard3dMarketBoard3DOrbitalManifest,
   isStdMarketBoard3dMarketBoard3DOrbitalParams,
@@ -570,21 +565,6 @@ import {
   isStdUiDrawerSlotDrawerSlotOrbitalParams,
 } from './ui/core/organisms/ui-drawer-slot.js';
 import {
-  stdUiEntityCardsEntityCardsOrbital,
-  StdUiEntityCardsEntityCardsOrbitalManifest,
-  isStdUiEntityCardsEntityCardsOrbitalParams,
-} from './ui/core/organisms/ui-entity-cards.js';
-import {
-  stdUiEntityListEntityListOrbital,
-  StdUiEntityListEntityListOrbitalManifest,
-  isStdUiEntityListEntityListOrbitalParams,
-} from './ui/core/organisms/ui-entity-list.js';
-import {
-  stdUiEntityTableEntityTableOrbital,
-  StdUiEntityTableEntityTableOrbitalManifest,
-  isStdUiEntityTableEntityTableOrbitalParams,
-} from './ui/core/organisms/ui-entity-table.js';
-import {
   stdUiFormFormOrbital,
   StdUiFormFormOrbitalManifest,
   isStdUiFormFormOrbitalParams,
@@ -594,11 +574,6 @@ import {
   StdUiFormSectionFormSectionOrbitalManifest,
   isStdUiFormSectionFormSectionOrbitalParams,
 } from './ui/core/organisms/ui-form-section.js';
-import {
-  stdUiMasterDetailMasterDetailOrbital,
-  StdUiMasterDetailMasterDetailOrbitalManifest,
-  isStdUiMasterDetailMasterDetailOrbitalParams,
-} from './ui/core/organisms/ui-master-detail.js';
 import {
   stdUiMasterDetailLayoutMasterDetailLayoutOrbital,
   StdUiMasterDetailLayoutMasterDetailLayoutOrbitalManifest,
@@ -1159,15 +1134,6 @@ REGISTRY_MUT.set('std-lifecycle::LifecycleOrbital', {
   },
   manifest: StdLifecycleLifecycleOrbitalManifest,
 });
-REGISTRY_MUT.set('std-list::ListItemOrbital', {
-  factory: (p: object): OrbitalDefinition => {
-    if (!isStdListListItemOrbitalParams(p)) {
-      throw new TypeError('Invalid params for std-list::ListItemOrbital');
-    }
-    return stdListListItemOrbital(p);
-  },
-  manifest: StdListListItemOrbitalManifest,
-});
 REGISTRY_MUT.set('std-market-board-3d::MarketBoard3DOrbital', {
   factory: (p: object): OrbitalDefinition => {
     if (!isStdMarketBoard3dMarketBoard3DOrbitalParams(p)) {
@@ -1672,33 +1638,6 @@ REGISTRY_MUT.set('ui-drawer-slot::DrawerSlotOrbital', {
   },
   manifest: StdUiDrawerSlotDrawerSlotOrbitalManifest,
 });
-REGISTRY_MUT.set('ui-entity-cards::EntityCardsOrbital', {
-  factory: (p: object): OrbitalDefinition => {
-    if (!isStdUiEntityCardsEntityCardsOrbitalParams(p)) {
-      throw new TypeError('Invalid params for ui-entity-cards::EntityCardsOrbital');
-    }
-    return stdUiEntityCardsEntityCardsOrbital(p);
-  },
-  manifest: StdUiEntityCardsEntityCardsOrbitalManifest,
-});
-REGISTRY_MUT.set('ui-entity-list::EntityListOrbital', {
-  factory: (p: object): OrbitalDefinition => {
-    if (!isStdUiEntityListEntityListOrbitalParams(p)) {
-      throw new TypeError('Invalid params for ui-entity-list::EntityListOrbital');
-    }
-    return stdUiEntityListEntityListOrbital(p);
-  },
-  manifest: StdUiEntityListEntityListOrbitalManifest,
-});
-REGISTRY_MUT.set('ui-entity-table::EntityTableOrbital', {
-  factory: (p: object): OrbitalDefinition => {
-    if (!isStdUiEntityTableEntityTableOrbitalParams(p)) {
-      throw new TypeError('Invalid params for ui-entity-table::EntityTableOrbital');
-    }
-    return stdUiEntityTableEntityTableOrbital(p);
-  },
-  manifest: StdUiEntityTableEntityTableOrbitalManifest,
-});
 REGISTRY_MUT.set('ui-form::FormOrbital', {
   factory: (p: object): OrbitalDefinition => {
     if (!isStdUiFormFormOrbitalParams(p)) {
@@ -1716,15 +1655,6 @@ REGISTRY_MUT.set('ui-form-section::FormSectionOrbital', {
     return stdUiFormSectionFormSectionOrbital(p);
   },
   manifest: StdUiFormSectionFormSectionOrbitalManifest,
-});
-REGISTRY_MUT.set('ui-master-detail::MasterDetailOrbital', {
-  factory: (p: object): OrbitalDefinition => {
-    if (!isStdUiMasterDetailMasterDetailOrbitalParams(p)) {
-      throw new TypeError('Invalid params for ui-master-detail::MasterDetailOrbital');
-    }
-    return stdUiMasterDetailMasterDetailOrbital(p);
-  },
-  manifest: StdUiMasterDetailMasterDetailOrbitalManifest,
 });
 REGISTRY_MUT.set('ui-master-detail-layout::MasterDetailLayoutOrbital', {
   factory: (p: object): OrbitalDefinition => {

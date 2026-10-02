@@ -91,6 +91,7 @@ export interface StdUiAlgoGraphCanvasConfig {
   root?: string;
   /** Default: `[]` */
   shapes?: EntityRow[];
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
   title?: string;
   /** Default: `600` */

@@ -1,0 +1,218 @@
+app ui-agent-activity-row "1.0.0"
+"AgentActivityRow — UI factory (1:1 with the @almadar/ui agent-activity-row pattern)."
+;; @pattern "agent-activity-row"
+orbital AgentActivityRowOrbital {
+  type AgentActivityRowActivity = AgentActivityRowActivityMessage | AgentActivityRowActivityToolCall | AgentActivityRowActivityToolResult | AgentActivityRowActivityFileOperation | AgentActivityRowActivitySchemaDiff | AgentActivityRowActivityError | AgentActivityRowActivityCoordinatorDecision | AgentActivityRowActivityPlanCommitted | AgentActivityRowActivityPendingQuestion | AgentActivityRowActivityClarificationQuestion | AgentActivityRowActivityAnalysis | AgentActivityRowActivityOrbitalStarted | AgentActivityRowActivityOrbitalDone | AgentActivityRowActivitySchemaChange | AgentActivityRowActivityDone | AgentActivityRowActivityCancelled | AgentActivityRowActivityLlmResponse
+  type AgentActivityRowActivityMessage = {
+    type : "message"!
+    role : "user" | "assistant" | "system"!
+    content : string!
+    timestamp : number!
+    isStreaming : boolean
+  }
+  type AgentActivityRowActivityToolCall = {
+    type : "tool_call"!
+    tool : string!
+    kind : "input" | "read" | "invalid"
+    argsText : string!
+    timestamp : number!
+    isExecuting : boolean
+  }
+  type AgentActivityRowActivityToolResult = {
+    type : "tool_result"!
+    tool : string!
+    kind : "input" | "read" | "invalid"
+    success : boolean!
+    detail : string
+    rows : number
+    resultText : string!
+    timestamp : number!
+  }
+  type AgentActivityRowActivityFileOperation = {
+    type : "file_operation"!
+    operation : "ls" | "read_file" | "write_file" | "edit_file"!
+    path : string!
+    success : boolean
+    timestamp : number!
+  }
+  type AgentActivityRowActivitySchemaDiff = {
+    type : "schema_diff"!
+    filePath : string!
+    hunks : [AgentActivityRowActivitySchemaDiffHunksItem]!
+    timestamp : number!
+  }
+  type AgentActivityRowActivitySchemaDiffHunksItem = {
+    oldStart : number!
+    oldLines : number!
+    newStart : number!
+    newLines : number!
+    lines : [AgentActivityRowActivitySchemaDiffHunksItemLinesItem]!
+  }
+  type AgentActivityRowActivitySchemaDiffHunksItemLinesItem = {
+    type : "add" | "remove" | "context"!
+    content : string!
+  }
+  type AgentActivityRowActivityError = {
+    type : "error"!
+    message : string!
+    code : string
+    timestamp : number!
+  }
+  type AgentActivityRowActivityCoordinatorDecision = {
+    type : "coordinator_decision"!
+    organism : string!
+    reason : string!
+    priorOrganism : string
+    timestamp : number!
+  }
+  type AgentActivityRowActivityPlanCommitted = {
+    type : "plan_committed"!
+    orbitals : [string]!
+    timestamp : number!
+  }
+  type AgentActivityRowActivityPendingQuestion = {
+    type : "pending_question"!
+    questionId : string!
+    question : string!
+    orbitalName : string
+    timestamp : number!
+  }
+  type AgentActivityRowActivityClarificationQuestion = {
+    type : "clarification_question"!
+    level : "organism" | "molecule" | "atom_trait"!
+    scope : AgentActivityRowActivityClarificationQuestionScope!
+    question : string!
+    candidates : [AgentActivityRowActivityClarificationQuestionCandidatesItem]!
+    skipDefault : string!
+    timestamp : number!
+  }
+  type AgentActivityRowActivityClarificationQuestionScope = {
+    orbitalName : string
+    traitName : string
+  }
+  type AgentActivityRowActivityClarificationQuestionCandidatesItem = {
+    id : string!
+    label : string!
+    description : string!
+    whyThisFits : string!
+  }
+  type AgentActivityRowActivityAnalysis = {
+    type : "analysis"!
+    organism : string!
+    organismReason : string
+    complexity : AgentActivityRowActivityAnalysisComplexity
+    renames : [AgentActivityRowActivityAnalysisRenamesItem]!
+    deletes : [string]!
+    timestamp : number!
+  }
+  type AgentActivityRowActivityAnalysisComplexity = {
+    category : string!
+    reasoning : string!
+  }
+  type AgentActivityRowActivityAnalysisRenamesItem = {
+    from : string!
+    to : string!
+  }
+  type AgentActivityRowActivityOrbitalStarted = {
+    type : "orbital_started"!
+    orbitalName : string!
+    timestamp : number!
+  }
+  type AgentActivityRowActivityOrbitalDone = {
+    type : "orbital_done"!
+    orbitalName : string!
+    traitCount : number
+    transitionCount : number
+    timestamp : number!
+  }
+  type AgentActivityRowActivitySchemaChange = {
+    type : "schema_change"!
+    changeKind : "orbital-added" | "orbital-removed" | "entity-fields-changed" | "trait-added" | "trait-removed" | "trait-config-changed" | "state-machine-changed" | "guard-changed" | "effect-changed" | "render-ui-changed" | "event-wiring-changed" | "page-changed" | "theme-changed" | "behavior-composed"!
+    orbitalName : string!
+    traitName : string
+    transitionEvent : string
+    timestamp : number!
+  }
+  type AgentActivityRowActivityDone = {
+    type : "done"!
+    orbitalCount : number!
+    timestamp : number!
+  }
+  type AgentActivityRowActivityCancelled = {
+    type : "cancelled"!
+    message : string!
+    timestamp : number!
+  }
+  type AgentActivityRowActivityLlmResponse = {
+    type : "llm_response"!
+    content : string!
+    llm : AgentActivityRowActivityLlmResponseLlm
+    timestamp : number!
+  }
+  type AgentActivityRowActivityLlmResponseLlm = {
+    service : string!
+    provider : string!
+    model : string!
+    systemPrompt : string!
+    userPrompt : string!
+    toolCallsJson : string
+    attempt : number
+    durationMs : number!
+    promptTokens : number
+    completionTokens : number
+    cachedPromptTokens : number
+    costUSD : number
+  }
+  type AgentActivityRowFacts = {
+    settled : boolean!
+    readyCount : number!
+  }
+  type AgentActivityRowJUMPTarget = {
+    orbital : string!
+    trait : string
+    transition : string
+  }
+
+  entity AgentActivityRowItem [runtime] {
+    id : string!
+  }
+
+  trait AgentActivityRowRender -> @rebindable AgentActivityRowItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          activity: @config.activity
+          onJump: @config.onJump
+          facts: @config.facts
+          type: agent-activity-row
+        })
+    }
+
+    emits {
+      @config.onJump -> external {
+        target : AgentActivityRowJUMPTarget
+      }
+        @description "'Jump to' affordance — rendered only when supplied and the activity names an orbital."
+        @tier "essential"
+    }
+
+    config {
+      activity : AgentActivityRowActivity = {}
+        @label "Activity"
+        @description "activity prop"
+        @tier "presentation"
+      onJump : event = "JUMP"
+        @label "On Jump"
+        @description "'Jump to' affordance — rendered only when supplied and the activity names an orbital."
+        @tier "presentation"
+      facts : AgentActivityRowFacts = { settled: false, readyCount: 1 }
+        @label "Facts"
+        @description "What the row knows from its list (`activityRowFacts`)."
+        @tier "presentation"
+    }
+  }
+
+  page "/agent-activity-row" as AgentActivityRowPage -> AgentActivityRowRender
+}

@@ -49,6 +49,7 @@ export interface StdUiDrawerSlotConfig {
   position?: 'left' | 'right';
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   sourceTrait?: string;
   title?: string;
 }
@@ -214,6 +215,24 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
               'full',
             ],
           },
+          'skeleton': {
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
+            'label': 'Skeleton',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'header',
+              'table',
+              'list',
+              'grid',
+              'detail',
+              'stats',
+              'form',
+              'card',
+              'text',
+              'none',
+            ],
+          },
           'sourceTrait': {
             'description': 'Source trait name for qualified event emission',
             'label': 'Source Trait',
@@ -279,6 +298,7 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
                     'isLoading': '@config.isLoading',
                     'position': '@config.position',
                     'size': '@config.size',
+                    'skeleton': '@config.skeleton',
                     'sourceTrait': '@config.sourceTrait',
                     'title': '@config.title',
                     'type': 'drawer-slot',

@@ -72,6 +72,7 @@ export interface StdUiControlButtonConfig {
   shape?: string;
   /** Default: `"md"` */
   size?: string;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
   /** Default: `"secondary"` */
   variant?: string;

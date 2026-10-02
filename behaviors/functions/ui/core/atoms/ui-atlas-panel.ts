@@ -51,6 +51,7 @@ export interface StdUiAtlasPanelConfig {
   enterDelay?: number;
   /** Default: `"nineSlice"` */
   mode?: 'nineSlice' | 'repeat';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `{}` */
   style?: Record<string, TraitConfig>;
 }

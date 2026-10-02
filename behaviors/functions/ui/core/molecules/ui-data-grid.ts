@@ -132,7 +132,11 @@ export interface StdUiDataGridConfig {
   selectionEvent?: string;
   /** Default: `true` */
   selfFetch?: boolean;
+  /** Default: `"grid"` */
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   sortable?: boolean;
+  /** Default: `"auto"` */
+  surface?: 'auto' | 'none';
   tabIndex?: number;
   /** Default: `""` */
   viewerRole?: string;

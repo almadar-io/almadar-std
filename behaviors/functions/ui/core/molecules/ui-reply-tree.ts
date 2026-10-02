@@ -112,6 +112,7 @@ export interface StdUiReplyTreeConfig {
   selfFetch?: boolean;
   /** Default: `true` */
   showActions?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
   /** Default: `"VOTE"` */
   voteEvent?: string;

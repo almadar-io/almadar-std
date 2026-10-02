@@ -99,10 +99,13 @@ export interface StdUiMediaGalleryConfig {
   selfFetch?: boolean;
   /** Default: `false` */
   showUpload?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
   /** Default: `"src"` */
   srcField?: string;
+  /** Default: `"auto"` */
+  surface?: 'auto' | 'none';
   tabIndex?: number;
   title?: string;
   totalCount?: number;
@@ -635,6 +638,24 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
             'tier': 'presentation',
             'type': 'boolean',
           },
+          'skeleton': {
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
+            'label': 'Skeleton',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'header',
+              'table',
+              'list',
+              'grid',
+              'detail',
+              'stats',
+              'form',
+              'card',
+              'text',
+              'none',
+            ],
+          },
           'sortBy': {
             'description': 'Current sort field',
             'label': 'Sort By',
@@ -657,6 +678,17 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
             'label': 'Src Field',
             'tier': 'presentation',
             'type': 'string',
+          },
+          'surface': {
+            'default': 'auto',
+            'description': 'Content surface: `auto` paints the theme\'s surface behind this block unless it already sits on one (a card, dialog or another block); `none` opts out.',
+            'label': 'Surface',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'auto',
+              'none',
+            ],
           },
           'tabIndex': {
             'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
@@ -868,9 +900,11 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
                     'selectedItems': '@config.selectedItems',
                     'selectionEvent': '@config.selectionEvent',
                     'showUpload': '@config.showUpload',
+                    'skeleton': '@config.skeleton',
                     'sortBy': '@config.sortBy',
                     'sortDirection': '@config.sortDirection',
                     'srcField': '@config.srcField',
+                    'surface': '@config.surface',
                     'tabIndex': '@config.tabIndex',
                     'title': '@config.title',
                     'totalCount': '@config.totalCount',
@@ -955,9 +989,11 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
                     'selectedItems': '@config.selectedItems',
                     'selectionEvent': '@config.selectionEvent',
                     'showUpload': '@config.showUpload',
+                    'skeleton': '@config.skeleton',
                     'sortBy': '@config.sortBy',
                     'sortDirection': '@config.sortDirection',
                     'srcField': '@config.srcField',
+                    'surface': '@config.surface',
                     'tabIndex': '@config.tabIndex',
                     'title': '@config.title',
                     'totalCount': '@config.totalCount',
@@ -1045,9 +1081,11 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
                     'selectedItems': '@config.selectedItems',
                     'selectionEvent': '@config.selectionEvent',
                     'showUpload': '@config.showUpload',
+                    'skeleton': '@config.skeleton',
                     'sortBy': '@config.sortBy',
                     'sortDirection': '@config.sortDirection',
                     'srcField': '@config.srcField',
+                    'surface': '@config.surface',
                     'tabIndex': '@config.tabIndex',
                     'title': '@config.title',
                     'totalCount': '@config.totalCount',

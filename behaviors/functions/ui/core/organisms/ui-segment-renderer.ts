@@ -56,8 +56,9 @@ export interface StdUiSegmentRendererConfig {
   enterDelay?: number;
   lang?: string;
   role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `[{"content":"Content","type":"markdown"},{"content":"Content 2","type":"markdown"}]` */
+  /** Default: `[{"answer":"Answer","question":"Question","type":"quiz"},{"answer":"Answer 2","question":"Question 2","type":"quiz"}]` */
   segments?: EntityRow[];
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
   userProgress?: EntityRow;
 }
@@ -362,19 +363,26 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
           'segments': {
             'default': [
               {
-                'content': 'Content',
-                'type': 'markdown',
+                'answer': 'Answer',
+                'question': 'Question',
+                'type': 'quiz',
               },
               {
-                'content': 'Content 2',
-                'type': 'markdown',
+                'answer': 'Answer 2',
+                'question': 'Question 2',
+                'type': 'quiz',
               },
             ],
             'description': 'Parsed lesson segments (see `parseLessonSegments`)',
             'items': {
               'properties': {
-                'content': {
-                  'name': 'content',
+                'answer': {
+                  'name': 'answer',
+                  'required': true,
+                  'type': 'string',
+                },
+                'question': {
+                  'name': 'question',
                   'required': true,
                   'type': 'string',
                 },
@@ -383,7 +391,7 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
                   'required': true,
                   'type': 'string',
                   'values': [
-                    'markdown',
+                    'quiz',
                   ],
                 },
               },
@@ -392,6 +400,24 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
             'label': 'Segments',
             'tier': 'presentation',
             'type': '[SegmentRendererSegmentsItem]',
+          },
+          'skeleton': {
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
+            'label': 'Skeleton',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'header',
+              'table',
+              'list',
+              'grid',
+              'detail',
+              'stats',
+              'form',
+              'card',
+              'text',
+              'none',
+            ],
           },
           'tabIndex': {
             'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
@@ -481,6 +507,7 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
                     'lang': '@config.lang',
                     'role': '@config.role',
                     'segments': '@config.segments',
+                    'skeleton': '@config.skeleton',
                     'tabIndex': '@config.tabIndex',
                     'type': 'segment-renderer',
                     'userProgress': '@config.userProgress',

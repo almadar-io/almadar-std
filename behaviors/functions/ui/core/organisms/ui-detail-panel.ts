@@ -78,7 +78,7 @@ export interface StdUiDetailPanelConfig {
   error?: EntityRow;
   /** Default: `[]` */
   fieldNames?: string[];
-  /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","relation":{"cardinality":"one","entity":"Entity"},"type":"Type","values":["Item","Item 2"],"variant":"h3"},{"format":"datetime","icon":"circle","label":"Label 2","name":"Name 2","relation":{"cardinality":"many","entity":"Entity 2"},"type":"Type 2","values":["Item","Item 2"],"variant":"h4"}]` */
+  /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","relation":{"cardinality":"one","entity":"Entity"},"type":"Type","values":["Item","Item 2"],"variant":"h3"},{"format":"time","icon":"circle","label":"Label 2","name":"Name 2","relation":{"cardinality":"many","entity":"Entity 2"},"type":"Type 2","values":["Item","Item 2"],"variant":"h4"}]` */
   fields?: EntityRow[];
   footer?: PatternValue;
   /** Default: `false` */
@@ -112,6 +112,8 @@ export interface StdUiDetailPanelConfig {
   selfFetch?: boolean;
   /** Default: `true` */
   showActions?: boolean;
+  /** Default: `"detail"` */
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `false` */
   slideOver?: boolean;
   sortBy?: string;
@@ -121,6 +123,8 @@ export interface StdUiDetailPanelConfig {
   stages?: EntityRow[];
   status?: EntityRow;
   subtitle?: string;
+  /** Default: `"auto"` */
+  surface?: 'auto' | 'none';
   tabIndex?: number;
   /** Default: `[]` */
   tabs?: EntityRow[];
@@ -705,7 +709,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                 'variant': 'h3',
               },
               {
-                'format': 'datetime',
+                'format': 'time',
                 'icon': 'circle',
                 'label': 'Label 2',
                 'name': 'Name 2',
@@ -750,6 +754,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                   'type': 'string',
                   'values': [
                     'date',
+                    'time',
                     'datetime',
                     'currency',
                     'number',
@@ -824,6 +829,8 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                   'values': [
                     'h3',
                     'h4',
+                    'overline',
+                    'avatar',
                     'body',
                     'caption',
                     'badge',
@@ -1264,6 +1271,25 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'tier': 'presentation',
             'type': 'boolean',
           },
+          'skeleton': {
+            'default': 'detail',
+            'description': 'Skeleton drawn while loading, and the shape an empty slot shows while this element\'s server render is in flight (`none` opts out).',
+            'label': 'Skeleton',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'header',
+              'table',
+              'list',
+              'grid',
+              'detail',
+              'stats',
+              'form',
+              'card',
+              'text',
+              'none',
+            ],
+          },
           'slideOver': {
             'default': false,
             'description': 'slideOver prop',
@@ -1345,6 +1371,17 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'label': 'Subtitle',
             'tier': 'presentation',
             'type': 'string',
+          },
+          'surface': {
+            'default': 'auto',
+            'description': 'Content surface: `auto` paints the theme\'s surface behind this block unless it already sits on one (a card, dialog or another block); `none` opts out. Inline mode only; the slide-over is itself a surface.',
+            'label': 'Surface',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'auto',
+              'none',
+            ],
           },
           'tabIndex': {
             'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
@@ -1436,6 +1473,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                   'type': 'string',
                   'values': [
                     'date',
+                    'time',
                     'datetime',
                     'currency',
                     'number',
@@ -1473,6 +1511,8 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                   'values': [
                     'h3',
                     'h4',
+                    'overline',
+                    'avatar',
                     'body',
                     'caption',
                     'badge',
@@ -1765,6 +1805,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'sections': '@config.sections',
                     'selectedIds': '@config.selectedIds',
                     'showActions': '@config.showActions',
+                    'skeleton': '@config.skeleton',
                     'slideOver': '@config.slideOver',
                     'sortBy': '@config.sortBy',
                     'sortDirection': '@config.sortDirection',
@@ -1772,6 +1813,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'stages': '@config.stages',
                     'status': '@config.status',
                     'subtitle': '@config.subtitle',
+                    'surface': '@config.surface',
                     'tabIndex': '@config.tabIndex',
                     'tabs': '@config.tabs',
                     'thread': '@entity',
@@ -1896,6 +1938,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'sections': '@config.sections',
                     'selectedIds': '@config.selectedIds',
                     'showActions': '@config.showActions',
+                    'skeleton': '@config.skeleton',
                     'slideOver': '@config.slideOver',
                     'sortBy': '@config.sortBy',
                     'sortDirection': '@config.sortDirection',
@@ -1903,6 +1946,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'stages': '@config.stages',
                     'status': '@config.status',
                     'subtitle': '@config.subtitle',
+                    'surface': '@config.surface',
                     'tabIndex': '@config.tabIndex',
                     'tabs': '@config.tabs',
                     'thread': '@entity',
@@ -2030,6 +2074,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'sections': '@config.sections',
                     'selectedIds': '@config.selectedIds',
                     'showActions': '@config.showActions',
+                    'skeleton': '@config.skeleton',
                     'slideOver': '@config.slideOver',
                     'sortBy': '@config.sortBy',
                     'sortDirection': '@config.sortDirection',
@@ -2037,6 +2082,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'stages': '@config.stages',
                     'status': '@config.status',
                     'subtitle': '@config.subtitle',
+                    'surface': '@config.surface',
                     'tabIndex': '@config.tabIndex',
                     'tabs': '@config.tabs',
                     'thread': '@entity',
@@ -2143,6 +2189,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'sections': '@config.sections',
                     'selectedIds': '@config.selectedIds',
                     'showActions': '@config.showActions',
+                    'skeleton': '@config.skeleton',
                     'slideOver': '@config.slideOver',
                     'sortBy': '@config.sortBy',
                     'sortDirection': '@config.sortDirection',
@@ -2150,6 +2197,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'stages': '@config.stages',
                     'status': '@config.status',
                     'subtitle': '@config.subtitle',
+                    'surface': '@config.surface',
                     'tabIndex': '@config.tabIndex',
                     'tabs': '@config.tabs',
                     'thread': '@entity',

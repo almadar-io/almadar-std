@@ -1,5 +1,5 @@
 {
-  "description": "std-agent-session — the persisted conversation with an in-app assistant. Owns AgentMessage rows (role, content, ownerId stamped with the real @user, createdAt). SEND stores the user's message, reloads the thread and emits CONVERSE with the whole conversation, oldest first, for std-agent-tool-loop to answer; REPLIED stores the assistant's reply and redraws; REPLY_FAILED redraws the conversation (the tool loop shows the error). Rows are meant to be private to their owner: owner-scoped access needs an [identity] roster, so the binding organism declares the @read/@create scoping on AgentMessage — this generic atom cannot.",
+  "description": "std-agent-session — the conversation with an in-app assistant. AgentThread owns the persisted AgentMessage rows (role, content, ownerId stamped with the real @user, createdAt): SEND stores the user's message, reloads the thread and emits CONVERSE with the whole conversation, oldest first, for std-agent-tool-loop to answer; REPLIED stores the reply. AgentConversation is what the user sees, in the browser: the thread as chat bubbles with every step the assistant takes interleaved live (STEP: each model call, each tool it used and what the app answered), a thinking row while it works, and a chat bar. Rows are meant to be private to their owner: owner-scoped access needs an [identity] roster, so the binding organism declares the @read/@create scoping on AgentMessage — this generic atom cannot.",
   "ledger": {
     "entries": {
       "ent_01M3TYMQH8YF6HGJJVC3GRECJP": {
@@ -10,19 +10,18 @@
         "owner": "workspace",
         "renames": []
       },
+      "ent_01M3WC4PY11QN1558Y1ZV83259": {
+        "bakedName": "AgentConversationView",
+        "curName": "AgentConversationView",
+        "id": "ent_01M3WC4PY11QN1558Y1ZV83259",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
       "evt_01M3TYMQH81AV51TX8HBD3BVVY": {
         "bakedName": "INIT",
         "curName": "INIT",
         "id": "evt_01M3TYMQH81AV51TX8HBD3BVVY",
-        "kind": "event",
-        "owner": "workspace",
-        "parent": "trt_01M3TYMQH8QP9883EWJYRT49M8",
-        "renames": []
-      },
-      "evt_01M3TYMQH844NH7EYEBPA4XVG6": {
-        "bakedName": "REPLY_FAILED",
-        "curName": "REPLY_FAILED",
-        "id": "evt_01M3TYMQH844NH7EYEBPA4XVG6",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01M3TYMQH8QP9883EWJYRT49M8",
@@ -91,15 +90,6 @@
         "parent": "trt_01M3TYMQH8QP9883EWJYRT49M8",
         "renames": []
       },
-      "evt_01M3TYMQH8HHGS90VQR6Y0RK1K": {
-        "bakedName": "EDIT_MESSAGE",
-        "curName": "EDIT_MESSAGE",
-        "id": "evt_01M3TYMQH8HHGS90VQR6Y0RK1K",
-        "kind": "event",
-        "owner": "workspace",
-        "parent": "trt_01M3TYMQH8QP9883EWJYRT49M8",
-        "renames": []
-      },
       "evt_01M3TYMQH8PJZ22902FWBBMMK4": {
         "bakedName": "REPLIED",
         "curName": "REPLIED",
@@ -109,13 +99,76 @@
         "parent": "trt_01M3TYMQH8QP9883EWJYRT49M8",
         "renames": []
       },
-      "evt_01M3TYMQH8RCRDSVZ3DQ6DZ2YF": {
-        "bakedName": "SEND_DRAFT",
-        "curName": "SEND_DRAFT",
-        "id": "evt_01M3TYMQH8RCRDSVZ3DQ6DZ2YF",
+      "evt_01M3WC4PY11N0BPZ1WZMMGJGR8": {
+        "bakedName": "THREAD_LOADED",
+        "curName": "THREAD_LOADED",
+        "id": "evt_01M3WC4PY11N0BPZ1WZMMGJGR8",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
+        "renames": []
+      },
+      "evt_01M3WC4PY16PAX6BAR4QCWZMJR": {
+        "bakedName": "SEND",
+        "curName": "SEND",
+        "id": "evt_01M3WC4PY16PAX6BAR4QCWZMJR",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
+        "renames": []
+      },
+      "evt_01M3WC4PY17CBXZBP39ZBSYT2B": {
+        "bakedName": "REPLIED",
+        "curName": "REPLIED",
+        "id": "evt_01M3WC4PY17CBXZBP39ZBSYT2B",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
+        "renames": []
+      },
+      "evt_01M3WC4PY186J45C1NERG11RG8": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M3WC4PY186J45C1NERG11RG8",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
+        "renames": []
+      },
+      "evt_01M3WC4PY1FP4JAXE259KW86F8": {
+        "bakedName": "REPLY_FAILED",
+        "curName": "REPLY_FAILED",
+        "id": "evt_01M3WC4PY1FP4JAXE259KW86F8",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
+        "renames": []
+      },
+      "evt_01M3WC4PY1REQ5RNNQBSR6JFXP": {
+        "bakedName": "STEP",
+        "curName": "STEP",
+        "id": "evt_01M3WC4PY1REQ5RNNQBSR6JFXP",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
+        "renames": []
+      },
+      "evt_01M3WC4PY1SBZM2NR5EQ1JARQK": {
+        "bakedName": "THREAD_FAILED",
+        "curName": "THREAD_FAILED",
+        "id": "evt_01M3WC4PY1SBZM2NR5EQ1JARQK",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01M3TYMQH8QP9883EWJYRT49M8",
+        "renames": []
+      },
+      "evt_01M3WC4PY1TK0PTERMDE5BWR5W": {
+        "bakedName": "ASK",
+        "curName": "ASK",
+        "id": "evt_01M3WC4PY1TK0PTERMDE5BWR5W",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
         "renames": []
       },
       "orb_01KXG04EKXYAHSWY6RJPZ81FXF": {
@@ -141,6 +194,14 @@
         "kind": "trait",
         "owner": "workspace",
         "renames": []
+      },
+      "trt_01M3WC4PY19N3FHQ4JQF6R9SA4": {
+        "bakedName": "AgentConversation",
+        "curName": "AgentConversation",
+        "id": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
       }
     },
     "schemaVersion": 1
@@ -148,6 +209,290 @@
   "name": "std-agent-session",
   "orbitals": [
     {
+      "auxiliaryEntities": [
+        {
+          "fields": [
+            {
+              "name": "id",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "default": [],
+              "description": "The conversation as shown: messages with the assistant's steps between them.",
+              "items": {
+                "properties": {
+                  "AgentErrorEntry": {
+                    "name": "AgentErrorEntry",
+                    "properties": {
+                      "message": {
+                        "name": "message",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "timestamp": {
+                        "name": "timestamp",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "type": {
+                        "name": "type",
+                        "required": true,
+                        "type": "string",
+                        "values": [
+                          "error"
+                        ]
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "AgentLlmResponseActivity": {
+                    "name": "AgentLlmResponseActivity",
+                    "properties": {
+                      "content": {
+                        "name": "content",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "llm": {
+                        "name": "llm",
+                        "properties": {
+                          "attempt": {
+                            "name": "attempt",
+                            "required": false,
+                            "type": "number"
+                          },
+                          "cachedPromptTokens": {
+                            "name": "cachedPromptTokens",
+                            "required": false,
+                            "type": "number"
+                          },
+                          "completionTokens": {
+                            "name": "completionTokens",
+                            "required": false,
+                            "type": "number"
+                          },
+                          "costUSD": {
+                            "name": "costUSD",
+                            "required": false,
+                            "type": "number"
+                          },
+                          "durationMs": {
+                            "name": "durationMs",
+                            "required": true,
+                            "type": "number"
+                          },
+                          "model": {
+                            "name": "model",
+                            "required": true,
+                            "type": "string"
+                          },
+                          "promptTokens": {
+                            "name": "promptTokens",
+                            "required": false,
+                            "type": "number"
+                          },
+                          "provider": {
+                            "name": "provider",
+                            "required": true,
+                            "type": "string"
+                          },
+                          "service": {
+                            "name": "service",
+                            "required": true,
+                            "type": "string"
+                          },
+                          "systemPrompt": {
+                            "name": "systemPrompt",
+                            "required": true,
+                            "type": "string"
+                          },
+                          "toolCallsJson": {
+                            "name": "toolCallsJson",
+                            "required": false,
+                            "type": "string"
+                          },
+                          "userPrompt": {
+                            "name": "userPrompt",
+                            "required": true,
+                            "type": "string"
+                          }
+                        },
+                        "required": false,
+                        "type": "object"
+                      },
+                      "timestamp": {
+                        "name": "timestamp",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "type": {
+                        "name": "type",
+                        "required": true,
+                        "type": "string",
+                        "values": [
+                          "llm_response"
+                        ]
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "AgentMessageEntry": {
+                    "name": "AgentMessageEntry",
+                    "properties": {
+                      "content": {
+                        "name": "content",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "role": {
+                        "name": "role",
+                        "required": true,
+                        "type": "string",
+                        "values": [
+                          "user",
+                          "assistant"
+                        ]
+                      },
+                      "timestamp": {
+                        "name": "timestamp",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "type": {
+                        "name": "type",
+                        "required": true,
+                        "type": "string",
+                        "values": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "AgentToolCallActivity": {
+                    "name": "AgentToolCallActivity",
+                    "properties": {
+                      "argsText": {
+                        "name": "argsText",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "isExecuting": {
+                        "name": "isExecuting",
+                        "required": false,
+                        "type": "boolean"
+                      },
+                      "kind": {
+                        "name": "kind",
+                        "required": false,
+                        "type": "string",
+                        "values": [
+                          "input",
+                          "read",
+                          "invalid"
+                        ]
+                      },
+                      "timestamp": {
+                        "name": "timestamp",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "tool": {
+                        "name": "tool",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "type": {
+                        "name": "type",
+                        "required": true,
+                        "type": "string",
+                        "values": [
+                          "tool_call"
+                        ]
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "AgentToolResultActivity": {
+                    "name": "AgentToolResultActivity",
+                    "properties": {
+                      "detail": {
+                        "name": "detail",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "kind": {
+                        "name": "kind",
+                        "required": false,
+                        "type": "string",
+                        "values": [
+                          "input",
+                          "read",
+                          "invalid"
+                        ]
+                      },
+                      "resultText": {
+                        "name": "resultText",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "rows": {
+                        "name": "rows",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "success": {
+                        "name": "success",
+                        "required": true,
+                        "type": "boolean"
+                      },
+                      "timestamp": {
+                        "name": "timestamp",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "tool": {
+                        "name": "tool",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "type": {
+                        "name": "type",
+                        "required": true,
+                        "type": "string",
+                        "values": [
+                          "tool_result"
+                        ]
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "union",
+                "values": [
+                  "AgentMessageEntry",
+                  "AgentToolCallActivity",
+                  "AgentToolResultActivity",
+                  "AgentLlmResponseActivity",
+                  "AgentErrorEntry"
+                ]
+              },
+              "name": "entries",
+              "type": "array"
+            },
+            {
+              "default": false,
+              "description": "The assistant is answering.",
+              "name": "working",
+              "type": "boolean"
+            }
+          ],
+          "id": "ent_01M3WC4PY11QN1558Y1ZV83259",
+          "name": "AgentConversationView",
+          "persistence": "runtime"
+        }
+      ],
       "entity": {
         "collection": "agentMessages",
         "fields": [
@@ -187,13 +532,6 @@
             "name": "createdAt",
             "synonyms": "time, timestamp",
             "type": "number"
-          },
-          {
-            "default": "",
-            "description": "The message being typed.",
-            "intrinsic": true,
-            "name": "draft",
-            "type": "string"
           }
         ],
         "id": "ent_01M3TYMQH8YF6HGJJVC3GRECJP",
@@ -209,6 +547,10 @@
           "path": "/agent-session",
           "traits": [
             {
+              "ref": "AgentConversation",
+              "refId": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4"
+            },
+            {
               "ref": "AgentThread",
               "refId": "trt_01M3TYMQH8QP9883EWJYRT49M8"
             }
@@ -217,48 +559,15 @@
       ],
       "traits": [
         {
-          "category": "interaction",
-          "config": {
-            "links": {
-              "default": [],
-              "description": "Related pages (e.g. the run history), shown under the title.",
-              "items": {
-                "properties": {
-                  "href": {
-                    "name": "href",
-                    "required": true,
-                    "type": "string"
-                  },
-                  "label": {
-                    "name": "label",
-                    "required": true,
-                    "type": "string"
-                  }
-                },
-                "type": "object"
-              },
-              "label": "Links above the conversation",
-              "tier": "presentation",
-              "type": "[AgentLink]"
-            },
-            "placeholder": {
-              "default": "Ask the assistant…",
-              "label": "Message placeholder",
-              "tier": "presentation",
-              "type": "string"
-            },
-            "title": {
-              "default": "Assistant",
-              "description": "Heading above the conversation.",
-              "label": "Title",
-              "tier": "presentation",
-              "type": "string"
-            }
-          },
+          "category": "lifecycle",
           "effectRow": [
             {
               "kind": "emit",
               "resource": "CONVERSE"
+            },
+            {
+              "kind": "emit",
+              "resource": "THREAD_FAILED"
             },
             {
               "kind": "fetch",
@@ -270,14 +579,25 @@
             },
             {
               "kind": "render-ui",
-              "resource": "main"
-            },
-            {
-              "kind": "set",
-              "resource": "@entity.draft"
+              "resource": "toast"
             }
           ],
           "emits": [
+            {
+              "description": "The conversation could not be loaded or a message could not be stored.",
+              "event": "THREAD_FAILED",
+              "eventId": "evt_01M3WC4PY1SBZM2NR5EQ1JARQK",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "failed, error",
+              "tier": "domain"
+            },
             {
               "description": "The conversation to answer, oldest first; the last turn is the request.",
               "event": "CONVERSE",
@@ -289,6 +609,7 @@
                   "properties": [
                     {
                       "name": "role",
+                      "required": true,
                       "type": "string"
                     },
                     {
@@ -304,48 +625,6 @@
               "scope": "external",
               "synonyms": "ask, converse, request",
               "tier": "domain"
-            },
-            {
-              "event": "AgentConversationLoaded",
-              "eventId": "evt_01M3TYMQH8H65NTWP1KYX7WM6C",
-              "payloadSchema": [
-                {
-                  "entity": "AgentMessage",
-                  "name": "data",
-                  "properties": [
-                    {
-                      "name": "id",
-                      "required": true,
-                      "type": "string"
-                    },
-                    {
-                      "name": "ownerId",
-                      "required": true,
-                      "type": "string"
-                    },
-                    {
-                      "name": "role",
-                      "type": "string"
-                    },
-                    {
-                      "name": "content",
-                      "required": true,
-                      "type": "string"
-                    },
-                    {
-                      "name": "createdAt",
-                      "type": "number"
-                    },
-                    {
-                      "name": "draft",
-                      "type": "string"
-                    }
-                  ],
-                  "type": "[object]"
-                }
-              ],
-              "scope": "internal",
-              "tier": "internal"
             },
             {
               "description": "The conversation finished loading.",
@@ -378,18 +657,16 @@
                     {
                       "name": "createdAt",
                       "type": "number"
-                    },
-                    {
-                      "name": "draft",
-                      "type": "string"
                     }
                   ],
                   "type": "[object]"
                 }
               ],
+              "scope": "external",
               "tier": "internal"
             },
             {
+              "description": "The conversation could not be loaded.",
               "event": "AgentMessagesLoadFailed",
               "eventId": "evt_01M3TYMQH8BHTWREJV617WFH68",
               "payloadSchema": [
@@ -402,6 +679,45 @@
                   "type": "string"
                 }
               ],
+              "scope": "external",
+              "tier": "internal"
+            },
+            {
+              "event": "AgentConversationLoaded",
+              "eventId": "evt_01M3TYMQH8H65NTWP1KYX7WM6C",
+              "payloadSchema": [
+                {
+                  "entity": "AgentMessage",
+                  "name": "data",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "ownerId",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "role",
+                      "type": "string"
+                    },
+                    {
+                      "name": "content",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "number"
+                    }
+                  ],
+                  "type": "[object]"
+                }
+              ],
+              "scope": "internal",
               "tier": "internal"
             },
             {
@@ -432,16 +748,13 @@
                 {
                   "name": "createdAt",
                   "type": "number"
-                },
-                {
-                  "name": "draft",
-                  "type": "string"
                 }
               ],
               "scope": "internal",
               "tier": "internal"
             },
             {
+              "description": "The message could not be stored.",
               "event": "AgentMessageSaveFailed",
               "eventId": "evt_01M3TYMQH8CEE16439Z6N25V08",
               "payloadSchema": [
@@ -454,33 +767,12 @@
                   "type": "string"
                 }
               ],
+              "scope": "external",
               "tier": "internal"
-            },
-            {
-              "description": "The message being typed changed.",
-              "event": "EDIT_MESSAGE",
-              "eventId": "evt_01M3TYMQH8HHGS90VQR6Y0RK1K",
-              "payloadSchema": [
-                {
-                  "name": "value",
-                  "required": true,
-                  "type": "string"
-                }
-              ],
-              "tier": "presentation"
-            },
-            {
-              "description": "Send the typed message.",
-              "event": "SEND_DRAFT",
-              "eventId": "evt_01M3TYMQH8RCRDSVZ3DQ6DZ2YF",
-              "synonyms": "send, ask, submit",
-              "tier": "domain"
             }
           ],
           "entityContract": {
-            "provides": [
-              "draft"
-            ],
+            "provides": [],
             "requires": []
           },
           "entityRebindable": true,
@@ -490,8 +782,21 @@
           "id": "trt_01M3TYMQH8QP9883EWJYRT49M8",
           "linkedEntity": "AgentMessage",
           "linkedEntityId": "ent_01M3TYMQH8YF6HGJJVC3GRECJP",
+          "listens": [
+            {
+              "event": "SEND",
+              "eventId": "evt_01M3TYMQH87CAV0ETMWW6P6W6P",
+              "source": {
+                "kind": "trait",
+                "trait": "AgentConversation",
+                "traitId": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4"
+              },
+              "triggers": "SEND",
+              "triggersId": "evt_01M3TYMQH87CAV0ETMWW6P6W6P"
+            }
+          ],
           "name": "AgentThread",
-          "scope": "collection",
+          "scope": "instance",
           "stateMachine": {
             "events": [
               {
@@ -500,88 +805,7 @@
                 "name": "Initialize"
               },
               {
-                "description": "The conversation finished loading.",
-                "id": "evt_01M3TYMQH87K7NK4H6DHKPYPM6",
-                "key": "AgentMessagesLoaded",
-                "name": "AgentMessage s loaded",
-                "payloadSchema": [
-                  {
-                    "entity": "AgentMessage",
-                    "name": "data",
-                    "properties": [
-                      {
-                        "name": "id",
-                        "required": true,
-                        "type": "string"
-                      },
-                      {
-                        "name": "ownerId",
-                        "required": true,
-                        "type": "string"
-                      },
-                      {
-                        "name": "role",
-                        "type": "string"
-                      },
-                      {
-                        "name": "content",
-                        "required": true,
-                        "type": "string"
-                      },
-                      {
-                        "name": "createdAt",
-                        "type": "number"
-                      },
-                      {
-                        "name": "draft",
-                        "type": "string"
-                      }
-                    ],
-                    "type": "[object]"
-                  }
-                ],
-                "tier": "internal"
-              },
-              {
-                "id": "evt_01M3TYMQH8BHTWREJV617WFH68",
-                "key": "AgentMessagesLoadFailed",
-                "name": "AgentMessage s load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ],
-                "tier": "internal"
-              },
-              {
-                "description": "The message being typed changed.",
-                "id": "evt_01M3TYMQH8HHGS90VQR6Y0RK1K",
-                "key": "EDIT_MESSAGE",
-                "name": "Edit Message",
-                "payloadSchema": [
-                  {
-                    "name": "value",
-                    "required": true,
-                    "type": "string"
-                  }
-                ],
-                "tier": "presentation"
-              },
-              {
-                "description": "Send the typed message.",
-                "id": "evt_01M3TYMQH8RCRDSVZ3DQ6DZ2YF",
-                "key": "SEND_DRAFT",
-                "name": "Send Draft",
-                "synonyms": "send, ask, submit",
-                "tier": "domain"
-              },
-              {
-                "description": "Ask the assistant something.",
+                "description": "Store the user's message and ask the assistant.",
                 "id": "evt_01M3TYMQH87CAV0ETMWW6P6W6P",
                 "key": "SEND",
                 "name": "Send",
@@ -593,32 +817,6 @@
                   }
                 ],
                 "synonyms": "ask, message, chat"
-              },
-              {
-                "description": "The assistant answered.",
-                "id": "evt_01M3TYMQH8PJZ22902FWBBMMK4",
-                "key": "REPLIED",
-                "name": "Replied",
-                "payloadSchema": [
-                  {
-                    "name": "reply",
-                    "required": true,
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "description": "The assistant could not answer.",
-                "id": "evt_01M3TYMQH844NH7EYEBPA4XVG6",
-                "key": "REPLY_FAILED",
-                "name": "Reply Failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "required": true,
-                    "type": "string"
-                  }
-                ]
               },
               {
                 "description": "A message persisted — payload is the created AgentMessage row itself.",
@@ -649,10 +847,6 @@
                   {
                     "name": "createdAt",
                     "type": "number"
-                  },
-                  {
-                    "name": "draft",
-                    "type": "string"
                   }
                 ],
                 "tier": "internal"
@@ -688,10 +882,6 @@
                       {
                         "name": "createdAt",
                         "type": "number"
-                      },
-                      {
-                        "name": "draft",
-                        "type": "string"
                       }
                     ],
                     "type": "[object]"
@@ -700,6 +890,37 @@
                 "tier": "internal"
               },
               {
+                "description": "Store the assistant's answer.",
+                "id": "evt_01M3TYMQH8PJZ22902FWBBMMK4",
+                "key": "REPLIED",
+                "name": "Replied",
+                "payloadSchema": [
+                  {
+                    "name": "reply",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "description": "The conversation could not be loaded.",
+                "id": "evt_01M3TYMQH8BHTWREJV617WFH68",
+                "key": "AgentMessagesLoadFailed",
+                "name": "AgentMessage s load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "description": "The message could not be stored.",
                 "id": "evt_01M3TYMQH8CEE16439Z6N25V08",
                 "key": "AgentMessageSaveFailed",
                 "name": "AgentMessage save failed",
@@ -716,6 +937,21 @@
                 "tier": "internal"
               },
               {
+                "description": "The conversation could not be loaded or a message could not be stored.",
+                "id": "evt_01M3WC4PY1SBZM2NR5EQ1JARQK",
+                "key": "THREAD_FAILED",
+                "name": "Thread Failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "failed, error",
+                "tier": "domain"
+              },
+              {
                 "description": "The conversation to answer, oldest first; the last turn is the request.",
                 "id": "evt_01M3TYMQH8CS3YHB2R90D5J678",
                 "key": "CONVERSE",
@@ -727,6 +963,7 @@
                     "properties": [
                       {
                         "name": "role",
+                        "required": true,
                         "type": "string"
                       },
                       {
@@ -741,18 +978,51 @@
                 ],
                 "synonyms": "ask, converse, request",
                 "tier": "domain"
+              },
+              {
+                "description": "The conversation finished loading.",
+                "id": "evt_01M3TYMQH87K7NK4H6DHKPYPM6",
+                "key": "AgentMessagesLoaded",
+                "name": "AgentMessage s loaded",
+                "payloadSchema": [
+                  {
+                    "entity": "AgentMessage",
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "role",
+                        "type": "string"
+                      },
+                      {
+                        "name": "content",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "tier": "internal"
               }
             ],
             "states": [
               {
                 "isInitial": true,
-                "name": "loading"
-              },
-              {
-                "name": "chatting"
-              },
-              {
-                "name": "waiting"
+                "name": "ready"
               }
             ],
             "transitions": [
@@ -767,238 +1037,12 @@
                         "success": "AgentMessagesLoaded"
                       }
                     }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "type": "skeleton",
-                          "variant": "header"
-                        },
-                        {
-                          "rows": 6.0,
-                          "type": "skeleton",
-                          "variant": "list"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack"
-                    }
                   ]
                 ],
                 "event": "INIT",
                 "eventId": "evt_01M3TYMQH81AV51TX8HBD3BVVY",
-                "from": "loading",
-                "to": "loading"
-              },
-              {
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "content": "@config.title",
-                          "type": "typography",
-                          "variant": "h4"
-                        },
-                        {
-                          "children": [
-                            "array/map",
-                            "@config.links",
-                            [
-                              "fn",
-                              "item",
-                              {
-                                "href": "@item.href",
-                                "label": "@item.label",
-                                "type": "button",
-                                "variant": "ghost"
-                              }
-                            ]
-                          ],
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack"
-                        },
-                        {
-                          "entity": [
-                            "array/sort",
-                            "@payload.data",
-                            "createdAt",
-                            "asc"
-                          ],
-                          "fields": [],
-                          "gap": "sm",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "children": [
-                                {
-                                  "label": "@item.role",
-                                  "size": "sm",
-                                  "type": "badge",
-                                  "variant": "neutral"
-                                },
-                                {
-                                  "content": "@item.content",
-                                  "type": "typography",
-                                  "variant": "body"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
-                            }
-                          ],
-                          "type": "data-list"
-                        },
-                        {
-                          "children": [
-                            {
-                              "aria-label": "Message",
-                              "onChange": "EDIT_MESSAGE",
-                              "placeholder": "@config.placeholder",
-                              "type": "textarea"
-                            },
-                            {
-                              "action": "SEND_DRAFT",
-                              "icon": "send",
-                              "label": "Send",
-                              "type": "button",
-                              "variant": "primary"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
-                    }
-                  ]
-                ],
-                "event": "AgentMessagesLoaded",
-                "eventId": "evt_01M3TYMQH87K7NK4H6DHKPYPM6",
-                "from": "loading",
-                "to": "chatting"
-              },
-              {
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "message": "@payload.error",
-                      "type": "alert",
-                      "variant": "error"
-                    }
-                  ]
-                ],
-                "event": "AgentMessagesLoadFailed",
-                "eventId": "evt_01M3TYMQH8BHTWREJV617WFH68",
-                "from": "loading",
-                "to": "chatting"
-              },
-              {
-                "effects": [
-                  [
-                    "fetch",
-                    "AgentMessage",
-                    {
-                      "emit": {
-                        "failure": "AgentMessagesLoadFailed",
-                        "success": "AgentMessagesLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "type": "skeleton",
-                          "variant": "header"
-                        },
-                        {
-                          "rows": 6.0,
-                          "type": "skeleton",
-                          "variant": "list"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack"
-                    }
-                  ]
-                ],
-                "event": "INIT",
-                "eventId": "evt_01M3TYMQH81AV51TX8HBD3BVVY",
-                "from": "chatting",
-                "to": "loading"
-              },
-              {
-                "effects": [
-                  [
-                    "set",
-                    "@entity.draft",
-                    "@payload.value"
-                  ]
-                ],
-                "event": "EDIT_MESSAGE",
-                "eventId": "evt_01M3TYMQH8HHGS90VQR6Y0RK1K",
-                "from": "chatting",
-                "to": "chatting"
-              },
-              {
-                "effects": [
-                  [
-                    "persist",
-                    "create",
-                    "AgentMessage",
-                    {
-                      "content": "@entity.draft",
-                      "createdAt": "@now",
-                      "ownerId": "@user.id",
-                      "role": "user"
-                    },
-                    {
-                      "emit": {
-                        "failure": "AgentMessageSaveFailed",
-                        "success": "AgentMessageSaved"
-                      }
-                    }
-                  ],
-                  [
-                    "set",
-                    "@entity.draft",
-                    ""
-                  ]
-                ],
-                "event": "SEND_DRAFT",
-                "eventId": "evt_01M3TYMQH8RCRDSVZ3DQ6DZ2YF",
-                "from": "chatting",
-                "guard": [
-                  "not",
-                  [
-                    "=",
-                    [
-                      "str/default",
-                      "@entity.draft",
-                      ""
-                    ],
-                    ""
-                  ]
-                ],
-                "to": "waiting"
+                "from": "ready",
+                "to": "ready"
               },
               {
                 "effects": [
@@ -1022,7 +1066,7 @@
                 ],
                 "event": "SEND",
                 "eventId": "evt_01M3TYMQH87CAV0ETMWW6P6W6P",
-                "from": "chatting",
+                "from": "ready",
                 "guard": [
                   "not",
                   [
@@ -1035,54 +1079,7 @@
                     ""
                   ]
                 ],
-                "to": "waiting"
-              },
-              {
-                "effects": [
-                  [
-                    "persist",
-                    "create",
-                    "AgentMessage",
-                    {
-                      "content": "@payload.reply",
-                      "createdAt": "@now",
-                      "ownerId": "@user.id",
-                      "role": "assistant"
-                    }
-                  ],
-                  [
-                    "fetch",
-                    "AgentMessage",
-                    {
-                      "emit": {
-                        "failure": "AgentMessagesLoadFailed",
-                        "success": "AgentMessagesLoaded"
-                      }
-                    }
-                  ]
-                ],
-                "event": "REPLIED",
-                "eventId": "evt_01M3TYMQH8PJZ22902FWBBMMK4",
-                "from": "chatting",
-                "to": "loading"
-              },
-              {
-                "effects": [
-                  [
-                    "fetch",
-                    "AgentMessage",
-                    {
-                      "emit": {
-                        "failure": "AgentMessagesLoadFailed",
-                        "success": "AgentMessagesLoaded"
-                      }
-                    }
-                  ]
-                ],
-                "event": "REPLY_FAILED",
-                "eventId": "evt_01M3TYMQH844NH7EYEBPA4XVG6",
-                "from": "chatting",
-                "to": "loading"
+                "to": "ready"
               },
               {
                 "effects": [
@@ -1095,20 +1092,12 @@
                         "success": "AgentConversationLoaded"
                       }
                     }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "size": "sm",
-                      "type": "spinner"
-                    }
                   ]
                 ],
                 "event": "AgentMessageSaved",
                 "eventId": "evt_01M3TYMQH8ACSRY02P4HWBHJWV",
-                "from": "waiting",
-                "to": "waiting"
+                "from": "ready",
+                "to": "ready"
               },
               {
                 "effects": [
@@ -1138,8 +1127,8 @@
                 ],
                 "event": "AgentConversationLoaded",
                 "eventId": "evt_01M3TYMQH8H65NTWP1KYX7WM6C",
-                "from": "waiting",
-                "to": "waiting"
+                "from": "ready",
+                "to": "ready"
               },
               {
                 "effects": [
@@ -1153,63 +1142,25 @@
                       "ownerId": "@user.id",
                       "role": "assistant"
                     }
-                  ],
-                  [
-                    "fetch",
-                    "AgentMessage",
-                    {
-                      "emit": {
-                        "failure": "AgentMessagesLoadFailed",
-                        "success": "AgentMessagesLoaded"
-                      }
-                    }
                   ]
                 ],
                 "event": "REPLIED",
                 "eventId": "evt_01M3TYMQH8PJZ22902FWBBMMK4",
-                "from": "waiting",
-                "to": "loading"
+                "from": "ready",
+                "to": "ready"
               },
               {
                 "effects": [
                   [
-                    "fetch",
-                    "AgentMessage",
+                    "emit",
+                    "THREAD_FAILED",
                     {
-                      "emit": {
-                        "failure": "AgentMessagesLoadFailed",
-                        "success": "AgentMessagesLoaded"
-                      }
+                      "error": "@payload.error"
                     }
-                  ]
-                ],
-                "event": "REPLY_FAILED",
-                "eventId": "evt_01M3TYMQH844NH7EYEBPA4XVG6",
-                "from": "waiting",
-                "to": "loading"
-              },
-              {
-                "effects": [
+                  ],
                   [
                     "render-ui",
-                    "main",
-                    {
-                      "message": "@payload.error",
-                      "type": "alert",
-                      "variant": "error"
-                    }
-                  ]
-                ],
-                "event": "AgentMessageSaveFailed",
-                "eventId": "evt_01M3TYMQH8CEE16439Z6N25V08",
-                "from": "waiting",
-                "to": "chatting"
-              },
-              {
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
+                    "toast",
                     {
                       "message": "@payload.error",
                       "type": "alert",
@@ -1219,8 +1170,707 @@
                 ],
                 "event": "AgentMessagesLoadFailed",
                 "eventId": "evt_01M3TYMQH8BHTWREJV617WFH68",
-                "from": "waiting",
-                "to": "chatting"
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "THREAD_FAILED",
+                    {
+                      "error": "@payload.error"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ],
+                "event": "AgentMessageSaveFailed",
+                "eventId": "evt_01M3TYMQH8CEE16439Z6N25V08",
+                "from": "ready",
+                "to": "ready"
+              }
+            ]
+          }
+        },
+        {
+          "category": "interaction",
+          "config": {
+            "emptyTitle": {
+              "default": "Ask me to do something in this app",
+              "label": "Empty conversation title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "links": {
+              "default": [],
+              "description": "Related pages (e.g. the run history).",
+              "items": {
+                "properties": {
+                  "href": {
+                    "name": "href",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Links above the conversation",
+              "tier": "presentation",
+              "type": "[AgentLink]"
+            },
+            "placeholder": {
+              "default": "Ask the assistant…",
+              "label": "Message placeholder",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "SEND"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "main"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.entries"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.working"
+            }
+          ],
+          "emits": [
+            {
+              "description": "The user asked something; AgentThread stores it and asks the assistant.",
+              "event": "SEND",
+              "eventId": "evt_01M3WC4PY16PAX6BAR4QCWZMJR",
+              "payloadSchema": [
+                {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "ask, send, submit",
+              "tier": "domain"
+            },
+            {
+              "description": "Send the typed message.",
+              "event": "ASK",
+              "eventId": "evt_01M3WC4PY1TK0PTERMDE5BWR5W",
+              "payloadSchema": [
+                {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "synonyms": "send, ask, submit",
+              "tier": "presentation"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "entries",
+              "working"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "entityRefIds": {
+            "AgentConversationView": "ent_01M3WC4PY11QN1558Y1ZV83259"
+          },
+          "id": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
+          "linkedEntity": "AgentConversationView",
+          "linkedEntityId": "ent_01M3WC4PY11QN1558Y1ZV83259",
+          "listens": [
+            {
+              "event": "AgentMessagesLoaded",
+              "eventId": "evt_01M3TYMQH87K7NK4H6DHKPYPM6",
+              "source": {
+                "kind": "trait",
+                "trait": "AgentThread",
+                "traitId": "trt_01M3TYMQH8QP9883EWJYRT49M8"
+              },
+              "triggers": "THREAD_LOADED",
+              "triggersId": "evt_01M3WC4PY11N0BPZ1WZMMGJGR8"
+            },
+            {
+              "event": "THREAD_FAILED",
+              "eventId": "evt_01M3WC4PY1SBZM2NR5EQ1JARQK",
+              "source": {
+                "kind": "trait",
+                "trait": "AgentThread",
+                "traitId": "trt_01M3TYMQH8QP9883EWJYRT49M8"
+              },
+              "triggers": "REPLY_FAILED",
+              "triggersId": "evt_01M3WC4PY1FP4JAXE259KW86F8"
+            }
+          ],
+          "name": "AgentConversation",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M3WC4PY186J45C1NERG11RG8",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Show the stored conversation.",
+                "id": "evt_01M3WC4PY11N0BPZ1WZMMGJGR8",
+                "key": "THREAD_LOADED",
+                "name": "Thread Loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "role",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "content",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ]
+              },
+              {
+                "description": "Send the typed message.",
+                "id": "evt_01M3WC4PY1TK0PTERMDE5BWR5W",
+                "key": "ASK",
+                "name": "Ask",
+                "payloadSchema": [
+                  {
+                    "name": "message",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "send, ask, submit",
+                "tier": "presentation"
+              },
+              {
+                "description": "One step the assistant just took, shown as it happens.",
+                "id": "evt_01M3WC4PY1REQ5RNNQBSR6JFXP",
+                "key": "STEP",
+                "name": "Step",
+                "payloadSchema": [
+                  {
+                    "name": "activity",
+                    "required": true,
+                    "type": "AgentActivity"
+                  }
+                ],
+                "synonyms": "progress, activity, working"
+              },
+              {
+                "description": "The assistant answered.",
+                "id": "evt_01M3WC4PY17CBXZBP39ZBSYT2B",
+                "key": "REPLIED",
+                "name": "Replied",
+                "payloadSchema": [
+                  {
+                    "name": "reply",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "description": "The assistant could not answer.",
+                "id": "evt_01M3WC4PY1FP4JAXE259KW86F8",
+                "key": "REPLY_FAILED",
+                "name": "Reply Failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "description": "The user asked something; AgentThread stores it and asks the assistant.",
+                "id": "evt_01M3WC4PY16PAX6BAR4QCWZMJR",
+                "key": "SEND",
+                "name": "Send",
+                "payloadSchema": [
+                  {
+                    "name": "message",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "ask, send, submit",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            "array/map",
+                            "@config.links",
+                            [
+                              "fn",
+                              "item",
+                              {
+                                "href": "@item.href",
+                                "label": "@item.label",
+                                "type": "button",
+                                "variant": "ghost"
+                              }
+                            ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "activities": "@entity.entries",
+                          "className": "flex-1",
+                          "emptyTitle": "@config.emptyTitle",
+                          "idPrefix": "agent-conversation",
+                          "rawLlmPreferenceKey": "agent-conversation-raw-llm",
+                          "type": "agent-chat-feed",
+                          "working": "@entity.working"
+                        },
+                        {
+                          "placeholder": "@config.placeholder",
+                          "sendEvent": "ASK",
+                          "type": "chat-bar"
+                        }
+                      ],
+                      "className": "h-full min-h-0 flex-1",
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M3WC4PY186J45C1NERG11RG8",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.entries",
+                    [
+                      "array/map",
+                      [
+                        "array/sort",
+                        "@payload.data",
+                        "createdAt",
+                        "asc"
+                      ],
+                      [
+                        "fn",
+                        "item",
+                        {
+                          "content": "@item.content",
+                          "role": "@item.role",
+                          "timestamp": "@item.createdAt",
+                          "type": "message"
+                        }
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            "array/map",
+                            "@config.links",
+                            [
+                              "fn",
+                              "item",
+                              {
+                                "href": "@item.href",
+                                "label": "@item.label",
+                                "type": "button",
+                                "variant": "ghost"
+                              }
+                            ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "activities": "@entity.entries",
+                          "className": "flex-1",
+                          "emptyTitle": "@config.emptyTitle",
+                          "idPrefix": "agent-conversation",
+                          "rawLlmPreferenceKey": "agent-conversation-raw-llm",
+                          "type": "agent-chat-feed",
+                          "working": "@entity.working"
+                        },
+                        {
+                          "placeholder": "@config.placeholder",
+                          "sendEvent": "ASK",
+                          "type": "chat-bar"
+                        }
+                      ],
+                      "className": "h-full min-h-0 flex-1",
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "THREAD_LOADED",
+                "eventId": "evt_01M3WC4PY11N0BPZ1WZMMGJGR8",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.entries",
+                    [
+                      "array/append",
+                      "@entity.entries",
+                      {
+                        "content": "@payload.message",
+                        "role": "user",
+                        "timestamp": "@now",
+                        "type": "message"
+                      }
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.working",
+                    true
+                  ],
+                  [
+                    "emit",
+                    "SEND",
+                    {
+                      "message": "@payload.message"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            "array/map",
+                            "@config.links",
+                            [
+                              "fn",
+                              "item",
+                              {
+                                "href": "@item.href",
+                                "label": "@item.label",
+                                "type": "button",
+                                "variant": "ghost"
+                              }
+                            ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "activities": "@entity.entries",
+                          "className": "flex-1",
+                          "emptyTitle": "@config.emptyTitle",
+                          "idPrefix": "agent-conversation",
+                          "rawLlmPreferenceKey": "agent-conversation-raw-llm",
+                          "type": "agent-chat-feed",
+                          "working": "@entity.working"
+                        },
+                        {
+                          "placeholder": "@config.placeholder",
+                          "sendEvent": "ASK",
+                          "type": "chat-bar"
+                        }
+                      ],
+                      "className": "h-full min-h-0 flex-1",
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "ASK",
+                "eventId": "evt_01M3WC4PY1TK0PTERMDE5BWR5W",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "not",
+                    "@entity.working"
+                  ],
+                  [
+                    "not",
+                    [
+                      "=",
+                      [
+                        "str/default",
+                        "@payload.message",
+                        ""
+                      ],
+                      ""
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.entries",
+                    [
+                      "array/append",
+                      "@entity.entries",
+                      "@payload.activity"
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            "array/map",
+                            "@config.links",
+                            [
+                              "fn",
+                              "item",
+                              {
+                                "href": "@item.href",
+                                "label": "@item.label",
+                                "type": "button",
+                                "variant": "ghost"
+                              }
+                            ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "activities": "@entity.entries",
+                          "className": "flex-1",
+                          "emptyTitle": "@config.emptyTitle",
+                          "idPrefix": "agent-conversation",
+                          "rawLlmPreferenceKey": "agent-conversation-raw-llm",
+                          "type": "agent-chat-feed",
+                          "working": "@entity.working"
+                        },
+                        {
+                          "placeholder": "@config.placeholder",
+                          "sendEvent": "ASK",
+                          "type": "chat-bar"
+                        }
+                      ],
+                      "className": "h-full min-h-0 flex-1",
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "STEP",
+                "eventId": "evt_01M3WC4PY1REQ5RNNQBSR6JFXP",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.entries",
+                    [
+                      "array/append",
+                      "@entity.entries",
+                      {
+                        "content": "@payload.reply",
+                        "role": "assistant",
+                        "timestamp": "@now",
+                        "type": "message"
+                      }
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.working",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            "array/map",
+                            "@config.links",
+                            [
+                              "fn",
+                              "item",
+                              {
+                                "href": "@item.href",
+                                "label": "@item.label",
+                                "type": "button",
+                                "variant": "ghost"
+                              }
+                            ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "activities": "@entity.entries",
+                          "className": "flex-1",
+                          "emptyTitle": "@config.emptyTitle",
+                          "idPrefix": "agent-conversation",
+                          "rawLlmPreferenceKey": "agent-conversation-raw-llm",
+                          "type": "agent-chat-feed",
+                          "working": "@entity.working"
+                        },
+                        {
+                          "placeholder": "@config.placeholder",
+                          "sendEvent": "ASK",
+                          "type": "chat-bar"
+                        }
+                      ],
+                      "className": "h-full min-h-0 flex-1",
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "REPLIED",
+                "eventId": "evt_01M3WC4PY17CBXZBP39ZBSYT2B",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.entries",
+                    [
+                      "array/append",
+                      "@entity.entries",
+                      {
+                        "message": "@payload.error",
+                        "timestamp": "@now",
+                        "type": "error"
+                      }
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.working",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            "array/map",
+                            "@config.links",
+                            [
+                              "fn",
+                              "item",
+                              {
+                                "href": "@item.href",
+                                "label": "@item.label",
+                                "type": "button",
+                                "variant": "ghost"
+                              }
+                            ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "activities": "@entity.entries",
+                          "className": "flex-1",
+                          "emptyTitle": "@config.emptyTitle",
+                          "idPrefix": "agent-conversation",
+                          "rawLlmPreferenceKey": "agent-conversation-raw-llm",
+                          "type": "agent-chat-feed",
+                          "working": "@entity.working"
+                        },
+                        {
+                          "placeholder": "@config.placeholder",
+                          "sendEvent": "ASK",
+                          "type": "chat-bar"
+                        }
+                      ],
+                      "className": "h-full min-h-0 flex-1",
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "REPLY_FAILED",
+                "eventId": "evt_01M3WC4PY1FP4JAXE259KW86F8",
+                "from": "idle",
+                "to": "idle"
               }
             ]
           }
@@ -1230,12 +1880,30 @@
         "AgentChatMessage": [
           {
             "name": "role",
+            "required": true,
             "type": "string"
           },
           {
             "name": "content",
             "required": true,
             "type": "string"
+          }
+        ],
+        "AgentErrorEntry": [
+          {
+            "name": "type",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "message",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "required": true,
+            "type": "number"
           }
         ],
         "AgentLink": [
@@ -1249,10 +1917,250 @@
             "required": true,
             "type": "string"
           }
+        ],
+        "AgentLlmCall": [
+          {
+            "name": "service",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "provider",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "model",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "systemPrompt",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "userPrompt",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "toolCallsJson",
+            "type": "string"
+          },
+          {
+            "name": "attempt",
+            "type": "number"
+          },
+          {
+            "name": "durationMs",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "promptTokens",
+            "type": "number"
+          },
+          {
+            "name": "completionTokens",
+            "type": "number"
+          },
+          {
+            "name": "cachedPromptTokens",
+            "type": "number"
+          },
+          {
+            "name": "costUSD",
+            "type": "number"
+          }
+        ],
+        "AgentLlmResponseActivity": [
+          {
+            "name": "type",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "content",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "llm",
+            "properties": [
+              {
+                "name": "service",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "name": "provider",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "name": "model",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "name": "systemPrompt",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "name": "userPrompt",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "name": "toolCallsJson",
+                "type": "string"
+              },
+              {
+                "name": "attempt",
+                "type": "number"
+              },
+              {
+                "name": "durationMs",
+                "required": true,
+                "type": "number"
+              },
+              {
+                "name": "promptTokens",
+                "type": "number"
+              },
+              {
+                "name": "completionTokens",
+                "type": "number"
+              },
+              {
+                "name": "cachedPromptTokens",
+                "type": "number"
+              },
+              {
+                "name": "costUSD",
+                "type": "number"
+              }
+            ],
+            "type": "object"
+          },
+          {
+            "name": "timestamp",
+            "required": true,
+            "type": "number"
+          }
+        ],
+        "AgentMessageEntry": [
+          {
+            "name": "type",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "role",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "content",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "required": true,
+            "type": "number"
+          }
+        ],
+        "AgentThreadRow": [
+          {
+            "name": "role",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "content",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "createdAt",
+            "type": "number"
+          }
+        ],
+        "AgentToolCallActivity": [
+          {
+            "name": "type",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "tool",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "type": "AgentToolKind"
+          },
+          {
+            "name": "argsText",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "isExecuting",
+            "type": "boolean"
+          }
+        ],
+        "AgentToolResultActivity": [
+          {
+            "name": "type",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "tool",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "type": "AgentToolKind"
+          },
+          {
+            "name": "success",
+            "required": true,
+            "type": "boolean"
+          },
+          {
+            "name": "detail",
+            "type": "string"
+          },
+          {
+            "name": "rows",
+            "type": "number"
+          },
+          {
+            "name": "resultText",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "required": true,
+            "type": "number"
+          }
         ]
       }
     }
   ],
   "schemaVersion": 1,
-  "version": "2.0.0"
+  "version": "3.0.0"
 }

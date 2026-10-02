@@ -1,5 +1,5 @@
 {
-  "description": "std-graphs — embeddable chart atom. ITEMS_LOADED keeps the rows whose @config.filterField equals @config.filterValue (blank = all), groups them by @config.categoryField, or (timeAxis=true) by the @config.period bucket of @config.timeField — rows without a time value have no place on a time axis and are left out — and aggregates per bucket. Multi-series rendering via @config.series (preformatted ChartSeries shape). Histograms via chartType=histogram pass pre-binned @payload.data through unchanged. Stacked / 100% stacked bars via @config.stack. Post-process sort + limit. Clicking a data point emits UI:@config.drillEvent with { label, value, seriesLabel? }. Drop into a dashboard alongside std-stats / std-browse.",
+  "description": "std-graphs — embeddable chart atom. ITEMS_LOADED keeps the rows whose @config.filterField equals @config.filterValue (blank = all), groups them by @config.categoryField, or (timeAxis=true) by the @config.period bucket of @config.timeField — rows without a time value (or, by category, without a category value) have no bucket to land in and are left out — and aggregates per bucket. Multi-series rendering via @config.series (preformatted ChartSeries shape). Histograms via chartType=histogram pass pre-binned @payload.data through unchanged. Stacked / 100% stacked bars via @config.stack. Post-process sort + limit. Clicking a data point emits UI:@config.drillEvent with { label, value, seriesLabel? }. Drop into a dashboard alongside std-stats / std-browse.",
   "ledger": {
     "entries": {
       "ent_01KXG04GN3VS5JTJHRM5AAK86J": {
@@ -585,7 +585,19 @@
                               ],
                               [
                                 "array/groupBy",
-                                "@rows",
+                                [
+                                  "array/filter",
+                                  "@rows",
+                                  [
+                                    "fn",
+                                    "row",
+                                    [
+                                      "object/get",
+                                      "@row",
+                                      "@config.categoryField"
+                                    ]
+                                  ]
+                                ],
                                 "@config.categoryField"
                               ]
                             ]

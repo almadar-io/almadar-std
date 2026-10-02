@@ -106,6 +106,7 @@ export interface StdUiWizardNavigationConfig {
   showComplete?: boolean;
   /** Default: `true` */
   showNext?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
   /** Default: `1` */
   totalSteps?: number;

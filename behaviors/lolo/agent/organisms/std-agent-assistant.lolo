@@ -1,5 +1,5 @@
-app std-agent-assistant "1.0.0"
-"std-agent-assistant — an in-app assistant that operates the running app for the signed-in user. One request flows down a chain of std agent atoms on the bus: the conversation (std-agent-session) SENDs → CONVERSE → std-agent-context bounds it → std-agent-memory adds what it recalls → std-agent-tool-loop answers it through `call-service llm call-tools`, firing only the inputs and reading only the entities the `tools` allowlist names, as the signed-in user → REPLIED goes back to the conversation, to memory (remembered) and to std-agent-trace (the run record). Import the orbital and supply the allowlist: `orbital Assistant = Agent.orbitals.AgentAssistantOrbital { config { tools: [{ event: TaskOrbital.TaskPersistor.DO_CREATE }, { read: Task }], instructions: \"…\" } }`. The conversation, memory and run records live in AgentRecordsOrbital; retarget them onto your own owner-scoped entities (`ownerId` a relation to your [identity] roster, with @read/@create) with `entities { AgentMessage: …, AgentMemory: …, AgentRun: … }`."
+app std-agent-assistant "2.0.0"
+"std-agent-assistant — an in-app assistant that operates the running app for the signed-in user. A floating button opens it in a side panel docked beside the page (std-panel-launcher; a side sheet on small screens), where the conversation shows every step the assistant takes live as it works. List AssistantDock with the assistant's traits on each page that should carry the button. One request flows down a chain of std agent atoms on the bus: the conversation (std-agent-session) SENDs → CONVERSE → std-agent-context bounds it → std-agent-memory adds what it recalls → std-agent-tool-loop answers it through `call-service llm call-tools`, firing only the inputs and reading only the entities the `tools` allowlist names, as the signed-in user → REPLIED goes back to the conversation, to memory (remembered) and to std-agent-trace (the run record). Import the orbital and supply the allowlist: `orbital Assistant = Agent.orbitals.AgentAssistantOrbital { config { tools: [{ event: TaskOrbital.TaskPersistor.DO_CREATE }, { read: Task }], instructions: \"…\" } }`. The conversation, memory and run records live in AgentRecordsOrbital; retarget them onto your own owner-scoped entities (`ownerId` a relation to your [identity] roster, with @read/@create) with `entities { AgentMessage: …, AgentMemory: …, AgentRun: … }`."
 
 type AgentTool = {
   event : event
@@ -16,6 +16,7 @@ orbital AgentAssistantOrbital {
   uses Memory from "std/behaviors/std-agent-memory"
   uses Loop from "std/behaviors/std-agent-tool-loop"
   uses Trace from "std/behaviors/std-agent-trace"
+  uses Launcher from "std/behaviors/std-panel-launcher"
 
   config {
     tools : [AgentTool] = []
@@ -41,6 +42,13 @@ orbital AgentAssistantOrbital {
       @label "Links above the conversation"
       @description "The pages showing the assistant's run history and memory."
       @tier "presentation"
+    title : string = "Assistant"
+      @label "Panel title"
+      @tier "presentation"
+    buttonLabel : string = "Open the assistant"
+      @label "Button label"
+      @description "What the floating button does, read to screen readers and shown as its tooltip."
+      @tier "presentation"
   }
 
   entity AgentAssistant [runtime] {
@@ -48,18 +56,34 @@ orbital AgentAssistantOrbital {
   }
 
   trait AssistantThread = Session.traits.AgentThread -> AgentMessage {
-    config {
-      links: @config.links
-    }
     events {
       CONVERSE: REQUEST_CONTEXT
     }
     listens {
-      SEND {
-        message : string!
-      }
+      AssistantConversation.SEND -> SEND
+      AssistantLoop.REPLIED -> REPLIED
+    }
+  }
+
+  trait AssistantConversation = Session.traits.AgentConversation {
+    config {
+      links: @config.links
+    }
+    listens {
+      AssistantThread.AgentMessagesLoaded -> THREAD_LOADED
+      AssistantThread.THREAD_FAILED -> REPLY_FAILED
+      AssistantLoop.STEP -> STEP
       AssistantLoop.REPLIED -> REPLIED
       AssistantLoop.REPLY_FAILED -> REPLY_FAILED
+    }
+  }
+
+  trait AssistantDock = Launcher.traits.PanelLauncher {
+    config {
+      contentTrait: @trait.AssistantConversation
+      title: @config.title
+      label: @config.buttonLabel
+      icon: message-circle
     }
   }
 
@@ -100,7 +124,7 @@ orbital AgentAssistantOrbital {
     }
   }
 
-  page "/assistant" as AssistantPage -> AssistantThread, AssistantContext, AssistantMemory, AssistantLoop, AssistantTrace
+  page "/assistant" as AssistantPage -> AssistantDock, AssistantThread, AssistantContext, AssistantMemory, AssistantLoop, AssistantTrace
 }
 
 ;; The assistant's records live outside AgentAssistantOrbital, so a consumer

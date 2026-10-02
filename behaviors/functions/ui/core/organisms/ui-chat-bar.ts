@@ -30,7 +30,7 @@ const ALIAS = 'UiChatBar';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiChatBarEventKey = 'INIT';
+export type StdUiChatBarEventKey = 'INIT' | 'SEND';
 
 /**
  * Typed call-site config block for this trait — every
@@ -69,6 +69,9 @@ export interface StdUiChatBarConfig {
   searchValue?: string;
   /** Default: `[]` */
   selectedIds?: string[];
+  /** Default: `"SEND"` */
+  sendEvent?: string;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
   /** Default: `"idle"` */
@@ -471,6 +474,31 @@ export function stdUiChatBarChatBarOrbital(params: StdUiChatBarChatBarOrbitalPar
             'tier': 'presentation',
             'type': '[string]',
           },
+          'sendEvent': {
+            'default': 'SEND',
+            'description': 'The event a message is sent as — `UI:{sendEvent}` with `{ message }`, from Enter or the send button. @default \'CHAT_SEND\'',
+            'label': 'Send Event',
+            'tier': 'presentation',
+            'type': 'event',
+          },
+          'skeleton': {
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
+            'label': 'Skeleton',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'header',
+              'table',
+              'list',
+              'grid',
+              'detail',
+              'stats',
+              'form',
+              'card',
+              'text',
+              'none',
+            ],
+          },
           'sortBy': {
             'description': 'Current sort field',
             'label': 'Sort By',
@@ -520,6 +548,15 @@ export function stdUiChatBarChatBarOrbital(params: StdUiChatBarChatBarOrbitalPar
             'resource': 'main',
           },
         ],
+        'emits': [
+          {
+            'definerKnob': 'sendEvent',
+            'description': 'The event a message is sent as — `UI:{sendEvent}` with `{ message }`, from Enter or the send button. @default \'CHAT_SEND\'',
+            'event': '@config.sendEvent',
+            'scope': 'external',
+            'tier': 'essential',
+          },
+        ],
         'entityContract': {
           'provides': [],
           'requires': [],
@@ -533,6 +570,12 @@ export function stdUiChatBarChatBarOrbital(params: StdUiChatBarChatBarOrbitalPar
             {
               'key': 'INIT',
               'name': 'Initialize',
+            },
+            {
+              'description': 'The event a message is sent as — `UI:{sendEvent}` with `{ message }`, from Enter or the send button. @default \'CHAT_SEND\'',
+              'key': '@config.sendEvent',
+              'name': '@config.send event',
+              'tier': 'essential',
             },
           ],
           'states': [
@@ -576,6 +619,8 @@ export function stdUiChatBarChatBarOrbital(params: StdUiChatBarChatBarOrbitalPar
                     'runningIndicator': '@config.runningIndicator',
                     'searchValue': '@config.searchValue',
                     'selectedIds': '@config.selectedIds',
+                    'sendEvent': '@config.sendEvent',
+                    'skeleton': '@config.skeleton',
                     'sortBy': '@config.sortBy',
                     'sortDirection': '@config.sortDirection',
                     'status': '@config.status',

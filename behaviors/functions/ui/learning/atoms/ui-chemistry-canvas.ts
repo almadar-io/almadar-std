@@ -96,6 +96,7 @@ export interface StdUiChemistryCanvasConfig {
   /** Default: `[]` */
   shapes?: EntityRow[];
   showGrid?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
   title?: string;
   /** Default: `[]` */

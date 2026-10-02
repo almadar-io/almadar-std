@@ -40,6 +40,7 @@ orbital MapViewOrbital {
     state idle {
       INIT -> idle
         (render-ui main {
+          surface: @config.surface
           markers: @config.markers
           routes: @config.routes
           centerLat: @config.centerLat
@@ -55,6 +56,7 @@ orbital MapViewOrbital {
           showAttribution: @config.showAttribution
           enter: @config.enter
           enterDelay: @config.enterDelay
+          skeleton: @config.skeleton
           aria-label: @config.ariaLabel
           aria-labelledby: @config.ariaLabelledby
           aria-describedby: @config.ariaDescribedby
@@ -95,6 +97,10 @@ orbital MapViewOrbital {
     }
 
     config {
+      surface : "auto" | "none" = auto
+        @label "Surface"
+        @description "Content surface: `auto` paints the theme's surface behind this block unless it already sits on one (a card, dialog or another block); `none` opts out."
+        @tier "presentation"
       markers : [MapViewMarkersItem] = []
         @label "Markers"
         @description "Array of markers to display"
@@ -154,6 +160,10 @@ orbital MapViewOrbital {
       enterDelay : number
         @label "Enter Delay"
         @description "Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating."
+        @tier "presentation"
+      skeleton : "header" | "table" | "list" | "grid" | "detail" | "stats" | "form" | "card" | "text" | "none"
+        @label "Skeleton"
+        @description "Skeleton shown while this element's server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`."
         @tier "presentation"
       ariaLabel : string
         @label "Aria-label"

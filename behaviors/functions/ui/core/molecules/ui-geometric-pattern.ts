@@ -51,6 +51,7 @@ export interface StdUiGeometricPatternConfig {
   opacity?: number;
   /** Default: `1` */
   scale?: number;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `0.5` */
   strokeWidth?: number;
   /** Default: `"star8"` */

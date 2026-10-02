@@ -1,0 +1,249 @@
+app ui-agent-activity-feed "1.0.0"
+"AgentActivityFeed — UI factory (1:1 with the @almadar/ui agent-activity-feed pattern)."
+;; @pattern "agent-activity-feed"
+orbital AgentActivityFeedOrbital {
+  type AgentActivityFeedActivitiesItem = AgentActivityFeedActivitiesItemMessage | AgentActivityFeedActivitiesItemToolCall | AgentActivityFeedActivitiesItemToolResult | AgentActivityFeedActivitiesItemFileOperation | AgentActivityFeedActivitiesItemSchemaDiff | AgentActivityFeedActivitiesItemError | AgentActivityFeedActivitiesItemCoordinatorDecision | AgentActivityFeedActivitiesItemPlanCommitted | AgentActivityFeedActivitiesItemPendingQuestion | AgentActivityFeedActivitiesItemClarificationQuestion | AgentActivityFeedActivitiesItemAnalysis | AgentActivityFeedActivitiesItemOrbitalStarted | AgentActivityFeedActivitiesItemOrbitalDone | AgentActivityFeedActivitiesItemSchemaChange | AgentActivityFeedActivitiesItemDone | AgentActivityFeedActivitiesItemCancelled | AgentActivityFeedActivitiesItemLlmResponse
+  type AgentActivityFeedActivitiesItemMessage = {
+    type : "message"!
+    role : "user" | "assistant" | "system"!
+    content : string!
+    timestamp : number!
+    isStreaming : boolean
+  }
+  type AgentActivityFeedActivitiesItemToolCall = {
+    type : "tool_call"!
+    tool : string!
+    kind : "input" | "read" | "invalid"
+    argsText : string!
+    timestamp : number!
+    isExecuting : boolean
+  }
+  type AgentActivityFeedActivitiesItemToolResult = {
+    type : "tool_result"!
+    tool : string!
+    kind : "input" | "read" | "invalid"
+    success : boolean!
+    detail : string
+    rows : number
+    resultText : string!
+    timestamp : number!
+  }
+  type AgentActivityFeedActivitiesItemFileOperation = {
+    type : "file_operation"!
+    operation : "ls" | "read_file" | "write_file" | "edit_file"!
+    path : string!
+    success : boolean
+    timestamp : number!
+  }
+  type AgentActivityFeedActivitiesItemSchemaDiff = {
+    type : "schema_diff"!
+    filePath : string!
+    hunks : [AgentActivityFeedActivitiesItemSchemaDiffHunksItem]!
+    timestamp : number!
+  }
+  type AgentActivityFeedActivitiesItemSchemaDiffHunksItem = {
+    oldStart : number!
+    oldLines : number!
+    newStart : number!
+    newLines : number!
+    lines : [AgentActivityFeedActivitiesItemSchemaDiffHunksItemLinesItem]!
+  }
+  type AgentActivityFeedActivitiesItemSchemaDiffHunksItemLinesItem = {
+    type : "add" | "remove" | "context"!
+    content : string!
+  }
+  type AgentActivityFeedActivitiesItemError = {
+    type : "error"!
+    message : string!
+    code : string
+    timestamp : number!
+  }
+  type AgentActivityFeedActivitiesItemCoordinatorDecision = {
+    type : "coordinator_decision"!
+    organism : string!
+    reason : string!
+    priorOrganism : string
+    timestamp : number!
+  }
+  type AgentActivityFeedActivitiesItemPlanCommitted = {
+    type : "plan_committed"!
+    orbitals : [string]!
+    timestamp : number!
+  }
+  type AgentActivityFeedActivitiesItemPendingQuestion = {
+    type : "pending_question"!
+    questionId : string!
+    question : string!
+    orbitalName : string
+    timestamp : number!
+  }
+  type AgentActivityFeedActivitiesItemClarificationQuestion = {
+    type : "clarification_question"!
+    level : "organism" | "molecule" | "atom_trait"!
+    scope : AgentActivityFeedActivitiesItemClarificationQuestionScope!
+    question : string!
+    candidates : [AgentActivityFeedActivitiesItemClarificationQuestionCandidatesItem]!
+    skipDefault : string!
+    timestamp : number!
+  }
+  type AgentActivityFeedActivitiesItemClarificationQuestionScope = {
+    orbitalName : string
+    traitName : string
+  }
+  type AgentActivityFeedActivitiesItemClarificationQuestionCandidatesItem = {
+    id : string!
+    label : string!
+    description : string!
+    whyThisFits : string!
+  }
+  type AgentActivityFeedActivitiesItemAnalysis = {
+    type : "analysis"!
+    organism : string!
+    organismReason : string
+    complexity : AgentActivityFeedActivitiesItemAnalysisComplexity
+    renames : [AgentActivityFeedActivitiesItemAnalysisRenamesItem]!
+    deletes : [string]!
+    timestamp : number!
+  }
+  type AgentActivityFeedActivitiesItemAnalysisComplexity = {
+    category : string!
+    reasoning : string!
+  }
+  type AgentActivityFeedActivitiesItemAnalysisRenamesItem = {
+    from : string!
+    to : string!
+  }
+  type AgentActivityFeedActivitiesItemOrbitalStarted = {
+    type : "orbital_started"!
+    orbitalName : string!
+    timestamp : number!
+  }
+  type AgentActivityFeedActivitiesItemOrbitalDone = {
+    type : "orbital_done"!
+    orbitalName : string!
+    traitCount : number
+    transitionCount : number
+    timestamp : number!
+  }
+  type AgentActivityFeedActivitiesItemSchemaChange = {
+    type : "schema_change"!
+    changeKind : "orbital-added" | "orbital-removed" | "entity-fields-changed" | "trait-added" | "trait-removed" | "trait-config-changed" | "state-machine-changed" | "guard-changed" | "effect-changed" | "render-ui-changed" | "event-wiring-changed" | "page-changed" | "theme-changed" | "behavior-composed"!
+    orbitalName : string!
+    traitName : string
+    transitionEvent : string
+    timestamp : number!
+  }
+  type AgentActivityFeedActivitiesItemDone = {
+    type : "done"!
+    orbitalCount : number!
+    timestamp : number!
+  }
+  type AgentActivityFeedActivitiesItemCancelled = {
+    type : "cancelled"!
+    message : string!
+    timestamp : number!
+  }
+  type AgentActivityFeedActivitiesItemLlmResponse = {
+    type : "llm_response"!
+    content : string!
+    llm : AgentActivityFeedActivitiesItemLlmResponseLlm
+    timestamp : number!
+  }
+  type AgentActivityFeedActivitiesItemLlmResponseLlm = {
+    service : string!
+    provider : string!
+    model : string!
+    systemPrompt : string!
+    userPrompt : string!
+    toolCallsJson : string
+    attempt : number
+    durationMs : number!
+    promptTokens : number
+    completionTokens : number
+    cachedPromptTokens : number
+    costUSD : number
+  }
+  type AgentActivityFeedJUMPTarget = {
+    orbital : string!
+    trait : string
+    transition : string
+  }
+
+  entity AgentActivityFeedItem [runtime] {
+    id : string!
+  }
+
+  trait AgentActivityFeedRender -> @rebindable AgentActivityFeedItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          activities: @config.activities
+          working: @config.working
+          onJump: @config.onJump
+          emptyTitle: @config.emptyTitle
+          emptyDescription: @config.emptyDescription
+          followLatest: @config.followLatest
+          className: @config.className
+          enter: @config.enter
+          enterDelay: @config.enterDelay
+          skeleton: @config.skeleton
+          type: agent-activity-feed
+        })
+    }
+
+    emits {
+      @config.onJump -> external {
+        target : AgentActivityFeedJUMPTarget
+      }
+        @description "onJump prop"
+        @tier "essential"
+    }
+
+    config {
+      activities : [AgentActivityFeedActivitiesItem] = []
+        @label "Activities"
+        @description "activities prop"
+        @tier "presentation"
+      working : boolean = false
+        @label "Working"
+        @description "The agent is running: show the thinking row after the last activity."
+        @tier "presentation"
+      onJump : event = "JUMP"
+        @label "On Jump"
+        @description "onJump prop"
+        @tier "presentation"
+      emptyTitle : string
+        @label "Empty Title"
+        @description "emptyTitle prop"
+        @tier "presentation"
+      emptyDescription : string
+        @label "Empty Description"
+        @description "emptyDescription prop"
+        @tier "presentation"
+      followLatest : boolean = true
+        @label "Follow Latest"
+        @description "Scroll the latest row into view as rows arrive. Off for a list of feeds (a run history). @default true"
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      enter : "none" | "fade" | "rise" | "scale" | "slide"
+        @label "Enter"
+        @description "How this element animates in when it mounts (theme-styled); overrides the theme's default slot entry. `none` opts out."
+        @tier "presentation"
+      enterDelay : number
+        @label "Enter Delay"
+        @description "Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating."
+        @tier "presentation"
+      skeleton : "header" | "table" | "list" | "grid" | "detail" | "stats" | "form" | "card" | "text" | "none"
+        @label "Skeleton"
+        @description "Skeleton shown while this element's server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`."
+        @tier "presentation"
+    }
+  }
+
+  page "/agent-activity-feed" as AgentActivityFeedPage -> AgentActivityFeedRender
+}

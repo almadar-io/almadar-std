@@ -63,6 +63,7 @@ export interface StdUiCodeRunnerPanelConfig {
   runEvent?: string;
   /** Default: `true` */
   runnable?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
 }
 
@@ -385,6 +386,24 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
             'tier': 'presentation',
             'type': 'boolean',
           },
+          'skeleton': {
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
+            'label': 'Skeleton',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'header',
+              'table',
+              'list',
+              'grid',
+              'detail',
+              'stats',
+              'form',
+              'card',
+              'text',
+              'none',
+            ],
+          },
           'tabIndex': {
             'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
             'label': 'Tab Index',
@@ -446,6 +465,7 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
                     'role': '@config.role',
                     'runEvent': '@config.runEvent',
                     'runnable': '@config.runnable',
+                    'skeleton': '@config.skeleton',
                     'tabIndex': '@config.tabIndex',
                     'type': 'code-runner-panel',
                   },
