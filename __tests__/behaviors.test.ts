@@ -68,9 +68,9 @@ describe('loadGoldenOrb', () => {
   });
 
   it('loads a known simple behavior', () => {
-    const result = loadGoldenOrb('std-list');
+    const result = loadGoldenOrb('std-esign-request');
     if (result) {
-      expect(result.name).toBe('std-list');
+      expect(result.name).toBe('std-esign-request');
       expect(result.orbitals.length).toBeGreaterThan(0);
     }
   });
@@ -78,7 +78,7 @@ describe('loadGoldenOrb', () => {
 
 describe('hasGoldenOrb', () => {
   it('returns true for registered behaviors', () => {
-    expect(hasGoldenOrb('std-list')).toBe(true);
+    expect(hasGoldenOrb('std-esign-request')).toBe(true);
   });
 
   it('returns false for unknown behaviors', () => {

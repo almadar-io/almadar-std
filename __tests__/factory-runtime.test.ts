@@ -104,18 +104,18 @@ async function loadOrb(topic: string, tier: string, name: string): Promise<Orbit
 describe('factory-runtime', () => {
   describe('extractManifest', () => {
     it('emits one manifest per orbital with the canonical six paramFields + trait splits', async () => {
-      // std-list — a persisted single-orbital atom (entity `ListItem`,
-      // collection `listitems`) so the persisted override surface
+      // std-esign-request — a persisted single-orbital atom (entity
+      // `ESignRequest`, collection `esignrequests`) so the persisted override surface
       // (persistence + collection) is present alongside the base four.
-      const orb = await loadOrb('ui/core', 'atoms', 'std-list');
+      const orb = await loadOrb('ui/core', 'atoms', 'std-esign-request');
       const manifests = extractManifest(orb);
 
       expect(manifests.length).toBe(orb.orbitals.length);
-      const item = manifests.find((m) => m.orbitalName === 'ListItemOrbital');
+      const item = manifests.find((m) => m.orbitalName === 'ESignRequestOrbital');
       expect(item).toBeDefined();
-      if (!item) throw new Error('expected ListItemOrbital manifest');
+      if (!item) throw new Error('expected ESignRequestOrbital manifest');
 
-      expect(item.organism).toBe('std-list');
+      expect(item.organism).toBe('std-esign-request');
       expect(item.paramFields.map((f) => f.name)).toEqual([
         'fields',
         'pagePath',
@@ -135,9 +135,9 @@ describe('factory-runtime', () => {
 
   describe('applyParamsToOrb', () => {
     it('emits the CANONICAL entity + applies traitOverrides.config; the rename is post-stamp', async () => {
-      // std-list is a small single-orbital atom — simple shape to exercise
+      // std-esign-request is a small single-orbital atom — simple shape to exercise
       // both the (deferred) entity rename and the trait config merge.
-      const orb = await loadOrb('ui/core', 'atoms', 'std-list');
+      const orb = await loadOrb('ui/core', 'atoms', 'std-esign-request');
       const manifests = extractManifest(orb);
       const orbital = orb.orbitals[0];
       const manifest = manifests.find((m) => m.orbitalName === orbital.name);
@@ -162,7 +162,7 @@ describe('factory-runtime', () => {
       }
       // V4-W4 stamp-before-rename: the factory emits the CANONICAL entity name.
       // The `entityName` rename is a declaration-only concern applied AFTER
-      // stamping (never inline), so the factory output still carries `ListItem`.
+      // stamping (never inline), so the factory output still carries `ESignRequest`.
       expect(entity.name).toBe(canonicalEntity);
 
       // The trait config override IS applied inline (config is not a rename).
