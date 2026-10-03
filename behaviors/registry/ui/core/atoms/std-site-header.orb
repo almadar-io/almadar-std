@@ -1,5 +1,5 @@
 {
-  "description": "std-site-header — the sticky top bar of a public website: brand (logo + name), navigation links with the current page marked (a link with children opens a dropdown), an optional language picker (std-language-picker: the same page in each language, default language at the root and the others under /<code>/), and an optional call-to-action button. On small screens the links fold into a menu opened by a toggle, with child links indented under their parent and the call-to-action button at the bottom. Links follow `href` (in-app path, #anchor, or absolute URL); the header action and the small-screen menu links also emit NAV_CLICKED { href, label }. Pick for marketing sites, docs portals and product websites; for signed-in app chrome use std-app-layout.",
+  "description": "std-site-header — the sticky top bar of a public website: brand (logo + name, linking home when `homeHref` is set), navigation links with the current page marked (a link with children opens a dropdown), an optional light/dark toggle, an optional language picker (std-language-picker: the same page in each language, default language at the root and the others under /<code>/), and an optional call-to-action button. On small screens the links fold into a menu opened by a toggle, with child links indented under their parent and the call-to-action button at the bottom. Links follow `href` (in-app path, #anchor, or absolute URL); the header action and the small-screen menu links also emit NAV_CLICKED { href, label }. Pick for marketing sites, docs portals and product websites; for signed-in app chrome use std-app-layout.",
   "ledger": {
     "entries": {
       "ent_01M3B9EHRNR3JQPJSD36PH5QV8": {
@@ -167,6 +167,16 @@
                     "actions": [
                       "@trait.SiteHeaderLanguages",
                       {
+                        "className": [
+                          "if",
+                          "@config.showThemeToggle",
+                          "",
+                          "hidden"
+                        ],
+                        "size": "sm",
+                        "type": "theme-toggle"
+                      },
+                      {
                         "action": "NAV_LINK",
                         "actionPayload": {
                           "href": "@config.actionHref",
@@ -189,6 +199,7 @@
                         "variant": "primary"
                       }
                     ],
+                    "brandHref": "@config.homeHref",
                     "brandName": "@config.brandName",
                     "className": "hidden lg:flex",
                     "logoSrc": "@config.logoSrc",
@@ -268,8 +279,19 @@
                   },
                   {
                     "actions": [
-                      "@trait.SiteHeaderLanguages"
+                      "@trait.SiteHeaderLanguages",
+                      {
+                        "className": [
+                          "if",
+                          "@config.showThemeToggle",
+                          "",
+                          "hidden"
+                        ],
+                        "size": "sm",
+                        "type": "theme-toggle"
+                      }
                     ],
+                    "brandHref": "@config.homeHref",
                     "brandName": "@config.brandName",
                     "className": "lg:hidden",
                     "isMenuOpen": "@entity.menuOpen",
@@ -464,6 +486,14 @@
               "tier": "internal",
               "type": "render-ui"
             },
+            "homeHref": {
+              "default": "",
+              "description": "Where the brand (logo + name) links to, usually the site's home page; empty leaves the brand unlinked",
+              "label": "Home link",
+              "synonyms": "logo link, home page, brand link",
+              "tier": "presentation",
+              "type": "string"
+            },
             "languages": {
               "default": [],
               "description": "Every language this page exists in, each named in its own language, with the href of THIS page in that language (default language at the root, others under /<code>/). Empty hides the language picker.",
@@ -544,6 +574,14 @@
               "label": "Logo image",
               "tier": "presentation",
               "type": "string"
+            },
+            "showThemeToggle": {
+              "default": false,
+              "description": "Show a button that switches the site between its light and dark mode",
+              "label": "Light/dark toggle",
+              "synonyms": "dark mode, theme switch, color mode",
+              "tier": "presentation",
+              "type": "boolean"
             }
           },
           "effectRow": [

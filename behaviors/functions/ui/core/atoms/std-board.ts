@@ -126,9 +126,11 @@ export interface StdBoardBoardItemsSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdBoardConfig {
+  /** Default: `"floating"` */
+  addPlacement?: 'floating' | 'inline';
   /** Default: `"columns"` */
   boardLook?: 'columns' | 'kanban-classic';
-  /** Default: `{"children":[["if","@config.showHeader",{"children":[{"align":"center","children":[{"name":"kanban-square","size":"lg","type":"icon"},{"content":"@config.title","type":"typography","variant":"h3"}],"direction":"horizontal","gap":"sm","type":"stack"},{"type":"divider"}],"direction":"vertical","gap":"md","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"BoardView","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"cols":"@config.gridCols","dndRoot":true,"entity":"@entity.boards","fields":[],"gap":"md","renderItem":["fn","col",{"children":[{"children":[{"align":"center","children":[{"name":"@col.icon","type":"icon"},{"content":"@col.label","type":"typography","variant":"h4"},{"label":"@col.count","type":"badge","variant":"@col.variant"}],"direction":"horizontal","gap":"xs","type":"stack"},{"accepts":"*","dragGroup":"@col.key","dropEvent":"MOVE_CARD","entity":"@col.items","fields":[],"gap":"sm","positionEvent":"REORDER_POSITION","renderItem":["fn","item",{"children":[{"children":[{"content":"@config.cardTitleBinding","type":"typography","variant":"h4"},{"color":"muted","content":"@config.cardDescriptionBinding","type":"typography","variant":"caption"},{"align":"center","children":[{"action":"OPEN_CARD","actionPayload":{"description":"@config.cardDescriptionBinding","id":"@config.cardIdBinding","notes":"@config.cardNotesBinding","row":"@item","stage":"@config.cardStageBinding","title":"@config.cardTitleBinding"},"icon":"arrow-right","label":"Open","type":"button","variant":"ghost"}],"direction":"horizontal","gap":"xs","type":"stack"}],"direction":"vertical","gap":"xs","type":"stack"}],"look":"@config.cardLook","type":"card"}],"reorderEvent":"REORDER_CARD","sortable":true,"type":"data-list"}],"direction":"vertical","gap":"sm","type":"stack"}],"look":"@config.cardLook","type":"card"}],"type":"data-grid"},{"action":"ADD_CARD","icon":"plus","label":"Add item","type":"floating-action-button","variant":"primary"}],"direction":"vertical","gap":"md","type":"stack"}` */
+  /** Default: `{"children":[["if",["=","@config.addPlacement","inline"],{"children":[{"action":"ADD_CARD","icon":"plus","label":"Add item","size":"sm","type":"button","variant":"secondary"}],"direction":"horizontal","gap":"sm","justify":"end","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if","@config.showHeader",{"children":[{"align":"center","children":[{"name":"kanban-square","size":"lg","type":"icon"},{"content":"@config.title","type":"typography","variant":"h3"}],"direction":"horizontal","gap":"sm","type":"stack"},{"type":"divider"}],"direction":"vertical","gap":"md","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"BoardView","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"cols":"@config.gridCols","dndRoot":true,"entity":"@entity.boards","fields":[],"gap":"md","renderItem":["fn","col",{"children":[{"children":[{"align":"center","children":[{"name":"@col.icon","type":"icon"},{"content":"@col.label","type":"typography","variant":"h4"},{"label":"@col.count","type":"badge","variant":"@col.variant"}],"direction":"horizontal","gap":"xs","type":"stack"},{"accepts":"*","dragGroup":"@col.key","dropEvent":"MOVE_CARD","entity":"@col.items","fields":[],"gap":"sm","positionEvent":"REORDER_POSITION","renderItem":["fn","item",{"children":[{"children":[{"content":"@config.cardTitleBinding","type":"typography","variant":"h4"},{"color":"muted","content":"@config.cardDescriptionBinding","type":"typography","variant":"caption"},{"align":"center","children":[{"action":"OPEN_CARD","actionPayload":{"description":"@config.cardDescriptionBinding","id":"@config.cardIdBinding","notes":"@config.cardNotesBinding","row":"@item","stage":"@config.cardStageBinding","title":"@config.cardTitleBinding"},"icon":"arrow-right","label":"Open","type":"button","variant":"ghost"}],"direction":"horizontal","gap":"xs","type":"stack"}],"direction":"vertical","gap":"xs","type":"stack"}],"look":"@config.cardLook","type":"card"}],"reorderEvent":"REORDER_CARD","sortable":true,"type":"data-list"}],"direction":"vertical","gap":"sm","type":"stack"}],"look":"@config.cardLook","type":"card"}],"type":"data-grid"},["if",["=","@config.addPlacement","floating"],{"action":"ADD_CARD","icon":"plus","label":"Add item","type":"floating-action-button","variant":"primary"},{"children":[],"gap":"none","type":"stack"}]],"direction":"vertical","gap":"md","type":"stack"}` */
   bodyContent?: unknown;
   /** Default: `false` */
   bodySearch?: boolean;
@@ -162,7 +164,7 @@ export interface StdBoardConfig {
   groupByField?: string;
   /** Default: `[]` */
   include?: string[];
-  /** Default: `{"children":[["if","@config.showHeader",{"children":[{"align":"center","children":[{"name":"kanban-square","size":"xl","type":"icon"},{"content":"@config.title","type":"typography","variant":"h2"}],"className":"px-card-md","direction":"horizontal","gap":"sm","type":"stack"},{"type":"divider"}],"direction":"vertical","gap":"md","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"className":"px-card-md","direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"BoardView","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"className":"px-card-md","direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"className":"w-full pb-2","dndRoot":true,"entity":"@entity.boards","fields":[],"gap":"lg","minCardWidth":300,"renderItem":["fn","col",{"children":[{"children":[{"align":"center","children":[{"name":"@col.icon","type":"icon"},{"className":"flex-1","content":"@col.label","type":"typography","variant":"h4"},{"label":"@col.count","size":"sm","type":"badge","variant":"primary"}],"className":"p-card-md border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)]","direction":"horizontal","gap":"sm","type":"stack"},{"accepts":"*","className":"p-card-md min-h-[120px]","dragGroup":"@col.key","dropEvent":"MOVE_CARD","entity":"@col.items","fields":[],"gap":"sm","positionEvent":"REORDER_POSITION","renderItem":["fn","item",{"children":[{"children":[{"content":"@config.cardTitleBinding","type":"typography","variant":"body","weight":"medium"},{"className":"line-clamp-2","color":"muted","content":"@config.cardDescriptionBinding","type":"typography","variant":"caption"},{"align":"center","children":[{"label":"@config.cardStageBinding","size":"sm","type":"badge","variant":"@col.variant"},{"action":"OPEN_CARD","actionPayload":{"description":"@config.cardDescriptionBinding","id":"@config.cardIdBinding","notes":"@config.cardNotesBinding","row":"@item","stage":"@config.cardStageBinding","title":"@config.cardTitleBinding"},"className":"ml-auto","icon":"arrow-right","label":"Open","size":"sm","type":"button","variant":"ghost"}],"className":"pt-1","direction":"horizontal","gap":"xs","type":"stack"}],"direction":"vertical","gap":"xs","type":"stack"}],"className":"cursor-grab hover:shadow-lg transition-shadow","look":"@config.cardLook","padding":"sm","type":"card"}],"reorderEvent":"REORDER_CARD","sortable":true,"type":"data-list"}],"direction":"vertical","gap":"none","type":"stack"}],"className":"w-[300px] bg-[var(--color-surface-subtle)] rounded-lg overflow-hidden","look":"elevated","padding":"none","type":"card"}],"scrollX":true,"type":"data-grid"},{"action":"ADD_CARD","icon":"plus","label":"Add card","type":"floating-action-button","variant":"primary"}],"className":"h-full","direction":"vertical","gap":"md","type":"stack"}` */
+  /** Default: `{"children":[["if",["=","@config.addPlacement","inline"],{"children":[{"action":"ADD_CARD","icon":"plus","label":"Add card","size":"sm","type":"button","variant":"secondary"}],"direction":"horizontal","gap":"sm","justify":"end","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if","@config.showHeader",{"children":[{"align":"center","children":[{"name":"kanban-square","size":"xl","type":"icon"},{"content":"@config.title","type":"typography","variant":"h2"}],"className":"px-card-md","direction":"horizontal","gap":"sm","type":"stack"},{"type":"divider"}],"direction":"vertical","gap":"md","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"className":"px-card-md","direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"BoardView","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"className":"px-card-md","direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"className":"w-full pb-2","dndRoot":true,"entity":"@entity.boards","fields":[],"gap":"lg","minCardWidth":300,"renderItem":["fn","col",{"children":[{"children":[{"align":"center","children":[{"name":"@col.icon","type":"icon"},{"className":"flex-1","content":"@col.label","type":"typography","variant":"h4"},{"label":"@col.count","size":"sm","type":"badge","variant":"primary"}],"className":"p-card-md border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)]","direction":"horizontal","gap":"sm","type":"stack"},{"accepts":"*","className":"p-card-md min-h-[120px]","dragGroup":"@col.key","dropEvent":"MOVE_CARD","entity":"@col.items","fields":[],"gap":"sm","positionEvent":"REORDER_POSITION","renderItem":["fn","item",{"children":[{"children":[{"content":"@config.cardTitleBinding","type":"typography","variant":"body","weight":"medium"},{"className":"line-clamp-2","color":"muted","content":"@config.cardDescriptionBinding","type":"typography","variant":"caption"},{"align":"center","children":[{"label":"@config.cardStageBinding","size":"sm","type":"badge","variant":"@col.variant"},{"action":"OPEN_CARD","actionPayload":{"description":"@config.cardDescriptionBinding","id":"@config.cardIdBinding","notes":"@config.cardNotesBinding","row":"@item","stage":"@config.cardStageBinding","title":"@config.cardTitleBinding"},"className":"ml-auto","icon":"arrow-right","label":"Open","size":"sm","type":"button","variant":"ghost"}],"className":"pt-1","direction":"horizontal","gap":"xs","type":"stack"}],"direction":"vertical","gap":"xs","type":"stack"}],"className":"cursor-grab hover:shadow-lg transition-shadow","look":"@config.cardLook","padding":"sm","type":"card"}],"reorderEvent":"REORDER_CARD","sortable":true,"type":"data-list"}],"direction":"vertical","gap":"none","type":"stack"}],"className":"w-[300px] bg-[var(--color-surface-subtle)] rounded-lg overflow-hidden","look":"elevated","padding":"none","type":"card"}],"scrollX":true,"type":"data-grid"},["if",["=","@config.addPlacement","floating"],{"action":"ADD_CARD","icon":"plus","label":"Add card","type":"floating-action-button","variant":"primary"},{"children":[],"gap":"none","type":"stack"}]],"className":"h-full","direction":"vertical","gap":"md","type":"stack"}` */
   kanbanClassicBodyContent?: unknown;
   /** Default: `10` */
   pageSize?: number;
@@ -502,6 +504,18 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
       {
         'category': 'interaction',
         'config': {
+          'addPlacement': {
+            'default': 'floating',
+            'description': 'Where the add-item button sits: \'floating\' (default) pins a floating action button to the screen corner; \'inline\' renders an ordinary Add button above the columns, for a board embedded in a card or panel.',
+            'label': 'Add button placement',
+            'synonyms': 'add button position, floating add, inline add, add item button placement. user phrases: \'put the add button inside the board\' / \'no floating button\' -> inline',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'floating',
+              'inline',
+            ],
+          },
           'boardLook': {
             'default': 'columns',
             'description': 'Layer 3 body layout: default N-column data-grid (\'columns\'), or a Trello-style wide-column kanban with sticky column headers (\'kanban-classic\').',
@@ -516,6 +530,35 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
           'bodyContent': {
             'default': {
               'children': [
+                [
+                  'if',
+                  [
+                    '=',
+                    '@config.addPlacement',
+                    'inline',
+                  ],
+                  {
+                    'children': [
+                      {
+                        'action': 'ADD_CARD',
+                        'icon': 'plus',
+                        'label': 'Add item',
+                        'size': 'sm',
+                        'type': 'button',
+                        'variant': 'secondary',
+                      },
+                    ],
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'justify': 'end',
+                    'type': 'stack',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
                 [
                   'if',
                   '@config.showHeader',
@@ -716,13 +759,26 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   ],
                   'type': 'data-grid',
                 },
-                {
-                  'action': 'ADD_CARD',
-                  'icon': 'plus',
-                  'label': 'Add item',
-                  'type': 'floating-action-button',
-                  'variant': 'primary',
-                },
+                [
+                  'if',
+                  [
+                    '=',
+                    '@config.addPlacement',
+                    'floating',
+                  ],
+                  {
+                    'action': 'ADD_CARD',
+                    'icon': 'plus',
+                    'label': 'Add item',
+                    'type': 'floating-action-button',
+                    'variant': 'primary',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
               ],
               'direction': 'vertical',
               'gap': 'md',
@@ -1050,6 +1106,35 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
               'children': [
                 [
                   'if',
+                  [
+                    '=',
+                    '@config.addPlacement',
+                    'inline',
+                  ],
+                  {
+                    'children': [
+                      {
+                        'action': 'ADD_CARD',
+                        'icon': 'plus',
+                        'label': 'Add card',
+                        'size': 'sm',
+                        'type': 'button',
+                        'variant': 'secondary',
+                      },
+                    ],
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'justify': 'end',
+                    'type': 'stack',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
+                [
+                  'if',
                   '@config.showHeader',
                   {
                     'children': [
@@ -1272,13 +1357,26 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   'scrollX': true,
                   'type': 'data-grid',
                 },
-                {
-                  'action': 'ADD_CARD',
-                  'icon': 'plus',
-                  'label': 'Add card',
-                  'type': 'floating-action-button',
-                  'variant': 'primary',
-                },
+                [
+                  'if',
+                  [
+                    '=',
+                    '@config.addPlacement',
+                    'floating',
+                  ],
+                  {
+                    'action': 'ADD_CARD',
+                    'icon': 'plus',
+                    'label': 'Add card',
+                    'type': 'floating-action-button',
+                    'variant': 'primary',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
               ],
               'className': 'h-full',
               'direction': 'vertical',

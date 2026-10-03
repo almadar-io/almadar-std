@@ -35,6 +35,7 @@ const CATEGORY_META: Record<string, { description: string; target: string[] }> =
     'std-time': { description: 'Date/time utilities', target: ['ts', 'rust'] },
     'std-validate': { description: 'Validation utilities', target: ['ts', 'rust'] },
     'std-format': { description: 'Formatting utilities', target: ['ts', 'rust'] },
+    'std-i18n': { description: 'Message catalogs', target: ['ts', 'rust'] },
     'std-async': { description: 'Async utilities (runtime only)', target: ['ts'] },
     'std-prob': { description: 'Probabilistic programming', target: ['ts'] },
     'std-os': { description: 'OS-level event watchers for system triggers', target: ['ts'] },
@@ -103,6 +104,8 @@ interface CanonicalOperatorEntry {
      */
     lambdaArgPosition?: number;
     runsOn?: RunsOn;
+    /** 0-indexed argument naming a data effect's target entity; the effect runs where that entity lives. */
+    entityArgPosition?: number;
     /** Enrichment (docs): human title, parameter docs, lolo examples, provenance. */
     title?: string;
     params?: { name: string; type: unknown; description?: string }[];
@@ -161,6 +164,7 @@ function toCanonicalEntry(
     if (meta.effect) entry.effect = meta.effect;
     if (meta.returnSemantics) entry.returnSemantics = meta.returnSemantics;
     if (meta.runsOn) entry.runsOn = meta.runsOn;
+    if (meta.entityArgPosition != null) entry.entityArgPosition = meta.entityArgPosition;
     if (meta.acceptsLambda && meta.lambdaArgPosition != null) {
         entry.lambdaArgPosition = meta.lambdaArgPosition;
     }

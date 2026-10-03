@@ -21,6 +21,7 @@ import { JSON_OPERATORS } from './modules/json.js';
 import { TIME_OPERATORS } from './modules/time.js';
 import { VALIDATE_OPERATORS } from './modules/validate.js';
 import { FORMAT_OPERATORS } from './modules/format.js';
+import { I18N_OPERATORS } from './modules/i18n.js';
 import { ASYNC_OPERATORS } from './modules/async.js';
 import { NN_OPERATORS } from './modules/nn.js';
 import { TENSOR_OPERATORS } from './modules/tensor.js';
@@ -66,6 +67,7 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
   ...TIME_OPERATORS,
   ...VALIDATE_OPERATORS,
   ...FORMAT_OPERATORS,
+  ...I18N_OPERATORS,
   ...ASYNC_OPERATORS,
   ...NN_OPERATORS,
   ...TENSOR_OPERATORS,
@@ -112,6 +114,7 @@ export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorM
   time: TIME_OPERATORS,
   validate: VALIDATE_OPERATORS,
   format: FORMAT_OPERATORS,
+  i18n: I18N_OPERATORS,
   async: ASYNC_OPERATORS,
   nn: NN_OPERATORS,
   tensor: TENSOR_OPERATORS,
@@ -298,6 +301,24 @@ export function isStdEffectOperator(operator: string): boolean {
 /** Declared execution site of an effect operator; `undefined` for a pure or unknown one. */
 export function getOperatorRunsOn(operator: string): RunsOn | undefined {
   return STD_OPERATORS[operator]?.runsOn;
+}
+
+/**
+ * Where one effect call runs: its declared `runsOn`, except a data effect
+ * (`entityArgPosition`) whose target entity stores its rows in the browser
+ * (core's `storesRowsInBrowser` over the program's entities), which runs on the
+ * client. Undefined for a pure op. Twin of Rust `effects::effect_site`.
+ */
+export function effectSiteFor(
+  operator: string,
+  args: readonly unknown[],
+  storesRowsInBrowser: (entityName: string) => boolean,
+): RunsOn | undefined {
+  const meta = STD_OPERATORS[operator];
+  const site = meta?.runsOn;
+  if (site !== 'server' || meta.entityArgPosition === undefined) return site;
+  const entity = args[meta.entityArgPosition];
+  return typeof entity === 'string' && !entity.startsWith('@') && storesRowsInBrowser(entity) ? 'client' : 'server';
 }
 
 /** Effect operators whose declared execution site is `site`, sorted. */

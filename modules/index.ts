@@ -15,6 +15,7 @@ export { JSON_OPERATORS, getJsonOperators } from './json.js';
 export { TIME_OPERATORS, getTimeOperators } from './time.js';
 export { VALIDATE_OPERATORS, getValidateOperators } from './validate.js';
 export { FORMAT_OPERATORS, getFormatOperators } from './format.js';
+export { I18N_OPERATORS, getI18nOperators } from './i18n.js';
 export { ASYNC_OPERATORS, getAsyncOperators } from './async.js';
 
 // Neural Network / ML modules

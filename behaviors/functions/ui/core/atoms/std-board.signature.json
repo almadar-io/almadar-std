@@ -249,6 +249,19 @@
         ],
         "overridableConfigKeys": [
           {
+            "key": "addPlacement",
+            "type": "string",
+            "default": "floating",
+            "label": "Add button placement",
+            "description": "Where the add-item button sits: 'floating' (default) pins a floating action button to the screen corner; 'inline' renders an ordinary Add button above the columns, for a board embedded in a card or panel.",
+            "synonyms": "add button position, floating add, inline add, add item button placement. user phrases: 'put the add button inside the board' / 'no floating button' -> inline",
+            "tier": "presentation",
+            "enumValues": [
+              "floating",
+              "inline"
+            ]
+          },
+          {
             "key": "boardLook",
             "type": "string",
             "default": "columns",
@@ -265,6 +278,35 @@
             "type": "render-ui",
             "default": {
               "children": [
+                [
+                  "if",
+                  [
+                    "=",
+                    "@config.addPlacement",
+                    "inline"
+                  ],
+                  {
+                    "children": [
+                      {
+                        "action": "ADD_CARD",
+                        "icon": "plus",
+                        "label": "Add item",
+                        "size": "sm",
+                        "type": "button",
+                        "variant": "secondary"
+                      }
+                    ],
+                    "direction": "horizontal",
+                    "gap": "sm",
+                    "justify": "end",
+                    "type": "stack"
+                  },
+                  {
+                    "children": [],
+                    "gap": "none",
+                    "type": "stack"
+                  }
+                ],
                 [
                   "if",
                   "@config.showHeader",
@@ -465,13 +507,26 @@
                   ],
                   "type": "data-grid"
                 },
-                {
-                  "action": "ADD_CARD",
-                  "icon": "plus",
-                  "label": "Add item",
-                  "type": "floating-action-button",
-                  "variant": "primary"
-                }
+                [
+                  "if",
+                  [
+                    "=",
+                    "@config.addPlacement",
+                    "floating"
+                  ],
+                  {
+                    "action": "ADD_CARD",
+                    "icon": "plus",
+                    "label": "Add item",
+                    "type": "floating-action-button",
+                    "variant": "primary"
+                  },
+                  {
+                    "children": [],
+                    "gap": "none",
+                    "type": "stack"
+                  }
+                ]
               ],
               "direction": "vertical",
               "gap": "md",
@@ -816,6 +871,35 @@
               "children": [
                 [
                   "if",
+                  [
+                    "=",
+                    "@config.addPlacement",
+                    "inline"
+                  ],
+                  {
+                    "children": [
+                      {
+                        "action": "ADD_CARD",
+                        "icon": "plus",
+                        "label": "Add card",
+                        "size": "sm",
+                        "type": "button",
+                        "variant": "secondary"
+                      }
+                    ],
+                    "direction": "horizontal",
+                    "gap": "sm",
+                    "justify": "end",
+                    "type": "stack"
+                  },
+                  {
+                    "children": [],
+                    "gap": "none",
+                    "type": "stack"
+                  }
+                ],
+                [
+                  "if",
                   "@config.showHeader",
                   {
                     "children": [
@@ -1038,13 +1122,26 @@
                   "scrollX": true,
                   "type": "data-grid"
                 },
-                {
-                  "action": "ADD_CARD",
-                  "icon": "plus",
-                  "label": "Add card",
-                  "type": "floating-action-button",
-                  "variant": "primary"
-                }
+                [
+                  "if",
+                  [
+                    "=",
+                    "@config.addPlacement",
+                    "floating"
+                  ],
+                  {
+                    "action": "ADD_CARD",
+                    "icon": "plus",
+                    "label": "Add card",
+                    "type": "floating-action-button",
+                    "variant": "primary"
+                  },
+                  {
+                    "children": [],
+                    "gap": "none",
+                    "type": "stack"
+                  }
+                ]
               ],
               "className": "h-full",
               "direction": "vertical",

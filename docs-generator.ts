@@ -76,6 +76,12 @@ export const MODULE_DESCRIPTIONS: Record<StdModule, ModuleInfo> = {
         description: 'Display formatting for currency, numbers, dates, and file sizes.',
         icon: '🎨',
     },
+    i18n: {
+        name: 'I18n',
+        displayName: 'Message Catalogs',
+        description: "The active locale's message for a catalog key, checked against every declared locale.",
+        icon: '🌐',
+    },
     async: {
         name: 'Async',
         displayName: 'Async Operations',

@@ -57,6 +57,7 @@ export interface StdUiHeaderConfig {
   ariaLive?: 'off' | 'polite' | 'assertive';
   ariaPressed?: 'true' | 'false' | 'mixed';
   ariaSelected?: boolean;
+  brandHref?: string;
   /** Default: `"KFlow"` */
   brandName?: string;
   className?: string;

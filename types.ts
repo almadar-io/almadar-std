@@ -29,6 +29,7 @@ export const OPERATOR_CATEGORIES = [
   'std-json',
   'std-time',
   'std-format',
+  'std-i18n',
   'std-async',
   'std-nn',
   'std-tensor',
@@ -188,6 +189,7 @@ export const STD_MODULES = [
   'time',
   'validate',
   'format',
+  'i18n',
   'async',
   'nn',
   'tensor',
@@ -231,6 +233,7 @@ export const STD_OPERATOR_CATEGORIES = [
   'std-time',
   'std-validate',
   'std-format',
+  'std-i18n',
   'std-async',
   'std-nn',
   'std-tensor',
@@ -349,6 +352,12 @@ export interface StdOperatorMeta extends OperatorMeta {
   acceptsLambda?: boolean;
   /** Position of the lambda argument (0-indexed) */
   lambdaArgPosition?: number;
+  /**
+   * Position of the argument naming the target entity (0-indexed), on a data
+   * effect: the effect runs where that entity's rows live, so a `runsOn: server`
+   * data effect on a client-resident entity runs on the client.
+   */
+  entityArgPosition?: number;
   /** Compile-time operator (resolved during .lolo lowering, not at runtime) */
   compileTime?: boolean;
   /** Schema v2: structured metadata for effect operators */

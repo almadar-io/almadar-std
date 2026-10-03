@@ -396,6 +396,10 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
             'payloadSchema': [
               {
                 'name': 'tagId',
+                'projectedFrom': {
+                  'field': 'id',
+                  'type': 'Tag',
+                },
                 'required': true,
                 'type': 'string',
               },
@@ -470,6 +474,10 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
             'payloadSchema': [
               {
                 'name': 'tagId',
+                'projectedFrom': {
+                  'field': 'id',
+                  'type': 'Tag',
+                },
                 'required': true,
                 'type': 'string',
               },
@@ -512,6 +520,10 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
             'payloadSchema': [
               {
                 'name': 'tagId',
+                'projectedFrom': {
+                  'field': 'id',
+                  'type': 'Tag',
+                },
                 'type': 'string',
               },
             ],
@@ -587,6 +599,10 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
               'payloadSchema': [
                 {
                   'name': 'tagId',
+                  'projectedFrom': {
+                    'field': 'id',
+                    'type': 'Tag',
+                  },
                   'type': 'string',
                 },
               ],
@@ -667,6 +683,10 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
               'payloadSchema': [
                 {
                   'name': 'tagId',
+                  'projectedFrom': {
+                    'field': 'id',
+                    'type': 'Tag',
+                  },
                   'required': true,
                   'type': 'string',
                 },
@@ -784,6 +804,10 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
               'payloadSchema': [
                 {
                   'name': 'tagId',
+                  'projectedFrom': {
+                    'field': 'id',
+                    'type': 'Tag',
+                  },
                   'required': true,
                   'type': 'string',
                 },

@@ -1636,7 +1636,14 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                                 'variant': 'caption',
                               },
                               {
-                                'content': '@entity.createdAt',
+                                'content': [
+                                  'time/format',
+                                  [
+                                    'time/parse',
+                                    '@entity.createdAt',
+                                  ],
+                                  'MMM D, YYYY',
+                                ],
                                 'type': 'typography',
                                 'variant': 'body',
                               },

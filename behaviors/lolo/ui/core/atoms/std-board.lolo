@@ -587,6 +587,11 @@ orbital BoardOrbital {
         @label "Group-by field"
         @description "Entity field whose value matches a column key — items are filtered into columns by it. Default 'stage'; set to 'status' (or any field) for entities that track state under a different name."
         @tier "presentation"
+      addPlacement : "floating" | "inline" = floating
+        @label "Add button placement"
+        @description "Where the add-item button sits: 'floating' (default) pins a floating action button to the screen corner; 'inline' renders an ordinary Add button above the columns, for a board embedded in a card or panel."
+        @synonyms "add button position, floating add, inline add, add item button placement. user phrases: 'put the add button inside the board' / 'no floating button' -> inline"
+        @tier "presentation"
       boardLook : "columns" | "kanban-classic" = columns
         @label "Board look"
         @description "Layer 3 body layout: default N-column data-grid ('columns'), or a Trello-style wide-column kanban with sticky column headers ('kanban-classic')."
@@ -647,7 +652,24 @@ orbital BoardOrbital {
         @description "Actions row of the open-card panel. Default is the Delete button only. Override to add consumer-wired actions — e.g. an Edit button with action: EDIT_CARD and actionPayload: { id: @entity.currentId, row: @entity.currentRow }, listened to by the organism's edit modal. Never leave a button here without a listener."
         @tier "presentation"
       bodyContent : render-ui = {
-        children: [(if @config.showHeader {
+        children: [(if ["=", @config.addPlacement, "inline"] {
+          children: [{
+            action: ADD_CARD
+            icon: plus
+            label: "Add item"
+            size: sm
+            type: button
+            variant: secondary
+          }]
+          direction: horizontal
+          gap: sm
+          justify: end
+          type: stack
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), (if @config.showHeader {
           children: [{
             align: center
             children: [{ name: kanban-square, size: lg, type: icon }, {
@@ -770,13 +792,17 @@ orbital BoardOrbital {
             type: card
           })
           type: data-grid
-        }, {
+        }, (if ["=", @config.addPlacement, "floating"] {
           action: ADD_CARD
           icon: plus
           label: "Add item"
           type: floating-action-button
           variant: primary
-        }]
+        } {
+          children: []
+          gap: none
+          type: stack
+        })]
         direction: vertical
         gap: md
         type: stack
@@ -785,7 +811,24 @@ orbital BoardOrbital {
         @description "Render-ui SExpr rendered after the board loads for boardLook='columns' — the canonical column data-grid with nested per-column data-lists. boardLook='kanban-classic' renders kanbanClassicBodyContent instead; both share this trait's state machine, emits, and listens."
         @tier "internal"
       kanbanClassicBodyContent : render-ui = {
-        children: [(if @config.showHeader {
+        children: [(if ["=", @config.addPlacement, "inline"] {
+          children: [{
+            action: ADD_CARD
+            icon: plus
+            label: "Add card"
+            size: sm
+            type: button
+            variant: secondary
+          }]
+          direction: horizontal
+          gap: sm
+          justify: end
+          type: stack
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), (if @config.showHeader {
           children: [{
             align: center
             children: [{ name: kanban-square, size: xl, type: icon }, {
@@ -931,13 +974,17 @@ orbital BoardOrbital {
           })
           scrollX: true
           type: data-grid
-        }, {
+        }, (if ["=", @config.addPlacement, "floating"] {
           action: ADD_CARD
           icon: plus
           label: "Add card"
           type: floating-action-button
           variant: primary
-        }]
+        } {
+          children: []
+          gap: none
+          type: stack
+        })]
         className: h-full
         direction: vertical
         gap: md

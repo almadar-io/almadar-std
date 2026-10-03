@@ -1,5 +1,5 @@
 app std-site-header "1.0.0"
-"std-site-header — the sticky top bar of a public website: brand (logo + name), navigation links with the current page marked (a link with children opens a dropdown), an optional language picker (std-language-picker: the same page in each language, default language at the root and the others under /<code>/), and an optional call-to-action button. On small screens the links fold into a menu opened by a toggle, with child links indented under their parent and the call-to-action button at the bottom. Links follow `href` (in-app path, #anchor, or absolute URL); the header action and the small-screen menu links also emit NAV_CLICKED { href, label }. Pick for marketing sites, docs portals and product websites; for signed-in app chrome use std-app-layout."
+"std-site-header — the sticky top bar of a public website: brand (logo + name, linking home when `homeHref` is set), navigation links with the current page marked (a link with children opens a dropdown), an optional light/dark toggle, an optional language picker (std-language-picker: the same page in each language, default language at the root and the others under /<code>/), and an optional call-to-action button. On small screens the links fold into a menu opened by a toggle, with child links indented under their parent and the call-to-action button at the bottom. Links follow `href` (in-app path, #anchor, or absolute URL); the header action and the small-screen menu links also emit NAV_CLICKED { href, label }. Pick for marketing sites, docs portals and product websites; for signed-in app chrome use std-app-layout."
 type SiteNavLink = { label : string!, href : string!, children : [SiteNavLink] }
 type SiteLanguage = { code : string!, label : string!, href : string! }
 orbital SiteHeaderOrbital {
@@ -54,6 +54,11 @@ orbital SiteHeaderOrbital {
         @label "Logo image"
         @description "Logo URL; empty shows the name only"
         @tier "presentation"
+      homeHref : string = ""
+        @label "Home link"
+        @description "Where the brand (logo + name) links to, usually the site's home page; empty leaves the brand unlinked"
+        @synonyms "logo link, home page, brand link"
+        @tier "presentation"
       links : [SiteNavLink] = [{ label: "Features", href: "/features" }, { label: "Pricing", href: "/pricing" }, { label: "About", href: "/about" }]
         @label "Navigation links"
         @synonyms "menu, nav items, top navigation"
@@ -66,6 +71,11 @@ orbital SiteHeaderOrbital {
         @label "Languages"
         @description "Every language this page exists in, each named in its own language, with the href of THIS page in that language (default language at the root, others under /<code>/). Empty hides the language picker."
         @synonyms "locales, translations, language switcher, i18n"
+        @tier "presentation"
+      showThemeToggle : boolean = false
+        @label "Light/dark toggle"
+        @description "Show a button that switches the site between its light and dark mode"
+        @synonyms "dark mode, theme switch, color mode"
         @tier "presentation"
       currentLanguage : string = "en"
         @label "Current language"
@@ -92,6 +102,7 @@ orbital SiteHeaderOrbital {
           showMenuToggle: false
           brandName: @config.brandName
           logoSrc: @config.logoSrc
+          brandHref: @config.homeHref
           className: "hidden lg:flex"
           navigationItems: (array/map @config.links (fn entry {
             label: (object/get @entry label "")
@@ -103,7 +114,7 @@ orbital SiteHeaderOrbital {
               active: (== (object/get @child href "") @config.currentPath)
             }))
           }))
-          actions: [@trait.SiteHeaderLanguages, {
+          actions: [@trait.SiteHeaderLanguages, { type: theme-toggle, size: sm, className: (if @config.showThemeToggle "" hidden) }, {
             type: button
             label: @config.actionLabel
             href: @config.actionHref
@@ -122,8 +133,9 @@ orbital SiteHeaderOrbital {
           onMenuToggle: MENU_TOGGLE
           brandName: @config.brandName
           logoSrc: @config.logoSrc
+          brandHref: @config.homeHref
           className: "lg:hidden"
-          actions: [@trait.SiteHeaderLanguages]
+          actions: [@trait.SiteHeaderLanguages, { type: theme-toggle, size: sm, className: (if @config.showThemeToggle "" hidden) }]
         }, {
           type: stack
           direction: vertical

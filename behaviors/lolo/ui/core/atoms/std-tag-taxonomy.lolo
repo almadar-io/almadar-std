@@ -5,7 +5,7 @@ orbital TagTaxonomyOrbital {
 
     type TagLoadFailed = Event { error : string, code : string } "Fired when the tag collection fails to load"
 
-    type TagSelected = Event { tagId : string! } "Fired when a tag is selected to drill into its children"
+    type TagSelected = Event { tagId : Tag.id! } "Fired when a tag is selected to drill into its children"
 
     type TagCreated = Event Tag "Fired after a new tag row persists — the payload IS the created row (flat: ?id, ?name, ?parentId)"
 
@@ -476,7 +476,7 @@ orbital TagTaxonomyOrbital {
 
     emits {
       SELECT_TAG {
-        tagId : string!
+        tagId : Tag.id!
       }
         @description "Signals a tag has been chosen for navigation."
         @synonyms "choose, pick, activate, navigate"
@@ -495,7 +495,7 @@ orbital TagTaxonomyOrbital {
         @synonyms "error, failed, problem, issue"
         @tier "internal"
       TagSelected {
-        tagId : string!
+        tagId : Tag.id!
       }
         @description "Signals a tag has been chosen for further exploration."
         @synonyms "chosen, picked, activated, highlighted"
@@ -512,7 +512,7 @@ orbital TagTaxonomyOrbital {
         @synonyms "cancel, back"
         @tier "internal"
       LEVEL_RELOAD {
-        tagId : string
+        tagId : Tag.id
       }
         @description "Internal hop that refetches the open level after the new-category form closes (a fetch filter cannot read trait state, so the level travels by payload)."
         @synonyms "reload level, refresh"
@@ -532,7 +532,7 @@ orbital TagTaxonomyOrbital {
 
     listens {
       SELECT_TAG {
-        tagId : string!
+        tagId : Tag.id!
       }
         @description "A tag in the taxonomy was selected for navigation."
         @synonyms "choose, pick, activate, navigate"
@@ -551,7 +551,7 @@ orbital TagTaxonomyOrbital {
         @synonyms "error, failure, load failed"
         @tier "internal"
       TagSelected {
-        tagId : string!
+        tagId : Tag.id!
       }
         @description "A tag in the taxonomy has been chosen by the user."
         @synonyms "chosen, picked, activated, selected"
@@ -571,7 +571,7 @@ orbital TagTaxonomyOrbital {
         @synonyms "cancel, back"
         @tier "internal"
       LEVEL_RELOAD {
-        tagId : string
+        tagId : Tag.id
       }
         @description "Refetch the open level."
         @synonyms "reload level, refresh"

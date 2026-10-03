@@ -431,6 +431,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Create, update, delete, clear, or batch entity records. Optional trailing { emit: { success, failure } } options object attaches closed-circuit emit routing.',
     hasSideEffects: true,
     runsOn: 'server',
+    entityArgPosition: 1,
     returnType: 'void',
     params: [
       { name: 'action', type: PERSIST_ACTION, description: 'Persist action' },
@@ -592,6 +593,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Fetch an entity (by id) or a collection (by filter) from persistence',
     hasSideEffects: true,
     runsOn: 'server',
+    entityArgPosition: 0,
     returnType: 'void',
     params: [
       { name: 'entity', type: { kind: 'entity' }, description: 'Target entity name' },
