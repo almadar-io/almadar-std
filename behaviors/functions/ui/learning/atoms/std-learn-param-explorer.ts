@@ -49,7 +49,7 @@ export interface StdLearnParamExplorerParamsChangedPayload {
 export interface StdLearnParamExplorerConfig {
   /** Default: `false` */
   animate?: boolean;
-  /** Default: `"#3b82f6"` */
+  /** Default: `"series-2"` */
   color?: string;
   /** Default: `"power"` */
   curveKind?: string;
@@ -85,6 +85,8 @@ export interface StdLearnParamExplorerConfig {
   showAxes?: boolean;
   /** Default: `true` */
   showGrid?: boolean;
+  /** Default: `""` */
+  summary?: string;
   /** Default: `"Parameter Explorer"` */
   title?: string;
   /** Default: `600` */

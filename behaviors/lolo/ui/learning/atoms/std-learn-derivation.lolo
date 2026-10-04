@@ -53,21 +53,27 @@ orbital LearnDerivationOrbital {
         (set @entity.elapsedMs 0)
         (set @entity.lines @config.premises)
         (set @entity.renderChildren [
-          { type: typography, variant: h4, content: @entity.title },
+          { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+              { type: stack, direction: vertical, gap: xs, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                  (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                ] },
+              { type: badge, label: (if @entity.goalReached "Goal reached" (if @entity.running "Auto-stepping" "In progress")), variant: (if @entity.goalReached "success" (if @entity.running "primary" "neutral")) }
+            ] },
           { type: typography, variant: body, content: (str/concat @config.goalPrefix @config.goalLabel) },
           { type: stack, direction: vertical, gap: xs, style: { maxHeight: (str/concat @config.height "px"), overflowY: "auto" }, children: (array/map @entity.lines (fn line
-              { type: stack, direction: horizontal, gap: sm, children: [
+              { type: stack, direction: horizontal, align: center, gap: sm, children: [
                   { type: badge, label: @line.badgeLabel, variant: @line.badgeVariant },
                   { type: typography, variant: body, content: @line.label }
                 ] }
             )) },
-          { type: stack, direction: horizontal, gap: sm, children: (array/map @config.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: primary })) },
-          { type: stack, direction: horizontal, gap: sm, children: [
-              { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
-              { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+          { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @config.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: secondary, size: lg, disabled: @entity.goalReached })) },
+          { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+              (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Run", icon: "play", variant: primary, aria-pressed: "false", disabled: @entity.goalReached }),
+              { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+              { type: typography, variant: caption, color: muted, content: (str/concat (array/len @entity.lines) " lines") }
             ] },
-          { type: typography, variant: caption, content: @entity.narration },
-          { type: typography, variant: caption, content: (if @entity.goalReached @config.goalReachedMessage "") }
+          { type: typography, variant: body, content: (if @entity.goalReached @config.goalReachedMessage @entity.narration) }
         ])
         (render-ui main {
           type: box
@@ -77,6 +83,11 @@ orbital LearnDerivationOrbital {
             { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
           ]
         })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (set @entity.running false)
+        (render-ui main null)
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (set @entity.active true)
@@ -88,21 +99,27 @@ orbital LearnDerivationOrbital {
         (set @entity.elapsedMs 0)
         (set @entity.lines @config.premises)
         (set @entity.renderChildren [
-          { type: typography, variant: h4, content: @entity.title },
+          { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+              { type: stack, direction: vertical, gap: xs, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                  (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                ] },
+              { type: badge, label: (if @entity.goalReached "Goal reached" (if @entity.running "Auto-stepping" "In progress")), variant: (if @entity.goalReached "success" (if @entity.running "primary" "neutral")) }
+            ] },
           { type: typography, variant: body, content: (str/concat @config.goalPrefix @config.goalLabel) },
           { type: stack, direction: vertical, gap: xs, style: { maxHeight: (str/concat @config.height "px"), overflowY: "auto" }, children: (array/map @entity.lines (fn line
-              { type: stack, direction: horizontal, gap: sm, children: [
+              { type: stack, direction: horizontal, align: center, gap: sm, children: [
                   { type: badge, label: @line.badgeLabel, variant: @line.badgeVariant },
                   { type: typography, variant: body, content: @line.label }
                 ] }
             )) },
-          { type: stack, direction: horizontal, gap: sm, children: (array/map @config.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: primary })) },
-          { type: stack, direction: horizontal, gap: sm, children: [
-              { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
-              { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+          { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @config.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: secondary, size: lg, disabled: @entity.goalReached })) },
+          { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+              (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Run", icon: "play", variant: primary, aria-pressed: "false", disabled: @entity.goalReached }),
+              { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+              { type: typography, variant: caption, color: muted, content: (str/concat (array/len @entity.lines) " lines") }
             ] },
-          { type: typography, variant: caption, content: @entity.narration },
-          { type: typography, variant: caption, content: (if @entity.goalReached @config.goalReachedMessage "") }
+          { type: typography, variant: body, content: (if @entity.goalReached @config.goalReachedMessage @entity.narration) }
         ])
         (render-ui main {
           type: box
@@ -150,21 +167,27 @@ orbital LearnDerivationOrbital {
           )
         )
         (set @entity.renderChildren [
-          { type: typography, variant: h4, content: @entity.title },
+          { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+              { type: stack, direction: vertical, gap: xs, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                  (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                ] },
+              { type: badge, label: (if @entity.goalReached "Goal reached" (if @entity.running "Auto-stepping" "In progress")), variant: (if @entity.goalReached "success" (if @entity.running "primary" "neutral")) }
+            ] },
           { type: typography, variant: body, content: (str/concat @config.goalPrefix @config.goalLabel) },
           { type: stack, direction: vertical, gap: xs, style: { maxHeight: (str/concat @config.height "px"), overflowY: "auto" }, children: (array/map @entity.lines (fn line
-              { type: stack, direction: horizontal, gap: sm, children: [
+              { type: stack, direction: horizontal, align: center, gap: sm, children: [
                   { type: badge, label: @line.badgeLabel, variant: @line.badgeVariant },
                   { type: typography, variant: body, content: @line.label }
                 ] }
             )) },
-          { type: stack, direction: horizontal, gap: sm, children: (array/map @config.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: primary })) },
-          { type: stack, direction: horizontal, gap: sm, children: [
-              { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
-              { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+          { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @config.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: secondary, size: lg, disabled: @entity.goalReached })) },
+          { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+              (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Run", icon: "play", variant: primary, aria-pressed: "false", disabled: @entity.goalReached }),
+              { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+              { type: typography, variant: caption, color: muted, content: (str/concat (array/len @entity.lines) " lines") }
             ] },
-          { type: typography, variant: caption, content: @entity.narration },
-          { type: typography, variant: caption, content: (if @entity.goalReached @config.goalReachedMessage "") }
+          { type: typography, variant: body, content: (if @entity.goalReached @config.goalReachedMessage @entity.narration) }
         ])
         (render-ui main {
           type: box
@@ -181,21 +204,27 @@ orbital LearnDerivationOrbital {
         (set @entity.feedback (if @entity.running @config.autoRunOnMessage @config.autoRunOffMessage))
         (set @entity.narration @entity.feedback)
         (set @entity.renderChildren [
-          { type: typography, variant: h4, content: @entity.title },
+          { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+              { type: stack, direction: vertical, gap: xs, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                  (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                ] },
+              { type: badge, label: (if @entity.goalReached "Goal reached" (if @entity.running "Auto-stepping" "In progress")), variant: (if @entity.goalReached "success" (if @entity.running "primary" "neutral")) }
+            ] },
           { type: typography, variant: body, content: (str/concat @config.goalPrefix @config.goalLabel) },
           { type: stack, direction: vertical, gap: xs, style: { maxHeight: (str/concat @config.height "px"), overflowY: "auto" }, children: (array/map @entity.lines (fn line
-              { type: stack, direction: horizontal, gap: sm, children: [
+              { type: stack, direction: horizontal, align: center, gap: sm, children: [
                   { type: badge, label: @line.badgeLabel, variant: @line.badgeVariant },
                   { type: typography, variant: body, content: @line.label }
                 ] }
             )) },
-          { type: stack, direction: horizontal, gap: sm, children: (array/map @config.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: primary })) },
-          { type: stack, direction: horizontal, gap: sm, children: [
-              { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
-              { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+          { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @config.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: secondary, size: lg, disabled: @entity.goalReached })) },
+          { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+              (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Run", icon: "play", variant: primary, aria-pressed: "false", disabled: @entity.goalReached }),
+              { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+              { type: typography, variant: caption, color: muted, content: (str/concat (array/len @entity.lines) " lines") }
             ] },
-          { type: typography, variant: caption, content: @entity.narration },
-          { type: typography, variant: caption, content: (if @entity.goalReached @config.goalReachedMessage "") }
+          { type: typography, variant: body, content: (if @entity.goalReached @config.goalReachedMessage @entity.narration) }
         ])
         (render-ui main {
           type: box
@@ -215,21 +244,27 @@ orbital LearnDerivationOrbital {
         (set @entity.running @config.autoRun)
         (set @entity.elapsedMs 0)
         (set @entity.renderChildren [
-          { type: typography, variant: h4, content: @entity.title },
+          { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+              { type: stack, direction: vertical, gap: xs, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                  (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                ] },
+              { type: badge, label: (if @entity.goalReached "Goal reached" (if @entity.running "Auto-stepping" "In progress")), variant: (if @entity.goalReached "success" (if @entity.running "primary" "neutral")) }
+            ] },
           { type: typography, variant: body, content: (str/concat @config.goalPrefix @config.goalLabel) },
           { type: stack, direction: vertical, gap: xs, style: { maxHeight: (str/concat @config.height "px"), overflowY: "auto" }, children: (array/map @entity.lines (fn line
-              { type: stack, direction: horizontal, gap: sm, children: [
+              { type: stack, direction: horizontal, align: center, gap: sm, children: [
                   { type: badge, label: @line.badgeLabel, variant: @line.badgeVariant },
                   { type: typography, variant: body, content: @line.label }
                 ] }
             )) },
-          { type: stack, direction: horizontal, gap: sm, children: (array/map @config.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: primary })) },
-          { type: stack, direction: horizontal, gap: sm, children: [
-              { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
-              { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+          { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @config.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: secondary, size: lg, disabled: @entity.goalReached })) },
+          { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+              (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Run", icon: "play", variant: primary, aria-pressed: "false", disabled: @entity.goalReached }),
+              { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+              { type: typography, variant: caption, color: muted, content: (str/concat (array/len @entity.lines) " lines") }
             ] },
-          { type: typography, variant: caption, content: @entity.narration },
-          { type: typography, variant: caption, content: (if @entity.goalReached @config.goalReachedMessage "") }
+          { type: typography, variant: body, content: (if @entity.goalReached @config.goalReachedMessage @entity.narration) }
         ])
         (render-ui main {
           type: box
@@ -287,21 +322,27 @@ orbital LearnDerivationOrbital {
               )
             )
             (set @entity.renderChildren [
-              { type: typography, variant: h4, content: @entity.title },
+              { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                  { type: stack, direction: vertical, gap: xs, children: [
+                      { type: typography, variant: h4, content: @entity.title },
+                      (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                    ] },
+                  { type: badge, label: (if @entity.goalReached "Goal reached" (if @entity.running "Auto-stepping" "In progress")), variant: (if @entity.goalReached "success" (if @entity.running "primary" "neutral")) }
+                ] },
               { type: typography, variant: body, content: (str/concat @config.goalPrefix @config.goalLabel) },
               { type: stack, direction: vertical, gap: xs, style: { maxHeight: (str/concat @config.height "px"), overflowY: "auto" }, children: (array/map @entity.lines (fn line
-                  { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: stack, direction: horizontal, align: center, gap: sm, children: [
                       { type: badge, label: @line.badgeLabel, variant: @line.badgeVariant },
                       { type: typography, variant: body, content: @line.label }
                     ] }
                 )) },
-              { type: stack, direction: horizontal, gap: sm, children: (array/map @config.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: primary })) },
-              { type: stack, direction: horizontal, gap: sm, children: [
-                  { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
-                  { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+              { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @config.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: secondary, size: lg, disabled: @entity.goalReached })) },
+              { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                  (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Run", icon: "play", variant: primary, aria-pressed: "false", disabled: @entity.goalReached }),
+                  { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                  { type: typography, variant: caption, color: muted, content: (str/concat (array/len @entity.lines) " lines") }
                 ] },
-              { type: typography, variant: caption, content: @entity.narration },
-              { type: typography, variant: caption, content: (if @entity.goalReached @config.goalReachedMessage "") }
+              { type: typography, variant: body, content: (if @entity.goalReached @config.goalReachedMessage @entity.narration) }
             ])
             (render-ui main {
               type: box
@@ -363,6 +404,10 @@ orbital LearnDerivationOrbital {
       title : string = "Derivation Lab"
         @label "Title"
         @description "Title shown above the derivation panel."
+        @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what is being derived (keep it under ~65 characters). Empty shows no line."
         @tier "presentation"
       autoRun : boolean = false
         @label "Auto Run"

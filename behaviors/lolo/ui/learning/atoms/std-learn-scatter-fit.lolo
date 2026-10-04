@@ -86,24 +86,42 @@ orbital LearnScatterFitOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: ADD_POINT, label: @config.addPointLabel, variant: primary },
-                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, variant: secondary },
-                    { type: button, action: TOGGLE_RUN, label: (if @entity.running @config.pauseLabel @config.runLabel), variant: secondary },
-                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.revealed "Revealed" (if @entity.done "Max points" (if @entity.running "Adding points" (if @config.guessMode "Guessing" "Fitted")))), variant: (if @entity.revealed "success" (if @entity.done "neutral" (if @entity.running "primary" "neutral"))) }
                   ] },
-                { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
-                { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } },
-                { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
-                { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
-                { type: typography, variant: body, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: ADD_POINT, label: @config.addPointLabel, icon: "plus", variant: primary, disabled: @entity.done },
+                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, icon: "eye", variant: secondary },
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: @config.pauseLabel, icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: @config.runLabel, icon: "play", variant: secondary, aria-pressed: "false", disabled: @entity.done }),
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat (str/concat "" (array/len @entity.points)) (str/concat " of " (str/concat "" @config.maxPoints))) }
+                  ] },
+                { type: math-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: ADD_POINT, KeyR: RESET }, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
+                        { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
+                        { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } }
+                      ] }
+                  ] },
+                { type: typography, variant: caption, color: muted, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
                 { type: typography, variant: body, content: @entity.narration }
               ] }
           ]
         })
         (emit LEARN_SCATTER_FIT_UPDATED { slope: @entity.slope, intercept: @entity.intercept, r: @entity.r, rSquared: @entity.rSquared, pointCount: (array/len @entity.points), narration: @entity.narration })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (set @entity.running false)
+        (render-ui main null)
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (set @entity.active true)
@@ -148,19 +166,32 @@ orbital LearnScatterFitOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: ADD_POINT, label: @config.addPointLabel, variant: primary },
-                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, variant: secondary },
-                    { type: button, action: TOGGLE_RUN, label: (if @entity.running @config.pauseLabel @config.runLabel), variant: secondary },
-                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.revealed "Revealed" (if @entity.done "Max points" (if @entity.running "Adding points" (if @config.guessMode "Guessing" "Fitted")))), variant: (if @entity.revealed "success" (if @entity.done "neutral" (if @entity.running "primary" "neutral"))) }
                   ] },
-                { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
-                { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } },
-                { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
-                { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
-                { type: typography, variant: body, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: ADD_POINT, label: @config.addPointLabel, icon: "plus", variant: primary, disabled: @entity.done },
+                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, icon: "eye", variant: secondary },
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: @config.pauseLabel, icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: @config.runLabel, icon: "play", variant: secondary, aria-pressed: "false", disabled: @entity.done }),
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat (str/concat "" (array/len @entity.points)) (str/concat " of " (str/concat "" @config.maxPoints))) }
+                  ] },
+                { type: math-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: ADD_POINT, KeyR: RESET }, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
+                        { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
+                        { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } }
+                      ] }
+                  ] },
+                { type: typography, variant: caption, color: muted, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
                 { type: typography, variant: body, content: @entity.narration }
               ] }
           ]
@@ -219,19 +250,32 @@ orbital LearnScatterFitOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: ADD_POINT, label: @config.addPointLabel, variant: primary },
-                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, variant: secondary },
-                    { type: button, action: TOGGLE_RUN, label: (if @entity.running @config.pauseLabel @config.runLabel), variant: secondary },
-                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.revealed "Revealed" (if @entity.done "Max points" (if @entity.running "Adding points" (if @config.guessMode "Guessing" "Fitted")))), variant: (if @entity.revealed "success" (if @entity.done "neutral" (if @entity.running "primary" "neutral"))) }
                   ] },
-                { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
-                { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } },
-                { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
-                { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
-                { type: typography, variant: body, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: ADD_POINT, label: @config.addPointLabel, icon: "plus", variant: primary, disabled: @entity.done },
+                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, icon: "eye", variant: secondary },
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: @config.pauseLabel, icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: @config.runLabel, icon: "play", variant: secondary, aria-pressed: "false", disabled: @entity.done }),
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat (str/concat "" (array/len @entity.points)) (str/concat " of " (str/concat "" @config.maxPoints))) }
+                  ] },
+                { type: math-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: ADD_POINT, KeyR: RESET }, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
+                        { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
+                        { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } }
+                      ] }
+                  ] },
+                { type: typography, variant: caption, color: muted, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
                 { type: typography, variant: body, content: @entity.narration }
               ] }
           ]
@@ -285,19 +329,32 @@ orbital LearnScatterFitOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: ADD_POINT, label: @config.addPointLabel, variant: primary },
-                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, variant: secondary },
-                    { type: button, action: TOGGLE_RUN, label: (if @entity.running @config.pauseLabel @config.runLabel), variant: secondary },
-                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.revealed "Revealed" (if @entity.done "Max points" (if @entity.running "Adding points" (if @config.guessMode "Guessing" "Fitted")))), variant: (if @entity.revealed "success" (if @entity.done "neutral" (if @entity.running "primary" "neutral"))) }
                   ] },
-                { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
-                { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } },
-                { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
-                { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
-                { type: typography, variant: body, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: ADD_POINT, label: @config.addPointLabel, icon: "plus", variant: primary, disabled: @entity.done },
+                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, icon: "eye", variant: secondary },
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: @config.pauseLabel, icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: @config.runLabel, icon: "play", variant: secondary, aria-pressed: "false", disabled: @entity.done }),
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat (str/concat "" (array/len @entity.points)) (str/concat " of " (str/concat "" @config.maxPoints))) }
+                  ] },
+                { type: math-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: ADD_POINT, KeyR: RESET }, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
+                        { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
+                        { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } }
+                      ] }
+                  ] },
+                { type: typography, variant: caption, color: muted, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
                 { type: typography, variant: body, content: @entity.narration }
               ] }
           ]
@@ -345,19 +402,32 @@ orbital LearnScatterFitOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: ADD_POINT, label: @config.addPointLabel, variant: primary },
-                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, variant: secondary },
-                    { type: button, action: TOGGLE_RUN, label: (if @entity.running @config.pauseLabel @config.runLabel), variant: secondary },
-                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.revealed "Revealed" (if @entity.done "Max points" (if @entity.running "Adding points" (if @config.guessMode "Guessing" "Fitted")))), variant: (if @entity.revealed "success" (if @entity.done "neutral" (if @entity.running "primary" "neutral"))) }
                   ] },
-                { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
-                { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } },
-                { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
-                { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
-                { type: typography, variant: body, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: ADD_POINT, label: @config.addPointLabel, icon: "plus", variant: primary, disabled: @entity.done },
+                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, icon: "eye", variant: secondary },
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: @config.pauseLabel, icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: @config.runLabel, icon: "play", variant: secondary, aria-pressed: "false", disabled: @entity.done }),
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat (str/concat "" (array/len @entity.points)) (str/concat " of " (str/concat "" @config.maxPoints))) }
+                  ] },
+                { type: math-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: ADD_POINT, KeyR: RESET }, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
+                        { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
+                        { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } }
+                      ] }
+                  ] },
+                { type: typography, variant: caption, color: muted, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
                 { type: typography, variant: body, content: @entity.narration }
               ] }
           ]
@@ -388,19 +458,32 @@ orbital LearnScatterFitOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: ADD_POINT, label: @config.addPointLabel, variant: primary },
-                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, variant: secondary },
-                    { type: button, action: TOGGLE_RUN, label: (if @entity.running @config.pauseLabel @config.runLabel), variant: secondary },
-                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.revealed "Revealed" (if @entity.done "Max points" (if @entity.running "Adding points" (if @config.guessMode "Guessing" "Fitted")))), variant: (if @entity.revealed "success" (if @entity.done "neutral" (if @entity.running "primary" "neutral"))) }
                   ] },
-                { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
-                { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } },
-                { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
-                { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
-                { type: typography, variant: body, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: ADD_POINT, label: @config.addPointLabel, icon: "plus", variant: primary, disabled: @entity.done },
+                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, icon: "eye", variant: secondary },
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: @config.pauseLabel, icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: @config.runLabel, icon: "play", variant: secondary, aria-pressed: "false", disabled: @entity.done }),
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat (str/concat "" (array/len @entity.points)) (str/concat " of " (str/concat "" @config.maxPoints))) }
+                  ] },
+                { type: math-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: ADD_POINT, KeyR: RESET }, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
+                        { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
+                        { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } }
+                      ] }
+                  ] },
+                { type: typography, variant: caption, color: muted, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
                 { type: typography, variant: body, content: @entity.narration }
               ] }
           ]
@@ -415,19 +498,32 @@ orbital LearnScatterFitOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: ADD_POINT, label: @config.addPointLabel, variant: primary },
-                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, variant: secondary },
-                    { type: button, action: TOGGLE_RUN, label: (if @entity.running @config.pauseLabel @config.runLabel), variant: secondary },
-                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.revealed "Revealed" (if @entity.done "Max points" (if @entity.running "Adding points" (if @config.guessMode "Guessing" "Fitted")))), variant: (if @entity.revealed "success" (if @entity.done "neutral" (if @entity.running "primary" "neutral"))) }
                   ] },
-                { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
-                { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } },
-                { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
-                { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
-                { type: typography, variant: body, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: ADD_POINT, label: @config.addPointLabel, icon: "plus", variant: primary, disabled: @entity.done },
+                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, icon: "eye", variant: secondary },
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: @config.pauseLabel, icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: @config.runLabel, icon: "play", variant: secondary, aria-pressed: "false", disabled: @entity.done }),
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat (str/concat "" (array/len @entity.points)) (str/concat " of " (str/concat "" @config.maxPoints))) }
+                  ] },
+                { type: math-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: ADD_POINT, KeyR: RESET }, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
+                        { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
+                        { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } }
+                      ] }
+                  ] },
+                { type: typography, variant: caption, color: muted, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
                 { type: typography, variant: body, content: @entity.narration }
               ] }
           ]
@@ -475,19 +571,32 @@ orbital LearnScatterFitOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: ADD_POINT, label: @config.addPointLabel, variant: primary },
-                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, variant: secondary },
-                    { type: button, action: TOGGLE_RUN, label: (if @entity.running @config.pauseLabel @config.runLabel), variant: secondary },
-                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.revealed "Revealed" (if @entity.done "Max points" (if @entity.running "Adding points" (if @config.guessMode "Guessing" "Fitted")))), variant: (if @entity.revealed "success" (if @entity.done "neutral" (if @entity.running "primary" "neutral"))) }
                   ] },
-                { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
-                { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } },
-                { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
-                { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
-                { type: typography, variant: body, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: ADD_POINT, label: @config.addPointLabel, icon: "plus", variant: primary, disabled: @entity.done },
+                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, icon: "eye", variant: secondary },
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: @config.pauseLabel, icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: @config.runLabel, icon: "play", variant: secondary, aria-pressed: "false", disabled: @entity.done }),
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat (str/concat "" (array/len @entity.points)) (str/concat " of " (str/concat "" @config.maxPoints))) }
+                  ] },
+                { type: math-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: ADD_POINT, KeyR: RESET }, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
+                        { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
+                        { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } }
+                      ] }
+                  ] },
+                { type: typography, variant: caption, color: muted, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
                 { type: typography, variant: body, content: @entity.narration }
               ] }
           ]
@@ -549,19 +658,32 @@ orbital LearnScatterFitOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: ADD_POINT, label: @config.addPointLabel, variant: primary },
-                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, variant: secondary },
-                    { type: button, action: TOGGLE_RUN, label: (if @entity.running @config.pauseLabel @config.runLabel), variant: secondary },
-                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.revealed "Revealed" (if @entity.done "Max points" (if @entity.running "Adding points" (if @config.guessMode "Guessing" "Fitted")))), variant: (if @entity.revealed "success" (if @entity.done "neutral" (if @entity.running "primary" "neutral"))) }
                   ] },
-                { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
-                { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } },
-                { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
-                { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
-                { type: typography, variant: body, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: ADD_POINT, label: @config.addPointLabel, icon: "plus", variant: primary, disabled: @entity.done },
+                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, icon: "eye", variant: secondary },
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: @config.pauseLabel, icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: @config.runLabel, icon: "play", variant: secondary, aria-pressed: "false", disabled: @entity.done }),
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat (str/concat "" (array/len @entity.points)) (str/concat " of " (str/concat "" @config.maxPoints))) }
+                  ] },
+                { type: math-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: ADD_POINT, KeyR: RESET }, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
+                        { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
+                        { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } }
+                      ] }
+                  ] },
+                { type: typography, variant: caption, color: muted, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
                 { type: typography, variant: body, content: @entity.narration }
               ] }
           ]
@@ -624,12 +746,16 @@ orbital LearnScatterFitOrbital {
         @label "Title"
         @description "Title shown above the canvas."
         @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line."
+        @tier "presentation"
       initialPoints : [LearnScatterFitPoint] = [
-        { id: "p0", x: 15, y: 25, label: "", color: "#334155", radius: 5 },
-        { id: "p1", x: 32, y: 40, label: "", color: "#334155", radius: 5 },
-        { id: "p2", x: 48, y: 44, label: "", color: "#334155", radius: 5 },
-        { id: "p3", x: 63, y: 62, label: "", color: "#334155", radius: 5 },
-        { id: "p4", x: 80, y: 70, label: "", color: "#334155", radius: 5 }
+        { id: "p0", x: 15, y: 25, label: "", color: "ink", radius: 5 },
+        { id: "p1", x: 32, y: 40, label: "", color: "ink", radius: 5 },
+        { id: "p2", x: 48, y: 44, label: "", color: "ink", radius: 5 },
+        { id: "p3", x: 63, y: 62, label: "", color: "ink", radius: 5 },
+        { id: "p4", x: 80, y: 70, label: "", color: "ink", radius: 5 }
       ]
         @label "Initial Points"
         @description "Scatter points the canvas starts with, in axis data coordinates; Reset reseeds from this roster."
@@ -703,23 +829,23 @@ orbital LearnScatterFitOrbital {
         @label "Fit Curve Label"
         @description "Legend label for the computed least-squares fit line."
         @tier "presentation"
-      fitColor : string = "#2563eb"
+      fitColor : string = "series-2"
         @label "Fit Curve Color"
         @tier "presentation"
       guessLabel : string = "your guess"
         @label "Guess Curve Label"
         @description "Legend label for the learner's proposed line, shown while guessMode is on and the fit isn't yet revealed."
         @tier "presentation"
-      guessColor : string = "#dc2626"
+      guessColor : string = "series-3"
         @label "Guess Curve Color"
         @tier "presentation"
-      residualColor : string = "#f59e0b"
+      residualColor : string = "guide"
         @label "Residual Color"
         @tier "presentation"
       residualDash : "dashed" | "dotted" = "dashed"
         @label "Residual Dash Style"
         @tier "presentation"
-      newPointColor : string = "#334155"
+      newPointColor : string = "ink"
         @label "New Point Color"
         @description "Fill color assigned to points created by Add Point or the auto-add tick."
         @tier "presentation"

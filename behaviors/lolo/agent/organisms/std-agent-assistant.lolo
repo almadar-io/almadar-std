@@ -1,14 +1,16 @@
 app std-agent-assistant "2.0.0"
-"std-agent-assistant — an in-app assistant that operates the running app for the signed-in user. A floating button opens it in a side panel docked beside the page (std-panel-launcher; a side sheet on small screens), where the conversation shows every step the assistant takes live as it works. List AssistantDock with the assistant's traits on each page that should carry the button. One request flows down a chain of std agent atoms on the bus: the conversation (std-agent-session) SENDs → CONVERSE → std-agent-context bounds it → std-agent-memory adds what it recalls → std-agent-tool-loop answers it through `call-service llm call-tools`, firing only the inputs and reading only the entities the `tools` allowlist names, as the signed-in user → REPLIED goes back to the conversation, to memory (remembered) and to std-agent-trace (the run record). Import the orbital and supply the allowlist: `orbital Assistant = Agent.orbitals.AgentAssistantOrbital { config { tools: [{ event: TaskOrbital.TaskPersistor.DO_CREATE }, { read: Task }], instructions: \"…\" } }`. The conversation, memory and run records live in AgentRecordsOrbital; retarget them onto your own owner-scoped entities (`ownerId` a relation to your [identity] roster, with @read/@create) with `entities { AgentMessage: …, AgentMemory: …, AgentRun: … }`."
+"std-agent-assistant — an in-app assistant that operates the running app for the signed-in user. Each section's floating button opens it in a side panel docked beside the page (std-panel-launcher; a side sheet on small screens), where the conversation shows every step the assistant takes live as it works; /assistant is the same conversation as a full page, in the app's own shell (pass `appName` and `navItems`); past conversations and what the assistant remembers open in place from its toolbar (Back returns to the chat), on either surface. One request flows down a chain of std agent atoms on the bus: the conversation (std-agent-session) SENDs → CONVERSE → std-agent-context bounds it → std-agent-memory adds what it recalls → std-agent-tool-loop answers it through `call-service llm call-tools`, firing only the inputs and reading only the entities its `tools` allow, as the signed-in user → ASSISTANT_REPLIED goes back to the conversation, to memory (remembered) and to std-agent-trace (the run record). By default the tools are the program's own declarations: every `-> external` input (its @description is the tool text) and a read over every persisted entity, so composing building blocks composes the assistant's abilities. Any section's page gets the assistant with two traits, `XAssistant = AgentSession.traits.AgentConversation` and a std-panel-launcher dock: the conversation speaks the ASSISTANT_* contract from any orbital, so the assistant needs no per-section wiring. Import the orbital once per app: `orbital Assistant = Agent.orbitals.AgentAssistantOrbital { config { instructions: \"…\" } }`. The conversation, memory and run records live in AgentRecordsOrbital; retarget them onto your own owner-scoped entities (`ownerId` a relation to your [identity] roster, with @read/@create) with `entities { AgentMessage: …, AgentMemory: …, AgentRun: …, AgentChat: … }`. The conversation is kept across pages and reloads (each person's most recently used conversation is the current one);"
 
 type AgentTool = {
   event : event
   read : string
+  scope : "declared"
 }
 type AgentLink = {
   label : string!
   href : string!
 }
+type NavItem = { label : string!, href : string!, icon : string, badge : string, children : [NavItem], roles : [string] }
 
 orbital AgentAssistantOrbital {
   uses Session from "std/behaviors/std-agent-session"
@@ -16,12 +18,12 @@ orbital AgentAssistantOrbital {
   uses Memory from "std/behaviors/std-agent-memory"
   uses Loop from "std/behaviors/std-agent-tool-loop"
   uses Trace from "std/behaviors/std-agent-trace"
-  uses Launcher from "std/behaviors/std-panel-launcher"
+  uses Shell from "std/behaviors/std-app-layout"
 
   config {
-    tools : [AgentTool] = []
+    tools : [AgentTool] = [{ scope: declared }]
       @label "What may the assistant do?"
-      @description "The declared inputs it may fire (`{ event: Trait.EVENT }` / `{ event: Orbital.Trait.EVENT }`) and the entities it may read (`{ read: Entity }`), as the signed-in user."
+      @description "As the signed-in user: `{ scope: declared }` (the default) gives it every external input the program declares and a read over every persisted entity, so each building block's declared inputs become its abilities; or list them — `{ event: Orbital.Trait.EVENT }` for one input, `{ read: Entity }` for one entity."
       @synonyms "allowlist, abilities, actions, permissions"
       @tier "domain"
     instructions : string = "You operate this app for the signed-in user. Use the tools to act and to look things up; when a tool reports that something was refused or denied, say so plainly."
@@ -38,17 +40,22 @@ orbital AgentAssistantOrbital {
     recallLimit : number = 3
       @label "Memories recalled per request"
       @tier "policy"
-    links : [AgentLink] = [{ label: "Run history", href: "/assistant/runs" }, { label: "What I remember", href: "/assistant/memory" }]
+    links : [AgentLink] = [{ label: "Run history", href: "/assistant/runs" }]
       @label "Links above the conversation"
-      @description "The pages showing the assistant's run history and memory."
+      @description "Related pages, e.g. the assistant's run history."
       @tier "presentation"
-    title : string = "Assistant"
-      @label "Panel title"
+    appName : string = "Assistant"
+      @label "App name in the assistant page's header"
+      @description "Pass the app's own name so the assistant page matches the rest of the app."
       @tier "presentation"
-    buttonLabel : string = "Open the assistant"
-      @label "Button label"
-      @description "What the floating button does, read to screen readers and shown as its tooltip."
+    navItems : [NavItem] = []
+      @label "Sidebar navigation on the assistant page"
+      @description "Pass the app's own navItems so the assistant page keeps the app's sidebar."
       @tier "presentation"
+    viewerRole : string = ""
+      @label "Viewer role on the assistant page"
+      @description "The role the assistant page's sidebar items and their `roles` are checked against. Bind `@user.role` in an app whose identity carries a role; left empty, only items with no `roles` show."
+      @tier "policy"
   }
 
   entity AgentAssistant [runtime] {
@@ -60,8 +67,20 @@ orbital AgentAssistantOrbital {
       CONVERSE: REQUEST_CONTEXT
     }
     listens {
-      AssistantConversation.SEND -> SEND
-      AssistantLoop.REPLIED -> REPLIED
+      AssistantChatKeeper.ASSISTANT_CHAT_OPENED -> OPEN_CHAT
+      AssistantChatKeeper.ASSISTANT_SEND_IN_CHAT -> SEND_IN_CHAT
+      AssistantChatKeeper.ASSISTANT_REPLY_IN_CHAT -> REPLY_IN_CHAT
+    }
+  }
+
+  trait AssistantChatKeeper = Session.traits.AgentChatKeeper -> AgentChat {
+    listens {
+      *.ASSISTANT_SEND -> SEND
+      *.ASSISTANT_HISTORY_REQUESTED -> LOAD_HISTORY
+      *.ASSISTANT_NEW_CHAT -> NEW_CHAT
+      *.ASSISTANT_CHAT_SELECTED -> SELECT_CHAT
+      *.ASSISTANT_CHATS_REQUESTED -> LIST_CHATS
+      AssistantLoop.ASSISTANT_REPLIED -> REPLIED
     }
   }
 
@@ -69,21 +88,19 @@ orbital AgentAssistantOrbital {
     config {
       links: @config.links
     }
-    listens {
-      AssistantThread.AgentMessagesLoaded -> THREAD_LOADED
-      AssistantThread.THREAD_FAILED -> REPLY_FAILED
-      AssistantLoop.STEP -> STEP
-      AssistantLoop.REPLIED -> REPLIED
-      AssistantLoop.REPLY_FAILED -> REPLY_FAILED
-    }
   }
 
-  trait AssistantDock = Launcher.traits.PanelLauncher {
+  ;; The full assistant page: the same conversation as the side panel, in the
+  ;; app's own shell.
+  trait AssistantLayout = Shell.traits.AppLayout {
     config {
-      contentTrait: @trait.AssistantConversation
-      title: @config.title
-      label: @config.buttonLabel
-      icon: message-circle
+      viewerRole: @config.viewerRole
+      viewerName: @user.name
+      viewerEmail: @user.email
+      appName: @config.appName
+      navItems: @config.navItems
+      contentTrait: <trait.AssistantConversation />
+      contentClassName: "mx-auto flex w-full max-w-3xl flex-col h-[calc(100vh-9rem)] min-h-0"
     }
   }
 
@@ -102,7 +119,8 @@ orbital AgentAssistantOrbital {
     }
     listens {
       AssistantContext.COMPACTED -> RECALL
-      AssistantLoop.REPLIED -> REMEMBER
+      AssistantLoop.ASSISTANT_REPLIED -> REMEMBER
+      *.ASSISTANT_MEMORIES_REQUESTED -> LIST
     }
   }
 
@@ -119,19 +137,18 @@ orbital AgentAssistantOrbital {
 
   trait AssistantTrace = Trace.traits.AgentTraceRecorder -> AgentRun {
     listens {
-      AssistantLoop.REPLIED -> REPLIED
-      AssistantLoop.REPLY_FAILED -> REPLY_FAILED
+      AssistantLoop.ASSISTANT_REPLIED -> REPLIED
+      AssistantLoop.ASSISTANT_REPLY_FAILED -> REPLY_FAILED
     }
   }
 
-  page "/assistant" as AssistantPage -> AssistantDock, AssistantThread, AssistantContext, AssistantMemory, AssistantLoop, AssistantTrace
+  page "/assistant" as AssistantPage -> AssistantLayout, AssistantThread, AssistantChatKeeper, AssistantContext, AssistantMemory, AssistantLoop, AssistantTrace
 }
 
 ;; The assistant's records live outside AgentAssistantOrbital, so a consumer
 ;; importing that orbital retargets them onto its own owner-scoped entities:
 ;; `entities { AgentMessage: MyMessage, AgentMemory: MyMemory, AgentRun: MyRun }`.
 orbital AgentRecordsOrbital {
-  uses Memory from "std/behaviors/std-agent-memory"
   uses Trace from "std/behaviors/std-agent-trace"
 
   entity AgentRun [persistent: agentRuns] {
@@ -143,6 +160,15 @@ orbital AgentRecordsOrbital {
   entity AgentMemory [persistent: agentMemories] {
     id : string!
   }
+  entity AgentChat [persistent: agentChats] {
+    id : string!
+    ownerId : string!
+    title : string = ""
+    startedAt : number = 0
+    lastActiveAt : number = 0
+    pendingMessage : string @intrinsic = ""
+    pendingReply : string @intrinsic = ""
+  }
 
   trait AgentRunHistory = Trace.traits.AgentRunBrowse -> AgentRun {
     listens {
@@ -150,12 +176,5 @@ orbital AgentRecordsOrbital {
     }
   }
 
-  trait AgentMemoryList = Memory.traits.AgentMemoryBrowse -> AgentMemory {
-    listens {
-      AgentAssistantOrbital.AssistantMemory.MEMORY_STORED -> MEMORY_STORED
-    }
-  }
-
   page "/assistant/runs" as AssistantRunsPage -> AgentRunHistory
-  page "/assistant/memory" as AssistantMemoryPage -> AgentMemoryList
 }

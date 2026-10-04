@@ -88,22 +88,32 @@ orbital PredictOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done (str/concat @entity.score " / " @entity.totalScenarios " correct") (if (== @entity.phase "commit") "Predict" (if (== @entity.phase "reveal") "Revealing" (if (== @entity.chosenIndex @entity.correctIndex) "Correct" "Incorrect")))), variant: (if @entity.done "primary" (if (== @entity.phase "judged") (if (== @entity.chosenIndex @entity.correctIndex) "success" "error") "neutral")) }
+                  ] },
                 { type: progress-bar, value: (+ @entity.scenarioIndex 1), max: @entity.totalScenarios, showPercentage: false, label: (str/concat "Scenario " (str/concat "" (+ @entity.scenarioIndex 1)) " of " (str/concat "" @entity.totalScenarios)) },
                 { type: stack, direction: vertical, gap: md, children: @entity.view },
-                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
-                    { type: button, action: PREDICT, actionPayload: { index: @i }, label: (array/nth @entity.options @i), variant: (if (and (!= @entity.phase "commit") (== @entity.chosenIndex @i)) "primary" "secondary"), size: sm, disabled: (if (== @entity.phase "commit") false true) })) },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: (math/max 1 (- (array/len @entity.frames) 1)), yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.revealCurves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: vertical, gap: sm, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
+                    { type: button, action: PREDICT, actionPayload: { index: @i }, label: (array/nth @entity.options @i), size: lg, disabled: (!= @entity.phase "commit"), variant: (if (== @entity.phase "commit") "secondary" (if (== @entity.phase "reveal") (if (== @entity.chosenIndex @i) "primary" "ghost") (if (== @i @entity.correctIndex) "success" (if (== @entity.chosenIndex @i) "danger" "ghost")))) })) },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: (math/max 1 (- (array/len @entity.frames) 1)), yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.revealCurves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { ArrowRight: NEXT, KeyR: RETRY } },
                 { type: typography, variant: body, content: @entity.frameCaption },
-                { type: typography, variant: caption, content: @entity.feedback },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: (if (and (== @entity.phase "judged") (== @entity.done false)) false true) },
-                    { type: button, action: RETRY, label: @config.retryLabel, variant: ghost, disabled: (if @entity.done false true) }
-                  ] },
-                { type: stat-display, label: "Correct predictions", value: @entity.score, max: @entity.totalScenarios }
+                { type: typography, variant: body, content: @entity.feedback },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: NEXT, label: @config.nextLabel, icon: "chevron-right", variant: primary, disabled: (if (and (== @entity.phase "judged") (== @entity.done false)) false true) },
+                    { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: ghost, disabled: (if @entity.done false true) },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Correct " @entity.score " of " @entity.totalScenarios) }
+                  ] }
               ] }
           ]
         })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (render-ui main null)
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (let (
@@ -141,19 +151,25 @@ orbital PredictOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done (str/concat @entity.score " / " @entity.totalScenarios " correct") (if (== @entity.phase "commit") "Predict" (if (== @entity.phase "reveal") "Revealing" (if (== @entity.chosenIndex @entity.correctIndex) "Correct" "Incorrect")))), variant: (if @entity.done "primary" (if (== @entity.phase "judged") (if (== @entity.chosenIndex @entity.correctIndex) "success" "error") "neutral")) }
+                  ] },
                 { type: progress-bar, value: (+ @entity.scenarioIndex 1), max: @entity.totalScenarios, showPercentage: false, label: (str/concat "Scenario " (str/concat "" (+ @entity.scenarioIndex 1)) " of " (str/concat "" @entity.totalScenarios)) },
                 { type: stack, direction: vertical, gap: md, children: @entity.view },
-                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
-                    { type: button, action: PREDICT, actionPayload: { index: @i }, label: (array/nth @entity.options @i), variant: (if (and (!= @entity.phase "commit") (== @entity.chosenIndex @i)) "primary" "secondary"), size: sm, disabled: (if (== @entity.phase "commit") false true) })) },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: (math/max 1 (- (array/len @entity.frames) 1)), yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.revealCurves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: vertical, gap: sm, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
+                    { type: button, action: PREDICT, actionPayload: { index: @i }, label: (array/nth @entity.options @i), size: lg, disabled: (!= @entity.phase "commit"), variant: (if (== @entity.phase "commit") "secondary" (if (== @entity.phase "reveal") (if (== @entity.chosenIndex @i) "primary" "ghost") (if (== @i @entity.correctIndex) "success" (if (== @entity.chosenIndex @i) "danger" "ghost")))) })) },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: (math/max 1 (- (array/len @entity.frames) 1)), yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.revealCurves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { ArrowRight: NEXT, KeyR: RETRY } },
                 { type: typography, variant: body, content: @entity.frameCaption },
-                { type: typography, variant: caption, content: @entity.feedback },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: (if (and (== @entity.phase "judged") (== @entity.done false)) false true) },
-                    { type: button, action: RETRY, label: @config.retryLabel, variant: ghost, disabled: (if @entity.done false true) }
-                  ] },
-                { type: stat-display, label: "Correct predictions", value: @entity.score, max: @entity.totalScenarios }
+                { type: typography, variant: body, content: @entity.feedback },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: NEXT, label: @config.nextLabel, icon: "chevron-right", variant: primary, disabled: (if (and (== @entity.phase "judged") (== @entity.done false)) false true) },
+                    { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: ghost, disabled: (if @entity.done false true) },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Correct " @entity.score " of " @entity.totalScenarios) }
+                  ] }
               ] }
           ]
         })
@@ -214,19 +230,25 @@ orbital PredictOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done (str/concat @entity.score " / " @entity.totalScenarios " correct") (if (== @entity.phase "commit") "Predict" (if (== @entity.phase "reveal") "Revealing" (if (== @entity.chosenIndex @entity.correctIndex) "Correct" "Incorrect")))), variant: (if @entity.done "primary" (if (== @entity.phase "judged") (if (== @entity.chosenIndex @entity.correctIndex) "success" "error") "neutral")) }
+                  ] },
                 { type: progress-bar, value: (+ @entity.scenarioIndex 1), max: @entity.totalScenarios, showPercentage: false, label: (str/concat "Scenario " (str/concat "" (+ @entity.scenarioIndex 1)) " of " (str/concat "" @entity.totalScenarios)) },
                 { type: stack, direction: vertical, gap: md, children: @entity.view },
-                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
-                    { type: button, action: PREDICT, actionPayload: { index: @i }, label: (array/nth @entity.options @i), variant: (if (and (!= @entity.phase "commit") (== @entity.chosenIndex @i)) "primary" "secondary"), size: sm, disabled: (if (== @entity.phase "commit") false true) })) },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: (math/max 1 (- (array/len @entity.frames) 1)), yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.revealCurves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: vertical, gap: sm, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
+                    { type: button, action: PREDICT, actionPayload: { index: @i }, label: (array/nth @entity.options @i), size: lg, disabled: (!= @entity.phase "commit"), variant: (if (== @entity.phase "commit") "secondary" (if (== @entity.phase "reveal") (if (== @entity.chosenIndex @i) "primary" "ghost") (if (== @i @entity.correctIndex) "success" (if (== @entity.chosenIndex @i) "danger" "ghost")))) })) },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: (math/max 1 (- (array/len @entity.frames) 1)), yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.revealCurves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { ArrowRight: NEXT, KeyR: RETRY } },
                 { type: typography, variant: body, content: @entity.frameCaption },
-                { type: typography, variant: caption, content: @entity.feedback },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: (if (and (== @entity.phase "judged") (== @entity.done false)) false true) },
-                    { type: button, action: RETRY, label: @config.retryLabel, variant: ghost, disabled: (if @entity.done false true) }
-                  ] },
-                { type: stat-display, label: "Correct predictions", value: @entity.score, max: @entity.totalScenarios }
+                { type: typography, variant: body, content: @entity.feedback },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: NEXT, label: @config.nextLabel, icon: "chevron-right", variant: primary, disabled: (if (and (== @entity.phase "judged") (== @entity.done false)) false true) },
+                    { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: ghost, disabled: (if @entity.done false true) },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Correct " @entity.score " of " @entity.totalScenarios) }
+                  ] }
               ] }
           ]
         })
@@ -265,19 +287,25 @@ orbital PredictOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done (str/concat @entity.score " / " @entity.totalScenarios " correct") (if (== @entity.phase "commit") "Predict" (if (== @entity.phase "reveal") "Revealing" (if (== @entity.chosenIndex @entity.correctIndex) "Correct" "Incorrect")))), variant: (if @entity.done "primary" (if (== @entity.phase "judged") (if (== @entity.chosenIndex @entity.correctIndex) "success" "error") "neutral")) }
+                  ] },
                 { type: progress-bar, value: (+ @entity.scenarioIndex 1), max: @entity.totalScenarios, showPercentage: false, label: (str/concat "Scenario " (str/concat "" (+ @entity.scenarioIndex 1)) " of " (str/concat "" @entity.totalScenarios)) },
                 { type: stack, direction: vertical, gap: md, children: @entity.view },
-                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
-                    { type: button, action: PREDICT, actionPayload: { index: @i }, label: (array/nth @entity.options @i), variant: (if (and (!= @entity.phase "commit") (== @entity.chosenIndex @i)) "primary" "secondary"), size: sm, disabled: (if (== @entity.phase "commit") false true) })) },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: (math/max 1 (- (array/len @entity.frames) 1)), yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.revealCurves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: vertical, gap: sm, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
+                    { type: button, action: PREDICT, actionPayload: { index: @i }, label: (array/nth @entity.options @i), size: lg, disabled: (!= @entity.phase "commit"), variant: (if (== @entity.phase "commit") "secondary" (if (== @entity.phase "reveal") (if (== @entity.chosenIndex @i) "primary" "ghost") (if (== @i @entity.correctIndex) "success" (if (== @entity.chosenIndex @i) "danger" "ghost")))) })) },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: (math/max 1 (- (array/len @entity.frames) 1)), yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.revealCurves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { ArrowRight: NEXT, KeyR: RETRY } },
                 { type: typography, variant: body, content: @entity.frameCaption },
-                { type: typography, variant: caption, content: @entity.feedback },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: (if (and (== @entity.phase "judged") (== @entity.done false)) false true) },
-                    { type: button, action: RETRY, label: @config.retryLabel, variant: ghost, disabled: (if @entity.done false true) }
-                  ] },
-                { type: stat-display, label: "Correct predictions", value: @entity.score, max: @entity.totalScenarios }
+                { type: typography, variant: body, content: @entity.feedback },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: NEXT, label: @config.nextLabel, icon: "chevron-right", variant: primary, disabled: (if (and (== @entity.phase "judged") (== @entity.done false)) false true) },
+                    { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: ghost, disabled: (if @entity.done false true) },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Correct " @entity.score " of " @entity.totalScenarios) }
+                  ] }
               ] }
           ]
         })
@@ -360,6 +388,10 @@ orbital PredictOrbital {
         @label "Title"
         @description "Title shown above the instrument."
         @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what is being predicted (keep it under ~65 characters). Empty shows no line."
+        @tier "presentation"
       scenarios : [PredictScenario] = [
         { setup: "A small island hosts 40 rabbits with unlimited grass and no predators.", question: "What happens to the population over the next six seasons?", options: ["It levels off", "It keeps accelerating", "It collapses"], correctIndex: 1, explanation: "With no limiting factor yet, growth compounds each season.", frames: [
             { caption: "Season 1: 40 rabbits", value: 40 },
@@ -394,7 +426,7 @@ orbital PredictOrbital {
       revealLabel : string = "Outcome"
         @label "Reveal Label"
         @tier "presentation"
-      revealColor : string = "#3b82f6"
+      revealColor : string = "series-1"
         @label "Reveal Color"
         @tier "presentation"
       nextLabel : string = "Next"

@@ -1,0 +1,59 @@
+app std-page-treat "1.0.0"
+"std-page-treat — applies a declared visual treatment to one element of a browser tab (hide, blur, highlight, or label it with text) or restores it, and reports which element it treated. TREAT takes the tab and element id std-page-watch reports. The treatments are a fixed, declared set: no arbitrary styles or scripts. Needs a host with the `page` service (a browser extension)."
+
+orbital PageTreatOrbital {
+  entity PageTreatRecord [runtime] {
+    treated : number @description "How many treatments were applied" @synonyms "count, applied" = 0
+    errorMessage : string @description "Why the last treatment failed; blank = none" @synonyms "error, failure reason" = ""
+  }
+
+  trait PageTreat -> PageTreatRecord [interaction, instance] {
+    initial: ready
+
+    config {
+      statusSlot : slot = main
+        @label "Status slot"
+        @description "Where the atom shows its one-line status; an organism running it in the background sends it to `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+    }
+
+    state ready {
+      INIT -> ready
+        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: "Ready to treat page elements" })
+      TREAT -> ready
+        (call-service "page" "apply" { tab: ?tab, elementId: ?elementId, treatment: ?treatment, label: ?label }
+          { emit: { success: APPLIED, failure: APPLY_FAILED } })
+      APPLIED -> ready
+        (set @entity.treated (+ @entity.treated 1))
+        (emit TREATED { tab: ?tab, elementId: ?elementId, treatment: ?treatment })
+      APPLY_FAILED -> ready
+        (set @entity.errorMessage ?error)
+        (emit TREAT_FAILED { error: ?error })
+        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: (str/concat "Couldn't treat a page element: " ?error) })
+    }
+
+    emits {
+      APPLIED { applied : boolean!, tab : number!, elementId : string!, treatment : "hide" | "blur" | "highlight" | "label" | "restore" }
+        @description "The page service applied the treatment"
+        @tier "secondary"
+      APPLY_FAILED { error : string! }
+        @description "The page service could not apply the treatment"
+        @tier "secondary"
+      TREATED -> external { tab : number!, elementId : string!, treatment : "hide" | "blur" | "highlight" | "label" | "restore" }
+        @description "The element now shows the treatment (or, for restore, is back as it was)"
+        @synonyms "hidden, blurred, highlighted, labelled, restored"
+        @tier "primary"
+      TREAT_FAILED -> external { error : string! }
+        @description "The treatment could not be applied (the element is gone, or the tab closed)"
+        @tier "primary"
+    }
+
+    listens {
+      TREAT -> external { tab : number!, elementId : string!, treatment : "hide" | "blur" | "highlight" | "label" | "restore", label : string }
+        @description "Treat one page element; `label` is the text shown with it (for example why it was hidden)"
+    }
+  }
+
+  page "/page-treat" as PageTreatPage -> PageTreat
+}

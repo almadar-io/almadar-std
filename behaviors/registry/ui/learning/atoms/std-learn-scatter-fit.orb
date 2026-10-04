@@ -353,7 +353,7 @@
               "type": "number"
             },
             "fitColor": {
-              "default": "#2563eb",
+              "default": "series-2",
               "label": "Fit Curve Color",
               "tier": "presentation",
               "type": "string"
@@ -373,7 +373,7 @@
               "type": "number"
             },
             "guessColor": {
-              "default": "#dc2626",
+              "default": "series-3",
               "label": "Guess Curve Color",
               "tier": "presentation",
               "type": "string"
@@ -457,7 +457,7 @@
             "initialPoints": {
               "default": [
                 {
-                  "color": "#334155",
+                  "color": "ink",
                   "id": "p0",
                   "label": "",
                   "radius": 5.0,
@@ -465,7 +465,7 @@
                   "y": 25.0
                 },
                 {
-                  "color": "#334155",
+                  "color": "ink",
                   "id": "p1",
                   "label": "",
                   "radius": 5.0,
@@ -473,7 +473,7 @@
                   "y": 40.0
                 },
                 {
-                  "color": "#334155",
+                  "color": "ink",
                   "id": "p2",
                   "label": "",
                   "radius": 5.0,
@@ -481,7 +481,7 @@
                   "y": 44.0
                 },
                 {
-                  "color": "#334155",
+                  "color": "ink",
                   "id": "p3",
                   "label": "",
                   "radius": 5.0,
@@ -489,7 +489,7 @@
                   "y": 62.0
                 },
                 {
-                  "color": "#334155",
+                  "color": "ink",
                   "id": "p4",
                   "label": "",
                   "radius": 5.0,
@@ -616,7 +616,7 @@
               "type": "string"
             },
             "newPointColor": {
-              "default": "#334155",
+              "default": "ink",
               "description": "Fill color assigned to points created by Add Point or the auto-add tick.",
               "label": "New Point Color",
               "tier": "presentation",
@@ -648,7 +648,7 @@
               "type": "string"
             },
             "residualColor": {
-              "default": "#f59e0b",
+              "default": "guide",
               "label": "Residual Color",
               "tier": "presentation",
               "type": "string"
@@ -708,6 +708,13 @@
               "label": "Show Tick Labels",
               "tier": "presentation",
               "type": "boolean"
+            },
+            "summary": {
+              "default": "",
+              "description": "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line.",
+              "label": "Concept",
+              "tier": "presentation",
+              "type": "string"
             },
             "title": {
               "default": "Scatter Fit",
@@ -1586,95 +1593,157 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.revealed",
+                                    "Revealed",
+                                    [
+                                      "if",
+                                      "@entity.done",
+                                      "Max points",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "Adding points",
+                                        [
+                                          "if",
+                                          "@config.guessMode",
+                                          "Guessing",
+                                          "Fitted"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.revealed",
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.done",
+                                      "neutral",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "primary",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "ADD_POINT",
+                                  "disabled": "@entity.done",
+                                  "icon": "plus",
                                   "label": "@config.addPointLabel",
                                   "type": "button",
                                   "variant": "primary"
                                 },
                                 {
                                   "action": "REVEAL_FIT",
+                                  "icon": "eye",
                                   "label": "@config.revealLabel",
                                   "type": "button",
                                   "variant": "secondary"
                                 },
-                                {
-                                  "action": "TOGGLE_RUN",
-                                  "label": [
-                                    "if",
-                                    "@entity.running",
-                                    "@config.pauseLabel",
-                                    "@config.runLabel"
-                                  ],
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "@config.pauseLabel",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "disabled": "@entity.done",
+                                    "icon": "play",
+                                    "label": "@config.runLabel",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  }
+                                ],
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "@config.resetLabel",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      [
+                                        "array/len",
+                                        "@entity.points"
+                                      ]
+                                    ],
+                                    [
+                                      "str/concat",
+                                      " of ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        "@config.maxPoints"
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "@config.guessSlopeCaption",
-                                [
-                                  "math/round",
-                                  "@entity.guessSlope",
-                                  2.0
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "action": "GUESS_LINE",
-                              "actionPayload": {
-                                "param": "slope"
-                              },
-                              "max": "@config.guessSlopeMax",
-                              "min": "@config.guessSlopeMin",
-                              "showTooltip": true,
-                              "step": "@config.guessSlopeStep",
-                              "type": "range-slider",
-                              "value": "@entity.guessSlope"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "@config.guessInterceptCaption",
-                                [
-                                  "math/round",
-                                  "@entity.guessIntercept",
-                                  1.0
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "action": "GUESS_LINE",
-                              "actionPayload": {
-                                "param": "intercept"
-                              },
-                              "max": "@config.guessInterceptMax",
-                              "min": "@config.guessInterceptMin",
-                              "showTooltip": true,
-                              "step": "@config.guessInterceptStep",
-                              "type": "range-slider",
-                              "value": "@entity.guessIntercept"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": "@config.animate",
@@ -1682,6 +1751,11 @@
                               "gridStep": "@config.gridStep",
                               "height": "@config.height",
                               "interactive": "@config.interactive",
+                              "keyMap": {
+                                "ArrowRight": "ADD_POINT",
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "points": "@entity.points",
                               "showAxes": "@config.showAxes",
                               "showGrid": "@config.showGrid",
@@ -1695,6 +1769,78 @@
                               "yMin": "@config.axisYMin"
                             },
                             {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@config.guessSlopeCaption",
+                                        [
+                                          "math/round",
+                                          "@entity.guessSlope",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "GUESS_LINE",
+                                      "actionPayload": {
+                                        "param": "slope"
+                                      },
+                                      "max": "@config.guessSlopeMax",
+                                      "min": "@config.guessSlopeMin",
+                                      "showTooltip": true,
+                                      "step": "@config.guessSlopeStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.guessSlope"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@config.guessInterceptCaption",
+                                        [
+                                          "math/round",
+                                          "@entity.guessIntercept",
+                                          1.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "GUESS_LINE",
+                                      "actionPayload": {
+                                        "param": "intercept"
+                                      },
+                                      "max": "@config.guessInterceptMax",
+                                      "min": "@config.guessInterceptMin",
+                                      "showTooltip": true,
+                                      "step": "@config.guessInterceptStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.guessIntercept"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "color": "muted",
                               "content": [
                                 "if",
                                 "@config.showR",
@@ -1719,7 +1865,7 @@
                                 ""
                               ],
                               "type": "typography",
-                              "variant": "body"
+                              "variant": "caption"
                             },
                             {
                               "content": "@entity.narration",
@@ -1759,6 +1905,48 @@
                   "==",
                   "@config.matchMode",
                   ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01M0CGSNDNBDW8469VPNX0HE2C",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@config.matchMode",
+                      ""
+                    ]
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -2270,95 +2458,157 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.revealed",
+                                    "Revealed",
+                                    [
+                                      "if",
+                                      "@entity.done",
+                                      "Max points",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "Adding points",
+                                        [
+                                          "if",
+                                          "@config.guessMode",
+                                          "Guessing",
+                                          "Fitted"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.revealed",
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.done",
+                                      "neutral",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "primary",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "ADD_POINT",
+                                  "disabled": "@entity.done",
+                                  "icon": "plus",
                                   "label": "@config.addPointLabel",
                                   "type": "button",
                                   "variant": "primary"
                                 },
                                 {
                                   "action": "REVEAL_FIT",
+                                  "icon": "eye",
                                   "label": "@config.revealLabel",
                                   "type": "button",
                                   "variant": "secondary"
                                 },
-                                {
-                                  "action": "TOGGLE_RUN",
-                                  "label": [
-                                    "if",
-                                    "@entity.running",
-                                    "@config.pauseLabel",
-                                    "@config.runLabel"
-                                  ],
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "@config.pauseLabel",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "disabled": "@entity.done",
+                                    "icon": "play",
+                                    "label": "@config.runLabel",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  }
+                                ],
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "@config.resetLabel",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      [
+                                        "array/len",
+                                        "@entity.points"
+                                      ]
+                                    ],
+                                    [
+                                      "str/concat",
+                                      " of ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        "@config.maxPoints"
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "@config.guessSlopeCaption",
-                                [
-                                  "math/round",
-                                  "@entity.guessSlope",
-                                  2.0
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "action": "GUESS_LINE",
-                              "actionPayload": {
-                                "param": "slope"
-                              },
-                              "max": "@config.guessSlopeMax",
-                              "min": "@config.guessSlopeMin",
-                              "showTooltip": true,
-                              "step": "@config.guessSlopeStep",
-                              "type": "range-slider",
-                              "value": "@entity.guessSlope"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "@config.guessInterceptCaption",
-                                [
-                                  "math/round",
-                                  "@entity.guessIntercept",
-                                  1.0
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "action": "GUESS_LINE",
-                              "actionPayload": {
-                                "param": "intercept"
-                              },
-                              "max": "@config.guessInterceptMax",
-                              "min": "@config.guessInterceptMin",
-                              "showTooltip": true,
-                              "step": "@config.guessInterceptStep",
-                              "type": "range-slider",
-                              "value": "@entity.guessIntercept"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": "@config.animate",
@@ -2366,6 +2616,11 @@
                               "gridStep": "@config.gridStep",
                               "height": "@config.height",
                               "interactive": "@config.interactive",
+                              "keyMap": {
+                                "ArrowRight": "ADD_POINT",
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "points": "@entity.points",
                               "showAxes": "@config.showAxes",
                               "showGrid": "@config.showGrid",
@@ -2379,6 +2634,78 @@
                               "yMin": "@config.axisYMin"
                             },
                             {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@config.guessSlopeCaption",
+                                        [
+                                          "math/round",
+                                          "@entity.guessSlope",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "GUESS_LINE",
+                                      "actionPayload": {
+                                        "param": "slope"
+                                      },
+                                      "max": "@config.guessSlopeMax",
+                                      "min": "@config.guessSlopeMin",
+                                      "showTooltip": true,
+                                      "step": "@config.guessSlopeStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.guessSlope"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@config.guessInterceptCaption",
+                                        [
+                                          "math/round",
+                                          "@entity.guessIntercept",
+                                          1.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "GUESS_LINE",
+                                      "actionPayload": {
+                                        "param": "intercept"
+                                      },
+                                      "max": "@config.guessInterceptMax",
+                                      "min": "@config.guessInterceptMin",
+                                      "showTooltip": true,
+                                      "step": "@config.guessInterceptStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.guessIntercept"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "color": "muted",
                               "content": [
                                 "if",
                                 "@config.showR",
@@ -2403,7 +2730,7 @@
                                 ""
                               ],
                               "type": "typography",
-                              "variant": "body"
+                              "variant": "caption"
                             },
                             {
                               "content": "@entity.narration",
@@ -3096,95 +3423,157 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.revealed",
+                                    "Revealed",
+                                    [
+                                      "if",
+                                      "@entity.done",
+                                      "Max points",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "Adding points",
+                                        [
+                                          "if",
+                                          "@config.guessMode",
+                                          "Guessing",
+                                          "Fitted"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.revealed",
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.done",
+                                      "neutral",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "primary",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "ADD_POINT",
+                                  "disabled": "@entity.done",
+                                  "icon": "plus",
                                   "label": "@config.addPointLabel",
                                   "type": "button",
                                   "variant": "primary"
                                 },
                                 {
                                   "action": "REVEAL_FIT",
+                                  "icon": "eye",
                                   "label": "@config.revealLabel",
                                   "type": "button",
                                   "variant": "secondary"
                                 },
-                                {
-                                  "action": "TOGGLE_RUN",
-                                  "label": [
-                                    "if",
-                                    "@entity.running",
-                                    "@config.pauseLabel",
-                                    "@config.runLabel"
-                                  ],
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "@config.pauseLabel",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "disabled": "@entity.done",
+                                    "icon": "play",
+                                    "label": "@config.runLabel",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  }
+                                ],
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "@config.resetLabel",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      [
+                                        "array/len",
+                                        "@entity.points"
+                                      ]
+                                    ],
+                                    [
+                                      "str/concat",
+                                      " of ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        "@config.maxPoints"
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "@config.guessSlopeCaption",
-                                [
-                                  "math/round",
-                                  "@entity.guessSlope",
-                                  2.0
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "action": "GUESS_LINE",
-                              "actionPayload": {
-                                "param": "slope"
-                              },
-                              "max": "@config.guessSlopeMax",
-                              "min": "@config.guessSlopeMin",
-                              "showTooltip": true,
-                              "step": "@config.guessSlopeStep",
-                              "type": "range-slider",
-                              "value": "@entity.guessSlope"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "@config.guessInterceptCaption",
-                                [
-                                  "math/round",
-                                  "@entity.guessIntercept",
-                                  1.0
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "action": "GUESS_LINE",
-                              "actionPayload": {
-                                "param": "intercept"
-                              },
-                              "max": "@config.guessInterceptMax",
-                              "min": "@config.guessInterceptMin",
-                              "showTooltip": true,
-                              "step": "@config.guessInterceptStep",
-                              "type": "range-slider",
-                              "value": "@entity.guessIntercept"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": "@config.animate",
@@ -3192,6 +3581,11 @@
                               "gridStep": "@config.gridStep",
                               "height": "@config.height",
                               "interactive": "@config.interactive",
+                              "keyMap": {
+                                "ArrowRight": "ADD_POINT",
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "points": "@entity.points",
                               "showAxes": "@config.showAxes",
                               "showGrid": "@config.showGrid",
@@ -3205,6 +3599,78 @@
                               "yMin": "@config.axisYMin"
                             },
                             {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@config.guessSlopeCaption",
+                                        [
+                                          "math/round",
+                                          "@entity.guessSlope",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "GUESS_LINE",
+                                      "actionPayload": {
+                                        "param": "slope"
+                                      },
+                                      "max": "@config.guessSlopeMax",
+                                      "min": "@config.guessSlopeMin",
+                                      "showTooltip": true,
+                                      "step": "@config.guessSlopeStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.guessSlope"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@config.guessInterceptCaption",
+                                        [
+                                          "math/round",
+                                          "@entity.guessIntercept",
+                                          1.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "GUESS_LINE",
+                                      "actionPayload": {
+                                        "param": "intercept"
+                                      },
+                                      "max": "@config.guessInterceptMax",
+                                      "min": "@config.guessInterceptMin",
+                                      "showTooltip": true,
+                                      "step": "@config.guessInterceptStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.guessIntercept"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "color": "muted",
                               "content": [
                                 "if",
                                 "@config.showR",
@@ -3229,7 +3695,7 @@
                                 ""
                               ],
                               "type": "typography",
-                              "variant": "body"
+                              "variant": "caption"
                             },
                             {
                               "content": "@entity.narration",
@@ -3831,95 +4297,157 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.revealed",
+                                    "Revealed",
+                                    [
+                                      "if",
+                                      "@entity.done",
+                                      "Max points",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "Adding points",
+                                        [
+                                          "if",
+                                          "@config.guessMode",
+                                          "Guessing",
+                                          "Fitted"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.revealed",
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.done",
+                                      "neutral",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "primary",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "ADD_POINT",
+                                  "disabled": "@entity.done",
+                                  "icon": "plus",
                                   "label": "@config.addPointLabel",
                                   "type": "button",
                                   "variant": "primary"
                                 },
                                 {
                                   "action": "REVEAL_FIT",
+                                  "icon": "eye",
                                   "label": "@config.revealLabel",
                                   "type": "button",
                                   "variant": "secondary"
                                 },
-                                {
-                                  "action": "TOGGLE_RUN",
-                                  "label": [
-                                    "if",
-                                    "@entity.running",
-                                    "@config.pauseLabel",
-                                    "@config.runLabel"
-                                  ],
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "@config.pauseLabel",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "disabled": "@entity.done",
+                                    "icon": "play",
+                                    "label": "@config.runLabel",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  }
+                                ],
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "@config.resetLabel",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      [
+                                        "array/len",
+                                        "@entity.points"
+                                      ]
+                                    ],
+                                    [
+                                      "str/concat",
+                                      " of ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        "@config.maxPoints"
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "@config.guessSlopeCaption",
-                                [
-                                  "math/round",
-                                  "@entity.guessSlope",
-                                  2.0
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "action": "GUESS_LINE",
-                              "actionPayload": {
-                                "param": "slope"
-                              },
-                              "max": "@config.guessSlopeMax",
-                              "min": "@config.guessSlopeMin",
-                              "showTooltip": true,
-                              "step": "@config.guessSlopeStep",
-                              "type": "range-slider",
-                              "value": "@entity.guessSlope"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "@config.guessInterceptCaption",
-                                [
-                                  "math/round",
-                                  "@entity.guessIntercept",
-                                  1.0
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "action": "GUESS_LINE",
-                              "actionPayload": {
-                                "param": "intercept"
-                              },
-                              "max": "@config.guessInterceptMax",
-                              "min": "@config.guessInterceptMin",
-                              "showTooltip": true,
-                              "step": "@config.guessInterceptStep",
-                              "type": "range-slider",
-                              "value": "@entity.guessIntercept"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": "@config.animate",
@@ -3927,6 +4455,11 @@
                               "gridStep": "@config.gridStep",
                               "height": "@config.height",
                               "interactive": "@config.interactive",
+                              "keyMap": {
+                                "ArrowRight": "ADD_POINT",
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "points": "@entity.points",
                               "showAxes": "@config.showAxes",
                               "showGrid": "@config.showGrid",
@@ -3940,6 +4473,78 @@
                               "yMin": "@config.axisYMin"
                             },
                             {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@config.guessSlopeCaption",
+                                        [
+                                          "math/round",
+                                          "@entity.guessSlope",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "GUESS_LINE",
+                                      "actionPayload": {
+                                        "param": "slope"
+                                      },
+                                      "max": "@config.guessSlopeMax",
+                                      "min": "@config.guessSlopeMin",
+                                      "showTooltip": true,
+                                      "step": "@config.guessSlopeStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.guessSlope"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@config.guessInterceptCaption",
+                                        [
+                                          "math/round",
+                                          "@entity.guessIntercept",
+                                          1.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "GUESS_LINE",
+                                      "actionPayload": {
+                                        "param": "intercept"
+                                      },
+                                      "max": "@config.guessInterceptMax",
+                                      "min": "@config.guessInterceptMin",
+                                      "showTooltip": true,
+                                      "step": "@config.guessInterceptStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.guessIntercept"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "color": "muted",
                               "content": [
                                 "if",
                                 "@config.showR",
@@ -3964,7 +4569,7 @@
                                 ""
                               ],
                               "type": "typography",
-                              "variant": "body"
+                              "variant": "caption"
                             },
                             {
                               "content": "@entity.narration",
@@ -4519,95 +5124,157 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.revealed",
+                                    "Revealed",
+                                    [
+                                      "if",
+                                      "@entity.done",
+                                      "Max points",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "Adding points",
+                                        [
+                                          "if",
+                                          "@config.guessMode",
+                                          "Guessing",
+                                          "Fitted"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.revealed",
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.done",
+                                      "neutral",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "primary",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "ADD_POINT",
+                                  "disabled": "@entity.done",
+                                  "icon": "plus",
                                   "label": "@config.addPointLabel",
                                   "type": "button",
                                   "variant": "primary"
                                 },
                                 {
                                   "action": "REVEAL_FIT",
+                                  "icon": "eye",
                                   "label": "@config.revealLabel",
                                   "type": "button",
                                   "variant": "secondary"
                                 },
-                                {
-                                  "action": "TOGGLE_RUN",
-                                  "label": [
-                                    "if",
-                                    "@entity.running",
-                                    "@config.pauseLabel",
-                                    "@config.runLabel"
-                                  ],
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "@config.pauseLabel",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "disabled": "@entity.done",
+                                    "icon": "play",
+                                    "label": "@config.runLabel",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  }
+                                ],
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "@config.resetLabel",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      [
+                                        "array/len",
+                                        "@entity.points"
+                                      ]
+                                    ],
+                                    [
+                                      "str/concat",
+                                      " of ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        "@config.maxPoints"
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "@config.guessSlopeCaption",
-                                [
-                                  "math/round",
-                                  "@entity.guessSlope",
-                                  2.0
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "action": "GUESS_LINE",
-                              "actionPayload": {
-                                "param": "slope"
-                              },
-                              "max": "@config.guessSlopeMax",
-                              "min": "@config.guessSlopeMin",
-                              "showTooltip": true,
-                              "step": "@config.guessSlopeStep",
-                              "type": "range-slider",
-                              "value": "@entity.guessSlope"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "@config.guessInterceptCaption",
-                                [
-                                  "math/round",
-                                  "@entity.guessIntercept",
-                                  1.0
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "action": "GUESS_LINE",
-                              "actionPayload": {
-                                "param": "intercept"
-                              },
-                              "max": "@config.guessInterceptMax",
-                              "min": "@config.guessInterceptMin",
-                              "showTooltip": true,
-                              "step": "@config.guessInterceptStep",
-                              "type": "range-slider",
-                              "value": "@entity.guessIntercept"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": "@config.animate",
@@ -4615,6 +5282,11 @@
                               "gridStep": "@config.gridStep",
                               "height": "@config.height",
                               "interactive": "@config.interactive",
+                              "keyMap": {
+                                "ArrowRight": "ADD_POINT",
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "points": "@entity.points",
                               "showAxes": "@config.showAxes",
                               "showGrid": "@config.showGrid",
@@ -4628,6 +5300,78 @@
                               "yMin": "@config.axisYMin"
                             },
                             {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@config.guessSlopeCaption",
+                                        [
+                                          "math/round",
+                                          "@entity.guessSlope",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "GUESS_LINE",
+                                      "actionPayload": {
+                                        "param": "slope"
+                                      },
+                                      "max": "@config.guessSlopeMax",
+                                      "min": "@config.guessSlopeMin",
+                                      "showTooltip": true,
+                                      "step": "@config.guessSlopeStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.guessSlope"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@config.guessInterceptCaption",
+                                        [
+                                          "math/round",
+                                          "@entity.guessIntercept",
+                                          1.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "GUESS_LINE",
+                                      "actionPayload": {
+                                        "param": "intercept"
+                                      },
+                                      "max": "@config.guessInterceptMax",
+                                      "min": "@config.guessInterceptMin",
+                                      "showTooltip": true,
+                                      "step": "@config.guessInterceptStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.guessIntercept"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "color": "muted",
                               "content": [
                                 "if",
                                 "@config.showR",
@@ -4652,7 +5396,7 @@
                                 ""
                               ],
                               "type": "typography",
-                              "variant": "body"
+                              "variant": "caption"
                             },
                             {
                               "content": "@entity.narration",
@@ -4845,95 +5589,157 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.revealed",
+                                    "Revealed",
+                                    [
+                                      "if",
+                                      "@entity.done",
+                                      "Max points",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "Adding points",
+                                        [
+                                          "if",
+                                          "@config.guessMode",
+                                          "Guessing",
+                                          "Fitted"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.revealed",
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.done",
+                                      "neutral",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "primary",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "ADD_POINT",
+                                  "disabled": "@entity.done",
+                                  "icon": "plus",
                                   "label": "@config.addPointLabel",
                                   "type": "button",
                                   "variant": "primary"
                                 },
                                 {
                                   "action": "REVEAL_FIT",
+                                  "icon": "eye",
                                   "label": "@config.revealLabel",
                                   "type": "button",
                                   "variant": "secondary"
                                 },
-                                {
-                                  "action": "TOGGLE_RUN",
-                                  "label": [
-                                    "if",
-                                    "@entity.running",
-                                    "@config.pauseLabel",
-                                    "@config.runLabel"
-                                  ],
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "@config.pauseLabel",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "disabled": "@entity.done",
+                                    "icon": "play",
+                                    "label": "@config.runLabel",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  }
+                                ],
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "@config.resetLabel",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      [
+                                        "array/len",
+                                        "@entity.points"
+                                      ]
+                                    ],
+                                    [
+                                      "str/concat",
+                                      " of ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        "@config.maxPoints"
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "@config.guessSlopeCaption",
-                                [
-                                  "math/round",
-                                  "@entity.guessSlope",
-                                  2.0
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "action": "GUESS_LINE",
-                              "actionPayload": {
-                                "param": "slope"
-                              },
-                              "max": "@config.guessSlopeMax",
-                              "min": "@config.guessSlopeMin",
-                              "showTooltip": true,
-                              "step": "@config.guessSlopeStep",
-                              "type": "range-slider",
-                              "value": "@entity.guessSlope"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "@config.guessInterceptCaption",
-                                [
-                                  "math/round",
-                                  "@entity.guessIntercept",
-                                  1.0
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "action": "GUESS_LINE",
-                              "actionPayload": {
-                                "param": "intercept"
-                              },
-                              "max": "@config.guessInterceptMax",
-                              "min": "@config.guessInterceptMin",
-                              "showTooltip": true,
-                              "step": "@config.guessInterceptStep",
-                              "type": "range-slider",
-                              "value": "@entity.guessIntercept"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": "@config.animate",
@@ -4941,6 +5747,11 @@
                               "gridStep": "@config.gridStep",
                               "height": "@config.height",
                               "interactive": "@config.interactive",
+                              "keyMap": {
+                                "ArrowRight": "ADD_POINT",
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "points": "@entity.points",
                               "showAxes": "@config.showAxes",
                               "showGrid": "@config.showGrid",
@@ -4954,6 +5765,78 @@
                               "yMin": "@config.axisYMin"
                             },
                             {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@config.guessSlopeCaption",
+                                        [
+                                          "math/round",
+                                          "@entity.guessSlope",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "GUESS_LINE",
+                                      "actionPayload": {
+                                        "param": "slope"
+                                      },
+                                      "max": "@config.guessSlopeMax",
+                                      "min": "@config.guessSlopeMin",
+                                      "showTooltip": true,
+                                      "step": "@config.guessSlopeStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.guessSlope"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@config.guessInterceptCaption",
+                                        [
+                                          "math/round",
+                                          "@entity.guessIntercept",
+                                          1.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "GUESS_LINE",
+                                      "actionPayload": {
+                                        "param": "intercept"
+                                      },
+                                      "max": "@config.guessInterceptMax",
+                                      "min": "@config.guessInterceptMin",
+                                      "showTooltip": true,
+                                      "step": "@config.guessInterceptStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.guessIntercept"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "color": "muted",
                               "content": [
                                 "if",
                                 "@config.showR",
@@ -4978,7 +5861,7 @@
                                 ""
                               ],
                               "type": "typography",
-                              "variant": "body"
+                              "variant": "caption"
                             },
                             {
                               "content": "@entity.narration",
@@ -5049,95 +5932,157 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.revealed",
+                                    "Revealed",
+                                    [
+                                      "if",
+                                      "@entity.done",
+                                      "Max points",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "Adding points",
+                                        [
+                                          "if",
+                                          "@config.guessMode",
+                                          "Guessing",
+                                          "Fitted"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.revealed",
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.done",
+                                      "neutral",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "primary",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "ADD_POINT",
+                                  "disabled": "@entity.done",
+                                  "icon": "plus",
                                   "label": "@config.addPointLabel",
                                   "type": "button",
                                   "variant": "primary"
                                 },
                                 {
                                   "action": "REVEAL_FIT",
+                                  "icon": "eye",
                                   "label": "@config.revealLabel",
                                   "type": "button",
                                   "variant": "secondary"
                                 },
-                                {
-                                  "action": "TOGGLE_RUN",
-                                  "label": [
-                                    "if",
-                                    "@entity.running",
-                                    "@config.pauseLabel",
-                                    "@config.runLabel"
-                                  ],
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "@config.pauseLabel",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "disabled": "@entity.done",
+                                    "icon": "play",
+                                    "label": "@config.runLabel",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  }
+                                ],
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "@config.resetLabel",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      [
+                                        "array/len",
+                                        "@entity.points"
+                                      ]
+                                    ],
+                                    [
+                                      "str/concat",
+                                      " of ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        "@config.maxPoints"
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "@config.guessSlopeCaption",
-                                [
-                                  "math/round",
-                                  "@entity.guessSlope",
-                                  2.0
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "action": "GUESS_LINE",
-                              "actionPayload": {
-                                "param": "slope"
-                              },
-                              "max": "@config.guessSlopeMax",
-                              "min": "@config.guessSlopeMin",
-                              "showTooltip": true,
-                              "step": "@config.guessSlopeStep",
-                              "type": "range-slider",
-                              "value": "@entity.guessSlope"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "@config.guessInterceptCaption",
-                                [
-                                  "math/round",
-                                  "@entity.guessIntercept",
-                                  1.0
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "action": "GUESS_LINE",
-                              "actionPayload": {
-                                "param": "intercept"
-                              },
-                              "max": "@config.guessInterceptMax",
-                              "min": "@config.guessInterceptMin",
-                              "showTooltip": true,
-                              "step": "@config.guessInterceptStep",
-                              "type": "range-slider",
-                              "value": "@entity.guessIntercept"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": "@config.animate",
@@ -5145,6 +6090,11 @@
                               "gridStep": "@config.gridStep",
                               "height": "@config.height",
                               "interactive": "@config.interactive",
+                              "keyMap": {
+                                "ArrowRight": "ADD_POINT",
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "points": "@entity.points",
                               "showAxes": "@config.showAxes",
                               "showGrid": "@config.showGrid",
@@ -5158,6 +6108,78 @@
                               "yMin": "@config.axisYMin"
                             },
                             {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@config.guessSlopeCaption",
+                                        [
+                                          "math/round",
+                                          "@entity.guessSlope",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "GUESS_LINE",
+                                      "actionPayload": {
+                                        "param": "slope"
+                                      },
+                                      "max": "@config.guessSlopeMax",
+                                      "min": "@config.guessSlopeMin",
+                                      "showTooltip": true,
+                                      "step": "@config.guessSlopeStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.guessSlope"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@config.guessInterceptCaption",
+                                        [
+                                          "math/round",
+                                          "@entity.guessIntercept",
+                                          1.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "GUESS_LINE",
+                                      "actionPayload": {
+                                        "param": "intercept"
+                                      },
+                                      "max": "@config.guessInterceptMax",
+                                      "min": "@config.guessInterceptMin",
+                                      "showTooltip": true,
+                                      "step": "@config.guessInterceptStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.guessIntercept"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "color": "muted",
                               "content": [
                                 "if",
                                 "@config.showR",
@@ -5182,7 +6204,7 @@
                                 ""
                               ],
                               "type": "typography",
-                              "variant": "body"
+                              "variant": "caption"
                             },
                             {
                               "content": "@entity.narration",
@@ -5723,95 +6745,157 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.revealed",
+                                    "Revealed",
+                                    [
+                                      "if",
+                                      "@entity.done",
+                                      "Max points",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "Adding points",
+                                        [
+                                          "if",
+                                          "@config.guessMode",
+                                          "Guessing",
+                                          "Fitted"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.revealed",
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.done",
+                                      "neutral",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "primary",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "ADD_POINT",
+                                  "disabled": "@entity.done",
+                                  "icon": "plus",
                                   "label": "@config.addPointLabel",
                                   "type": "button",
                                   "variant": "primary"
                                 },
                                 {
                                   "action": "REVEAL_FIT",
+                                  "icon": "eye",
                                   "label": "@config.revealLabel",
                                   "type": "button",
                                   "variant": "secondary"
                                 },
-                                {
-                                  "action": "TOGGLE_RUN",
-                                  "label": [
-                                    "if",
-                                    "@entity.running",
-                                    "@config.pauseLabel",
-                                    "@config.runLabel"
-                                  ],
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "@config.pauseLabel",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "disabled": "@entity.done",
+                                    "icon": "play",
+                                    "label": "@config.runLabel",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  }
+                                ],
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "@config.resetLabel",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      [
+                                        "array/len",
+                                        "@entity.points"
+                                      ]
+                                    ],
+                                    [
+                                      "str/concat",
+                                      " of ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        "@config.maxPoints"
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "@config.guessSlopeCaption",
-                                [
-                                  "math/round",
-                                  "@entity.guessSlope",
-                                  2.0
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "action": "GUESS_LINE",
-                              "actionPayload": {
-                                "param": "slope"
-                              },
-                              "max": "@config.guessSlopeMax",
-                              "min": "@config.guessSlopeMin",
-                              "showTooltip": true,
-                              "step": "@config.guessSlopeStep",
-                              "type": "range-slider",
-                              "value": "@entity.guessSlope"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "@config.guessInterceptCaption",
-                                [
-                                  "math/round",
-                                  "@entity.guessIntercept",
-                                  1.0
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "action": "GUESS_LINE",
-                              "actionPayload": {
-                                "param": "intercept"
-                              },
-                              "max": "@config.guessInterceptMax",
-                              "min": "@config.guessInterceptMin",
-                              "showTooltip": true,
-                              "step": "@config.guessInterceptStep",
-                              "type": "range-slider",
-                              "value": "@entity.guessIntercept"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": "@config.animate",
@@ -5819,6 +6903,11 @@
                               "gridStep": "@config.gridStep",
                               "height": "@config.height",
                               "interactive": "@config.interactive",
+                              "keyMap": {
+                                "ArrowRight": "ADD_POINT",
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "points": "@entity.points",
                               "showAxes": "@config.showAxes",
                               "showGrid": "@config.showGrid",
@@ -5832,6 +6921,78 @@
                               "yMin": "@config.axisYMin"
                             },
                             {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@config.guessSlopeCaption",
+                                        [
+                                          "math/round",
+                                          "@entity.guessSlope",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "GUESS_LINE",
+                                      "actionPayload": {
+                                        "param": "slope"
+                                      },
+                                      "max": "@config.guessSlopeMax",
+                                      "min": "@config.guessSlopeMin",
+                                      "showTooltip": true,
+                                      "step": "@config.guessSlopeStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.guessSlope"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@config.guessInterceptCaption",
+                                        [
+                                          "math/round",
+                                          "@entity.guessIntercept",
+                                          1.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "GUESS_LINE",
+                                      "actionPayload": {
+                                        "param": "intercept"
+                                      },
+                                      "max": "@config.guessInterceptMax",
+                                      "min": "@config.guessInterceptMin",
+                                      "showTooltip": true,
+                                      "step": "@config.guessInterceptStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.guessIntercept"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "color": "muted",
                               "content": [
                                 "if",
                                 "@config.showR",
@@ -5856,7 +7017,7 @@
                                 ""
                               ],
                               "type": "typography",
-                              "variant": "body"
+                              "variant": "caption"
                             },
                             {
                               "content": "@entity.narration",
@@ -6552,95 +7713,157 @@
                       {
                         "children": [
                           {
-                            "content": "@entity.title",
-                            "type": "typography",
-                            "variant": "h4"
+                            "align": "start",
+                            "children": [
+                              {
+                                "children": [
+                                  {
+                                    "content": "@entity.title",
+                                    "type": "typography",
+                                    "variant": "h4"
+                                  },
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@config.summary",
+                                      ""
+                                    ],
+                                    null,
+                                    {
+                                      "color": "muted",
+                                      "content": "@config.summary",
+                                      "type": "typography",
+                                      "variant": "body2"
+                                    }
+                                  ]
+                                ],
+                                "direction": "vertical",
+                                "gap": "xs",
+                                "type": "stack"
+                              },
+                              {
+                                "label": [
+                                  "if",
+                                  "@entity.revealed",
+                                  "Revealed",
+                                  [
+                                    "if",
+                                    "@entity.done",
+                                    "Max points",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "Adding points",
+                                      [
+                                        "if",
+                                        "@config.guessMode",
+                                        "Guessing",
+                                        "Fitted"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                "type": "badge",
+                                "variant": [
+                                  "if",
+                                  "@entity.revealed",
+                                  "success",
+                                  [
+                                    "if",
+                                    "@entity.done",
+                                    "neutral",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "primary",
+                                      "neutral"
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "md",
+                            "justify": "between",
+                            "type": "stack"
                           },
                           {
+                            "align": "center",
                             "children": [
                               {
                                 "action": "ADD_POINT",
+                                "disabled": "@entity.done",
+                                "icon": "plus",
                                 "label": "@config.addPointLabel",
                                 "type": "button",
                                 "variant": "primary"
                               },
                               {
                                 "action": "REVEAL_FIT",
+                                "icon": "eye",
                                 "label": "@config.revealLabel",
                                 "type": "button",
                                 "variant": "secondary"
                               },
-                              {
-                                "action": "TOGGLE_RUN",
-                                "label": [
-                                  "if",
-                                  "@entity.running",
-                                  "@config.pauseLabel",
-                                  "@config.runLabel"
-                                ],
-                                "type": "button",
-                                "variant": "secondary"
-                              },
+                              [
+                                "if",
+                                "@entity.running",
+                                {
+                                  "action": "TOGGLE_RUN",
+                                  "aria-pressed": "true",
+                                  "icon": "pause",
+                                  "label": "@config.pauseLabel",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "TOGGLE_RUN",
+                                  "aria-pressed": "false",
+                                  "disabled": "@entity.done",
+                                  "icon": "play",
+                                  "label": "@config.runLabel",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                }
+                              ],
                               {
                                 "action": "RESET",
+                                "icon": "rotate-ccw",
                                 "label": "@config.resetLabel",
                                 "type": "button",
                                 "variant": "ghost"
+                              },
+                              {
+                                "color": "muted",
+                                "content": [
+                                  "str/concat",
+                                  [
+                                    "str/concat",
+                                    "",
+                                    [
+                                      "array/len",
+                                      "@entity.points"
+                                    ]
+                                  ],
+                                  [
+                                    "str/concat",
+                                    " of ",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      "@config.maxPoints"
+                                    ]
+                                  ]
+                                ],
+                                "type": "typography",
+                                "variant": "caption"
                               }
                             ],
                             "direction": "horizontal",
                             "gap": "sm",
-                            "type": "stack"
-                          },
-                          {
-                            "content": [
-                              "str/concat",
-                              "@config.guessSlopeCaption",
-                              [
-                                "math/round",
-                                "@entity.guessSlope",
-                                2.0
-                              ]
-                            ],
-                            "type": "typography",
-                            "variant": "caption"
-                          },
-                          {
-                            "action": "GUESS_LINE",
-                            "actionPayload": {
-                              "param": "slope"
-                            },
-                            "max": "@config.guessSlopeMax",
-                            "min": "@config.guessSlopeMin",
-                            "showTooltip": true,
-                            "step": "@config.guessSlopeStep",
-                            "type": "range-slider",
-                            "value": "@entity.guessSlope"
-                          },
-                          {
-                            "content": [
-                              "str/concat",
-                              "@config.guessInterceptCaption",
-                              [
-                                "math/round",
-                                "@entity.guessIntercept",
-                                1.0
-                              ]
-                            ],
-                            "type": "typography",
-                            "variant": "caption"
-                          },
-                          {
-                            "action": "GUESS_LINE",
-                            "actionPayload": {
-                              "param": "intercept"
-                            },
-                            "max": "@config.guessInterceptMax",
-                            "min": "@config.guessInterceptMin",
-                            "showTooltip": true,
-                            "step": "@config.guessInterceptStep",
-                            "type": "range-slider",
-                            "value": "@entity.guessIntercept"
+                            "type": "stack",
+                            "wrap": true
                           },
                           {
                             "animate": "@config.animate",
@@ -6648,6 +7871,11 @@
                             "gridStep": "@config.gridStep",
                             "height": "@config.height",
                             "interactive": "@config.interactive",
+                            "keyMap": {
+                              "ArrowRight": "ADD_POINT",
+                              "KeyR": "RESET",
+                              "Space": "TOGGLE_RUN"
+                            },
                             "points": "@entity.points",
                             "showAxes": "@config.showAxes",
                             "showGrid": "@config.showGrid",
@@ -6661,6 +7889,78 @@
                             "yMin": "@config.axisYMin"
                           },
                           {
+                            "children": [
+                              {
+                                "children": [
+                                  {
+                                    "content": [
+                                      "str/concat",
+                                      "@config.guessSlopeCaption",
+                                      [
+                                        "math/round",
+                                        "@entity.guessSlope",
+                                        2.0
+                                      ]
+                                    ],
+                                    "type": "typography",
+                                    "variant": "caption"
+                                  },
+                                  {
+                                    "action": "GUESS_LINE",
+                                    "actionPayload": {
+                                      "param": "slope"
+                                    },
+                                    "max": "@config.guessSlopeMax",
+                                    "min": "@config.guessSlopeMin",
+                                    "showTooltip": true,
+                                    "step": "@config.guessSlopeStep",
+                                    "type": "range-slider",
+                                    "value": "@entity.guessSlope"
+                                  }
+                                ],
+                                "direction": "vertical",
+                                "gap": "xs",
+                                "type": "stack"
+                              },
+                              {
+                                "children": [
+                                  {
+                                    "content": [
+                                      "str/concat",
+                                      "@config.guessInterceptCaption",
+                                      [
+                                        "math/round",
+                                        "@entity.guessIntercept",
+                                        1.0
+                                      ]
+                                    ],
+                                    "type": "typography",
+                                    "variant": "caption"
+                                  },
+                                  {
+                                    "action": "GUESS_LINE",
+                                    "actionPayload": {
+                                      "param": "intercept"
+                                    },
+                                    "max": "@config.guessInterceptMax",
+                                    "min": "@config.guessInterceptMin",
+                                    "showTooltip": true,
+                                    "step": "@config.guessInterceptStep",
+                                    "type": "range-slider",
+                                    "value": "@entity.guessIntercept"
+                                  }
+                                ],
+                                "direction": "vertical",
+                                "gap": "xs",
+                                "type": "stack"
+                              }
+                            ],
+                            "direction": "vertical",
+                            "gap": "sm",
+                            "type": "stack"
+                          },
+                          {
+                            "color": "muted",
                             "content": [
                               "if",
                               "@config.showR",
@@ -6685,7 +7985,7 @@
                               ""
                             ],
                             "type": "typography",
-                            "variant": "body"
+                            "variant": "caption"
                           },
                           {
                             "content": "@entity.narration",

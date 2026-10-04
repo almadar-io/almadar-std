@@ -49,6 +49,11 @@
             "required": false
           },
           {
+            "name": "speed",
+            "type": "number",
+            "required": false
+          },
+          {
             "name": "pSamples",
             "type": "array",
             "required": false
@@ -112,6 +117,18 @@
             "direction": "listen",
             "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
             "tier": "domain"
+          },
+          {
+            "name": "TOGGLE_RUN",
+            "direction": "listen",
+            "description": "Learner pressed the Play/Pause toggle — starts or freezes the coupled evolution.",
+            "tier": "domain"
+          },
+          {
+            "name": "SPEED_SET",
+            "direction": "listen",
+            "description": "The learner picked a playback speed; the system evolves that many times faster.",
+            "tier": "presentation"
           },
           {
             "name": "RUN",
@@ -289,7 +306,7 @@
           {
             "key": "pColor",
             "type": "string",
-            "default": "#16a34a",
+            "default": "series-1",
             "label": "P Color",
             "tier": "presentation"
           },
@@ -311,7 +328,7 @@
           {
             "key": "qColor",
             "type": "string",
-            "default": "#dc2626",
+            "default": "series-2",
             "label": "Q Color",
             "tier": "presentation"
           },
@@ -353,6 +370,14 @@
             "tier": "presentation"
           },
           {
+            "key": "summary",
+            "type": "string",
+            "default": "",
+            "label": "Concept",
+            "description": "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line.",
+            "tier": "presentation"
+          },
+          {
             "key": "taskText",
             "type": "string",
             "default": "Run the system, retune the rates, and shock it — watch how the two quantities push and pull each other.",
@@ -373,7 +398,7 @@
             "type": "string",
             "default": "Coupled System",
             "label": "Title",
-            "description": "Title shown above the simulation.",
+            "description": "The instrument's name, the header's one hero.",
             "tier": "presentation"
           },
           {
@@ -402,7 +427,9 @@
           "RUN",
           "SET_A",
           "SET_B",
-          "SHOCK"
+          "SHOCK",
+          "SPEED_SET",
+          "TOGGLE_RUN"
         ],
         "definerKnobs": [],
         "entityRebindable": true,
@@ -418,6 +445,7 @@
             "q",
             "qSamples",
             "running",
+            "speed",
             "t",
             "title"
           ]
@@ -508,6 +536,10 @@
             "kind": "set",
             "resource": "@entity.running",
             "site": "tick"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.speed"
           },
           {
             "kind": "set",

@@ -31,6 +31,11 @@ orbital LearnStepperOrbital {
     fill : string
     lineWidth : number
     opacity : number
+    tone : string
+    fillTone : string
+    stroke : string
+    textSize : string
+    fillStyle : string
   }
   type LearnStepperStage = {
     id : string!
@@ -93,9 +98,9 @@ orbital LearnStepperOrbital {
             (visibleThreadNote (if (== @entity.activeFilter "all") @config.allSummary (object/get (array/first (array/filter @config.categorySummaries (fn cs (== @cs.category @entity.activeFilter)))) summary)))
             (axisWidth (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
             (baseShapes [
-              { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, color: "#78716c", lineWidth: 2, opacity: 1 },
-              { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), fontSize: 11, align: "left", color: "#78716c" },
-              { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), fontSize: 11, align: "right", color: "#78716c" }
+              { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, tone: "axis", stroke: "normal", opacity: 1 },
+              { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), textSize: "xs", align: "left", tone: "label" },
+              { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), textSize: "xs", align: "right", tone: "label" }
             ])
             (markerShapes (array/flatten (array/map @config.stages (fn s (let (
                 (isRevealed (<= @s.position @currentPosition))
@@ -111,18 +116,22 @@ orbital LearnStepperOrbital {
               )
               (if @isCurrent
                 [
-                  { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), color: @catColor, fill: "transparent", lineWidth: 3, opacity: 1 },
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, color: @col, fill: @col, opacity: @finalOpacity }
+                  { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), tone: @catColor, fillStyle: "outline", stroke: "bold", opacity: 1 },
+                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
                 ]
                 [
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, color: @col, fill: @col, opacity: @finalOpacity }
+                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
                 ]
               )
             )))))
-            (allShapes (array/concat @baseShapes @markerShapes))
+            (legendShapes (array/flatten (array/map @config.categories [
+                { type: circle, id: (str/concat "legend-dot-" @index), x: (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @config.categories)))), y: 22, radius: 5, tone: (object/get @item color), fillTone: (object/get @item color), fillStyle: "solid", opacity: 1 },
+                { type: text, id: (str/concat "legend-label-" @index), x: (+ (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @config.categories)))) 12), y: 26, text: (object/get @item label), textSize: "xs", align: "left", tone: "label" }
+              ])))
+            (allShapes (array/concat @baseShapes @markerShapes @legendShapes))
             (filterButtons (array/concat [
-                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "primary" "ghost"), size: sm }
-              ] (array/map @config.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "primary" "ghost"), size: sm }))))
+                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter "all") "true" "false") }
+              ] (array/map @config.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter (object/get @cc category)) "true" "false") }))))
           )
           (do
             (set @entity.narration @narration)
@@ -140,24 +149,34 @@ orbital LearnStepperOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: progress-bar, value: (+ @entity.cursorIndex 1), max: (array/len @config.stages), showPercentage: false, label: (str/concat "Stage " (str/concat "" (+ @entity.cursorIndex 1)) " of " (str/concat "" (array/len @config.stages))) },
-                { type: chart-legend, items: (array/map @config.categories (fn cc { label: (object/get @cc label), color: (object/get @cc color) })), direction: horizontal },
-                { type: math-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
-                { type: stack, direction: horizontal, gap: xs, children: @entity.filterButtons },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: PREV, label: "Prev", variant: ghost, disabled: (if (<= @entity.cursorIndex -1) true false) },
-                    { type: button, action: NEXT, label: "Next", variant: primary, disabled: (if (>= @entity.cursorIndex (- (array/len @config.stages) 1)) true false) },
-                    { type: button, action: RESET_STEPPER, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (<= @entity.cursorIndex -1) "Not started" (if (>= @entity.cursorIndex (- (array/len @config.stages) 1)) "Complete" (str/concat "Stage " (+ @entity.cursorIndex 1) " of " (array/len @config.stages)))), variant: (if (<= @entity.cursorIndex -1) "neutral" (if (>= @entity.cursorIndex (- (array/len @config.stages) 1)) "success" "primary")) }
                   ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: NEXT, label: "Next", icon: "chevron-right", variant: primary, disabled: (>= @entity.cursorIndex (- (array/len @config.stages) 1)) },
+                    { type: button, action: PREV, label: "Prev", icon: "chevron-left", variant: secondary, disabled: (<= @entity.cursorIndex -1) },
+                    { type: button, action: RESET_STEPPER, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Stage " (+ @entity.cursorIndex 1) " of " (array/len @config.stages)) }
+                  ] },
+                { type: progress-bar, value: (+ @entity.cursorIndex 1), max: (array/len @config.stages), showPercentage: false },
+                { type: stack, direction: horizontal, align: center, gap: xs, wrap: true, role: "group", aria-label: "Category lens", children: @entity.filterButtons },
+                { type: math-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate, keyMap: { ArrowRight: NEXT, ArrowLeft: PREV, KeyR: RESET_STEPPER } },
                 { type: card, variant: bordered, padding: md, title: (if (!= @entity.currentStageLabel "") @entity.currentStageLabel "Not Started"), children: [
                     { type: typography, variant: body, content: @entity.currentStageDescription }
                   ] },
-                { type: stack, direction: horizontal, gap: xs, children: (array/map @entity.tallyItems (fn t { type: badge, variant: neutral, label: (str/concat (object/get @t label) ": " (str/concat "" (object/get @t count))) })) },
-                { type: typography, variant: caption, content: @entity.visibleThreadNote }
+                { type: stack, direction: horizontal, gap: xs, wrap: true, children: (array/map @entity.tallyItems (fn t { type: badge, variant: neutral, label: (str/concat (object/get @t label) ": " (str/concat "" (object/get @t count))) })) },
+                { type: typography, variant: caption, color: muted, content: @entity.visibleThreadNote }
               ] }
           ]
         })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (render-ui main null)
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (set @entity.active true)
@@ -179,9 +198,9 @@ orbital LearnStepperOrbital {
             (visibleThreadNote (if (== @entity.activeFilter "all") @config.allSummary (object/get (array/first (array/filter @config.categorySummaries (fn cs (== @cs.category @entity.activeFilter)))) summary)))
             (axisWidth (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
             (baseShapes [
-              { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, color: "#78716c", lineWidth: 2, opacity: 1 },
-              { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), fontSize: 11, align: "left", color: "#78716c" },
-              { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), fontSize: 11, align: "right", color: "#78716c" }
+              { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, tone: "axis", stroke: "normal", opacity: 1 },
+              { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), textSize: "xs", align: "left", tone: "label" },
+              { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), textSize: "xs", align: "right", tone: "label" }
             ])
             (markerShapes (array/flatten (array/map @config.stages (fn s (let (
                 (isRevealed (<= @s.position @currentPosition))
@@ -197,18 +216,22 @@ orbital LearnStepperOrbital {
               )
               (if @isCurrent
                 [
-                  { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), color: @catColor, fill: "transparent", lineWidth: 3, opacity: 1 },
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, color: @col, fill: @col, opacity: @finalOpacity }
+                  { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), tone: @catColor, fillStyle: "outline", stroke: "bold", opacity: 1 },
+                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
                 ]
                 [
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, color: @col, fill: @col, opacity: @finalOpacity }
+                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
                 ]
               )
             )))))
-            (allShapes (array/concat @baseShapes @markerShapes))
+            (legendShapes (array/flatten (array/map @config.categories [
+                { type: circle, id: (str/concat "legend-dot-" @index), x: (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @config.categories)))), y: 22, radius: 5, tone: (object/get @item color), fillTone: (object/get @item color), fillStyle: "solid", opacity: 1 },
+                { type: text, id: (str/concat "legend-label-" @index), x: (+ (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @config.categories)))) 12), y: 26, text: (object/get @item label), textSize: "xs", align: "left", tone: "label" }
+              ])))
+            (allShapes (array/concat @baseShapes @markerShapes @legendShapes))
             (filterButtons (array/concat [
-                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "primary" "ghost"), size: sm }
-              ] (array/map @config.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "primary" "ghost"), size: sm }))))
+                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter "all") "true" "false") }
+              ] (array/map @config.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter (object/get @cc category)) "true" "false") }))))
           )
           (do
             (set @entity.narration @narration)
@@ -226,21 +249,27 @@ orbital LearnStepperOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: progress-bar, value: (+ @entity.cursorIndex 1), max: (array/len @config.stages), showPercentage: false, label: (str/concat "Stage " (str/concat "" (+ @entity.cursorIndex 1)) " of " (str/concat "" (array/len @config.stages))) },
-                { type: chart-legend, items: (array/map @config.categories (fn cc { label: (object/get @cc label), color: (object/get @cc color) })), direction: horizontal },
-                { type: math-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
-                { type: stack, direction: horizontal, gap: xs, children: @entity.filterButtons },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: PREV, label: "Prev", variant: ghost, disabled: (if (<= @entity.cursorIndex -1) true false) },
-                    { type: button, action: NEXT, label: "Next", variant: primary, disabled: (if (>= @entity.cursorIndex (- (array/len @config.stages) 1)) true false) },
-                    { type: button, action: RESET_STEPPER, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (<= @entity.cursorIndex -1) "Not started" (if (>= @entity.cursorIndex (- (array/len @config.stages) 1)) "Complete" (str/concat "Stage " (+ @entity.cursorIndex 1) " of " (array/len @config.stages)))), variant: (if (<= @entity.cursorIndex -1) "neutral" (if (>= @entity.cursorIndex (- (array/len @config.stages) 1)) "success" "primary")) }
                   ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: NEXT, label: "Next", icon: "chevron-right", variant: primary, disabled: (>= @entity.cursorIndex (- (array/len @config.stages) 1)) },
+                    { type: button, action: PREV, label: "Prev", icon: "chevron-left", variant: secondary, disabled: (<= @entity.cursorIndex -1) },
+                    { type: button, action: RESET_STEPPER, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Stage " (+ @entity.cursorIndex 1) " of " (array/len @config.stages)) }
+                  ] },
+                { type: progress-bar, value: (+ @entity.cursorIndex 1), max: (array/len @config.stages), showPercentage: false },
+                { type: stack, direction: horizontal, align: center, gap: xs, wrap: true, role: "group", aria-label: "Category lens", children: @entity.filterButtons },
+                { type: math-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate, keyMap: { ArrowRight: NEXT, ArrowLeft: PREV, KeyR: RESET_STEPPER } },
                 { type: card, variant: bordered, padding: md, title: (if (!= @entity.currentStageLabel "") @entity.currentStageLabel "Not Started"), children: [
                     { type: typography, variant: body, content: @entity.currentStageDescription }
                   ] },
-                { type: stack, direction: horizontal, gap: xs, children: (array/map @entity.tallyItems (fn t { type: badge, variant: neutral, label: (str/concat (object/get @t label) ": " (str/concat "" (object/get @t count))) })) },
-                { type: typography, variant: caption, content: @entity.visibleThreadNote }
+                { type: stack, direction: horizontal, gap: xs, wrap: true, children: (array/map @entity.tallyItems (fn t { type: badge, variant: neutral, label: (str/concat (object/get @t label) ": " (str/concat "" (object/get @t count))) })) },
+                { type: typography, variant: caption, color: muted, content: @entity.visibleThreadNote }
               ] }
           ]
         })
@@ -262,9 +291,9 @@ orbital LearnStepperOrbital {
             (visibleThreadNote (if (== @entity.activeFilter "all") @config.allSummary (object/get (array/first (array/filter @config.categorySummaries (fn cs (== @cs.category @entity.activeFilter)))) summary)))
             (axisWidth (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
             (baseShapes [
-              { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, color: "#78716c", lineWidth: 2, opacity: 1 },
-              { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), fontSize: 11, align: "left", color: "#78716c" },
-              { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), fontSize: 11, align: "right", color: "#78716c" }
+              { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, tone: "axis", stroke: "normal", opacity: 1 },
+              { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), textSize: "xs", align: "left", tone: "label" },
+              { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), textSize: "xs", align: "right", tone: "label" }
             ])
             (markerShapes (array/flatten (array/map @config.stages (fn s (let (
                 (isRevealed (<= @s.position @currentPosition))
@@ -280,18 +309,22 @@ orbital LearnStepperOrbital {
               )
               (if @isCurrent
                 [
-                  { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), color: @catColor, fill: "transparent", lineWidth: 3, opacity: 1 },
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, color: @col, fill: @col, opacity: @finalOpacity }
+                  { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), tone: @catColor, fillStyle: "outline", stroke: "bold", opacity: 1 },
+                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
                 ]
                 [
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, color: @col, fill: @col, opacity: @finalOpacity }
+                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
                 ]
               )
             )))))
-            (allShapes (array/concat @baseShapes @markerShapes))
+            (legendShapes (array/flatten (array/map @config.categories [
+                { type: circle, id: (str/concat "legend-dot-" @index), x: (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @config.categories)))), y: 22, radius: 5, tone: (object/get @item color), fillTone: (object/get @item color), fillStyle: "solid", opacity: 1 },
+                { type: text, id: (str/concat "legend-label-" @index), x: (+ (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @config.categories)))) 12), y: 26, text: (object/get @item label), textSize: "xs", align: "left", tone: "label" }
+              ])))
+            (allShapes (array/concat @baseShapes @markerShapes @legendShapes))
             (filterButtons (array/concat [
-                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "primary" "ghost"), size: sm }
-              ] (array/map @config.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "primary" "ghost"), size: sm }))))
+                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter "all") "true" "false") }
+              ] (array/map @config.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter (object/get @cc category)) "true" "false") }))))
           )
           (do
             (set @entity.narration @narration)
@@ -309,21 +342,27 @@ orbital LearnStepperOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: progress-bar, value: (+ @entity.cursorIndex 1), max: (array/len @config.stages), showPercentage: false, label: (str/concat "Stage " (str/concat "" (+ @entity.cursorIndex 1)) " of " (str/concat "" (array/len @config.stages))) },
-                { type: chart-legend, items: (array/map @config.categories (fn cc { label: (object/get @cc label), color: (object/get @cc color) })), direction: horizontal },
-                { type: math-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
-                { type: stack, direction: horizontal, gap: xs, children: @entity.filterButtons },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: PREV, label: "Prev", variant: ghost, disabled: (if (<= @entity.cursorIndex -1) true false) },
-                    { type: button, action: NEXT, label: "Next", variant: primary, disabled: (if (>= @entity.cursorIndex (- (array/len @config.stages) 1)) true false) },
-                    { type: button, action: RESET_STEPPER, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (<= @entity.cursorIndex -1) "Not started" (if (>= @entity.cursorIndex (- (array/len @config.stages) 1)) "Complete" (str/concat "Stage " (+ @entity.cursorIndex 1) " of " (array/len @config.stages)))), variant: (if (<= @entity.cursorIndex -1) "neutral" (if (>= @entity.cursorIndex (- (array/len @config.stages) 1)) "success" "primary")) }
                   ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: NEXT, label: "Next", icon: "chevron-right", variant: primary, disabled: (>= @entity.cursorIndex (- (array/len @config.stages) 1)) },
+                    { type: button, action: PREV, label: "Prev", icon: "chevron-left", variant: secondary, disabled: (<= @entity.cursorIndex -1) },
+                    { type: button, action: RESET_STEPPER, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Stage " (+ @entity.cursorIndex 1) " of " (array/len @config.stages)) }
+                  ] },
+                { type: progress-bar, value: (+ @entity.cursorIndex 1), max: (array/len @config.stages), showPercentage: false },
+                { type: stack, direction: horizontal, align: center, gap: xs, wrap: true, role: "group", aria-label: "Category lens", children: @entity.filterButtons },
+                { type: math-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate, keyMap: { ArrowRight: NEXT, ArrowLeft: PREV, KeyR: RESET_STEPPER } },
                 { type: card, variant: bordered, padding: md, title: (if (!= @entity.currentStageLabel "") @entity.currentStageLabel "Not Started"), children: [
                     { type: typography, variant: body, content: @entity.currentStageDescription }
                   ] },
-                { type: stack, direction: horizontal, gap: xs, children: (array/map @entity.tallyItems (fn t { type: badge, variant: neutral, label: (str/concat (object/get @t label) ": " (str/concat "" (object/get @t count))) })) },
-                { type: typography, variant: caption, content: @entity.visibleThreadNote }
+                { type: stack, direction: horizontal, gap: xs, wrap: true, children: (array/map @entity.tallyItems (fn t { type: badge, variant: neutral, label: (str/concat (object/get @t label) ": " (str/concat "" (object/get @t count))) })) },
+                { type: typography, variant: caption, color: muted, content: @entity.visibleThreadNote }
               ] }
           ]
         })
@@ -346,9 +385,9 @@ orbital LearnStepperOrbital {
             (visibleThreadNote (if (== @entity.activeFilter "all") @config.allSummary (object/get (array/first (array/filter @config.categorySummaries (fn cs (== @cs.category @entity.activeFilter)))) summary)))
             (axisWidth (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
             (baseShapes [
-              { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, color: "#78716c", lineWidth: 2, opacity: 1 },
-              { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), fontSize: 11, align: "left", color: "#78716c" },
-              { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), fontSize: 11, align: "right", color: "#78716c" }
+              { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, tone: "axis", stroke: "normal", opacity: 1 },
+              { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), textSize: "xs", align: "left", tone: "label" },
+              { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), textSize: "xs", align: "right", tone: "label" }
             ])
             (markerShapes (array/flatten (array/map @config.stages (fn s (let (
                 (isRevealed (<= @s.position @currentPosition))
@@ -364,18 +403,22 @@ orbital LearnStepperOrbital {
               )
               (if @isCurrent
                 [
-                  { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), color: @catColor, fill: "transparent", lineWidth: 3, opacity: 1 },
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, color: @col, fill: @col, opacity: @finalOpacity }
+                  { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), tone: @catColor, fillStyle: "outline", stroke: "bold", opacity: 1 },
+                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
                 ]
                 [
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, color: @col, fill: @col, opacity: @finalOpacity }
+                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
                 ]
               )
             )))))
-            (allShapes (array/concat @baseShapes @markerShapes))
+            (legendShapes (array/flatten (array/map @config.categories [
+                { type: circle, id: (str/concat "legend-dot-" @index), x: (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @config.categories)))), y: 22, radius: 5, tone: (object/get @item color), fillTone: (object/get @item color), fillStyle: "solid", opacity: 1 },
+                { type: text, id: (str/concat "legend-label-" @index), x: (+ (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @config.categories)))) 12), y: 26, text: (object/get @item label), textSize: "xs", align: "left", tone: "label" }
+              ])))
+            (allShapes (array/concat @baseShapes @markerShapes @legendShapes))
             (filterButtons (array/concat [
-                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "primary" "ghost"), size: sm }
-              ] (array/map @config.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "primary" "ghost"), size: sm }))))
+                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter "all") "true" "false") }
+              ] (array/map @config.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter (object/get @cc category)) "true" "false") }))))
           )
           (do
             (set @entity.narration @narration)
@@ -393,21 +436,27 @@ orbital LearnStepperOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: progress-bar, value: (+ @entity.cursorIndex 1), max: (array/len @config.stages), showPercentage: false, label: (str/concat "Stage " (str/concat "" (+ @entity.cursorIndex 1)) " of " (str/concat "" (array/len @config.stages))) },
-                { type: chart-legend, items: (array/map @config.categories (fn cc { label: (object/get @cc label), color: (object/get @cc color) })), direction: horizontal },
-                { type: math-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
-                { type: stack, direction: horizontal, gap: xs, children: @entity.filterButtons },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: PREV, label: "Prev", variant: ghost, disabled: (if (<= @entity.cursorIndex -1) true false) },
-                    { type: button, action: NEXT, label: "Next", variant: primary, disabled: (if (>= @entity.cursorIndex (- (array/len @config.stages) 1)) true false) },
-                    { type: button, action: RESET_STEPPER, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (<= @entity.cursorIndex -1) "Not started" (if (>= @entity.cursorIndex (- (array/len @config.stages) 1)) "Complete" (str/concat "Stage " (+ @entity.cursorIndex 1) " of " (array/len @config.stages)))), variant: (if (<= @entity.cursorIndex -1) "neutral" (if (>= @entity.cursorIndex (- (array/len @config.stages) 1)) "success" "primary")) }
                   ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: NEXT, label: "Next", icon: "chevron-right", variant: primary, disabled: (>= @entity.cursorIndex (- (array/len @config.stages) 1)) },
+                    { type: button, action: PREV, label: "Prev", icon: "chevron-left", variant: secondary, disabled: (<= @entity.cursorIndex -1) },
+                    { type: button, action: RESET_STEPPER, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Stage " (+ @entity.cursorIndex 1) " of " (array/len @config.stages)) }
+                  ] },
+                { type: progress-bar, value: (+ @entity.cursorIndex 1), max: (array/len @config.stages), showPercentage: false },
+                { type: stack, direction: horizontal, align: center, gap: xs, wrap: true, role: "group", aria-label: "Category lens", children: @entity.filterButtons },
+                { type: math-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate, keyMap: { ArrowRight: NEXT, ArrowLeft: PREV, KeyR: RESET_STEPPER } },
                 { type: card, variant: bordered, padding: md, title: (if (!= @entity.currentStageLabel "") @entity.currentStageLabel "Not Started"), children: [
                     { type: typography, variant: body, content: @entity.currentStageDescription }
                   ] },
-                { type: stack, direction: horizontal, gap: xs, children: (array/map @entity.tallyItems (fn t { type: badge, variant: neutral, label: (str/concat (object/get @t label) ": " (str/concat "" (object/get @t count))) })) },
-                { type: typography, variant: caption, content: @entity.visibleThreadNote }
+                { type: stack, direction: horizontal, gap: xs, wrap: true, children: (array/map @entity.tallyItems (fn t { type: badge, variant: neutral, label: (str/concat (object/get @t label) ": " (str/concat "" (object/get @t count))) })) },
+                { type: typography, variant: caption, color: muted, content: @entity.visibleThreadNote }
               ] }
           ]
         })
@@ -430,9 +479,9 @@ orbital LearnStepperOrbital {
             (visibleThreadNote (if (== @entity.activeFilter "all") @config.allSummary (object/get (array/first (array/filter @config.categorySummaries (fn cs (== @cs.category @entity.activeFilter)))) summary)))
             (axisWidth (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
             (baseShapes [
-              { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, color: "#78716c", lineWidth: 2, opacity: 1 },
-              { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), fontSize: 11, align: "left", color: "#78716c" },
-              { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), fontSize: 11, align: "right", color: "#78716c" }
+              { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, tone: "axis", stroke: "normal", opacity: 1 },
+              { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), textSize: "xs", align: "left", tone: "label" },
+              { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), textSize: "xs", align: "right", tone: "label" }
             ])
             (markerShapes (array/flatten (array/map @config.stages (fn s (let (
                 (isRevealed (<= @s.position @currentPosition))
@@ -448,18 +497,22 @@ orbital LearnStepperOrbital {
               )
               (if @isCurrent
                 [
-                  { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), color: @catColor, fill: "transparent", lineWidth: 3, opacity: 1 },
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, color: @col, fill: @col, opacity: @finalOpacity }
+                  { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), tone: @catColor, fillStyle: "outline", stroke: "bold", opacity: 1 },
+                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
                 ]
                 [
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, color: @col, fill: @col, opacity: @finalOpacity }
+                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
                 ]
               )
             )))))
-            (allShapes (array/concat @baseShapes @markerShapes))
+            (legendShapes (array/flatten (array/map @config.categories [
+                { type: circle, id: (str/concat "legend-dot-" @index), x: (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @config.categories)))), y: 22, radius: 5, tone: (object/get @item color), fillTone: (object/get @item color), fillStyle: "solid", opacity: 1 },
+                { type: text, id: (str/concat "legend-label-" @index), x: (+ (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @config.categories)))) 12), y: 26, text: (object/get @item label), textSize: "xs", align: "left", tone: "label" }
+              ])))
+            (allShapes (array/concat @baseShapes @markerShapes @legendShapes))
             (filterButtons (array/concat [
-                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "primary" "ghost"), size: sm }
-              ] (array/map @config.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "primary" "ghost"), size: sm }))))
+                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter "all") "true" "false") }
+              ] (array/map @config.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter (object/get @cc category)) "true" "false") }))))
           )
           (do
             (set @entity.narration @narration)
@@ -477,21 +530,27 @@ orbital LearnStepperOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: progress-bar, value: (+ @entity.cursorIndex 1), max: (array/len @config.stages), showPercentage: false, label: (str/concat "Stage " (str/concat "" (+ @entity.cursorIndex 1)) " of " (str/concat "" (array/len @config.stages))) },
-                { type: chart-legend, items: (array/map @config.categories (fn cc { label: (object/get @cc label), color: (object/get @cc color) })), direction: horizontal },
-                { type: math-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
-                { type: stack, direction: horizontal, gap: xs, children: @entity.filterButtons },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: PREV, label: "Prev", variant: ghost, disabled: (if (<= @entity.cursorIndex -1) true false) },
-                    { type: button, action: NEXT, label: "Next", variant: primary, disabled: (if (>= @entity.cursorIndex (- (array/len @config.stages) 1)) true false) },
-                    { type: button, action: RESET_STEPPER, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (<= @entity.cursorIndex -1) "Not started" (if (>= @entity.cursorIndex (- (array/len @config.stages) 1)) "Complete" (str/concat "Stage " (+ @entity.cursorIndex 1) " of " (array/len @config.stages)))), variant: (if (<= @entity.cursorIndex -1) "neutral" (if (>= @entity.cursorIndex (- (array/len @config.stages) 1)) "success" "primary")) }
                   ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: NEXT, label: "Next", icon: "chevron-right", variant: primary, disabled: (>= @entity.cursorIndex (- (array/len @config.stages) 1)) },
+                    { type: button, action: PREV, label: "Prev", icon: "chevron-left", variant: secondary, disabled: (<= @entity.cursorIndex -1) },
+                    { type: button, action: RESET_STEPPER, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Stage " (+ @entity.cursorIndex 1) " of " (array/len @config.stages)) }
+                  ] },
+                { type: progress-bar, value: (+ @entity.cursorIndex 1), max: (array/len @config.stages), showPercentage: false },
+                { type: stack, direction: horizontal, align: center, gap: xs, wrap: true, role: "group", aria-label: "Category lens", children: @entity.filterButtons },
+                { type: math-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate, keyMap: { ArrowRight: NEXT, ArrowLeft: PREV, KeyR: RESET_STEPPER } },
                 { type: card, variant: bordered, padding: md, title: (if (!= @entity.currentStageLabel "") @entity.currentStageLabel "Not Started"), children: [
                     { type: typography, variant: body, content: @entity.currentStageDescription }
                   ] },
-                { type: stack, direction: horizontal, gap: xs, children: (array/map @entity.tallyItems (fn t { type: badge, variant: neutral, label: (str/concat (object/get @t label) ": " (str/concat "" (object/get @t count))) })) },
-                { type: typography, variant: caption, content: @entity.visibleThreadNote }
+                { type: stack, direction: horizontal, gap: xs, wrap: true, children: (array/map @entity.tallyItems (fn t { type: badge, variant: neutral, label: (str/concat (object/get @t label) ": " (str/concat "" (object/get @t count))) })) },
+                { type: typography, variant: caption, color: muted, content: @entity.visibleThreadNote }
               ] }
           ]
         })
@@ -515,9 +574,9 @@ orbital LearnStepperOrbital {
             (visibleThreadNote (if (== @entity.activeFilter "all") @config.allSummary (object/get (array/first (array/filter @config.categorySummaries (fn cs (== @cs.category @entity.activeFilter)))) summary)))
             (axisWidth (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
             (baseShapes [
-              { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, color: "#78716c", lineWidth: 2, opacity: 1 },
-              { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), fontSize: 11, align: "left", color: "#78716c" },
-              { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), fontSize: 11, align: "right", color: "#78716c" }
+              { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, tone: "axis", stroke: "normal", opacity: 1 },
+              { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), textSize: "xs", align: "left", tone: "label" },
+              { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), textSize: "xs", align: "right", tone: "label" }
             ])
             (markerShapes (array/flatten (array/map @config.stages (fn s (let (
                 (isRevealed (<= @s.position @currentPosition))
@@ -533,18 +592,22 @@ orbital LearnStepperOrbital {
               )
               (if @isCurrent
                 [
-                  { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), color: @catColor, fill: "transparent", lineWidth: 3, opacity: 1 },
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, color: @col, fill: @col, opacity: @finalOpacity }
+                  { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), tone: @catColor, fillStyle: "outline", stroke: "bold", opacity: 1 },
+                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
                 ]
                 [
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, color: @col, fill: @col, opacity: @finalOpacity }
+                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
                 ]
               )
             )))))
-            (allShapes (array/concat @baseShapes @markerShapes))
+            (legendShapes (array/flatten (array/map @config.categories [
+                { type: circle, id: (str/concat "legend-dot-" @index), x: (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @config.categories)))), y: 22, radius: 5, tone: (object/get @item color), fillTone: (object/get @item color), fillStyle: "solid", opacity: 1 },
+                { type: text, id: (str/concat "legend-label-" @index), x: (+ (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @config.categories)))) 12), y: 26, text: (object/get @item label), textSize: "xs", align: "left", tone: "label" }
+              ])))
+            (allShapes (array/concat @baseShapes @markerShapes @legendShapes))
             (filterButtons (array/concat [
-                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "primary" "ghost"), size: sm }
-              ] (array/map @config.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "primary" "ghost"), size: sm }))))
+                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter "all") "true" "false") }
+              ] (array/map @config.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter (object/get @cc category)) "true" "false") }))))
           )
           (do
             (set @entity.narration @narration)
@@ -562,21 +625,27 @@ orbital LearnStepperOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: progress-bar, value: (+ @entity.cursorIndex 1), max: (array/len @config.stages), showPercentage: false, label: (str/concat "Stage " (str/concat "" (+ @entity.cursorIndex 1)) " of " (str/concat "" (array/len @config.stages))) },
-                { type: chart-legend, items: (array/map @config.categories (fn cc { label: (object/get @cc label), color: (object/get @cc color) })), direction: horizontal },
-                { type: math-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
-                { type: stack, direction: horizontal, gap: xs, children: @entity.filterButtons },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: PREV, label: "Prev", variant: ghost, disabled: (if (<= @entity.cursorIndex -1) true false) },
-                    { type: button, action: NEXT, label: "Next", variant: primary, disabled: (if (>= @entity.cursorIndex (- (array/len @config.stages) 1)) true false) },
-                    { type: button, action: RESET_STEPPER, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (<= @entity.cursorIndex -1) "Not started" (if (>= @entity.cursorIndex (- (array/len @config.stages) 1)) "Complete" (str/concat "Stage " (+ @entity.cursorIndex 1) " of " (array/len @config.stages)))), variant: (if (<= @entity.cursorIndex -1) "neutral" (if (>= @entity.cursorIndex (- (array/len @config.stages) 1)) "success" "primary")) }
                   ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: NEXT, label: "Next", icon: "chevron-right", variant: primary, disabled: (>= @entity.cursorIndex (- (array/len @config.stages) 1)) },
+                    { type: button, action: PREV, label: "Prev", icon: "chevron-left", variant: secondary, disabled: (<= @entity.cursorIndex -1) },
+                    { type: button, action: RESET_STEPPER, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Stage " (+ @entity.cursorIndex 1) " of " (array/len @config.stages)) }
+                  ] },
+                { type: progress-bar, value: (+ @entity.cursorIndex 1), max: (array/len @config.stages), showPercentage: false },
+                { type: stack, direction: horizontal, align: center, gap: xs, wrap: true, role: "group", aria-label: "Category lens", children: @entity.filterButtons },
+                { type: math-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate, keyMap: { ArrowRight: NEXT, ArrowLeft: PREV, KeyR: RESET_STEPPER } },
                 { type: card, variant: bordered, padding: md, title: (if (!= @entity.currentStageLabel "") @entity.currentStageLabel "Not Started"), children: [
                     { type: typography, variant: body, content: @entity.currentStageDescription }
                   ] },
-                { type: stack, direction: horizontal, gap: xs, children: (array/map @entity.tallyItems (fn t { type: badge, variant: neutral, label: (str/concat (object/get @t label) ": " (str/concat "" (object/get @t count))) })) },
-                { type: typography, variant: caption, content: @entity.visibleThreadNote }
+                { type: stack, direction: horizontal, gap: xs, wrap: true, children: (array/map @entity.tallyItems (fn t { type: badge, variant: neutral, label: (str/concat (object/get @t label) ": " (str/concat "" (object/get @t count))) })) },
+                { type: typography, variant: caption, color: muted, content: @entity.visibleThreadNote }
               ] }
           ]
         })
@@ -627,7 +696,11 @@ orbital LearnStepperOrbital {
         @tier "presentation"
       title : string = "Stepper"
         @label "Title"
-        @description "Title shown above the instrument."
+        @description "The instrument's name, the header's one hero."
+        @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line."
         @tier "presentation"
       width : number = 640
         @label "Width"
@@ -637,8 +710,9 @@ orbital LearnStepperOrbital {
         @label "Height"
         @description "Canvas height in pixels."
         @tier "presentation"
-      backgroundColor : string = "#f8fafc"
+      backgroundColor : string = ""
         @label "Background Color"
+        @description "Canvas ground override; empty uses the theme's drawing ground."
         @tier "presentation"
       interactive : boolean = false
         @label "Interactive"
@@ -658,8 +732,8 @@ orbital LearnStepperOrbital {
         @synonyms "stage roster, sequence, timeline, cycle, phase, event roster, ordered stages"
         @tier "domain"
       categories : [LearnStepperCategory] = [
-        { category: "a", color: "#7c3aed", label: "Category A" },
-        { category: "b", color: "#15803d", label: "Category B" }
+        { category: "a", color: "series-1", label: "Category A" },
+        { category: "b", color: "series-2", label: "Category B" }
       ]
         @label "Categories"
         @description "Marker color and button label per stage category, used for the axis dots, the legend, the FILTER_CATEGORY buttons, and the running per-category tally."
@@ -714,7 +788,7 @@ orbital LearnStepperOrbital {
         @label "Marker Highlight Radius"
         @description "Radius of the current step's marker, larger than an ordinary stage marker."
         @tier "presentation"
-      unreachedColor : string = "#d6d3d1"
+      unreachedColor : string = "muted"
         @label "Unreached Marker Color"
         @description "Color of stage markers the learner has not yet stepped to."
         @tier "presentation"

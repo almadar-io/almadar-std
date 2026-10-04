@@ -34,6 +34,11 @@
             "required": false
           },
           {
+            "name": "speed",
+            "type": "number",
+            "required": false
+          },
+          {
             "name": "traceSamples",
             "type": "array",
             "required": false
@@ -102,6 +107,18 @@
             "tier": "domain"
           },
           {
+            "name": "TOGGLE_RUN",
+            "direction": "listen",
+            "description": "Learner pressed the Play/Pause toggle — starts or freezes the signal clock.",
+            "tier": "domain"
+          },
+          {
+            "name": "SPEED_SET",
+            "direction": "listen",
+            "description": "The learner picked a playback speed; the signal clock advances that many times faster.",
+            "tier": "presentation"
+          },
+          {
             "name": "RUN",
             "direction": "listen",
             "description": "Learner started (or resumed) the signal's evolution; the trace draws live until Pause or the configured duration.",
@@ -168,7 +185,7 @@
           {
             "key": "probeColor",
             "type": "string",
-            "default": "#dc2626",
+            "default": "highlight",
             "label": "Probe Color",
             "tier": "presentation"
           },
@@ -190,7 +207,7 @@
           {
             "key": "signalColor",
             "type": "string",
-            "default": "#94a3b8",
+            "default": "ink",
             "label": "Signal Color",
             "tier": "presentation"
           },
@@ -202,6 +219,14 @@
             "description": "How the measured quantity evolves: sine (A·sin(B·t)), growth (A·(1+B)ᵗ), or decay (half-life A·(1/2)^(t/B)).",
             "synonyms": "signal family, oscillation, exponential growth, half-life decay",
             "tier": "domain"
+          },
+          {
+            "key": "summary",
+            "type": "string",
+            "default": "",
+            "label": "Concept",
+            "description": "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line.",
+            "tier": "presentation"
           },
           {
             "key": "taskText",
@@ -216,7 +241,7 @@
             "type": "string",
             "default": "Measurement Lab",
             "label": "Title",
-            "description": "Title shown above the experiment.",
+            "description": "The instrument's name, the header's one hero.",
             "tier": "presentation"
           },
           {
@@ -259,7 +284,9 @@
           "PAUSE",
           "PROBE",
           "RESET",
-          "RUN"
+          "RUN",
+          "SPEED_SET",
+          "TOGGLE_RUN"
         ],
         "definerKnobs": [],
         "entityRebindable": true,
@@ -271,6 +298,7 @@
             "points",
             "running",
             "sampleCount",
+            "speed",
             "t",
             "title",
             "traceCurves",
@@ -319,6 +347,10 @@
           {
             "kind": "set",
             "resource": "@entity.sampleCount"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.speed"
           },
           {
             "kind": "set",

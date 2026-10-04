@@ -1,0 +1,134 @@
+app std-page-search "1.0.0"
+"std-page-search — runs one search on a site in a background tab: opens `searchUrl` with the query as the `queryParam` parameter, reads up to `maxResults` elements matching `resultSelector` (waiting up to `waitMs` for the results to appear), closes the tab, and reports RESULTS with the fields read from each. One search at a time: SEARCH is accepted again once RESULTS or SEARCH_FAILED is reported. It never clicks anything. Needs a host with the `page` service (a browser extension with access to the search pages)."
+
+orbital PageSearchOrbital {
+  type PageField = {
+    selector : string
+    attr : string
+    resolve : boolean
+  }
+
+  type PageResult = {
+    elementId : string!
+    fields : Map string string
+  }
+
+  entity PageSearchRecord [runtime] {
+    query : string @description "The search being run" @synonyms "search term, terms, topic" = ""
+    tab : number @description "The background tab running the search; 0 = none" @synonyms "tab id" = 0
+    errorMessage : string @description "Why the last search failed; blank = none" @synonyms "error, failure reason" = ""
+    status : "idle" | "searching" @description "Whether a search is running" @synonyms "state, busy" = idle
+  }
+
+  trait PageSearch -> PageSearchRecord [interaction, instance] {
+    initial: idle
+
+    config {
+      statusSlot : slot = main
+        @label "Status slot"
+        @description "Where the atom shows its one-line status; an organism running it in the background sends it to `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+      searchUrl : string = "https://example.com/search"
+        @label "Search page"
+        @description "URL of the site's search results page, without the query"
+        @synonyms "search url, results page, endpoint"
+        @tier "domain"
+      resultsMatch : string = "https://example.com/search*"
+        @label "Results pages"
+        @description "URL match pattern the results page lies in (Chrome match-pattern syntax); the search page must match it, and the extension asks for access to exactly these pages"
+        @synonyms "site, url pattern, results url"
+        @tier "domain"
+      queryParam : string = "q"
+        @label "Query parameter"
+        @description "Name of the URL parameter that carries the search terms"
+        @synonyms "query key, search parameter"
+        @tier "domain"
+      resultSelector : string = ".result"
+        @label "Result selector"
+        @description "CSS selector of one result on the results page"
+        @synonyms "result, item, card, tile"
+        @tier "domain"
+      fields : Map string PageField = {}
+        @label "Fields"
+        @description "Field name to how to read it from each result: `selector` (a descendant; absent reads the result itself), `attr` (an attribute; absent reads the text) and `resolve` (the attribute is a URL: return it absolute)"
+        @synonyms "columns, properties, extract"
+        @tier "domain"
+      maxResults : number = 10
+        @label "Results per search"
+        @description "Most results read from one search"
+        @synonyms "limit, count, how many"
+        @tier "policy"
+      waitMs : number = 8000
+        @label "Wait for results (ms)"
+        @description "How long to wait for the results page to load and its first result to appear"
+        @synonyms "timeout, wait, patience"
+        @tier "infra"
+    }
+
+    state idle {
+      INIT -> idle
+        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: "Ready to search" })
+      SEARCH -> searching
+        (set @entity.query ?query)
+        (set @entity.tab 0)
+        (set @entity.status searching)
+        (call-service "page" "openTab" { url: @config.searchUrl, params: (object/set {} @config.queryParam ?query), match: @config.resultsMatch, active: false }
+          { emit: { success: TAB_OPENED, failure: SEARCH_CALL_FAILED } })
+        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: (str/concat "Searching for " ?query) })
+    }
+
+    state searching {
+      INIT -> searching
+        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: (str/concat "Searching for " @entity.query) })
+      TAB_OPENED -> searching
+        (set @entity.tab ?tab)
+        (call-service "page" "query" { tab: ?tab, selector: @config.resultSelector, fields: @config.fields, limit: @config.maxResults, waitMs: @config.waitMs }
+          { emit: { success: RESULTS_READ, failure: SEARCH_CALL_FAILED } })
+      RESULTS_READ -> idle
+        (call-service "page" "closeTab" { tab: ?tab })
+        (set @entity.tab 0)
+        (set @entity.status idle)
+        (emit RESULTS { query: @entity.query, results: ?elements })
+        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: (str/concat "Searched for " @entity.query) })
+      SEARCH_CALL_FAILED -> idle when (> @entity.tab 0)
+        (call-service "page" "closeTab" { tab: @entity.tab })
+        (set @entity.tab 0)
+        (set @entity.errorMessage ?error)
+        (set @entity.status idle)
+        (emit SEARCH_FAILED { query: @entity.query, error: ?error })
+        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: (str/concat "Couldn't search: " ?error) })
+      SEARCH_CALL_FAILED -> idle when (== @entity.tab 0)
+        (set @entity.errorMessage ?error)
+        (set @entity.status idle)
+        (emit SEARCH_FAILED { query: @entity.query, error: ?error })
+        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: (str/concat "Couldn't search: " ?error) })
+    }
+
+    emits {
+      TAB_OPENED { tab : number! }
+        @description "The background tab for the search is open"
+        @tier "secondary"
+      RESULTS_READ { tab : number!, elements : [PageResult]! }
+        @description "The results were read from the search page"
+        @tier "secondary"
+      SEARCH_CALL_FAILED { error : string! }
+        @description "Opening the search page or reading it failed"
+        @tier "secondary"
+      RESULTS -> external { query : string!, results : [PageResult]! }
+        @description "What one search found: each result's element id and the fields read from it"
+        @synonyms "search results, found, hits"
+        @tier "primary"
+      SEARCH_FAILED -> external { query : string!, error : string! }
+        @description "The search could not be run or read"
+        @tier "primary"
+    }
+
+    listens {
+      SEARCH -> external { query : string! }
+        @description "Search the site for `query`"
+    }
+  }
+
+  page "/page-search" as PageSearchPage -> PageSearch
+}

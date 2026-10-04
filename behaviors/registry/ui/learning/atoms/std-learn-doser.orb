@@ -304,8 +304,8 @@
               "type": "boolean"
             },
             "backgroundColor": {
-              "default": "#fafafa",
-              "description": "Canvas background color.",
+              "default": "",
+              "description": "Canvas ground. Empty uses the theme drawing ground.",
               "label": "Background Color",
               "tier": "presentation",
               "type": "string"
@@ -313,13 +313,13 @@
             "bands": {
               "default": [
                 {
-                  "color": "#94a3b8",
+                  "color": "muted",
                   "label": "Low",
                   "terminal": false,
                   "upperBound": 50.0
                 },
                 {
-                  "color": "#16a34a",
+                  "color": "success",
                   "label": "High",
                   "terminal": true,
                   "upperBound": 999999999.0
@@ -407,6 +407,16 @@
               "tier": "presentation",
               "type": "string"
             },
+            "series": {
+              "default": [],
+              "description": "Overrides the theme's categorical palette on the canvas (series-1…N) — a subject's real-world color convention, such as indicator colors. Empty uses the theme's palette.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Palette",
+              "tier": "presentation",
+              "type": "[string]"
+            },
             "showCanvas": {
               "default": true,
               "description": "When true (the default, standalone use) the instrument renders its own reservoir/source canvas and narration below the control strip. Set false when a domain sibling trait composes this atom via @rebindable and owns the accurate scene render itself — then only the control strip (add/drip/reset buttons) embeds via @trait.<name>, avoiding a duplicate canvas.",
@@ -415,8 +425,8 @@
               "type": "boolean"
             },
             "sourceColor": {
-              "default": "#60a5fa",
-              "description": "Fill color for the source vessel.",
+              "default": "series-1",
+              "description": "Tone name for the source vessel fill (for example series-1).",
               "label": "Source Color",
               "tier": "presentation",
               "type": "string"
@@ -442,6 +452,13 @@
               "label": "Small Step",
               "tier": "domain",
               "type": "number"
+            },
+            "summary": {
+              "default": "",
+              "description": "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line.",
+              "label": "Concept",
+              "tier": "presentation",
+              "type": "string"
             },
             "title": {
               "default": "Doser",
@@ -1063,17 +1080,76 @@
                           {
                             "children": [
                               {
-                                "content": "@entity.title",
-                                "type": "typography",
-                                "variant": "h4"
+                                "align": "start",
+                                "children": [
+                                  {
+                                    "children": [
+                                      {
+                                        "content": "@entity.title",
+                                        "type": "typography",
+                                        "variant": "h4"
+                                      },
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@config.summary",
+                                          ""
+                                        ],
+                                        null,
+                                        {
+                                          "color": "muted",
+                                          "content": "@config.summary",
+                                          "type": "typography",
+                                          "variant": "body2"
+                                        }
+                                      ]
+                                    ],
+                                    "direction": "vertical",
+                                    "gap": "xs",
+                                    "type": "stack"
+                                  },
+                                  {
+                                    "label": [
+                                      "if",
+                                      "@entity.done",
+                                      "Locked",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "Auto-dosing",
+                                        "Ready"
+                                      ]
+                                    ],
+                                    "type": "badge",
+                                    "variant": [
+                                      "if",
+                                      "@entity.done",
+                                      "warning",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "primary",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  }
+                                ],
+                                "direction": "horizontal",
+                                "gap": "md",
+                                "justify": "between",
+                                "type": "stack"
                               },
                               {
+                                "align": "center",
                                 "children": [
                                   {
                                     "action": "ADD_SMALL",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
                                     "label": [
                                       "str/concat",
-                                      "+ ",
+                                      "Add ",
                                       [
                                         "str/concat",
                                         [
@@ -1102,9 +1178,11 @@
                                   },
                                   {
                                     "action": "ADD_LARGE",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
                                     "label": [
                                       "str/concat",
-                                      "+ ",
+                                      "Add ",
                                       [
                                         "str/concat",
                                         [
@@ -1131,33 +1209,101 @@
                                     "type": "button",
                                     "variant": "secondary"
                                   },
-                                  {
-                                    "action": "TOGGLE_DRIP",
-                                    "label": [
-                                      "if",
-                                      "@entity.running",
-                                      "Pause",
-                                      "Auto-dose"
-                                    ],
-                                    "type": "button",
-                                    "variant": "secondary"
-                                  },
+                                  [
+                                    "if",
+                                    "@entity.running",
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "true",
+                                      "icon": "pause",
+                                      "label": "Pause",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    },
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "false",
+                                      "disabled": "@entity.done",
+                                      "icon": "play",
+                                      "label": "Auto-dose",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    }
+                                  ],
                                   {
                                     "action": "RESET",
+                                    "icon": "rotate-ccw",
                                     "label": "Reset",
                                     "type": "button",
                                     "variant": "ghost"
+                                  },
+                                  {
+                                    "color": "muted",
+                                    "content": [
+                                      "str/concat",
+                                      "@config.quantityLabel",
+                                      [
+                                        "str/concat",
+                                        " ",
+                                        [
+                                          "str/concat",
+                                          [
+                                            "str/concat",
+                                            "",
+                                            [
+                                              "math/round",
+                                              "@entity.dose",
+                                              2.0
+                                            ]
+                                          ],
+                                          [
+                                            "str/concat",
+                                            " of ",
+                                            [
+                                              "str/concat",
+                                              [
+                                                "str/concat",
+                                                "",
+                                                "@config.capacity"
+                                              ],
+                                              [
+                                                "if",
+                                                [
+                                                  "==",
+                                                  "@config.unit",
+                                                  ""
+                                                ],
+                                                "",
+                                                [
+                                                  "str/concat",
+                                                  " ",
+                                                  "@config.unit"
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    "type": "typography",
+                                    "variant": "caption"
                                   }
                                 ],
                                 "direction": "horizontal",
                                 "gap": "sm",
-                                "type": "stack"
+                                "type": "stack",
+                                "wrap": true
                               },
                               {
                                 "backgroundColor": "@config.backgroundColor",
                                 "containers": "@entity.containers",
                                 "height": "@config.height",
+                                "keyMap": {
+                                  "KeyR": "RESET",
+                                  "Space": "TOGGLE_DRIP"
+                                },
                                 "readouts": "@entity.readouts",
+                                "series": "@config.series",
                                 "traces": [
                                   {
                                     "series": [
@@ -1196,17 +1342,76 @@
                           {
                             "children": [
                               {
-                                "content": "@entity.title",
-                                "type": "typography",
-                                "variant": "h4"
+                                "align": "start",
+                                "children": [
+                                  {
+                                    "children": [
+                                      {
+                                        "content": "@entity.title",
+                                        "type": "typography",
+                                        "variant": "h4"
+                                      },
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@config.summary",
+                                          ""
+                                        ],
+                                        null,
+                                        {
+                                          "color": "muted",
+                                          "content": "@config.summary",
+                                          "type": "typography",
+                                          "variant": "body2"
+                                        }
+                                      ]
+                                    ],
+                                    "direction": "vertical",
+                                    "gap": "xs",
+                                    "type": "stack"
+                                  },
+                                  {
+                                    "label": [
+                                      "if",
+                                      "@entity.done",
+                                      "Locked",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "Auto-dosing",
+                                        "Ready"
+                                      ]
+                                    ],
+                                    "type": "badge",
+                                    "variant": [
+                                      "if",
+                                      "@entity.done",
+                                      "warning",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "primary",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  }
+                                ],
+                                "direction": "horizontal",
+                                "gap": "md",
+                                "justify": "between",
+                                "type": "stack"
                               },
                               {
+                                "align": "center",
                                 "children": [
                                   {
                                     "action": "ADD_SMALL",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
                                     "label": [
                                       "str/concat",
-                                      "+ ",
+                                      "Add ",
                                       [
                                         "str/concat",
                                         [
@@ -1235,9 +1440,11 @@
                                   },
                                   {
                                     "action": "ADD_LARGE",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
                                     "label": [
                                       "str/concat",
-                                      "+ ",
+                                      "Add ",
                                       [
                                         "str/concat",
                                         [
@@ -1264,27 +1471,90 @@
                                     "type": "button",
                                     "variant": "secondary"
                                   },
-                                  {
-                                    "action": "TOGGLE_DRIP",
-                                    "label": [
-                                      "if",
-                                      "@entity.running",
-                                      "Pause",
-                                      "Auto-dose"
-                                    ],
-                                    "type": "button",
-                                    "variant": "secondary"
-                                  },
+                                  [
+                                    "if",
+                                    "@entity.running",
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "true",
+                                      "icon": "pause",
+                                      "label": "Pause",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    },
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "false",
+                                      "disabled": "@entity.done",
+                                      "icon": "play",
+                                      "label": "Auto-dose",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    }
+                                  ],
                                   {
                                     "action": "RESET",
+                                    "icon": "rotate-ccw",
                                     "label": "Reset",
                                     "type": "button",
                                     "variant": "ghost"
+                                  },
+                                  {
+                                    "color": "muted",
+                                    "content": [
+                                      "str/concat",
+                                      "@config.quantityLabel",
+                                      [
+                                        "str/concat",
+                                        " ",
+                                        [
+                                          "str/concat",
+                                          [
+                                            "str/concat",
+                                            "",
+                                            [
+                                              "math/round",
+                                              "@entity.dose",
+                                              2.0
+                                            ]
+                                          ],
+                                          [
+                                            "str/concat",
+                                            " of ",
+                                            [
+                                              "str/concat",
+                                              [
+                                                "str/concat",
+                                                "",
+                                                "@config.capacity"
+                                              ],
+                                              [
+                                                "if",
+                                                [
+                                                  "==",
+                                                  "@config.unit",
+                                                  ""
+                                                ],
+                                                "",
+                                                [
+                                                  "str/concat",
+                                                  " ",
+                                                  "@config.unit"
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    "type": "typography",
+                                    "variant": "caption"
                                   }
                                 ],
                                 "direction": "horizontal",
                                 "gap": "sm",
-                                "type": "stack"
+                                "type": "stack",
+                                "wrap": true
                               }
                             ],
                             "direction": "vertical",
@@ -1315,6 +1585,48 @@
                   "==",
                   "@config.matchMode",
                   ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01M0CGZ8SPCJWD38ZCMJGGA4EF",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@config.matchMode",
+                      ""
+                    ]
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1593,17 +1905,76 @@
                           {
                             "children": [
                               {
-                                "content": "@entity.title",
-                                "type": "typography",
-                                "variant": "h4"
+                                "align": "start",
+                                "children": [
+                                  {
+                                    "children": [
+                                      {
+                                        "content": "@entity.title",
+                                        "type": "typography",
+                                        "variant": "h4"
+                                      },
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@config.summary",
+                                          ""
+                                        ],
+                                        null,
+                                        {
+                                          "color": "muted",
+                                          "content": "@config.summary",
+                                          "type": "typography",
+                                          "variant": "body2"
+                                        }
+                                      ]
+                                    ],
+                                    "direction": "vertical",
+                                    "gap": "xs",
+                                    "type": "stack"
+                                  },
+                                  {
+                                    "label": [
+                                      "if",
+                                      "@entity.done",
+                                      "Locked",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "Auto-dosing",
+                                        "Ready"
+                                      ]
+                                    ],
+                                    "type": "badge",
+                                    "variant": [
+                                      "if",
+                                      "@entity.done",
+                                      "warning",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "primary",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  }
+                                ],
+                                "direction": "horizontal",
+                                "gap": "md",
+                                "justify": "between",
+                                "type": "stack"
                               },
                               {
+                                "align": "center",
                                 "children": [
                                   {
                                     "action": "ADD_SMALL",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
                                     "label": [
                                       "str/concat",
-                                      "+ ",
+                                      "Add ",
                                       [
                                         "str/concat",
                                         [
@@ -1632,9 +2003,11 @@
                                   },
                                   {
                                     "action": "ADD_LARGE",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
                                     "label": [
                                       "str/concat",
-                                      "+ ",
+                                      "Add ",
                                       [
                                         "str/concat",
                                         [
@@ -1661,33 +2034,101 @@
                                     "type": "button",
                                     "variant": "secondary"
                                   },
-                                  {
-                                    "action": "TOGGLE_DRIP",
-                                    "label": [
-                                      "if",
-                                      "@entity.running",
-                                      "Pause",
-                                      "Auto-dose"
-                                    ],
-                                    "type": "button",
-                                    "variant": "secondary"
-                                  },
+                                  [
+                                    "if",
+                                    "@entity.running",
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "true",
+                                      "icon": "pause",
+                                      "label": "Pause",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    },
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "false",
+                                      "disabled": "@entity.done",
+                                      "icon": "play",
+                                      "label": "Auto-dose",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    }
+                                  ],
                                   {
                                     "action": "RESET",
+                                    "icon": "rotate-ccw",
                                     "label": "Reset",
                                     "type": "button",
                                     "variant": "ghost"
+                                  },
+                                  {
+                                    "color": "muted",
+                                    "content": [
+                                      "str/concat",
+                                      "@config.quantityLabel",
+                                      [
+                                        "str/concat",
+                                        " ",
+                                        [
+                                          "str/concat",
+                                          [
+                                            "str/concat",
+                                            "",
+                                            [
+                                              "math/round",
+                                              "@entity.dose",
+                                              2.0
+                                            ]
+                                          ],
+                                          [
+                                            "str/concat",
+                                            " of ",
+                                            [
+                                              "str/concat",
+                                              [
+                                                "str/concat",
+                                                "",
+                                                "@config.capacity"
+                                              ],
+                                              [
+                                                "if",
+                                                [
+                                                  "==",
+                                                  "@config.unit",
+                                                  ""
+                                                ],
+                                                "",
+                                                [
+                                                  "str/concat",
+                                                  " ",
+                                                  "@config.unit"
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    "type": "typography",
+                                    "variant": "caption"
                                   }
                                 ],
                                 "direction": "horizontal",
                                 "gap": "sm",
-                                "type": "stack"
+                                "type": "stack",
+                                "wrap": true
                               },
                               {
                                 "backgroundColor": "@config.backgroundColor",
                                 "containers": "@entity.containers",
                                 "height": "@config.height",
+                                "keyMap": {
+                                  "KeyR": "RESET",
+                                  "Space": "TOGGLE_DRIP"
+                                },
                                 "readouts": "@entity.readouts",
+                                "series": "@config.series",
                                 "traces": [
                                   {
                                     "series": [
@@ -1726,17 +2167,76 @@
                           {
                             "children": [
                               {
-                                "content": "@entity.title",
-                                "type": "typography",
-                                "variant": "h4"
+                                "align": "start",
+                                "children": [
+                                  {
+                                    "children": [
+                                      {
+                                        "content": "@entity.title",
+                                        "type": "typography",
+                                        "variant": "h4"
+                                      },
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@config.summary",
+                                          ""
+                                        ],
+                                        null,
+                                        {
+                                          "color": "muted",
+                                          "content": "@config.summary",
+                                          "type": "typography",
+                                          "variant": "body2"
+                                        }
+                                      ]
+                                    ],
+                                    "direction": "vertical",
+                                    "gap": "xs",
+                                    "type": "stack"
+                                  },
+                                  {
+                                    "label": [
+                                      "if",
+                                      "@entity.done",
+                                      "Locked",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "Auto-dosing",
+                                        "Ready"
+                                      ]
+                                    ],
+                                    "type": "badge",
+                                    "variant": [
+                                      "if",
+                                      "@entity.done",
+                                      "warning",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "primary",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  }
+                                ],
+                                "direction": "horizontal",
+                                "gap": "md",
+                                "justify": "between",
+                                "type": "stack"
                               },
                               {
+                                "align": "center",
                                 "children": [
                                   {
                                     "action": "ADD_SMALL",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
                                     "label": [
                                       "str/concat",
-                                      "+ ",
+                                      "Add ",
                                       [
                                         "str/concat",
                                         [
@@ -1765,9 +2265,11 @@
                                   },
                                   {
                                     "action": "ADD_LARGE",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
                                     "label": [
                                       "str/concat",
-                                      "+ ",
+                                      "Add ",
                                       [
                                         "str/concat",
                                         [
@@ -1794,27 +2296,90 @@
                                     "type": "button",
                                     "variant": "secondary"
                                   },
-                                  {
-                                    "action": "TOGGLE_DRIP",
-                                    "label": [
-                                      "if",
-                                      "@entity.running",
-                                      "Pause",
-                                      "Auto-dose"
-                                    ],
-                                    "type": "button",
-                                    "variant": "secondary"
-                                  },
+                                  [
+                                    "if",
+                                    "@entity.running",
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "true",
+                                      "icon": "pause",
+                                      "label": "Pause",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    },
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "false",
+                                      "disabled": "@entity.done",
+                                      "icon": "play",
+                                      "label": "Auto-dose",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    }
+                                  ],
                                   {
                                     "action": "RESET",
+                                    "icon": "rotate-ccw",
                                     "label": "Reset",
                                     "type": "button",
                                     "variant": "ghost"
+                                  },
+                                  {
+                                    "color": "muted",
+                                    "content": [
+                                      "str/concat",
+                                      "@config.quantityLabel",
+                                      [
+                                        "str/concat",
+                                        " ",
+                                        [
+                                          "str/concat",
+                                          [
+                                            "str/concat",
+                                            "",
+                                            [
+                                              "math/round",
+                                              "@entity.dose",
+                                              2.0
+                                            ]
+                                          ],
+                                          [
+                                            "str/concat",
+                                            " of ",
+                                            [
+                                              "str/concat",
+                                              [
+                                                "str/concat",
+                                                "",
+                                                "@config.capacity"
+                                              ],
+                                              [
+                                                "if",
+                                                [
+                                                  "==",
+                                                  "@config.unit",
+                                                  ""
+                                                ],
+                                                "",
+                                                [
+                                                  "str/concat",
+                                                  " ",
+                                                  "@config.unit"
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    "type": "typography",
+                                    "variant": "caption"
                                   }
                                 ],
                                 "direction": "horizontal",
                                 "gap": "sm",
-                                "type": "stack"
+                                "type": "stack",
+                                "wrap": true
                               }
                             ],
                             "direction": "vertical",
@@ -2129,17 +2694,76 @@
                           {
                             "children": [
                               {
-                                "content": "@entity.title",
-                                "type": "typography",
-                                "variant": "h4"
+                                "align": "start",
+                                "children": [
+                                  {
+                                    "children": [
+                                      {
+                                        "content": "@entity.title",
+                                        "type": "typography",
+                                        "variant": "h4"
+                                      },
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@config.summary",
+                                          ""
+                                        ],
+                                        null,
+                                        {
+                                          "color": "muted",
+                                          "content": "@config.summary",
+                                          "type": "typography",
+                                          "variant": "body2"
+                                        }
+                                      ]
+                                    ],
+                                    "direction": "vertical",
+                                    "gap": "xs",
+                                    "type": "stack"
+                                  },
+                                  {
+                                    "label": [
+                                      "if",
+                                      "@entity.done",
+                                      "Locked",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "Auto-dosing",
+                                        "Ready"
+                                      ]
+                                    ],
+                                    "type": "badge",
+                                    "variant": [
+                                      "if",
+                                      "@entity.done",
+                                      "warning",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "primary",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  }
+                                ],
+                                "direction": "horizontal",
+                                "gap": "md",
+                                "justify": "between",
+                                "type": "stack"
                               },
                               {
+                                "align": "center",
                                 "children": [
                                   {
                                     "action": "ADD_SMALL",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
                                     "label": [
                                       "str/concat",
-                                      "+ ",
+                                      "Add ",
                                       [
                                         "str/concat",
                                         [
@@ -2168,9 +2792,11 @@
                                   },
                                   {
                                     "action": "ADD_LARGE",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
                                     "label": [
                                       "str/concat",
-                                      "+ ",
+                                      "Add ",
                                       [
                                         "str/concat",
                                         [
@@ -2197,33 +2823,101 @@
                                     "type": "button",
                                     "variant": "secondary"
                                   },
-                                  {
-                                    "action": "TOGGLE_DRIP",
-                                    "label": [
-                                      "if",
-                                      "@entity.running",
-                                      "Pause",
-                                      "Auto-dose"
-                                    ],
-                                    "type": "button",
-                                    "variant": "secondary"
-                                  },
+                                  [
+                                    "if",
+                                    "@entity.running",
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "true",
+                                      "icon": "pause",
+                                      "label": "Pause",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    },
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "false",
+                                      "disabled": "@entity.done",
+                                      "icon": "play",
+                                      "label": "Auto-dose",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    }
+                                  ],
                                   {
                                     "action": "RESET",
+                                    "icon": "rotate-ccw",
                                     "label": "Reset",
                                     "type": "button",
                                     "variant": "ghost"
+                                  },
+                                  {
+                                    "color": "muted",
+                                    "content": [
+                                      "str/concat",
+                                      "@config.quantityLabel",
+                                      [
+                                        "str/concat",
+                                        " ",
+                                        [
+                                          "str/concat",
+                                          [
+                                            "str/concat",
+                                            "",
+                                            [
+                                              "math/round",
+                                              "@entity.dose",
+                                              2.0
+                                            ]
+                                          ],
+                                          [
+                                            "str/concat",
+                                            " of ",
+                                            [
+                                              "str/concat",
+                                              [
+                                                "str/concat",
+                                                "",
+                                                "@config.capacity"
+                                              ],
+                                              [
+                                                "if",
+                                                [
+                                                  "==",
+                                                  "@config.unit",
+                                                  ""
+                                                ],
+                                                "",
+                                                [
+                                                  "str/concat",
+                                                  " ",
+                                                  "@config.unit"
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    "type": "typography",
+                                    "variant": "caption"
                                   }
                                 ],
                                 "direction": "horizontal",
                                 "gap": "sm",
-                                "type": "stack"
+                                "type": "stack",
+                                "wrap": true
                               },
                               {
                                 "backgroundColor": "@config.backgroundColor",
                                 "containers": "@entity.containers",
                                 "height": "@config.height",
+                                "keyMap": {
+                                  "KeyR": "RESET",
+                                  "Space": "TOGGLE_DRIP"
+                                },
                                 "readouts": "@entity.readouts",
+                                "series": "@config.series",
                                 "traces": [
                                   {
                                     "series": [
@@ -2262,17 +2956,76 @@
                           {
                             "children": [
                               {
-                                "content": "@entity.title",
-                                "type": "typography",
-                                "variant": "h4"
+                                "align": "start",
+                                "children": [
+                                  {
+                                    "children": [
+                                      {
+                                        "content": "@entity.title",
+                                        "type": "typography",
+                                        "variant": "h4"
+                                      },
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@config.summary",
+                                          ""
+                                        ],
+                                        null,
+                                        {
+                                          "color": "muted",
+                                          "content": "@config.summary",
+                                          "type": "typography",
+                                          "variant": "body2"
+                                        }
+                                      ]
+                                    ],
+                                    "direction": "vertical",
+                                    "gap": "xs",
+                                    "type": "stack"
+                                  },
+                                  {
+                                    "label": [
+                                      "if",
+                                      "@entity.done",
+                                      "Locked",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "Auto-dosing",
+                                        "Ready"
+                                      ]
+                                    ],
+                                    "type": "badge",
+                                    "variant": [
+                                      "if",
+                                      "@entity.done",
+                                      "warning",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "primary",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  }
+                                ],
+                                "direction": "horizontal",
+                                "gap": "md",
+                                "justify": "between",
+                                "type": "stack"
                               },
                               {
+                                "align": "center",
                                 "children": [
                                   {
                                     "action": "ADD_SMALL",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
                                     "label": [
                                       "str/concat",
-                                      "+ ",
+                                      "Add ",
                                       [
                                         "str/concat",
                                         [
@@ -2301,9 +3054,11 @@
                                   },
                                   {
                                     "action": "ADD_LARGE",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
                                     "label": [
                                       "str/concat",
-                                      "+ ",
+                                      "Add ",
                                       [
                                         "str/concat",
                                         [
@@ -2330,27 +3085,90 @@
                                     "type": "button",
                                     "variant": "secondary"
                                   },
-                                  {
-                                    "action": "TOGGLE_DRIP",
-                                    "label": [
-                                      "if",
-                                      "@entity.running",
-                                      "Pause",
-                                      "Auto-dose"
-                                    ],
-                                    "type": "button",
-                                    "variant": "secondary"
-                                  },
+                                  [
+                                    "if",
+                                    "@entity.running",
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "true",
+                                      "icon": "pause",
+                                      "label": "Pause",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    },
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "false",
+                                      "disabled": "@entity.done",
+                                      "icon": "play",
+                                      "label": "Auto-dose",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    }
+                                  ],
                                   {
                                     "action": "RESET",
+                                    "icon": "rotate-ccw",
                                     "label": "Reset",
                                     "type": "button",
                                     "variant": "ghost"
+                                  },
+                                  {
+                                    "color": "muted",
+                                    "content": [
+                                      "str/concat",
+                                      "@config.quantityLabel",
+                                      [
+                                        "str/concat",
+                                        " ",
+                                        [
+                                          "str/concat",
+                                          [
+                                            "str/concat",
+                                            "",
+                                            [
+                                              "math/round",
+                                              "@entity.dose",
+                                              2.0
+                                            ]
+                                          ],
+                                          [
+                                            "str/concat",
+                                            " of ",
+                                            [
+                                              "str/concat",
+                                              [
+                                                "str/concat",
+                                                "",
+                                                "@config.capacity"
+                                              ],
+                                              [
+                                                "if",
+                                                [
+                                                  "==",
+                                                  "@config.unit",
+                                                  ""
+                                                ],
+                                                "",
+                                                [
+                                                  "str/concat",
+                                                  " ",
+                                                  "@config.unit"
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    "type": "typography",
+                                    "variant": "caption"
                                   }
                                 ],
                                 "direction": "horizontal",
                                 "gap": "sm",
-                                "type": "stack"
+                                "type": "stack",
+                                "wrap": true
                               }
                             ],
                             "direction": "vertical",
@@ -2686,17 +3504,76 @@
                           {
                             "children": [
                               {
-                                "content": "@entity.title",
-                                "type": "typography",
-                                "variant": "h4"
+                                "align": "start",
+                                "children": [
+                                  {
+                                    "children": [
+                                      {
+                                        "content": "@entity.title",
+                                        "type": "typography",
+                                        "variant": "h4"
+                                      },
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@config.summary",
+                                          ""
+                                        ],
+                                        null,
+                                        {
+                                          "color": "muted",
+                                          "content": "@config.summary",
+                                          "type": "typography",
+                                          "variant": "body2"
+                                        }
+                                      ]
+                                    ],
+                                    "direction": "vertical",
+                                    "gap": "xs",
+                                    "type": "stack"
+                                  },
+                                  {
+                                    "label": [
+                                      "if",
+                                      "@entity.done",
+                                      "Locked",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "Auto-dosing",
+                                        "Ready"
+                                      ]
+                                    ],
+                                    "type": "badge",
+                                    "variant": [
+                                      "if",
+                                      "@entity.done",
+                                      "warning",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "primary",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  }
+                                ],
+                                "direction": "horizontal",
+                                "gap": "md",
+                                "justify": "between",
+                                "type": "stack"
                               },
                               {
+                                "align": "center",
                                 "children": [
                                   {
                                     "action": "ADD_SMALL",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
                                     "label": [
                                       "str/concat",
-                                      "+ ",
+                                      "Add ",
                                       [
                                         "str/concat",
                                         [
@@ -2725,9 +3602,11 @@
                                   },
                                   {
                                     "action": "ADD_LARGE",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
                                     "label": [
                                       "str/concat",
-                                      "+ ",
+                                      "Add ",
                                       [
                                         "str/concat",
                                         [
@@ -2754,33 +3633,101 @@
                                     "type": "button",
                                     "variant": "secondary"
                                   },
-                                  {
-                                    "action": "TOGGLE_DRIP",
-                                    "label": [
-                                      "if",
-                                      "@entity.running",
-                                      "Pause",
-                                      "Auto-dose"
-                                    ],
-                                    "type": "button",
-                                    "variant": "secondary"
-                                  },
+                                  [
+                                    "if",
+                                    "@entity.running",
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "true",
+                                      "icon": "pause",
+                                      "label": "Pause",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    },
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "false",
+                                      "disabled": "@entity.done",
+                                      "icon": "play",
+                                      "label": "Auto-dose",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    }
+                                  ],
                                   {
                                     "action": "RESET",
+                                    "icon": "rotate-ccw",
                                     "label": "Reset",
                                     "type": "button",
                                     "variant": "ghost"
+                                  },
+                                  {
+                                    "color": "muted",
+                                    "content": [
+                                      "str/concat",
+                                      "@config.quantityLabel",
+                                      [
+                                        "str/concat",
+                                        " ",
+                                        [
+                                          "str/concat",
+                                          [
+                                            "str/concat",
+                                            "",
+                                            [
+                                              "math/round",
+                                              "@entity.dose",
+                                              2.0
+                                            ]
+                                          ],
+                                          [
+                                            "str/concat",
+                                            " of ",
+                                            [
+                                              "str/concat",
+                                              [
+                                                "str/concat",
+                                                "",
+                                                "@config.capacity"
+                                              ],
+                                              [
+                                                "if",
+                                                [
+                                                  "==",
+                                                  "@config.unit",
+                                                  ""
+                                                ],
+                                                "",
+                                                [
+                                                  "str/concat",
+                                                  " ",
+                                                  "@config.unit"
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    "type": "typography",
+                                    "variant": "caption"
                                   }
                                 ],
                                 "direction": "horizontal",
                                 "gap": "sm",
-                                "type": "stack"
+                                "type": "stack",
+                                "wrap": true
                               },
                               {
                                 "backgroundColor": "@config.backgroundColor",
                                 "containers": "@entity.containers",
                                 "height": "@config.height",
+                                "keyMap": {
+                                  "KeyR": "RESET",
+                                  "Space": "TOGGLE_DRIP"
+                                },
                                 "readouts": "@entity.readouts",
+                                "series": "@config.series",
                                 "traces": [
                                   {
                                     "series": [
@@ -2819,17 +3766,76 @@
                           {
                             "children": [
                               {
-                                "content": "@entity.title",
-                                "type": "typography",
-                                "variant": "h4"
+                                "align": "start",
+                                "children": [
+                                  {
+                                    "children": [
+                                      {
+                                        "content": "@entity.title",
+                                        "type": "typography",
+                                        "variant": "h4"
+                                      },
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@config.summary",
+                                          ""
+                                        ],
+                                        null,
+                                        {
+                                          "color": "muted",
+                                          "content": "@config.summary",
+                                          "type": "typography",
+                                          "variant": "body2"
+                                        }
+                                      ]
+                                    ],
+                                    "direction": "vertical",
+                                    "gap": "xs",
+                                    "type": "stack"
+                                  },
+                                  {
+                                    "label": [
+                                      "if",
+                                      "@entity.done",
+                                      "Locked",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "Auto-dosing",
+                                        "Ready"
+                                      ]
+                                    ],
+                                    "type": "badge",
+                                    "variant": [
+                                      "if",
+                                      "@entity.done",
+                                      "warning",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "primary",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  }
+                                ],
+                                "direction": "horizontal",
+                                "gap": "md",
+                                "justify": "between",
+                                "type": "stack"
                               },
                               {
+                                "align": "center",
                                 "children": [
                                   {
                                     "action": "ADD_SMALL",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
                                     "label": [
                                       "str/concat",
-                                      "+ ",
+                                      "Add ",
                                       [
                                         "str/concat",
                                         [
@@ -2858,9 +3864,11 @@
                                   },
                                   {
                                     "action": "ADD_LARGE",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
                                     "label": [
                                       "str/concat",
-                                      "+ ",
+                                      "Add ",
                                       [
                                         "str/concat",
                                         [
@@ -2887,27 +3895,90 @@
                                     "type": "button",
                                     "variant": "secondary"
                                   },
-                                  {
-                                    "action": "TOGGLE_DRIP",
-                                    "label": [
-                                      "if",
-                                      "@entity.running",
-                                      "Pause",
-                                      "Auto-dose"
-                                    ],
-                                    "type": "button",
-                                    "variant": "secondary"
-                                  },
+                                  [
+                                    "if",
+                                    "@entity.running",
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "true",
+                                      "icon": "pause",
+                                      "label": "Pause",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    },
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "false",
+                                      "disabled": "@entity.done",
+                                      "icon": "play",
+                                      "label": "Auto-dose",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    }
+                                  ],
                                   {
                                     "action": "RESET",
+                                    "icon": "rotate-ccw",
                                     "label": "Reset",
                                     "type": "button",
                                     "variant": "ghost"
+                                  },
+                                  {
+                                    "color": "muted",
+                                    "content": [
+                                      "str/concat",
+                                      "@config.quantityLabel",
+                                      [
+                                        "str/concat",
+                                        " ",
+                                        [
+                                          "str/concat",
+                                          [
+                                            "str/concat",
+                                            "",
+                                            [
+                                              "math/round",
+                                              "@entity.dose",
+                                              2.0
+                                            ]
+                                          ],
+                                          [
+                                            "str/concat",
+                                            " of ",
+                                            [
+                                              "str/concat",
+                                              [
+                                                "str/concat",
+                                                "",
+                                                "@config.capacity"
+                                              ],
+                                              [
+                                                "if",
+                                                [
+                                                  "==",
+                                                  "@config.unit",
+                                                  ""
+                                                ],
+                                                "",
+                                                [
+                                                  "str/concat",
+                                                  " ",
+                                                  "@config.unit"
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    "type": "typography",
+                                    "variant": "caption"
                                   }
                                 ],
                                 "direction": "horizontal",
                                 "gap": "sm",
-                                "type": "stack"
+                                "type": "stack",
+                                "wrap": true
                               }
                             ],
                             "direction": "vertical",
@@ -2988,17 +4059,76 @@
                           {
                             "children": [
                               {
-                                "content": "@entity.title",
-                                "type": "typography",
-                                "variant": "h4"
+                                "align": "start",
+                                "children": [
+                                  {
+                                    "children": [
+                                      {
+                                        "content": "@entity.title",
+                                        "type": "typography",
+                                        "variant": "h4"
+                                      },
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@config.summary",
+                                          ""
+                                        ],
+                                        null,
+                                        {
+                                          "color": "muted",
+                                          "content": "@config.summary",
+                                          "type": "typography",
+                                          "variant": "body2"
+                                        }
+                                      ]
+                                    ],
+                                    "direction": "vertical",
+                                    "gap": "xs",
+                                    "type": "stack"
+                                  },
+                                  {
+                                    "label": [
+                                      "if",
+                                      "@entity.done",
+                                      "Locked",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "Auto-dosing",
+                                        "Ready"
+                                      ]
+                                    ],
+                                    "type": "badge",
+                                    "variant": [
+                                      "if",
+                                      "@entity.done",
+                                      "warning",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "primary",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  }
+                                ],
+                                "direction": "horizontal",
+                                "gap": "md",
+                                "justify": "between",
+                                "type": "stack"
                               },
                               {
+                                "align": "center",
                                 "children": [
                                   {
                                     "action": "ADD_SMALL",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
                                     "label": [
                                       "str/concat",
-                                      "+ ",
+                                      "Add ",
                                       [
                                         "str/concat",
                                         [
@@ -3027,9 +4157,11 @@
                                   },
                                   {
                                     "action": "ADD_LARGE",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
                                     "label": [
                                       "str/concat",
-                                      "+ ",
+                                      "Add ",
                                       [
                                         "str/concat",
                                         [
@@ -3056,33 +4188,101 @@
                                     "type": "button",
                                     "variant": "secondary"
                                   },
-                                  {
-                                    "action": "TOGGLE_DRIP",
-                                    "label": [
-                                      "if",
-                                      "@entity.running",
-                                      "Pause",
-                                      "Auto-dose"
-                                    ],
-                                    "type": "button",
-                                    "variant": "secondary"
-                                  },
+                                  [
+                                    "if",
+                                    "@entity.running",
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "true",
+                                      "icon": "pause",
+                                      "label": "Pause",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    },
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "false",
+                                      "disabled": "@entity.done",
+                                      "icon": "play",
+                                      "label": "Auto-dose",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    }
+                                  ],
                                   {
                                     "action": "RESET",
+                                    "icon": "rotate-ccw",
                                     "label": "Reset",
                                     "type": "button",
                                     "variant": "ghost"
+                                  },
+                                  {
+                                    "color": "muted",
+                                    "content": [
+                                      "str/concat",
+                                      "@config.quantityLabel",
+                                      [
+                                        "str/concat",
+                                        " ",
+                                        [
+                                          "str/concat",
+                                          [
+                                            "str/concat",
+                                            "",
+                                            [
+                                              "math/round",
+                                              "@entity.dose",
+                                              2.0
+                                            ]
+                                          ],
+                                          [
+                                            "str/concat",
+                                            " of ",
+                                            [
+                                              "str/concat",
+                                              [
+                                                "str/concat",
+                                                "",
+                                                "@config.capacity"
+                                              ],
+                                              [
+                                                "if",
+                                                [
+                                                  "==",
+                                                  "@config.unit",
+                                                  ""
+                                                ],
+                                                "",
+                                                [
+                                                  "str/concat",
+                                                  " ",
+                                                  "@config.unit"
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    "type": "typography",
+                                    "variant": "caption"
                                   }
                                 ],
                                 "direction": "horizontal",
                                 "gap": "sm",
-                                "type": "stack"
+                                "type": "stack",
+                                "wrap": true
                               },
                               {
                                 "backgroundColor": "@config.backgroundColor",
                                 "containers": "@entity.containers",
                                 "height": "@config.height",
+                                "keyMap": {
+                                  "KeyR": "RESET",
+                                  "Space": "TOGGLE_DRIP"
+                                },
                                 "readouts": "@entity.readouts",
+                                "series": "@config.series",
                                 "traces": [
                                   {
                                     "series": [
@@ -3121,17 +4321,76 @@
                           {
                             "children": [
                               {
-                                "content": "@entity.title",
-                                "type": "typography",
-                                "variant": "h4"
+                                "align": "start",
+                                "children": [
+                                  {
+                                    "children": [
+                                      {
+                                        "content": "@entity.title",
+                                        "type": "typography",
+                                        "variant": "h4"
+                                      },
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@config.summary",
+                                          ""
+                                        ],
+                                        null,
+                                        {
+                                          "color": "muted",
+                                          "content": "@config.summary",
+                                          "type": "typography",
+                                          "variant": "body2"
+                                        }
+                                      ]
+                                    ],
+                                    "direction": "vertical",
+                                    "gap": "xs",
+                                    "type": "stack"
+                                  },
+                                  {
+                                    "label": [
+                                      "if",
+                                      "@entity.done",
+                                      "Locked",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "Auto-dosing",
+                                        "Ready"
+                                      ]
+                                    ],
+                                    "type": "badge",
+                                    "variant": [
+                                      "if",
+                                      "@entity.done",
+                                      "warning",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "primary",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  }
+                                ],
+                                "direction": "horizontal",
+                                "gap": "md",
+                                "justify": "between",
+                                "type": "stack"
                               },
                               {
+                                "align": "center",
                                 "children": [
                                   {
                                     "action": "ADD_SMALL",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
                                     "label": [
                                       "str/concat",
-                                      "+ ",
+                                      "Add ",
                                       [
                                         "str/concat",
                                         [
@@ -3160,9 +4419,11 @@
                                   },
                                   {
                                     "action": "ADD_LARGE",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
                                     "label": [
                                       "str/concat",
-                                      "+ ",
+                                      "Add ",
                                       [
                                         "str/concat",
                                         [
@@ -3189,27 +4450,90 @@
                                     "type": "button",
                                     "variant": "secondary"
                                   },
-                                  {
-                                    "action": "TOGGLE_DRIP",
-                                    "label": [
-                                      "if",
-                                      "@entity.running",
-                                      "Pause",
-                                      "Auto-dose"
-                                    ],
-                                    "type": "button",
-                                    "variant": "secondary"
-                                  },
+                                  [
+                                    "if",
+                                    "@entity.running",
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "true",
+                                      "icon": "pause",
+                                      "label": "Pause",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    },
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "false",
+                                      "disabled": "@entity.done",
+                                      "icon": "play",
+                                      "label": "Auto-dose",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    }
+                                  ],
                                   {
                                     "action": "RESET",
+                                    "icon": "rotate-ccw",
                                     "label": "Reset",
                                     "type": "button",
                                     "variant": "ghost"
+                                  },
+                                  {
+                                    "color": "muted",
+                                    "content": [
+                                      "str/concat",
+                                      "@config.quantityLabel",
+                                      [
+                                        "str/concat",
+                                        " ",
+                                        [
+                                          "str/concat",
+                                          [
+                                            "str/concat",
+                                            "",
+                                            [
+                                              "math/round",
+                                              "@entity.dose",
+                                              2.0
+                                            ]
+                                          ],
+                                          [
+                                            "str/concat",
+                                            " of ",
+                                            [
+                                              "str/concat",
+                                              [
+                                                "str/concat",
+                                                "",
+                                                "@config.capacity"
+                                              ],
+                                              [
+                                                "if",
+                                                [
+                                                  "==",
+                                                  "@config.unit",
+                                                  ""
+                                                ],
+                                                "",
+                                                [
+                                                  "str/concat",
+                                                  " ",
+                                                  "@config.unit"
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    "type": "typography",
+                                    "variant": "caption"
                                   }
                                 ],
                                 "direction": "horizontal",
                                 "gap": "sm",
-                                "type": "stack"
+                                "type": "stack",
+                                "wrap": true
                               }
                             ],
                             "direction": "vertical",
@@ -3513,17 +4837,76 @@
                           {
                             "children": [
                               {
-                                "content": "@entity.title",
-                                "type": "typography",
-                                "variant": "h4"
+                                "align": "start",
+                                "children": [
+                                  {
+                                    "children": [
+                                      {
+                                        "content": "@entity.title",
+                                        "type": "typography",
+                                        "variant": "h4"
+                                      },
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@config.summary",
+                                          ""
+                                        ],
+                                        null,
+                                        {
+                                          "color": "muted",
+                                          "content": "@config.summary",
+                                          "type": "typography",
+                                          "variant": "body2"
+                                        }
+                                      ]
+                                    ],
+                                    "direction": "vertical",
+                                    "gap": "xs",
+                                    "type": "stack"
+                                  },
+                                  {
+                                    "label": [
+                                      "if",
+                                      "@entity.done",
+                                      "Locked",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "Auto-dosing",
+                                        "Ready"
+                                      ]
+                                    ],
+                                    "type": "badge",
+                                    "variant": [
+                                      "if",
+                                      "@entity.done",
+                                      "warning",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "primary",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  }
+                                ],
+                                "direction": "horizontal",
+                                "gap": "md",
+                                "justify": "between",
+                                "type": "stack"
                               },
                               {
+                                "align": "center",
                                 "children": [
                                   {
                                     "action": "ADD_SMALL",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
                                     "label": [
                                       "str/concat",
-                                      "+ ",
+                                      "Add ",
                                       [
                                         "str/concat",
                                         [
@@ -3552,9 +4935,11 @@
                                   },
                                   {
                                     "action": "ADD_LARGE",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
                                     "label": [
                                       "str/concat",
-                                      "+ ",
+                                      "Add ",
                                       [
                                         "str/concat",
                                         [
@@ -3581,33 +4966,101 @@
                                     "type": "button",
                                     "variant": "secondary"
                                   },
-                                  {
-                                    "action": "TOGGLE_DRIP",
-                                    "label": [
-                                      "if",
-                                      "@entity.running",
-                                      "Pause",
-                                      "Auto-dose"
-                                    ],
-                                    "type": "button",
-                                    "variant": "secondary"
-                                  },
+                                  [
+                                    "if",
+                                    "@entity.running",
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "true",
+                                      "icon": "pause",
+                                      "label": "Pause",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    },
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "false",
+                                      "disabled": "@entity.done",
+                                      "icon": "play",
+                                      "label": "Auto-dose",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    }
+                                  ],
                                   {
                                     "action": "RESET",
+                                    "icon": "rotate-ccw",
                                     "label": "Reset",
                                     "type": "button",
                                     "variant": "ghost"
+                                  },
+                                  {
+                                    "color": "muted",
+                                    "content": [
+                                      "str/concat",
+                                      "@config.quantityLabel",
+                                      [
+                                        "str/concat",
+                                        " ",
+                                        [
+                                          "str/concat",
+                                          [
+                                            "str/concat",
+                                            "",
+                                            [
+                                              "math/round",
+                                              "@entity.dose",
+                                              2.0
+                                            ]
+                                          ],
+                                          [
+                                            "str/concat",
+                                            " of ",
+                                            [
+                                              "str/concat",
+                                              [
+                                                "str/concat",
+                                                "",
+                                                "@config.capacity"
+                                              ],
+                                              [
+                                                "if",
+                                                [
+                                                  "==",
+                                                  "@config.unit",
+                                                  ""
+                                                ],
+                                                "",
+                                                [
+                                                  "str/concat",
+                                                  " ",
+                                                  "@config.unit"
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    "type": "typography",
+                                    "variant": "caption"
                                   }
                                 ],
                                 "direction": "horizontal",
                                 "gap": "sm",
-                                "type": "stack"
+                                "type": "stack",
+                                "wrap": true
                               },
                               {
                                 "backgroundColor": "@config.backgroundColor",
                                 "containers": "@entity.containers",
                                 "height": "@config.height",
+                                "keyMap": {
+                                  "KeyR": "RESET",
+                                  "Space": "TOGGLE_DRIP"
+                                },
                                 "readouts": "@entity.readouts",
+                                "series": "@config.series",
                                 "traces": [
                                   {
                                     "series": [
@@ -3646,17 +5099,76 @@
                           {
                             "children": [
                               {
-                                "content": "@entity.title",
-                                "type": "typography",
-                                "variant": "h4"
+                                "align": "start",
+                                "children": [
+                                  {
+                                    "children": [
+                                      {
+                                        "content": "@entity.title",
+                                        "type": "typography",
+                                        "variant": "h4"
+                                      },
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@config.summary",
+                                          ""
+                                        ],
+                                        null,
+                                        {
+                                          "color": "muted",
+                                          "content": "@config.summary",
+                                          "type": "typography",
+                                          "variant": "body2"
+                                        }
+                                      ]
+                                    ],
+                                    "direction": "vertical",
+                                    "gap": "xs",
+                                    "type": "stack"
+                                  },
+                                  {
+                                    "label": [
+                                      "if",
+                                      "@entity.done",
+                                      "Locked",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "Auto-dosing",
+                                        "Ready"
+                                      ]
+                                    ],
+                                    "type": "badge",
+                                    "variant": [
+                                      "if",
+                                      "@entity.done",
+                                      "warning",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "primary",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  }
+                                ],
+                                "direction": "horizontal",
+                                "gap": "md",
+                                "justify": "between",
+                                "type": "stack"
                               },
                               {
+                                "align": "center",
                                 "children": [
                                   {
                                     "action": "ADD_SMALL",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
                                     "label": [
                                       "str/concat",
-                                      "+ ",
+                                      "Add ",
                                       [
                                         "str/concat",
                                         [
@@ -3685,9 +5197,11 @@
                                   },
                                   {
                                     "action": "ADD_LARGE",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
                                     "label": [
                                       "str/concat",
-                                      "+ ",
+                                      "Add ",
                                       [
                                         "str/concat",
                                         [
@@ -3714,27 +5228,90 @@
                                     "type": "button",
                                     "variant": "secondary"
                                   },
-                                  {
-                                    "action": "TOGGLE_DRIP",
-                                    "label": [
-                                      "if",
-                                      "@entity.running",
-                                      "Pause",
-                                      "Auto-dose"
-                                    ],
-                                    "type": "button",
-                                    "variant": "secondary"
-                                  },
+                                  [
+                                    "if",
+                                    "@entity.running",
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "true",
+                                      "icon": "pause",
+                                      "label": "Pause",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    },
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "false",
+                                      "disabled": "@entity.done",
+                                      "icon": "play",
+                                      "label": "Auto-dose",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    }
+                                  ],
                                   {
                                     "action": "RESET",
+                                    "icon": "rotate-ccw",
                                     "label": "Reset",
                                     "type": "button",
                                     "variant": "ghost"
+                                  },
+                                  {
+                                    "color": "muted",
+                                    "content": [
+                                      "str/concat",
+                                      "@config.quantityLabel",
+                                      [
+                                        "str/concat",
+                                        " ",
+                                        [
+                                          "str/concat",
+                                          [
+                                            "str/concat",
+                                            "",
+                                            [
+                                              "math/round",
+                                              "@entity.dose",
+                                              2.0
+                                            ]
+                                          ],
+                                          [
+                                            "str/concat",
+                                            " of ",
+                                            [
+                                              "str/concat",
+                                              [
+                                                "str/concat",
+                                                "",
+                                                "@config.capacity"
+                                              ],
+                                              [
+                                                "if",
+                                                [
+                                                  "==",
+                                                  "@config.unit",
+                                                  ""
+                                                ],
+                                                "",
+                                                [
+                                                  "str/concat",
+                                                  " ",
+                                                  "@config.unit"
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    "type": "typography",
+                                    "variant": "caption"
                                   }
                                 ],
                                 "direction": "horizontal",
                                 "gap": "sm",
-                                "type": "stack"
+                                "type": "stack",
+                                "wrap": true
                               }
                             ],
                             "direction": "vertical",

@@ -59,17 +59,27 @@ orbital LearnDiagramOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (== @entity.selectedId "") "Overview" (str/concat "Part " (str/concat "" (+ @entity.selectedIndex 1)) " of " (str/concat "" (array/len @entity.parts)))), variant: (if (== @entity.selectedId "") "neutral" "primary") }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: xs, wrap: true, children: @entity.partButtons },
                 { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
                   nodes: (array/map @entity.parts (fn p { id: (object/get @p id), x: (object/get @p x), y: (object/get @p y), radius: (if (== (object/get @p id) @entity.selectedId) (* (object/get @p radius) 1.4) (object/get @p radius)), color: (object/get @p color), label: (object/get @p label) })),
                   edges: @entity.links,
-                  shapes: (if (== @entity.selectedId "") [] [ { type: circle, x: (object/get (array/nth @entity.parts @entity.selectedIndex) x), y: (object/get (array/nth @entity.parts @entity.selectedIndex) y), radius: (+ (object/get (array/nth @entity.parts @entity.selectedIndex) radius) 10), color: @config.highlightColor, lineWidth: 4 } ])
+                  shapes: (if (== @entity.selectedId "") [] [ { type: circle, x: (object/get (array/nth @entity.parts @entity.selectedIndex) x), y: (object/get (array/nth @entity.parts @entity.selectedIndex) y), radius: (+ (object/get (array/nth @entity.parts @entity.selectedIndex) radius) 10), color: @config.highlightColor, stroke: bold } ])
                 },
-                { type: card, variant: bordered, padding: md, children: @entity.captionChildren },
-                { type: stack, direction: horizontal, gap: xs, children: @entity.partButtons }
+                { type: card, variant: bordered, padding: md, children: @entity.captionChildren }
               ] }
           ]
         })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (render-ui main null)
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (set @entity.active true)
@@ -94,14 +104,20 @@ orbital LearnDiagramOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (== @entity.selectedId "") "Overview" (str/concat "Part " (str/concat "" (+ @entity.selectedIndex 1)) " of " (str/concat "" (array/len @entity.parts)))), variant: (if (== @entity.selectedId "") "neutral" "primary") }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: xs, wrap: true, children: @entity.partButtons },
                 { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
                   nodes: (array/map @entity.parts (fn p { id: (object/get @p id), x: (object/get @p x), y: (object/get @p y), radius: (if (== (object/get @p id) @entity.selectedId) (* (object/get @p radius) 1.4) (object/get @p radius)), color: (object/get @p color), label: (object/get @p label) })),
                   edges: @entity.links,
-                  shapes: (if (== @entity.selectedId "") [] [ { type: circle, x: (object/get (array/nth @entity.parts @entity.selectedIndex) x), y: (object/get (array/nth @entity.parts @entity.selectedIndex) y), radius: (+ (object/get (array/nth @entity.parts @entity.selectedIndex) radius) 10), color: @config.highlightColor, lineWidth: 4 } ])
+                  shapes: (if (== @entity.selectedId "") [] [ { type: circle, x: (object/get (array/nth @entity.parts @entity.selectedIndex) x), y: (object/get (array/nth @entity.parts @entity.selectedIndex) y), radius: (+ (object/get (array/nth @entity.parts @entity.selectedIndex) radius) 10), color: @config.highlightColor, stroke: bold } ])
                 },
-                { type: card, variant: bordered, padding: md, children: @entity.captionChildren },
-                { type: stack, direction: horizontal, gap: xs, children: @entity.partButtons }
+                { type: card, variant: bordered, padding: md, children: @entity.captionChildren }
               ] }
           ]
         })
@@ -132,14 +148,20 @@ orbital LearnDiagramOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (== @entity.selectedId "") "Overview" (str/concat "Part " (str/concat "" (+ @entity.selectedIndex 1)) " of " (str/concat "" (array/len @entity.parts)))), variant: (if (== @entity.selectedId "") "neutral" "primary") }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: xs, wrap: true, children: @entity.partButtons },
                 { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
                   nodes: (array/map @entity.parts (fn p { id: (object/get @p id), x: (object/get @p x), y: (object/get @p y), radius: (if (== (object/get @p id) @entity.selectedId) (* (object/get @p radius) 1.4) (object/get @p radius)), color: (object/get @p color), label: (object/get @p label) })),
                   edges: @entity.links,
-                  shapes: (if (== @entity.selectedId "") [] [ { type: circle, x: (object/get (array/nth @entity.parts @entity.selectedIndex) x), y: (object/get (array/nth @entity.parts @entity.selectedIndex) y), radius: (+ (object/get (array/nth @entity.parts @entity.selectedIndex) radius) 10), color: @config.highlightColor, lineWidth: 4 } ])
+                  shapes: (if (== @entity.selectedId "") [] [ { type: circle, x: (object/get (array/nth @entity.parts @entity.selectedIndex) x), y: (object/get (array/nth @entity.parts @entity.selectedIndex) y), radius: (+ (object/get (array/nth @entity.parts @entity.selectedIndex) radius) 10), color: @config.highlightColor, stroke: bold } ])
                 },
-                { type: card, variant: bordered, padding: md, children: @entity.captionChildren },
-                { type: stack, direction: horizontal, gap: xs, children: @entity.partButtons }
+                { type: card, variant: bordered, padding: md, children: @entity.captionChildren }
               ] }
           ]
         })
@@ -164,14 +186,20 @@ orbital LearnDiagramOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (== @entity.selectedId "") "Overview" (str/concat "Part " (str/concat "" (+ @entity.selectedIndex 1)) " of " (str/concat "" (array/len @entity.parts)))), variant: (if (== @entity.selectedId "") "neutral" "primary") }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: xs, wrap: true, children: @entity.partButtons },
                 { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
                   nodes: (array/map @entity.parts (fn p { id: (object/get @p id), x: (object/get @p x), y: (object/get @p y), radius: (if (== (object/get @p id) @entity.selectedId) (* (object/get @p radius) 1.4) (object/get @p radius)), color: (object/get @p color), label: (object/get @p label) })),
                   edges: @entity.links,
-                  shapes: (if (== @entity.selectedId "") [] [ { type: circle, x: (object/get (array/nth @entity.parts @entity.selectedIndex) x), y: (object/get (array/nth @entity.parts @entity.selectedIndex) y), radius: (+ (object/get (array/nth @entity.parts @entity.selectedIndex) radius) 10), color: @config.highlightColor, lineWidth: 4 } ])
+                  shapes: (if (== @entity.selectedId "") [] [ { type: circle, x: (object/get (array/nth @entity.parts @entity.selectedIndex) x), y: (object/get (array/nth @entity.parts @entity.selectedIndex) y), radius: (+ (object/get (array/nth @entity.parts @entity.selectedIndex) radius) 10), color: @config.highlightColor, stroke: bold } ])
                 },
-                { type: card, variant: bordered, padding: md, children: @entity.captionChildren },
-                { type: stack, direction: horizontal, gap: xs, children: @entity.partButtons }
+                { type: card, variant: bordered, padding: md, children: @entity.captionChildren }
               ] }
           ]
         })
@@ -218,22 +246,26 @@ orbital LearnDiagramOrbital {
         @label "Title"
         @description "Title shown above the diagram."
         @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line."
+        @tier "presentation"
       parts : [LearnDiagramPart] = [
-        { id: "input", label: "Input", description: "Receives raw data or requests from the outside world and hands them to the processor.", x: 120, y: 200, radius: 34, color: "#2563eb" },
-        { id: "processor", label: "Processor", description: "The central component that transforms incoming data according to the system's rules.", x: 300, y: 200, radius: 46, color: "#7c3aed" },
-        { id: "storage", label: "Storage", description: "Persists data so it can be retrieved later, even after the system restarts.", x: 300, y: 320, radius: 34, color: "#0891b2" },
-        { id: "output", label: "Output", description: "Delivers the processor's results back out to users or other systems.", x: 480, y: 200, radius: 34, color: "#16a34a" },
-        { id: "controller", label: "Controller", description: "Coordinates timing and configuration for the processor without touching the data itself.", x: 300, y: 80, radius: 26, color: "#dc2626" }
+        { id: "input", label: "Input", description: "Receives raw data or requests from the outside world and hands them to the processor.", x: 120, y: 200, radius: 34, color: "series-1" },
+        { id: "processor", label: "Processor", description: "The central component that transforms incoming data according to the system's rules.", x: 300, y: 200, radius: 46, color: "series-2" },
+        { id: "storage", label: "Storage", description: "Persists data so it can be retrieved later, even after the system restarts.", x: 300, y: 320, radius: 34, color: "series-3" },
+        { id: "output", label: "Output", description: "Delivers the processor's results back out to users or other systems.", x: 480, y: 200, radius: 34, color: "series-4" },
+        { id: "controller", label: "Controller", description: "Coordinates timing and configuration for the processor without touching the data itself.", x: 300, y: 80, radius: 26, color: "series-5" }
       ]
         @label "Parts"
         @description "Roster of labeled parts (id, label, description, x, y, radius, color) the diagram renders as circles; the learner selects one to see its description."
         @synonyms "part, node, component, label, annotation"
         @tier "domain"
       links : [LearnDiagramLink] = [
-        { from: "input", to: "processor", color: "#cbd5e1", label: "" },
-        { from: "processor", to: "storage", color: "#cbd5e1", label: "" },
-        { from: "processor", to: "output", color: "#cbd5e1", label: "" },
-        { from: "controller", to: "processor", color: "#cbd5e1", label: "" }
+        { from: "input", to: "processor", color: "guide", label: "" },
+        { from: "processor", to: "storage", color: "guide", label: "" },
+        { from: "processor", to: "output", color: "guide", label: "" },
+        { from: "controller", to: "processor", color: "guide", label: "" }
       ]
         @label "Links"
         @description "Connector lines drawn between parts, by id."
@@ -251,11 +283,11 @@ orbital LearnDiagramOrbital {
         @label "Height"
         @description "Canvas height in pixels."
         @tier "presentation"
-      backgroundColor : string = "#f8fafc"
+      backgroundColor : string = ""
         @label "Background Color"
-        @description "Canvas background color."
+        @description "Canvas ground. Empty uses the theme drawing ground."
         @tier "presentation"
-      highlightColor : string = "#f59e0b"
+      highlightColor : string = "highlight"
         @label "Highlight Color"
         @description "Ring color drawn around the selected part."
         @tier "presentation"

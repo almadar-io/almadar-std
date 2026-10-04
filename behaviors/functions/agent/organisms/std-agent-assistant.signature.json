@@ -16,8 +16,9 @@
         "name": "AssistantThread",
         "emittedEvents": [],
         "listenedEvents": [
-          "SEND",
-          "REPLIED"
+          "ASSISTANT_CHAT_OPENED",
+          "ASSISTANT_SEND_IN_CHAT",
+          "ASSISTANT_REPLY_IN_CHAT"
         ],
         "overridableConfigKeys": [],
         "capabilities": [],
@@ -32,8 +33,9 @@
           "AgentMessageSaved",
           "AgentMessagesLoadFailed",
           "INIT",
-          "REPLIED",
-          "SEND"
+          "OPEN_CHAT",
+          "REPLY_IN_CHAT",
+          "SEND_IN_CHAT"
         ],
         "effectEntityRefs": [
           "AgentMessage"
@@ -46,16 +48,78 @@
         }
       },
       {
-        "name": "AssistantConversation",
+        "name": "AssistantChatKeeper",
         "emittedEvents": [],
         "listenedEvents": [
-          "AgentMessagesLoaded",
-          "THREAD_FAILED",
-          "STEP",
-          "REPLIED",
-          "REPLY_FAILED"
+          "ASSISTANT_SEND",
+          "ASSISTANT_HISTORY_REQUESTED",
+          "ASSISTANT_NEW_CHAT",
+          "ASSISTANT_CHAT_SELECTED",
+          "ASSISTANT_CHATS_REQUESTED",
+          "ASSISTANT_REPLIED"
         ],
+        "overridableConfigKeys": [],
+        "capabilities": [],
+        "ref": "Session.traits.AgentChatKeeper",
+        "linkedEntity": "AgentChat",
+        "transitionEvents": [
+          "AgentChatsLoadFailed",
+          "ChatReadyForSend",
+          "ChatSelected",
+          "ChatsForHistory",
+          "ChatsForList",
+          "ChatsForReply",
+          "ChatsForSelect",
+          "ChatsForSend",
+          "INIT",
+          "LIST_CHATS",
+          "LOAD_HISTORY",
+          "NEW_CHAT",
+          "NewChatStarted",
+          "REPLIED",
+          "SELECT_CHAT",
+          "SEND"
+        ],
+        "effectEntityRefs": [
+          "AgentChat"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "pendingMessage",
+            "pendingReply"
+          ]
+        }
+      },
+      {
+        "name": "AssistantConversation",
+        "emittedEvents": [],
+        "listenedEvents": [],
         "overridableConfigKeys": [
+          {
+            "key": "backLabel",
+            "type": "string",
+            "default": "Back",
+            "label": "Back to the conversation",
+            "tier": "presentation"
+          },
+          {
+            "key": "chatsEmptyTitle",
+            "type": "string",
+            "default": "No conversations yet",
+            "label": "Empty conversation list",
+            "tier": "presentation"
+          },
+          {
+            "key": "chatsLabel",
+            "type": "string",
+            "default": "Conversations",
+            "label": "Past conversations button",
+            "description": "Shows the person's past conversations in place of the chat; picking one reopens it.",
+            "tier": "presentation"
+          },
           {
             "key": "emptyTitle",
             "type": "string",
@@ -87,10 +151,40 @@
             "tier": "presentation"
           },
           {
+            "key": "memoryEmptyTitle",
+            "type": "string",
+            "default": "Nothing remembered yet",
+            "label": "Empty memory list",
+            "tier": "presentation"
+          },
+          {
+            "key": "memoryLabel",
+            "type": "string",
+            "default": "What I remember",
+            "label": "Memory button",
+            "description": "Shows what the assistant remembers for this person in place of the chat.",
+            "tier": "presentation"
+          },
+          {
+            "key": "newChatLabel",
+            "type": "string",
+            "default": "New conversation",
+            "label": "New conversation button",
+            "description": "Starts a fresh conversation; earlier ones stay in the conversation list.",
+            "tier": "presentation"
+          },
+          {
             "key": "placeholder",
             "type": "string",
             "default": "Ask the assistant…",
             "label": "Message placeholder",
+            "tier": "presentation"
+          },
+          {
+            "key": "untitledLabel",
+            "type": "string",
+            "default": "New conversation",
+            "label": "Title of a conversation with no messages yet",
             "tier": "presentation"
           }
         ],
@@ -98,7 +192,14 @@
         "ref": "Session.traits.AgentConversation",
         "transitionEvents": [
           "ASK",
+          "BACK_TO_CHAT",
+          "CHATS_LISTED",
+          "CHAT_PICKED",
           "INIT",
+          "MEMORIES_LISTED",
+          "NEW_CHAT_CLICKED",
+          "OPEN_CHATS_CLICKED",
+          "OPEN_MEMORY_CLICKED",
           "REPLIED",
           "REPLY_FAILED",
           "STEP",
@@ -115,65 +216,299 @@
         }
       },
       {
-        "name": "AssistantDock",
+        "name": "AssistantLayout",
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
-            "key": "closeLabel",
+            "key": "accessDeniedDescription",
             "type": "string",
-            "default": "Close panel",
-            "label": "Close button label",
+            "default": "Ask an administrator if you need it.",
+            "label": "Access-denied message",
             "tier": "presentation"
+          },
+          {
+            "key": "accessDeniedTitle",
+            "type": "string",
+            "default": "You don't have access to this page",
+            "label": "Access-denied title",
+            "tier": "presentation"
+          },
+          {
+            "key": "allowedRoles",
+            "type": "[string]",
+            "default": [],
+            "label": "Who may open this page?",
+            "description": "Roles (matched against viewerRole) allowed to see this page's content. Empty = everyone; anyone else sees the access-denied state instead. Nav items and top-bar actions carry their own `roles` the same way.",
+            "synonyms": "access, permission, restrict, only for, roles allowed, who can see",
+            "tier": "policy",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "appName",
+            "type": "string",
+            "default": "@config.appName",
+            "label": "What should this app be called?",
+            "description": "Name shown in the top-left of the chrome header.",
+            "synonyms": "app title, product name, brand name, application name, site name",
+            "tier": "presentation"
+          },
+          {
+            "key": "contentClassName",
+            "type": "string",
+            "default": "mx-auto flex w-full max-w-3xl flex-col h-[calc(100vh-9rem)] min-h-0",
+            "label": "Content wrapper class",
+            "description": "CSS class applied to the content area wrapper.",
+            "tier": "internal"
           },
           {
             "key": "contentTrait",
             "type": "trait",
             "default": "@trait.AssistantConversation",
-            "label": "What does the panel hold?",
-            "description": "The trait the panel shows when it is open.",
-            "synonyms": "panel content, body, assistant, chat",
+            "label": "Content trait",
+            "description": "Trait rendered inside the app layout content area",
             "tier": "presentation"
           },
           {
-            "key": "icon",
-            "type": "icon",
-            "default": "message-circle",
-            "label": "Button icon",
-            "tier": "presentation"
-          },
-          {
-            "key": "label",
+            "key": "currentPath",
             "type": "string",
-            "default": "@config.buttonLabel",
-            "label": "Button label",
-            "description": "What the floating button does, read to screen readers and shown as its tooltip.",
-            "synonyms": "aria label, button name, tooltip",
-            "tier": "presentation"
+            "default": "",
+            "label": "Current path",
+            "description": "Nav-highlight ONLY: which nav item to mark active. This is NOT the page route — it does not change what page loads or where the orbital lives. To set the landing route or a page path, use the orbital's pagePath / page path, not this knob. When omitted, the layout reads the current route.",
+            "synonyms": "active nav item, highlighted nav link, which menu item is selected, nav highlight",
+            "tier": "internal"
           },
           {
-            "key": "panelSlot",
-            "type": "slot",
-            "default": "dock",
-            "label": "Where the panel opens",
-            "description": "`dock` pushes the page aside (a side sheet on small screens); `drawer` slides over it.",
-            "tier": "presentation"
-          },
-          {
-            "key": "title",
+            "key": "layoutMode",
             "type": "string",
-            "default": "@config.title",
-            "label": "Panel title",
-            "description": "Heading at the top of the open panel.",
+            "default": "sidebar",
+            "label": "Where should navigation be placed?",
+            "description": "sidebar = left rail; topnav = top bar; bottomnav = mobile tab bar; minimal = no nav.",
+            "synonyms": "nav position, navigation style, menu placement, layout style",
+            "tier": "presentation",
+            "enumValues": [
+              "sidebar",
+              "topnav",
+              "bottomnav",
+              "minimal"
+            ]
+          },
+          {
+            "key": "layoutPattern",
+            "type": "pattern",
+            "default": "dashboard-layout",
+            "label": "Layout pattern",
+            "description": "UI pattern used to render the application chrome",
+            "tier": "internal"
+          },
+          {
+            "key": "navItems",
+            "type": "[NavItem]",
+            "default": "@config.navItems",
+            "items": {
+              "properties": {
+                "badge": {
+                  "name": "badge",
+                  "required": false,
+                  "type": "string"
+                },
+                "children": {
+                  "name": "children",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "union",
+                    "values": [
+                      "NavItem"
+                    ]
+                  }
+                },
+                "href": {
+                  "name": "href",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "roles": {
+                  "name": "roles",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "type": "object"
+            },
+            "label": "Which sections appear in the sidebar?",
+            "description": "Top-level navigation links shown on the left rail.",
+            "synonyms": "nav links, menu items, sidebar sections, navigation entries, pages",
             "tier": "presentation"
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "event",
+            "default": "NOTIFY_CLICK",
+            "label": "Notification click event",
+            "description": "Event emitted when the user picks a notification",
+            "tier": "internal"
+          },
+          {
+            "key": "notifications",
+            "type": "[NotificationSpec]",
+            "default": [],
+            "label": "What notifications should appear?",
+            "description": "Items shown in the notifications dropdown.",
+            "synonyms": "alerts, messages, notices, notification items, bell items",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "searchEvent",
+            "type": "event",
+            "default": "SEARCH",
+            "label": "Search event",
+            "description": "Event emitted when the user runs a global search",
+            "tier": "internal"
+          },
+          {
+            "key": "sidebarTrait",
+            "type": "trait",
+            "label": "Sidebar trait",
+            "description": "Optional trait rendered in the sidebar between the nav links and the footer — the Notion/Confluence-style always-visible page tree; scrolls independently. Unset renders plain nav only.",
+            "synonyms": "sidebar tree, nav tree, page tree in sidebar, hierarchy rail",
+            "tier": "presentation"
+          },
+          {
+            "key": "theme",
+            "type": "string",
+            "default": "@currentTheme",
+            "label": "Theme",
+            "description": "Data-theme attribute applied to the layout root (e.g. almadar-website-dark).",
+            "tier": "presentation"
+          },
+          {
+            "key": "topBarActions",
+            "type": "[ItemAction]",
+            "default": [],
+            "label": "What shortcuts go in the top bar?",
+            "description": "Icon buttons shown on the right side of the top bar (e.g. cart, help, profile).",
+            "synonyms": "toolbar buttons, header actions, shortcut icons, quick actions",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "event": {
+                  "name": "event",
+                  "required": false,
+                  "type": "event"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "navigatesTo": {
+                  "name": "navigatesTo",
+                  "required": false,
+                  "type": "string"
+                },
+                "roles": {
+                  "name": "roles",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "viewerAvatar",
+            "type": "string",
+            "default": "",
+            "label": "Signed-in avatar",
+            "description": "Avatar image URL for the account menu.",
+            "tier": "presentation"
+          },
+          {
+            "key": "viewerEmail",
+            "type": "string",
+            "default": "@user.email",
+            "label": "Signed-in email",
+            "description": "Email shown under the name in the account menu — typically @user.email.",
+            "tier": "presentation"
+          },
+          {
+            "key": "viewerName",
+            "type": "string",
+            "default": "@user.name",
+            "label": "Who is signed in",
+            "description": "Display name of the signed-in viewer, shown in the app bar's account menu — typically @user.name. Blank renders no account menu, so people can see which account (and which persona) they are viewing the app as only when it is actually known.",
+            "synonyms": "signed in user, current user, account, profile, persona, who am i",
+            "tier": "presentation"
+          },
+          {
+            "key": "viewerRole",
+            "type": "string",
+            "default": "@config.viewerRole",
+            "label": "Viewer's role",
+            "description": "The signed-in viewer's role that allowedRoles and each nav item's / top-bar action's `roles` are checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only items with no `roles` show and a page with allowedRoles is denied.",
+            "tier": "policy"
           }
         ],
         "capabilities": [],
-        "ref": "Launcher.traits.PanelLauncher",
+        "ref": "Shell.traits.AppLayout",
         "transitionEvents": [
-          "CLOSE",
+          "AppLayoutStateLoadFailed",
+          "AppLayoutStateLoaded",
           "INIT",
-          "OPEN"
+          "NOTIFY_CLICK",
+          "SEARCH"
+        ],
+        "effectEntityRefs": [
+          "AppLayoutData"
         ],
         "definerKnobs": [],
         "entityRebindable": true,
@@ -214,7 +549,8 @@
         "emittedEvents": [],
         "listenedEvents": [
           "COMPACTED",
-          "REPLIED"
+          "ASSISTANT_REPLIED",
+          "ASSISTANT_MEMORIES_REQUESTED"
         ],
         "overridableConfigKeys": [
           {
@@ -232,10 +568,13 @@
         "transitionEvents": [
           "AgentMemoriesLoadFailed",
           "INIT",
+          "LIST",
           "MEMORY_STORED",
+          "MemoriesForList",
           "MemoriesForRecall",
           "MemoryEmbedFailed",
           "MemoryEmbedded",
+          "MemoryListFailed",
           "RECALL",
           "REMEMBER"
         ],
@@ -293,6 +632,14 @@
                   "name": "read",
                   "required": false,
                   "type": "string"
+                },
+                "scope": {
+                  "name": "scope",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "declared"
+                  ]
                 }
               },
               "type": "object"
@@ -317,8 +664,8 @@
         "name": "AssistantTrace",
         "emittedEvents": [],
         "listenedEvents": [
-          "REPLIED",
-          "REPLY_FAILED"
+          "ASSISTANT_REPLIED",
+          "ASSISTANT_REPLY_FAILED"
         ],
         "overridableConfigKeys": [],
         "capabilities": [],
@@ -352,23 +699,28 @@
     ],
     "emittedEvents": [],
     "listenedEvents": [
-      "AgentMessagesLoaded",
+      "ASSISTANT_CHATS_REQUESTED",
+      "ASSISTANT_CHAT_OPENED",
+      "ASSISTANT_CHAT_SELECTED",
+      "ASSISTANT_HISTORY_REQUESTED",
+      "ASSISTANT_MEMORIES_REQUESTED",
+      "ASSISTANT_NEW_CHAT",
+      "ASSISTANT_REPLIED",
+      "ASSISTANT_REPLY_FAILED",
+      "ASSISTANT_REPLY_IN_CHAT",
+      "ASSISTANT_SEND",
+      "ASSISTANT_SEND_IN_CHAT",
       "COMPACTED",
       "RECALLED",
-      "REPLIED",
-      "REPLY_FAILED",
-      "REQUEST_CONTEXT",
-      "SEND",
-      "STEP",
-      "THREAD_FAILED"
+      "REQUEST_CONTEXT"
     ],
     "config": [
       {
-        "key": "buttonLabel",
+        "key": "appName",
         "type": "string",
-        "default": "Open the assistant",
-        "label": "Button label",
-        "description": "What the floating button does, read to screen readers and shown as its tooltip.",
+        "default": "Assistant",
+        "label": "App name in the assistant page's header",
+        "description": "Pass the app's own name so the assistant page matches the rest of the app.",
         "tier": "presentation"
       },
       {
@@ -394,14 +746,10 @@
           {
             "href": "/assistant/runs",
             "label": "Run history"
-          },
-          {
-            "href": "/assistant/memory",
-            "label": "What I remember"
           }
         ],
         "label": "Links above the conversation",
-        "description": "The pages showing the assistant's run history and memory.",
+        "description": "Related pages, e.g. the assistant's run history.",
         "tier": "presentation",
         "items": {
           "properties": {
@@ -427,6 +775,58 @@
         "tier": "policy"
       },
       {
+        "key": "navItems",
+        "type": "[NavItem]",
+        "default": [],
+        "label": "Sidebar navigation on the assistant page",
+        "description": "Pass the app's own navItems so the assistant page keeps the app's sidebar.",
+        "tier": "presentation",
+        "items": {
+          "properties": {
+            "badge": {
+              "name": "badge",
+              "required": false,
+              "type": "string"
+            },
+            "children": {
+              "name": "children",
+              "required": false,
+              "type": "array",
+              "items": {
+                "type": "union",
+                "values": [
+                  "NavItem"
+                ]
+              }
+            },
+            "href": {
+              "name": "href",
+              "required": true,
+              "type": "string"
+            },
+            "icon": {
+              "name": "icon",
+              "required": false,
+              "type": "string"
+            },
+            "label": {
+              "name": "label",
+              "required": true,
+              "type": "string"
+            },
+            "roles": {
+              "name": "roles",
+              "required": false,
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "type": "object"
+        }
+      },
+      {
         "key": "recallLimit",
         "type": "number",
         "default": 3,
@@ -434,18 +834,15 @@
         "tier": "policy"
       },
       {
-        "key": "title",
-        "type": "string",
-        "default": "Assistant",
-        "label": "Panel title",
-        "tier": "presentation"
-      },
-      {
         "key": "tools",
         "type": "[AgentTool]",
-        "default": [],
+        "default": [
+          {
+            "scope": "declared"
+          }
+        ],
         "label": "What may the assistant do?",
-        "description": "The declared inputs it may fire (`{ event: Trait.EVENT }` / `{ event: Orbital.Trait.EVENT }`) and the entities it may read (`{ read: Entity }`), as the signed-in user.",
+        "description": "As the signed-in user: `{ scope: declared }` (the default) gives it every external input the program declares and a read over every persisted entity, so each building block's declared inputs become its abilities; or list them — `{ event: Orbital.Trait.EVENT }` for one input, `{ read: Entity }` for one entity.",
         "synonyms": "allowlist, abilities, actions, permissions",
         "tier": "domain",
         "items": {
@@ -459,10 +856,26 @@
               "name": "read",
               "required": false,
               "type": "string"
+            },
+            "scope": {
+              "name": "scope",
+              "required": false,
+              "type": "string",
+              "values": [
+                "declared"
+              ]
             }
           },
           "type": "object"
         }
+      },
+      {
+        "key": "viewerRole",
+        "type": "string",
+        "default": "",
+        "label": "Viewer role on the assistant page",
+        "description": "The role the assistant page's sidebar items and their `roles` are checked against. Bind `@user.role` in an app whose identity carries a role; left empty, only items with no `roles` show.",
+        "tier": "policy"
       }
     ],
     "exposure": "internal",
@@ -507,32 +920,6 @@
           "requires": [],
           "provides": []
         }
-      },
-      {
-        "name": "AgentMemoryList",
-        "emittedEvents": [],
-        "listenedEvents": [
-          "MEMORY_STORED"
-        ],
-        "overridableConfigKeys": [],
-        "capabilities": [],
-        "ref": "Memory.traits.AgentMemoryBrowse",
-        "linkedEntity": "AgentMemory",
-        "transitionEvents": [
-          "AgentMemoriesLoadFailed",
-          "AgentMemoriesLoaded",
-          "INIT",
-          "MEMORY_STORED"
-        ],
-        "effectEntityRefs": [
-          "AgentMemory"
-        ],
-        "definerKnobs": [],
-        "entityRebindable": true,
-        "entityContract": {
-          "requires": [],
-          "provides": []
-        }
       }
     ],
     "pages": [
@@ -540,16 +927,10 @@
         "name": "AssistantRunsPage",
         "defaultPath": "/assistant/runs",
         "primaryEntity": "AgentRun"
-      },
-      {
-        "name": "AssistantMemoryPage",
-        "defaultPath": "/assistant/memory",
-        "primaryEntity": "AgentRun"
       }
     ],
     "emittedEvents": [],
     "listenedEvents": [
-      "MEMORY_STORED",
       "RUN_RECORDED"
     ],
     "exposure": "internal",

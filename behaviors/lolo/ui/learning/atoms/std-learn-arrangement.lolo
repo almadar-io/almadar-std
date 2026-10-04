@@ -31,6 +31,11 @@ orbital LearnArrangementOrbital {
     fill : string
     lineWidth : number
     opacity : number
+    tone : string
+    fillTone : string
+    stroke : string
+    textSize : string
+    fillStyle : string
   }
   type LearnArrangementItem = {
     id : string!
@@ -75,8 +80,8 @@ orbital LearnArrangementOrbital {
                     (bx (+ @config.slotLeft (* @i @config.slotSpacing)))
                   )
                   [
-                    { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, color: @config.slotBorderColor, fill: @fillColor },
-                    { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), fontSize: @config.slotFontSize, align: "center", color: @config.slotTextColor }
+                    { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, tone: @config.slotBorderColor, fillTone: @fillColor, fillStyle: "tint" },
+                    { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), textSize: @config.slotFontSize, align: "center", tone: @config.slotTextColor }
                   ]
                 )))))
           )
@@ -87,22 +92,29 @@ orbital LearnArrangementOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: "Tap items below to build the sequence in order, then press Check." },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.slotShapes, interactive: @config.interactive, animate: @config.animate },
-                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/filter @config.items (fn it (not (array/includes @entity.placedIds (object/get @it id))))) (fn it { type: button, action: PLACE, actionPayload: { itemId: (object/get @it id) }, label: (if (!= (object/get @it hint "") "") (str/concat (object/get @it label) " — " (object/get @it hint "")) (object/get @it label)), variant: secondary, size: sm })) },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: UNDO, label: @config.undoLabel, variant: ghost, disabled: (if (> (array/len @entity.placedIds) 0) false true) },
-                    { type: button, action: CHECK, label: @config.checkLabel, variant: primary, disabled: (if (>= (array/len @entity.placedIds) @entity.totalItems) false true) },
-                    { type: button, action: RETRY, label: @config.retryLabel, variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.checked (if (== @entity.correctCount @entity.totalItems) "Correct" (str/concat @entity.correctCount " / " @entity.totalItems " correct")) (str/concat (array/len @entity.placedIds) " / " @entity.totalItems " placed")), variant: (if @entity.checked (if (== @entity.correctCount @entity.totalItems) "success" "error") "neutral") }
                   ] },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: badge, variant: (if @entity.checked (if (== @entity.correctCount @entity.totalItems) "success" "danger") "neutral"), label: (if @entity.checked @entity.verdict "Not checked yet") },
-                    { type: stat-display, label: "Score", value: @entity.correctCount, max: @entity.totalItems }
-                  ] }
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.slotShapes, interactive: @config.interactive, animate: @config.animate, keyMap: { Space: CHECK, Backspace: UNDO, KeyR: RETRY } },
+                { type: stack, direction: vertical, gap: sm, children: (array/map (array/filter @config.items (fn it (not (array/includes @entity.placedIds (object/get @it id))))) (fn it { type: button, action: PLACE, actionPayload: { itemId: (object/get @it id) }, label: (if (!= (object/get @it hint "") "") (str/concat (object/get @it label) " — " (object/get @it hint "")) (object/get @it label)), variant: secondary, size: lg, disabled: @entity.checked })) },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if (>= (array/len @entity.placedIds) @entity.totalItems) false true) },
+                    { type: button, action: UNDO, label: @config.undoLabel, icon: "chevron-left", variant: secondary, disabled: (if (> (array/len @entity.placedIds) 0) false true) },
+                    { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Placed " (array/len @entity.placedIds) " of " @entity.totalItems) }
+                  ] },
+                { type: typography, variant: body, content: (if @entity.checked @entity.verdict "Tap items to build the sequence in order, then press Check.") }
               ] }
           ]
         })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (render-ui main null)
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (set @entity.active true)
@@ -124,8 +136,8 @@ orbital LearnArrangementOrbital {
                     (bx (+ @config.slotLeft (* @i @config.slotSpacing)))
                   )
                   [
-                    { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, color: @config.slotBorderColor, fill: @fillColor },
-                    { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), fontSize: @config.slotFontSize, align: "center", color: @config.slotTextColor }
+                    { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, tone: @config.slotBorderColor, fillTone: @fillColor, fillStyle: "tint" },
+                    { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), textSize: @config.slotFontSize, align: "center", tone: @config.slotTextColor }
                   ]
                 )))))
           )
@@ -136,19 +148,22 @@ orbital LearnArrangementOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: "Tap items below to build the sequence in order, then press Check." },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.slotShapes, interactive: @config.interactive, animate: @config.animate },
-                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/filter @config.items (fn it (not (array/includes @entity.placedIds (object/get @it id))))) (fn it { type: button, action: PLACE, actionPayload: { itemId: (object/get @it id) }, label: (if (!= (object/get @it hint "") "") (str/concat (object/get @it label) " — " (object/get @it hint "")) (object/get @it label)), variant: secondary, size: sm })) },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: UNDO, label: @config.undoLabel, variant: ghost, disabled: (if (> (array/len @entity.placedIds) 0) false true) },
-                    { type: button, action: CHECK, label: @config.checkLabel, variant: primary, disabled: (if (>= (array/len @entity.placedIds) @entity.totalItems) false true) },
-                    { type: button, action: RETRY, label: @config.retryLabel, variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.checked (if (== @entity.correctCount @entity.totalItems) "Correct" (str/concat @entity.correctCount " / " @entity.totalItems " correct")) (str/concat (array/len @entity.placedIds) " / " @entity.totalItems " placed")), variant: (if @entity.checked (if (== @entity.correctCount @entity.totalItems) "success" "error") "neutral") }
                   ] },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: badge, variant: (if @entity.checked (if (== @entity.correctCount @entity.totalItems) "success" "danger") "neutral"), label: (if @entity.checked @entity.verdict "Not checked yet") },
-                    { type: stat-display, label: "Score", value: @entity.correctCount, max: @entity.totalItems }
-                  ] }
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.slotShapes, interactive: @config.interactive, animate: @config.animate, keyMap: { Space: CHECK, Backspace: UNDO, KeyR: RETRY } },
+                { type: stack, direction: vertical, gap: sm, children: (array/map (array/filter @config.items (fn it (not (array/includes @entity.placedIds (object/get @it id))))) (fn it { type: button, action: PLACE, actionPayload: { itemId: (object/get @it id) }, label: (if (!= (object/get @it hint "") "") (str/concat (object/get @it label) " — " (object/get @it hint "")) (object/get @it label)), variant: secondary, size: lg, disabled: @entity.checked })) },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if (>= (array/len @entity.placedIds) @entity.totalItems) false true) },
+                    { type: button, action: UNDO, label: @config.undoLabel, icon: "chevron-left", variant: secondary, disabled: (if (> (array/len @entity.placedIds) 0) false true) },
+                    { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Placed " (array/len @entity.placedIds) " of " @entity.totalItems) }
+                  ] },
+                { type: typography, variant: body, content: (if @entity.checked @entity.verdict "Tap items to build the sequence in order, then press Check.") }
               ] }
           ]
         })
@@ -170,8 +185,8 @@ orbital LearnArrangementOrbital {
                     (bx (+ @config.slotLeft (* @i @config.slotSpacing)))
                   )
                   [
-                    { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, color: @config.slotBorderColor, fill: @fillColor },
-                    { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), fontSize: @config.slotFontSize, align: "center", color: @config.slotTextColor }
+                    { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, tone: @config.slotBorderColor, fillTone: @fillColor, fillStyle: "tint" },
+                    { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), textSize: @config.slotFontSize, align: "center", tone: @config.slotTextColor }
                   ]
                 )))))
           )
@@ -182,19 +197,22 @@ orbital LearnArrangementOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: "Tap items below to build the sequence in order, then press Check." },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.slotShapes, interactive: @config.interactive, animate: @config.animate },
-                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/filter @config.items (fn it (not (array/includes @entity.placedIds (object/get @it id))))) (fn it { type: button, action: PLACE, actionPayload: { itemId: (object/get @it id) }, label: (if (!= (object/get @it hint "") "") (str/concat (object/get @it label) " — " (object/get @it hint "")) (object/get @it label)), variant: secondary, size: sm })) },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: UNDO, label: @config.undoLabel, variant: ghost, disabled: (if (> (array/len @entity.placedIds) 0) false true) },
-                    { type: button, action: CHECK, label: @config.checkLabel, variant: primary, disabled: (if (>= (array/len @entity.placedIds) @entity.totalItems) false true) },
-                    { type: button, action: RETRY, label: @config.retryLabel, variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.checked (if (== @entity.correctCount @entity.totalItems) "Correct" (str/concat @entity.correctCount " / " @entity.totalItems " correct")) (str/concat (array/len @entity.placedIds) " / " @entity.totalItems " placed")), variant: (if @entity.checked (if (== @entity.correctCount @entity.totalItems) "success" "error") "neutral") }
                   ] },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: badge, variant: (if @entity.checked (if (== @entity.correctCount @entity.totalItems) "success" "danger") "neutral"), label: (if @entity.checked @entity.verdict "Not checked yet") },
-                    { type: stat-display, label: "Score", value: @entity.correctCount, max: @entity.totalItems }
-                  ] }
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.slotShapes, interactive: @config.interactive, animate: @config.animate, keyMap: { Space: CHECK, Backspace: UNDO, KeyR: RETRY } },
+                { type: stack, direction: vertical, gap: sm, children: (array/map (array/filter @config.items (fn it (not (array/includes @entity.placedIds (object/get @it id))))) (fn it { type: button, action: PLACE, actionPayload: { itemId: (object/get @it id) }, label: (if (!= (object/get @it hint "") "") (str/concat (object/get @it label) " — " (object/get @it hint "")) (object/get @it label)), variant: secondary, size: lg, disabled: @entity.checked })) },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if (>= (array/len @entity.placedIds) @entity.totalItems) false true) },
+                    { type: button, action: UNDO, label: @config.undoLabel, icon: "chevron-left", variant: secondary, disabled: (if (> (array/len @entity.placedIds) 0) false true) },
+                    { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Placed " (array/len @entity.placedIds) " of " @entity.totalItems) }
+                  ] },
+                { type: typography, variant: body, content: (if @entity.checked @entity.verdict "Tap items to build the sequence in order, then press Check.") }
               ] }
           ]
         })
@@ -216,8 +234,8 @@ orbital LearnArrangementOrbital {
                     (bx (+ @config.slotLeft (* @i @config.slotSpacing)))
                   )
                   [
-                    { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, color: @config.slotBorderColor, fill: @fillColor },
-                    { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), fontSize: @config.slotFontSize, align: "center", color: @config.slotTextColor }
+                    { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, tone: @config.slotBorderColor, fillTone: @fillColor, fillStyle: "tint" },
+                    { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), textSize: @config.slotFontSize, align: "center", tone: @config.slotTextColor }
                   ]
                 )))))
           )
@@ -228,19 +246,22 @@ orbital LearnArrangementOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: "Tap items below to build the sequence in order, then press Check." },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.slotShapes, interactive: @config.interactive, animate: @config.animate },
-                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/filter @config.items (fn it (not (array/includes @entity.placedIds (object/get @it id))))) (fn it { type: button, action: PLACE, actionPayload: { itemId: (object/get @it id) }, label: (if (!= (object/get @it hint "") "") (str/concat (object/get @it label) " — " (object/get @it hint "")) (object/get @it label)), variant: secondary, size: sm })) },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: UNDO, label: @config.undoLabel, variant: ghost, disabled: (if (> (array/len @entity.placedIds) 0) false true) },
-                    { type: button, action: CHECK, label: @config.checkLabel, variant: primary, disabled: (if (>= (array/len @entity.placedIds) @entity.totalItems) false true) },
-                    { type: button, action: RETRY, label: @config.retryLabel, variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.checked (if (== @entity.correctCount @entity.totalItems) "Correct" (str/concat @entity.correctCount " / " @entity.totalItems " correct")) (str/concat (array/len @entity.placedIds) " / " @entity.totalItems " placed")), variant: (if @entity.checked (if (== @entity.correctCount @entity.totalItems) "success" "error") "neutral") }
                   ] },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: badge, variant: (if @entity.checked (if (== @entity.correctCount @entity.totalItems) "success" "danger") "neutral"), label: (if @entity.checked @entity.verdict "Not checked yet") },
-                    { type: stat-display, label: "Score", value: @entity.correctCount, max: @entity.totalItems }
-                  ] }
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.slotShapes, interactive: @config.interactive, animate: @config.animate, keyMap: { Space: CHECK, Backspace: UNDO, KeyR: RETRY } },
+                { type: stack, direction: vertical, gap: sm, children: (array/map (array/filter @config.items (fn it (not (array/includes @entity.placedIds (object/get @it id))))) (fn it { type: button, action: PLACE, actionPayload: { itemId: (object/get @it id) }, label: (if (!= (object/get @it hint "") "") (str/concat (object/get @it label) " — " (object/get @it hint "")) (object/get @it label)), variant: secondary, size: lg, disabled: @entity.checked })) },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if (>= (array/len @entity.placedIds) @entity.totalItems) false true) },
+                    { type: button, action: UNDO, label: @config.undoLabel, icon: "chevron-left", variant: secondary, disabled: (if (> (array/len @entity.placedIds) 0) false true) },
+                    { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Placed " (array/len @entity.placedIds) " of " @entity.totalItems) }
+                  ] },
+                { type: typography, variant: body, content: (if @entity.checked @entity.verdict "Tap items to build the sequence in order, then press Check.") }
               ] }
           ]
         })
@@ -272,8 +293,8 @@ orbital LearnArrangementOrbital {
                     (bx (+ @config.slotLeft (* @i @config.slotSpacing)))
                   )
                   [
-                    { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, color: @config.slotBorderColor, fill: @fillColor },
-                    { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), fontSize: @config.slotFontSize, align: "center", color: @config.slotTextColor }
+                    { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, tone: @config.slotBorderColor, fillTone: @fillColor, fillStyle: "tint" },
+                    { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), textSize: @config.slotFontSize, align: "center", tone: @config.slotTextColor }
                   ]
                 )))))
           )
@@ -284,19 +305,22 @@ orbital LearnArrangementOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: "Tap items below to build the sequence in order, then press Check." },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.slotShapes, interactive: @config.interactive, animate: @config.animate },
-                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/filter @config.items (fn it (not (array/includes @entity.placedIds (object/get @it id))))) (fn it { type: button, action: PLACE, actionPayload: { itemId: (object/get @it id) }, label: (if (!= (object/get @it hint "") "") (str/concat (object/get @it label) " — " (object/get @it hint "")) (object/get @it label)), variant: secondary, size: sm })) },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: UNDO, label: @config.undoLabel, variant: ghost, disabled: (if (> (array/len @entity.placedIds) 0) false true) },
-                    { type: button, action: CHECK, label: @config.checkLabel, variant: primary, disabled: (if (>= (array/len @entity.placedIds) @entity.totalItems) false true) },
-                    { type: button, action: RETRY, label: @config.retryLabel, variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.checked (if (== @entity.correctCount @entity.totalItems) "Correct" (str/concat @entity.correctCount " / " @entity.totalItems " correct")) (str/concat (array/len @entity.placedIds) " / " @entity.totalItems " placed")), variant: (if @entity.checked (if (== @entity.correctCount @entity.totalItems) "success" "error") "neutral") }
                   ] },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: badge, variant: (if @entity.checked (if (== @entity.correctCount @entity.totalItems) "success" "danger") "neutral"), label: (if @entity.checked @entity.verdict "Not checked yet") },
-                    { type: stat-display, label: "Score", value: @entity.correctCount, max: @entity.totalItems }
-                  ] }
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.slotShapes, interactive: @config.interactive, animate: @config.animate, keyMap: { Space: CHECK, Backspace: UNDO, KeyR: RETRY } },
+                { type: stack, direction: vertical, gap: sm, children: (array/map (array/filter @config.items (fn it (not (array/includes @entity.placedIds (object/get @it id))))) (fn it { type: button, action: PLACE, actionPayload: { itemId: (object/get @it id) }, label: (if (!= (object/get @it hint "") "") (str/concat (object/get @it label) " — " (object/get @it hint "")) (object/get @it label)), variant: secondary, size: lg, disabled: @entity.checked })) },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if (>= (array/len @entity.placedIds) @entity.totalItems) false true) },
+                    { type: button, action: UNDO, label: @config.undoLabel, icon: "chevron-left", variant: secondary, disabled: (if (> (array/len @entity.placedIds) 0) false true) },
+                    { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Placed " (array/len @entity.placedIds) " of " @entity.totalItems) }
+                  ] },
+                { type: typography, variant: body, content: (if @entity.checked @entity.verdict "Tap items to build the sequence in order, then press Check.") }
               ] }
           ]
         })
@@ -320,8 +344,8 @@ orbital LearnArrangementOrbital {
                     (bx (+ @config.slotLeft (* @i @config.slotSpacing)))
                   )
                   [
-                    { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, color: @config.slotBorderColor, fill: @fillColor },
-                    { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), fontSize: @config.slotFontSize, align: "center", color: @config.slotTextColor }
+                    { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, tone: @config.slotBorderColor, fillTone: @fillColor, fillStyle: "tint" },
+                    { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), textSize: @config.slotFontSize, align: "center", tone: @config.slotTextColor }
                   ]
                 )))))
           )
@@ -332,19 +356,22 @@ orbital LearnArrangementOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: "Tap items below to build the sequence in order, then press Check." },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.slotShapes, interactive: @config.interactive, animate: @config.animate },
-                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/filter @config.items (fn it (not (array/includes @entity.placedIds (object/get @it id))))) (fn it { type: button, action: PLACE, actionPayload: { itemId: (object/get @it id) }, label: (if (!= (object/get @it hint "") "") (str/concat (object/get @it label) " — " (object/get @it hint "")) (object/get @it label)), variant: secondary, size: sm })) },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: UNDO, label: @config.undoLabel, variant: ghost, disabled: (if (> (array/len @entity.placedIds) 0) false true) },
-                    { type: button, action: CHECK, label: @config.checkLabel, variant: primary, disabled: (if (>= (array/len @entity.placedIds) @entity.totalItems) false true) },
-                    { type: button, action: RETRY, label: @config.retryLabel, variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.checked (if (== @entity.correctCount @entity.totalItems) "Correct" (str/concat @entity.correctCount " / " @entity.totalItems " correct")) (str/concat (array/len @entity.placedIds) " / " @entity.totalItems " placed")), variant: (if @entity.checked (if (== @entity.correctCount @entity.totalItems) "success" "error") "neutral") }
                   ] },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: badge, variant: (if @entity.checked (if (== @entity.correctCount @entity.totalItems) "success" "danger") "neutral"), label: (if @entity.checked @entity.verdict "Not checked yet") },
-                    { type: stat-display, label: "Score", value: @entity.correctCount, max: @entity.totalItems }
-                  ] }
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.slotShapes, interactive: @config.interactive, animate: @config.animate, keyMap: { Space: CHECK, Backspace: UNDO, KeyR: RETRY } },
+                { type: stack, direction: vertical, gap: sm, children: (array/map (array/filter @config.items (fn it (not (array/includes @entity.placedIds (object/get @it id))))) (fn it { type: button, action: PLACE, actionPayload: { itemId: (object/get @it id) }, label: (if (!= (object/get @it hint "") "") (str/concat (object/get @it label) " — " (object/get @it hint "")) (object/get @it label)), variant: secondary, size: lg, disabled: @entity.checked })) },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if (>= (array/len @entity.placedIds) @entity.totalItems) false true) },
+                    { type: button, action: UNDO, label: @config.undoLabel, icon: "chevron-left", variant: secondary, disabled: (if (> (array/len @entity.placedIds) 0) false true) },
+                    { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Placed " (array/len @entity.placedIds) " of " @entity.totalItems) }
+                  ] },
+                { type: typography, variant: body, content: (if @entity.checked @entity.verdict "Tap items to build the sequence in order, then press Check.") }
               ] }
           ]
         })
@@ -407,6 +434,10 @@ orbital LearnArrangementOrbital {
         @label "Title"
         @description "Title shown above the instrument."
         @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what is being ordered (keep it under ~65 characters). Empty shows no line."
+        @tier "presentation"
       width : number = 640
         @label "Width"
         @description "Canvas width in pixels."
@@ -434,19 +465,19 @@ orbital LearnArrangementOrbital {
         @description "Roster of items to order; each carries its label, its zero-based correct position in the finished sequence, and an optional hint shown beneath its button while unplaced."
         @synonyms "item, step, stage, sequence, order, ranking, procedure"
         @tier "domain"
-      correctColor : string = "#16a34a"
+      correctColor : string = "success"
         @label "Correct Slot Color"
         @description "Fill color for a filled slot whose item matches its correct position, once graded."
         @tier "presentation"
-      incorrectColor : string = "#dc2626"
+      incorrectColor : string = "error"
         @label "Incorrect Slot Color"
         @description "Fill color for a filled slot whose item does not match its correct position, once graded."
         @tier "presentation"
-      pendingColor : string = "#94a3b8"
+      pendingColor : string = "series-2"
         @label "Pending Slot Color"
         @description "Fill color for a filled slot before grading."
         @tier "presentation"
-      emptySlotColor : string = "#e2e8f0"
+      emptySlotColor : string = "fill"
         @label "Empty Slot Color"
         @description "Fill color for a slot with no item placed yet."
         @tier "presentation"
@@ -465,13 +496,14 @@ orbital LearnArrangementOrbital {
       slotY : number = 70
         @label "Slot Row Y (px)"
         @tier "presentation"
-      slotFontSize : number = 13
-        @label "Slot Font Size"
+      slotFontSize : string = "sm"
+        @label "Slot Text Size"
+        @description "Slot label size role: xs, sm, base or lg."
         @tier "presentation"
-      slotBorderColor : string = "#334155"
+      slotBorderColor : string = "ink"
         @label "Slot Border Color"
         @tier "presentation"
-      slotTextColor : string = "#0f172a"
+      slotTextColor : string = "label"
         @label "Slot Text Color"
         @tier "presentation"
       undoLabel : string = "Undo"

@@ -73,6 +73,24 @@
         "parent": "trt_01M055GQ61JS78ZEMDZ0VQXK05",
         "renames": []
       },
+      "evt_01M41KYRWHNQAV91TFYYX082AQ": {
+        "bakedName": "SPEED_SET",
+        "curName": "SPEED_SET",
+        "id": "evt_01M41KYRWHNQAV91TFYYX082AQ",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M055GQ61JS78ZEMDZ0VQXK05",
+        "renames": []
+      },
+      "evt_01M41KYRWHVGNZB4MRHMTMJY0C": {
+        "bakedName": "TOGGLE_RUN",
+        "curName": "TOGGLE_RUN",
+        "id": "evt_01M41KYRWHVGNZB4MRHMTMJY0C",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M055GQ61JS78ZEMDZ0VQXK05",
+        "renames": []
+      },
       "orb_01M055GQ614BBGQKXAACQ604DE": {
         "bakedName": "LearnTracePlayerOrbital",
         "curName": "LearnTracePlayerOrbital",
@@ -128,6 +146,16 @@
             "default": false,
             "name": "running",
             "type": "boolean"
+          },
+          {
+            "default": 1.0,
+            "name": "speed",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "elapsedMs",
+            "type": "number"
           },
           {
             "items": {
@@ -190,13 +218,14 @@
           "category": "interaction",
           "config": {
             "backgroundColor": {
-              "default": "#f8fafc",
+              "default": "",
+              "description": "Canvas ground override; empty uses the theme's drawing ground.",
               "label": "Background Color",
               "tier": "presentation",
               "type": "string"
             },
             "baseColor": {
-              "default": "#3b82f6",
+              "default": "series-1",
               "description": "Color of bars not highlighted in the current frame.",
               "label": "Base Bar Color",
               "tier": "presentation",
@@ -343,7 +372,7 @@
               "type": "number"
             },
             "highlightColor": {
-              "default": "#f59e0b",
+              "default": "highlight",
               "description": "Color of bars whose index appears in the current frame's highlights.",
               "label": "Highlight Bar Color",
               "tier": "presentation",
@@ -363,6 +392,13 @@
               "tier": "presentation",
               "type": "string"
             },
+            "summary": {
+              "default": "",
+              "description": "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line.",
+              "label": "Concept",
+              "tier": "presentation",
+              "type": "string"
+            },
             "tickMs": {
               "default": 500.0,
               "description": "Milliseconds per frame shown in the readout; the autoplay cadence.",
@@ -372,7 +408,7 @@
             },
             "title": {
               "default": "Trace Player",
-              "description": "Title shown above the instrument.",
+              "description": "The instrument's name, the header's one hero.",
               "label": "Title",
               "tier": "presentation",
               "type": "string"
@@ -424,6 +460,11 @@
             },
             {
               "kind": "set",
+              "resource": "@entity.elapsedMs",
+              "site": "tick"
+            },
+            {
+              "kind": "set",
               "resource": "@entity.frameCaption"
             },
             {
@@ -457,6 +498,10 @@
               "kind": "set",
               "resource": "@entity.running",
               "site": "tick"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.speed"
             },
             {
               "kind": "set",
@@ -514,10 +559,12 @@
             "provides": [
               "active",
               "bars",
+              "elapsedMs",
               "frameCaption",
               "frameIndex",
               "frameLabel",
               "running",
+              "speed",
               "statusNote",
               "title"
             ],
@@ -551,6 +598,26 @@
                   }
                 ],
                 "tier": "domain"
+              },
+              {
+                "description": "Learner pressed the Play/Pause toggle — starts or freezes the frame cursor.",
+                "id": "evt_01M41KYRWHVGNZB4MRHMTMJY0C",
+                "key": "TOGGLE_RUN",
+                "name": "Toggle Run",
+                "tier": "domain"
+              },
+              {
+                "description": "The learner picked a playback speed; frames advance that many times faster.",
+                "id": "evt_01M41KYRWHNQAV91TFYYX082AQ",
+                "key": "SPEED_SET",
+                "name": "Speed Set",
+                "payloadSchema": [
+                  {
+                    "name": "speed",
+                    "type": "number"
+                  }
+                ],
+                "tier": "presentation"
               },
               {
                 "description": "Learner pressed Play — the frame cursor begins advancing on the tick until the last frame is reached or Pause is pressed.",
@@ -716,33 +783,247 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": "@entity.statusNote",
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.statusNote",
+                                      "Finished"
+                                    ],
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "primary",
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
-                              "label": [
-                                "str/concat",
-                                "Frame ",
+                              "align": "center",
+                              "children": [
                                 [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "+",
-                                    "@entity.frameIndex",
-                                    1.0
-                                  ]
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "disabled": [
+                                      "==",
+                                      "@entity.statusNote",
+                                      "Finished"
+                                    ],
+                                    "icon": "play",
+                                    "label": "Play",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  }
                                 ],
-                                " of ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "array/len",
-                                    "@config.frames"
-                                  ]
-                                ]
+                                {
+                                  "action": "RESTART",
+                                  "icon": "rotate-ccw",
+                                  "label": "Restart",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "align": "center",
+                                  "aria-label": "Speed",
+                                  "children": [
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 0.5
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          0.5
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "0.5×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          0.5
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 1.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          1.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "1×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          1.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 2.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          2.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "2×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          2.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 4.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          4.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "4×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          4.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "role": "group",
+                                  "type": "stack"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Frame ",
+                                    [
+                                      "+",
+                                      "@entity.frameIndex",
+                                      1.0
+                                    ],
+                                    " of ",
+                                    [
+                                      "array/len",
+                                      "@config.frames"
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
                               ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
                               "max": [
                                 "array/len",
                                 "@config.frames"
@@ -759,45 +1040,12 @@
                               "backgroundColor": "@config.backgroundColor",
                               "bars": "@entity.bars",
                               "height": "@config.height",
+                              "keyMap": {
+                                "KeyR": "RESTART",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "type": "algorithm-canvas",
                               "width": "@config.width"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "action": "PLAY",
-                                  "disabled": [
-                                    "if",
-                                    "@entity.running",
-                                    true,
-                                    false
-                                  ],
-                                  "label": "Play",
-                                  "type": "button",
-                                  "variant": "primary"
-                                },
-                                {
-                                  "action": "PAUSE",
-                                  "disabled": [
-                                    "if",
-                                    "@entity.running",
-                                    false,
-                                    true
-                                  ],
-                                  "label": "Pause",
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
-                                {
-                                  "action": "RESTART",
-                                  "label": "Restart",
-                                  "type": "button",
-                                  "variant": "ghost"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack"
                             },
                             {
                               "children": [
@@ -811,27 +1059,6 @@
                               "title": "@entity.frameLabel",
                               "type": "card",
                               "variant": "bordered"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "@entity.statusNote",
-                                " · ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  "@config.tickMs"
-                                ],
-                                " ms/frame",
-                                [
-                                  "if",
-                                  "@config.loop",
-                                  " · loops",
-                                  ""
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
                             }
                           ],
                           "direction": "vertical",
@@ -851,6 +1078,48 @@
                   "==",
                   "@config.matchMode",
                   ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01M055GQ62P0G7TCNBQ7WTTSZD",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@config.matchMode",
+                      ""
+                    ]
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -957,33 +1226,247 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": "@entity.statusNote",
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.statusNote",
+                                      "Finished"
+                                    ],
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "primary",
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
-                              "label": [
-                                "str/concat",
-                                "Frame ",
+                              "align": "center",
+                              "children": [
                                 [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "+",
-                                    "@entity.frameIndex",
-                                    1.0
-                                  ]
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "disabled": [
+                                      "==",
+                                      "@entity.statusNote",
+                                      "Finished"
+                                    ],
+                                    "icon": "play",
+                                    "label": "Play",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  }
                                 ],
-                                " of ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "array/len",
-                                    "@config.frames"
-                                  ]
-                                ]
+                                {
+                                  "action": "RESTART",
+                                  "icon": "rotate-ccw",
+                                  "label": "Restart",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "align": "center",
+                                  "aria-label": "Speed",
+                                  "children": [
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 0.5
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          0.5
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "0.5×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          0.5
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 1.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          1.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "1×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          1.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 2.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          2.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "2×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          2.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 4.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          4.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "4×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          4.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "role": "group",
+                                  "type": "stack"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Frame ",
+                                    [
+                                      "+",
+                                      "@entity.frameIndex",
+                                      1.0
+                                    ],
+                                    " of ",
+                                    [
+                                      "array/len",
+                                      "@config.frames"
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
                               ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
                               "max": [
                                 "array/len",
                                 "@config.frames"
@@ -1000,45 +1483,12 @@
                               "backgroundColor": "@config.backgroundColor",
                               "bars": "@entity.bars",
                               "height": "@config.height",
+                              "keyMap": {
+                                "KeyR": "RESTART",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "type": "algorithm-canvas",
                               "width": "@config.width"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "action": "PLAY",
-                                  "disabled": [
-                                    "if",
-                                    "@entity.running",
-                                    true,
-                                    false
-                                  ],
-                                  "label": "Play",
-                                  "type": "button",
-                                  "variant": "primary"
-                                },
-                                {
-                                  "action": "PAUSE",
-                                  "disabled": [
-                                    "if",
-                                    "@entity.running",
-                                    false,
-                                    true
-                                  ],
-                                  "label": "Pause",
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
-                                {
-                                  "action": "RESTART",
-                                  "label": "Restart",
-                                  "type": "button",
-                                  "variant": "ghost"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack"
                             },
                             {
                               "children": [
@@ -1052,27 +1502,6 @@
                               "title": "@entity.frameLabel",
                               "type": "card",
                               "variant": "bordered"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "@entity.statusNote",
-                                " · ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  "@config.tickMs"
-                                ],
-                                " ms/frame",
-                                [
-                                  "if",
-                                  "@config.loop",
-                                  " · loops",
-                                  ""
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
                             }
                           ],
                           "direction": "vertical",
@@ -1100,12 +1529,20 @@
                   [
                     "set",
                     "@entity.running",
-                    true
+                    [
+                      "not",
+                      "@entity.running"
+                    ]
                   ],
                   [
                     "set",
                     "@entity.statusNote",
-                    "Playing"
+                    [
+                      "if",
+                      "@entity.running",
+                      "Playing",
+                      "Paused"
+                    ]
                   ],
                   [
                     "render-ui",
@@ -1115,33 +1552,247 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": "@entity.statusNote",
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.statusNote",
+                                      "Finished"
+                                    ],
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "primary",
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
-                              "label": [
-                                "str/concat",
-                                "Frame ",
+                              "align": "center",
+                              "children": [
                                 [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "+",
-                                    "@entity.frameIndex",
-                                    1.0
-                                  ]
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "disabled": [
+                                      "==",
+                                      "@entity.statusNote",
+                                      "Finished"
+                                    ],
+                                    "icon": "play",
+                                    "label": "Play",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  }
                                 ],
-                                " of ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "array/len",
-                                    "@config.frames"
-                                  ]
-                                ]
+                                {
+                                  "action": "RESTART",
+                                  "icon": "rotate-ccw",
+                                  "label": "Restart",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "align": "center",
+                                  "aria-label": "Speed",
+                                  "children": [
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 0.5
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          0.5
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "0.5×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          0.5
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 1.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          1.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "1×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          1.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 2.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          2.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "2×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          2.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 4.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          4.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "4×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          4.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "role": "group",
+                                  "type": "stack"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Frame ",
+                                    [
+                                      "+",
+                                      "@entity.frameIndex",
+                                      1.0
+                                    ],
+                                    " of ",
+                                    [
+                                      "array/len",
+                                      "@config.frames"
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
                               ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
                               "max": [
                                 "array/len",
                                 "@config.frames"
@@ -1158,45 +1809,12 @@
                               "backgroundColor": "@config.backgroundColor",
                               "bars": "@entity.bars",
                               "height": "@config.height",
+                              "keyMap": {
+                                "KeyR": "RESTART",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "type": "algorithm-canvas",
                               "width": "@config.width"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "action": "PLAY",
-                                  "disabled": [
-                                    "if",
-                                    "@entity.running",
-                                    true,
-                                    false
-                                  ],
-                                  "label": "Play",
-                                  "type": "button",
-                                  "variant": "primary"
-                                },
-                                {
-                                  "action": "PAUSE",
-                                  "disabled": [
-                                    "if",
-                                    "@entity.running",
-                                    false,
-                                    true
-                                  ],
-                                  "label": "Pause",
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
-                                {
-                                  "action": "RESTART",
-                                  "label": "Restart",
-                                  "type": "button",
-                                  "variant": "ghost"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack"
                             },
                             {
                               "children": [
@@ -1210,27 +1828,637 @@
                               "title": "@entity.frameLabel",
                               "type": "card",
                               "variant": "bordered"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "TOGGLE_RUN",
+                "eventId": "evt_01M41KYRWHVGNZB4MRHMTMJY0C",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.speed",
+                    "@payload.speed"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": "@entity.statusNote",
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.statusNote",
+                                      "Finished"
+                                    ],
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "primary",
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
-                              "content": [
-                                "str/concat",
-                                "@entity.statusNote",
-                                " · ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  "@config.tickMs"
-                                ],
-                                " ms/frame",
+                              "align": "center",
+                              "children": [
                                 [
                                   "if",
-                                  "@config.loop",
-                                  " · loops",
-                                  ""
-                                ]
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "disabled": [
+                                      "==",
+                                      "@entity.statusNote",
+                                      "Finished"
+                                    ],
+                                    "icon": "play",
+                                    "label": "Play",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  }
+                                ],
+                                {
+                                  "action": "RESTART",
+                                  "icon": "rotate-ccw",
+                                  "label": "Restart",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "align": "center",
+                                  "aria-label": "Speed",
+                                  "children": [
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 0.5
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          0.5
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "0.5×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          0.5
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 1.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          1.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "1×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          1.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 2.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          2.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "2×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          2.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 4.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          4.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "4×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          4.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "role": "group",
+                                  "type": "stack"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Frame ",
+                                    [
+                                      "+",
+                                      "@entity.frameIndex",
+                                      1.0
+                                    ],
+                                    " of ",
+                                    [
+                                      "array/len",
+                                      "@config.frames"
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
                               ],
-                              "type": "typography",
-                              "variant": "caption"
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
+                              "max": [
+                                "array/len",
+                                "@config.frames"
+                              ],
+                              "showPercentage": false,
+                              "type": "progress-bar",
+                              "value": [
+                                "+",
+                                "@entity.frameIndex",
+                                1.0
+                              ]
+                            },
+                            {
+                              "backgroundColor": "@config.backgroundColor",
+                              "bars": "@entity.bars",
+                              "height": "@config.height",
+                              "keyMap": {
+                                "KeyR": "RESTART",
+                                "Space": "TOGGLE_RUN"
+                              },
+                              "type": "algorithm-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": "@entity.frameCaption",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "padding": "md",
+                              "title": "@entity.frameLabel",
+                              "type": "card",
+                              "variant": "bordered"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "SPEED_SET",
+                "eventId": "evt_01M41KYRWHNQAV91TFYYX082AQ",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.running",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.statusNote",
+                    "Playing"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": "@entity.statusNote",
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.statusNote",
+                                      "Finished"
+                                    ],
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "primary",
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "disabled": [
+                                      "==",
+                                      "@entity.statusNote",
+                                      "Finished"
+                                    ],
+                                    "icon": "play",
+                                    "label": "Play",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  }
+                                ],
+                                {
+                                  "action": "RESTART",
+                                  "icon": "rotate-ccw",
+                                  "label": "Restart",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "align": "center",
+                                  "aria-label": "Speed",
+                                  "children": [
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 0.5
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          0.5
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "0.5×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          0.5
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 1.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          1.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "1×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          1.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 2.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          2.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "2×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          2.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 4.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          4.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "4×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          4.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "role": "group",
+                                  "type": "stack"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Frame ",
+                                    [
+                                      "+",
+                                      "@entity.frameIndex",
+                                      1.0
+                                    ],
+                                    " of ",
+                                    [
+                                      "array/len",
+                                      "@config.frames"
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
+                              "max": [
+                                "array/len",
+                                "@config.frames"
+                              ],
+                              "showPercentage": false,
+                              "type": "progress-bar",
+                              "value": [
+                                "+",
+                                "@entity.frameIndex",
+                                1.0
+                              ]
+                            },
+                            {
+                              "backgroundColor": "@config.backgroundColor",
+                              "bars": "@entity.bars",
+                              "height": "@config.height",
+                              "keyMap": {
+                                "KeyR": "RESTART",
+                                "Space": "TOGGLE_RUN"
+                              },
+                              "type": "algorithm-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": "@entity.frameCaption",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "padding": "md",
+                              "title": "@entity.frameLabel",
+                              "type": "card",
+                              "variant": "bordered"
                             }
                           ],
                           "direction": "vertical",
@@ -1281,33 +2509,247 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": "@entity.statusNote",
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.statusNote",
+                                      "Finished"
+                                    ],
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "primary",
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
-                              "label": [
-                                "str/concat",
-                                "Frame ",
+                              "align": "center",
+                              "children": [
                                 [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "+",
-                                    "@entity.frameIndex",
-                                    1.0
-                                  ]
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "disabled": [
+                                      "==",
+                                      "@entity.statusNote",
+                                      "Finished"
+                                    ],
+                                    "icon": "play",
+                                    "label": "Play",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  }
                                 ],
-                                " of ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "array/len",
-                                    "@config.frames"
-                                  ]
-                                ]
+                                {
+                                  "action": "RESTART",
+                                  "icon": "rotate-ccw",
+                                  "label": "Restart",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "align": "center",
+                                  "aria-label": "Speed",
+                                  "children": [
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 0.5
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          0.5
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "0.5×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          0.5
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 1.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          1.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "1×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          1.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 2.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          2.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "2×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          2.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 4.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          4.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "4×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          4.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "role": "group",
+                                  "type": "stack"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Frame ",
+                                    [
+                                      "+",
+                                      "@entity.frameIndex",
+                                      1.0
+                                    ],
+                                    " of ",
+                                    [
+                                      "array/len",
+                                      "@config.frames"
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
                               ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
                               "max": [
                                 "array/len",
                                 "@config.frames"
@@ -1324,45 +2766,12 @@
                               "backgroundColor": "@config.backgroundColor",
                               "bars": "@entity.bars",
                               "height": "@config.height",
+                              "keyMap": {
+                                "KeyR": "RESTART",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "type": "algorithm-canvas",
                               "width": "@config.width"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "action": "PLAY",
-                                  "disabled": [
-                                    "if",
-                                    "@entity.running",
-                                    true,
-                                    false
-                                  ],
-                                  "label": "Play",
-                                  "type": "button",
-                                  "variant": "primary"
-                                },
-                                {
-                                  "action": "PAUSE",
-                                  "disabled": [
-                                    "if",
-                                    "@entity.running",
-                                    false,
-                                    true
-                                  ],
-                                  "label": "Pause",
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
-                                {
-                                  "action": "RESTART",
-                                  "label": "Restart",
-                                  "type": "button",
-                                  "variant": "ghost"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack"
                             },
                             {
                               "children": [
@@ -1376,27 +2785,6 @@
                               "title": "@entity.frameLabel",
                               "type": "card",
                               "variant": "bordered"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "@entity.statusNote",
-                                " · ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  "@config.tickMs"
-                                ],
-                                " ms/frame",
-                                [
-                                  "if",
-                                  "@config.loop",
-                                  " · loops",
-                                  ""
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
                             }
                           ],
                           "direction": "vertical",
@@ -1520,33 +2908,247 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": "@entity.statusNote",
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.statusNote",
+                                      "Finished"
+                                    ],
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "primary",
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
-                              "label": [
-                                "str/concat",
-                                "Frame ",
+                              "align": "center",
+                              "children": [
                                 [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "+",
-                                    "@entity.frameIndex",
-                                    1.0
-                                  ]
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "disabled": [
+                                      "==",
+                                      "@entity.statusNote",
+                                      "Finished"
+                                    ],
+                                    "icon": "play",
+                                    "label": "Play",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  }
                                 ],
-                                " of ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "array/len",
-                                    "@config.frames"
-                                  ]
-                                ]
+                                {
+                                  "action": "RESTART",
+                                  "icon": "rotate-ccw",
+                                  "label": "Restart",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "align": "center",
+                                  "aria-label": "Speed",
+                                  "children": [
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 0.5
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          0.5
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "0.5×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          0.5
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 1.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          1.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "1×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          1.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 2.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          2.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "2×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          2.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 4.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          4.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "4×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          4.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "role": "group",
+                                  "type": "stack"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Frame ",
+                                    [
+                                      "+",
+                                      "@entity.frameIndex",
+                                      1.0
+                                    ],
+                                    " of ",
+                                    [
+                                      "array/len",
+                                      "@config.frames"
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
                               ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
                               "max": [
                                 "array/len",
                                 "@config.frames"
@@ -1563,45 +3165,12 @@
                               "backgroundColor": "@config.backgroundColor",
                               "bars": "@entity.bars",
                               "height": "@config.height",
+                              "keyMap": {
+                                "KeyR": "RESTART",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "type": "algorithm-canvas",
                               "width": "@config.width"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "action": "PLAY",
-                                  "disabled": [
-                                    "if",
-                                    "@entity.running",
-                                    true,
-                                    false
-                                  ],
-                                  "label": "Play",
-                                  "type": "button",
-                                  "variant": "primary"
-                                },
-                                {
-                                  "action": "PAUSE",
-                                  "disabled": [
-                                    "if",
-                                    "@entity.running",
-                                    false,
-                                    true
-                                  ],
-                                  "label": "Pause",
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
-                                {
-                                  "action": "RESTART",
-                                  "label": "Restart",
-                                  "type": "button",
-                                  "variant": "ghost"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack"
                             },
                             {
                               "children": [
@@ -1615,27 +3184,6 @@
                               "title": "@entity.frameLabel",
                               "type": "card",
                               "variant": "bordered"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "@entity.statusNote",
-                                " · ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  "@config.tickMs"
-                                ],
-                                " ms/frame",
-                                [
-                                  "if",
-                                  "@config.loop",
-                                  " · loops",
-                                  ""
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
                             }
                           ],
                           "direction": "vertical",
@@ -1673,339 +3221,528 @@
               "effects": [
                 [
                   "set",
-                  "@entity.running",
+                  "@entity.elapsedMs",
                   [
-                    "if",
-                    [
-                      "and",
-                      [
-                        ">=",
-                        "@entity.frameIndex",
-                        [
-                          "-",
-                          [
-                            "array/len",
-                            "@config.frames"
-                          ],
-                          1.0
-                        ]
-                      ],
-                      [
-                        "not",
-                        "@config.loop"
-                      ]
-                    ],
-                    false,
-                    "@entity.running"
+                    "+",
+                    "@entity.elapsedMs",
+                    50.0
                   ]
                 ],
                 [
-                  "set",
-                  "@entity.frameIndex",
+                  "when",
                   [
-                    "if",
+                    ">=",
                     [
-                      ">=",
-                      "@entity.frameIndex",
+                      "*",
+                      "@entity.elapsedMs",
+                      "@entity.speed"
+                    ],
+                    "@config.tickMs"
+                  ],
+                  [
+                    "do",
+                    [
+                      "set",
+                      "@entity.elapsedMs",
+                      0.0
+                    ],
+                    [
+                      "set",
+                      "@entity.running",
                       [
-                        "-",
-                        [
-                          "array/len",
-                          "@config.frames"
-                        ],
-                        1.0
-                      ]
-                    ],
-                    [
-                      "if",
-                      "@config.loop",
-                      0.0,
-                      "@entity.frameIndex"
-                    ],
-                    [
-                      "+",
-                      "@entity.frameIndex",
-                      1.0
-                    ]
-                  ]
-                ],
-                [
-                  "set",
-                  "@entity.frameLabel",
-                  [
-                    "object/get",
-                    [
-                      "array/nth",
-                      "@config.frames",
-                      "@entity.frameIndex"
-                    ],
-                    "label"
-                  ]
-                ],
-                [
-                  "set",
-                  "@entity.frameCaption",
-                  [
-                    "object/get",
-                    [
-                      "array/nth",
-                      "@config.frames",
-                      "@entity.frameIndex"
-                    ],
-                    "caption"
-                  ]
-                ],
-                [
-                  "set",
-                  "@entity.bars",
-                  [
-                    "array/map",
-                    [
-                      "object/get",
-                      [
-                        "array/nth",
-                        "@config.frames",
-                        "@entity.frameIndex"
-                      ],
-                      "values"
-                    ],
-                    {
-                      "color": [
                         "if",
                         [
-                          "array/includes",
+                          "and",
                           [
-                            "object/get",
+                            ">=",
+                            "@entity.frameIndex",
                             [
-                              "array/nth",
-                              "@config.frames",
-                              "@entity.frameIndex"
-                            ],
-                            "highlights"
+                              "-",
+                              [
+                                "array/len",
+                                "@config.frames"
+                              ],
+                              1.0
+                            ]
                           ],
-                          "@index"
+                          [
+                            "not",
+                            "@config.loop"
+                          ]
                         ],
-                        "@config.highlightColor",
-                        "@config.baseColor"
-                      ],
-                      "label": [
-                        "str/concat",
-                        "",
-                        "@item"
-                      ],
-                      "value": "@item"
-                    }
-                  ]
-                ],
-                [
-                  "set",
-                  "@entity.statusNote",
-                  [
-                    "if",
-                    "@entity.running",
-                    "Playing",
+                        false,
+                        "@entity.running"
+                      ]
+                    ],
                     [
-                      "if",
+                      "set",
+                      "@entity.frameIndex",
                       [
-                        ">=",
+                        "if",
+                        [
+                          ">=",
+                          "@entity.frameIndex",
+                          [
+                            "-",
+                            [
+                              "array/len",
+                              "@config.frames"
+                            ],
+                            1.0
+                          ]
+                        ],
+                        [
+                          "if",
+                          "@config.loop",
+                          0.0,
+                          "@entity.frameIndex"
+                        ],
                         [
                           "+",
                           "@entity.frameIndex",
                           1.0
-                        ],
-                        [
-                          "array/len",
-                          "@config.frames"
                         ]
-                      ],
-                      "Finished",
-                      "Paused"
-                    ]
-                  ]
-                ],
-                [
-                  "render-ui",
-                  "main",
-                  {
-                    "children": [
+                      ]
+                    ],
+                    [
+                      "set",
+                      "@entity.frameLabel",
+                      [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@config.frames",
+                          "@entity.frameIndex"
+                        ],
+                        "label"
+                      ]
+                    ],
+                    [
+                      "set",
+                      "@entity.frameCaption",
+                      [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@config.frames",
+                          "@entity.frameIndex"
+                        ],
+                        "caption"
+                      ]
+                    ],
+                    [
+                      "set",
+                      "@entity.bars",
+                      [
+                        "array/map",
+                        [
+                          "object/get",
+                          [
+                            "array/nth",
+                            "@config.frames",
+                            "@entity.frameIndex"
+                          ],
+                          "values"
+                        ],
+                        {
+                          "color": [
+                            "if",
+                            [
+                              "array/includes",
+                              [
+                                "object/get",
+                                [
+                                  "array/nth",
+                                  "@config.frames",
+                                  "@entity.frameIndex"
+                                ],
+                                "highlights"
+                              ],
+                              "@index"
+                            ],
+                            "@config.highlightColor",
+                            "@config.baseColor"
+                          ],
+                          "label": [
+                            "str/concat",
+                            "",
+                            "@item"
+                          ],
+                          "value": "@item"
+                        }
+                      ]
+                    ],
+                    [
+                      "set",
+                      "@entity.statusNote",
+                      [
+                        "if",
+                        "@entity.running",
+                        "Playing",
+                        [
+                          "if",
+                          [
+                            ">=",
+                            [
+                              "+",
+                              "@entity.frameIndex",
+                              1.0
+                            ],
+                            [
+                              "array/len",
+                              "@config.frames"
+                            ]
+                          ],
+                          "Finished",
+                          "Paused"
+                        ]
+                      ]
+                    ],
+                    [
+                      "render-ui",
+                      "main",
                       {
                         "children": [
                           {
-                            "content": "@entity.title",
-                            "type": "typography",
-                            "variant": "h4"
-                          },
-                          {
-                            "label": [
-                              "str/concat",
-                              "Frame ",
-                              [
-                                "str/concat",
-                                "",
-                                [
+                            "children": [
+                              {
+                                "align": "start",
+                                "children": [
+                                  {
+                                    "children": [
+                                      {
+                                        "content": "@entity.title",
+                                        "type": "typography",
+                                        "variant": "h4"
+                                      },
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@config.summary",
+                                          ""
+                                        ],
+                                        null,
+                                        {
+                                          "color": "muted",
+                                          "content": "@config.summary",
+                                          "type": "typography",
+                                          "variant": "body2"
+                                        }
+                                      ]
+                                    ],
+                                    "direction": "vertical",
+                                    "gap": "xs",
+                                    "type": "stack"
+                                  },
+                                  {
+                                    "label": "@entity.statusNote",
+                                    "type": "badge",
+                                    "variant": [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.statusNote",
+                                        "Finished"
+                                      ],
+                                      "success",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "primary",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  }
+                                ],
+                                "direction": "horizontal",
+                                "gap": "md",
+                                "justify": "between",
+                                "type": "stack"
+                              },
+                              {
+                                "align": "center",
+                                "children": [
+                                  [
+                                    "if",
+                                    "@entity.running",
+                                    {
+                                      "action": "TOGGLE_RUN",
+                                      "aria-pressed": "true",
+                                      "icon": "pause",
+                                      "label": "Pause",
+                                      "type": "button",
+                                      "variant": "primary"
+                                    },
+                                    {
+                                      "action": "TOGGLE_RUN",
+                                      "aria-pressed": "false",
+                                      "disabled": [
+                                        "==",
+                                        "@entity.statusNote",
+                                        "Finished"
+                                      ],
+                                      "icon": "play",
+                                      "label": "Play",
+                                      "type": "button",
+                                      "variant": "primary"
+                                    }
+                                  ],
+                                  {
+                                    "action": "RESTART",
+                                    "icon": "rotate-ccw",
+                                    "label": "Restart",
+                                    "type": "button",
+                                    "variant": "ghost"
+                                  },
+                                  {
+                                    "align": "center",
+                                    "aria-label": "Speed",
+                                    "children": [
+                                      {
+                                        "action": "SPEED_SET",
+                                        "actionPayload": {
+                                          "speed": 0.5
+                                        },
+                                        "aria-pressed": [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.speed",
+                                            0.5
+                                          ],
+                                          "true",
+                                          "false"
+                                        ],
+                                        "label": "0.5×",
+                                        "size": "sm",
+                                        "type": "button",
+                                        "variant": [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.speed",
+                                            0.5
+                                          ],
+                                          "secondary",
+                                          "ghost"
+                                        ]
+                                      },
+                                      {
+                                        "action": "SPEED_SET",
+                                        "actionPayload": {
+                                          "speed": 1.0
+                                        },
+                                        "aria-pressed": [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.speed",
+                                            1.0
+                                          ],
+                                          "true",
+                                          "false"
+                                        ],
+                                        "label": "1×",
+                                        "size": "sm",
+                                        "type": "button",
+                                        "variant": [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.speed",
+                                            1.0
+                                          ],
+                                          "secondary",
+                                          "ghost"
+                                        ]
+                                      },
+                                      {
+                                        "action": "SPEED_SET",
+                                        "actionPayload": {
+                                          "speed": 2.0
+                                        },
+                                        "aria-pressed": [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.speed",
+                                            2.0
+                                          ],
+                                          "true",
+                                          "false"
+                                        ],
+                                        "label": "2×",
+                                        "size": "sm",
+                                        "type": "button",
+                                        "variant": [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.speed",
+                                            2.0
+                                          ],
+                                          "secondary",
+                                          "ghost"
+                                        ]
+                                      },
+                                      {
+                                        "action": "SPEED_SET",
+                                        "actionPayload": {
+                                          "speed": 4.0
+                                        },
+                                        "aria-pressed": [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.speed",
+                                            4.0
+                                          ],
+                                          "true",
+                                          "false"
+                                        ],
+                                        "label": "4×",
+                                        "size": "sm",
+                                        "type": "button",
+                                        "variant": [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.speed",
+                                            4.0
+                                          ],
+                                          "secondary",
+                                          "ghost"
+                                        ]
+                                      }
+                                    ],
+                                    "direction": "horizontal",
+                                    "gap": "xs",
+                                    "role": "group",
+                                    "type": "stack"
+                                  },
+                                  {
+                                    "color": "muted",
+                                    "content": [
+                                      "str/concat",
+                                      "Frame ",
+                                      [
+                                        "+",
+                                        "@entity.frameIndex",
+                                        1.0
+                                      ],
+                                      " of ",
+                                      [
+                                        "array/len",
+                                        "@config.frames"
+                                      ]
+                                    ],
+                                    "type": "typography",
+                                    "variant": "caption"
+                                  }
+                                ],
+                                "direction": "horizontal",
+                                "gap": "sm",
+                                "type": "stack",
+                                "wrap": true
+                              },
+                              {
+                                "max": [
+                                  "array/len",
+                                  "@config.frames"
+                                ],
+                                "showPercentage": false,
+                                "type": "progress-bar",
+                                "value": [
                                   "+",
                                   "@entity.frameIndex",
                                   1.0
                                 ]
-                              ],
-                              " of ",
-                              [
-                                "str/concat",
-                                "",
-                                [
-                                  "array/len",
-                                  "@config.frames"
-                                ]
-                              ]
-                            ],
-                            "max": [
-                              "array/len",
-                              "@config.frames"
-                            ],
-                            "showPercentage": false,
-                            "type": "progress-bar",
-                            "value": [
-                              "+",
-                              "@entity.frameIndex",
-                              1.0
-                            ]
-                          },
-                          {
-                            "backgroundColor": "@config.backgroundColor",
-                            "bars": "@entity.bars",
-                            "height": "@config.height",
-                            "type": "algorithm-canvas",
-                            "width": "@config.width"
-                          },
-                          {
-                            "children": [
-                              {
-                                "action": "PLAY",
-                                "disabled": [
-                                  "if",
-                                  "@entity.running",
-                                  true,
-                                  false
-                                ],
-                                "label": "Play",
-                                "type": "button",
-                                "variant": "primary"
                               },
                               {
-                                "action": "PAUSE",
-                                "disabled": [
-                                  "if",
-                                  "@entity.running",
-                                  false,
-                                  true
-                                ],
-                                "label": "Pause",
-                                "type": "button",
-                                "variant": "secondary"
+                                "backgroundColor": "@config.backgroundColor",
+                                "bars": "@entity.bars",
+                                "height": "@config.height",
+                                "keyMap": {
+                                  "KeyR": "RESTART",
+                                  "Space": "TOGGLE_RUN"
+                                },
+                                "type": "algorithm-canvas",
+                                "width": "@config.width"
                               },
                               {
-                                "action": "RESTART",
-                                "label": "Restart",
-                                "type": "button",
-                                "variant": "ghost"
+                                "children": [
+                                  {
+                                    "content": "@entity.frameCaption",
+                                    "type": "typography",
+                                    "variant": "body"
+                                  }
+                                ],
+                                "padding": "md",
+                                "title": "@entity.frameLabel",
+                                "type": "card",
+                                "variant": "bordered"
                               }
                             ],
-                            "direction": "horizontal",
-                            "gap": "sm",
+                            "direction": "vertical",
+                            "gap": "md",
                             "type": "stack"
-                          },
-                          {
-                            "children": [
-                              {
-                                "content": "@entity.frameCaption",
-                                "type": "typography",
-                                "variant": "body"
-                              }
-                            ],
-                            "padding": "md",
-                            "title": "@entity.frameLabel",
-                            "type": "card",
-                            "variant": "bordered"
-                          },
-                          {
-                            "content": [
-                              "str/concat",
-                              "@entity.statusNote",
-                              " · ",
-                              [
-                                "str/concat",
-                                "",
-                                "@config.tickMs"
-                              ],
-                              " ms/frame",
-                              [
-                                "if",
-                                "@config.loop",
-                                " · loops",
-                                ""
-                              ]
-                            ],
-                            "type": "typography",
-                            "variant": "caption"
                           }
                         ],
-                        "direction": "vertical",
-                        "gap": "md",
-                        "type": "stack"
+                        "padding": "md",
+                        "type": "box"
                       }
                     ],
-                    "padding": "md",
-                    "type": "box"
-                  }
-                ],
-                [
-                  "emit",
-                  "FRAME_ADVANCED",
-                  {
-                    "frameIndex": "@entity.frameIndex",
-                    "frameLabel": "@entity.frameLabel"
-                  }
-                ],
-                [
-                  "if",
-                  [
-                    "and",
                     [
-                      "not",
-                      "@config.loop"
+                      "emit",
+                      "FRAME_ADVANCED",
+                      {
+                        "frameIndex": "@entity.frameIndex",
+                        "frameLabel": "@entity.frameLabel"
+                      }
                     ],
                     [
-                      "not",
-                      "@entity.running"
-                    ],
-                    [
-                      ">=",
+                      "if",
                       [
-                        "+",
-                        "@entity.frameIndex",
-                        1.0
+                        "and",
+                        [
+                          "not",
+                          "@config.loop"
+                        ],
+                        [
+                          "not",
+                          "@entity.running"
+                        ],
+                        [
+                          ">=",
+                          [
+                            "+",
+                            "@entity.frameIndex",
+                            1.0
+                          ],
+                          [
+                            "array/len",
+                            "@config.frames"
+                          ]
+                        ]
                       ],
                       [
-                        "array/len",
-                        "@config.frames"
-                      ]
+                        "emit",
+                        "TRACE_DONE",
+                        {
+                          "totalFrames": [
+                            "array/len",
+                            "@config.frames"
+                          ]
+                        }
+                      ],
+                      null
                     ]
-                  ],
-                  [
-                    "emit",
-                    "TRACE_DONE",
-                    {
-                      "totalFrames": [
-                        "array/len",
-                        "@config.frames"
-                      ]
-                    }
-                  ],
-                  null
+                  ]
                 ]
               ],
               "guard": "@entity.running",
-              "interval": 500.0,
+              "interval": 50.0,
               "name": "framePlayerTick"
             }
           ]

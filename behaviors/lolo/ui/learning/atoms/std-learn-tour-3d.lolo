@@ -90,12 +90,19 @@ orbital LearnTour3DOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: TOUR, label: @config.tourLabel, variant: primary },
-                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.tourComplete "Complete" (str/concat "Station " (str/concat "" (+ @entity.selectedIndex 1)) " of " (str/concat "" (array/len @entity.stations)))), variant: (if @entity.tourComplete "success" "neutral") }
                   ] },
-                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: TOUR, label: @config.tourLabel, icon: "chevron-right", variant: primary },
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Explored " (str/concat "" (array/len @entity.visitedIds)) " of " (str/concat "" (array/len @entity.stations)) (if @entity.tourComplete " — tour complete!" "")) }
+                  ] },
+                { type: biology-canvas, keyMap: { Space: TOUR, ArrowRight: TOUR, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
                   mode: "3d",
                   camera: { mode: "perspective", zoom: @config.zoom, fov: @config.fov, azimuth: @config.azimuth,
                     target: { x: (object/get (array/nth @entity.stations @entity.selectedIndex) x), y: (object/get (array/nth @entity.stations @entity.selectedIndex) y), z: (object/get (array/nth @entity.stations @entity.selectedIndex) z) } },
@@ -106,12 +113,15 @@ orbital LearnTour3DOrbital {
                   interactive: true,
                   onShapeClick: "SELECT_STATION"
                 },
-                { type: typography, variant: body, content: @entity.narration },
-                { type: typography, variant: caption, content: (str/concat "Explored " (str/concat "" (array/len @entity.visitedIds)) " of " (str/concat "" (array/len @entity.stations)) (if @entity.tourComplete " — tour complete!" "")) }
+                { type: typography, variant: body, content: @entity.narration }
               ] }
           ]
         })
         (emit TOUR_3D_UPDATED { id: @entity.selectedId, name: (object/get (array/nth @entity.stations 0) name), caption: (object/get (array/nth @entity.stations 0) caption), visited: (array/len @entity.visitedIds), total: (array/len @entity.stations), tourComplete: false })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (render-ui main null)
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (set @entity.active true)
@@ -129,12 +139,19 @@ orbital LearnTour3DOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: TOUR, label: @config.tourLabel, variant: primary },
-                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.tourComplete "Complete" (str/concat "Station " (str/concat "" (+ @entity.selectedIndex 1)) " of " (str/concat "" (array/len @entity.stations)))), variant: (if @entity.tourComplete "success" "neutral") }
                   ] },
-                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: TOUR, label: @config.tourLabel, icon: "chevron-right", variant: primary },
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Explored " (str/concat "" (array/len @entity.visitedIds)) " of " (str/concat "" (array/len @entity.stations)) (if @entity.tourComplete " — tour complete!" "")) }
+                  ] },
+                { type: biology-canvas, keyMap: { Space: TOUR, ArrowRight: TOUR, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
                   mode: "3d",
                   camera: { mode: "perspective", zoom: @config.zoom, fov: @config.fov, azimuth: @config.azimuth,
                     target: { x: (object/get (array/nth @entity.stations @entity.selectedIndex) x), y: (object/get (array/nth @entity.stations @entity.selectedIndex) y), z: (object/get (array/nth @entity.stations @entity.selectedIndex) z) } },
@@ -145,8 +162,7 @@ orbital LearnTour3DOrbital {
                   interactive: true,
                   onShapeClick: "SELECT_STATION"
                 },
-                { type: typography, variant: body, content: @entity.narration },
-                { type: typography, variant: caption, content: (str/concat "Explored " (str/concat "" (array/len @entity.visitedIds)) " of " (str/concat "" (array/len @entity.stations)) (if @entity.tourComplete " — tour complete!" "")) }
+                { type: typography, variant: body, content: @entity.narration }
               ] }
           ]
         })
@@ -164,12 +180,19 @@ orbital LearnTour3DOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: TOUR, label: @config.tourLabel, variant: primary },
-                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.tourComplete "Complete" (str/concat "Station " (str/concat "" (+ @entity.selectedIndex 1)) " of " (str/concat "" (array/len @entity.stations)))), variant: (if @entity.tourComplete "success" "neutral") }
                   ] },
-                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: TOUR, label: @config.tourLabel, icon: "chevron-right", variant: primary },
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Explored " (str/concat "" (array/len @entity.visitedIds)) " of " (str/concat "" (array/len @entity.stations)) (if @entity.tourComplete " — tour complete!" "")) }
+                  ] },
+                { type: biology-canvas, keyMap: { Space: TOUR, ArrowRight: TOUR, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
                   mode: "3d",
                   camera: { mode: "perspective", zoom: @config.zoom, fov: @config.fov, azimuth: @config.azimuth,
                     target: { x: (object/get (array/nth @entity.stations @entity.selectedIndex) x), y: (object/get (array/nth @entity.stations @entity.selectedIndex) y), z: (object/get (array/nth @entity.stations @entity.selectedIndex) z) } },
@@ -180,8 +203,7 @@ orbital LearnTour3DOrbital {
                   interactive: true,
                   onShapeClick: "SELECT_STATION"
                 },
-                { type: typography, variant: body, content: @entity.narration },
-                { type: typography, variant: caption, content: (str/concat "Explored " (str/concat "" (array/len @entity.visitedIds)) " of " (str/concat "" (array/len @entity.stations)) (if @entity.tourComplete " — tour complete!" "")) }
+                { type: typography, variant: body, content: @entity.narration }
               ] }
           ]
         })
@@ -205,12 +227,19 @@ orbital LearnTour3DOrbital {
               padding: md
               children: [
                 { type: stack, direction: vertical, gap: md, children: [
-                    { type: typography, variant: h4, content: @entity.title },
-                    { type: stack, direction: horizontal, gap: sm, children: [
-                        { type: button, action: TOUR, label: @config.tourLabel, variant: primary },
-                        { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                    { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                        { type: stack, direction: vertical, gap: xs, children: [
+                            { type: typography, variant: h4, content: @entity.title },
+                            (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                          ] },
+                        { type: badge, label: (if @entity.tourComplete "Complete" (str/concat "Station " (str/concat "" (+ @entity.selectedIndex 1)) " of " (str/concat "" (array/len @entity.stations)))), variant: (if @entity.tourComplete "success" "neutral") }
                       ] },
-                    { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                    { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                        { type: button, action: TOUR, label: @config.tourLabel, icon: "chevron-right", variant: primary },
+                        { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                        { type: typography, variant: caption, color: muted, content: (str/concat "Explored " (str/concat "" (array/len @entity.visitedIds)) " of " (str/concat "" (array/len @entity.stations)) (if @entity.tourComplete " — tour complete!" "")) }
+                      ] },
+                    { type: biology-canvas, keyMap: { Space: TOUR, ArrowRight: TOUR, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
                       mode: "3d",
                       camera: { mode: "perspective", zoom: @config.zoom, fov: @config.fov, azimuth: @config.azimuth,
                         target: { x: (object/get (array/nth @entity.stations @entity.selectedIndex) x), y: (object/get (array/nth @entity.stations @entity.selectedIndex) y), z: (object/get (array/nth @entity.stations @entity.selectedIndex) z) } },
@@ -221,8 +250,7 @@ orbital LearnTour3DOrbital {
                       interactive: true,
                       onShapeClick: "SELECT_STATION"
                     },
-                    { type: typography, variant: body, content: @entity.narration },
-                    { type: typography, variant: caption, content: (str/concat "Explored " (str/concat "" (array/len @entity.visitedIds)) " of " (str/concat "" (array/len @entity.stations)) (if @entity.tourComplete " — tour complete!" "")) }
+                    { type: typography, variant: body, content: @entity.narration }
                   ] }
               ]
             })
@@ -241,12 +269,19 @@ orbital LearnTour3DOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: TOUR, label: @config.tourLabel, variant: primary },
-                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.tourComplete "Complete" (str/concat "Station " (str/concat "" (+ @entity.selectedIndex 1)) " of " (str/concat "" (array/len @entity.stations)))), variant: (if @entity.tourComplete "success" "neutral") }
                   ] },
-                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: TOUR, label: @config.tourLabel, icon: "chevron-right", variant: primary },
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Explored " (str/concat "" (array/len @entity.visitedIds)) " of " (str/concat "" (array/len @entity.stations)) (if @entity.tourComplete " — tour complete!" "")) }
+                  ] },
+                { type: biology-canvas, keyMap: { Space: TOUR, ArrowRight: TOUR, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
                   mode: "3d",
                   camera: { mode: "perspective", zoom: @config.zoom, fov: @config.fov, azimuth: @config.azimuth,
                     target: { x: (object/get (array/nth @entity.stations @entity.selectedIndex) x), y: (object/get (array/nth @entity.stations @entity.selectedIndex) y), z: (object/get (array/nth @entity.stations @entity.selectedIndex) z) } },
@@ -257,8 +292,7 @@ orbital LearnTour3DOrbital {
                   interactive: true,
                   onShapeClick: "SELECT_STATION"
                 },
-                { type: typography, variant: body, content: @entity.narration },
-                { type: typography, variant: caption, content: (str/concat "Explored " (str/concat "" (array/len @entity.visitedIds)) " of " (str/concat "" (array/len @entity.stations)) (if @entity.tourComplete " — tour complete!" "")) }
+                { type: typography, variant: body, content: @entity.narration }
               ] }
           ]
         })
@@ -278,12 +312,19 @@ orbital LearnTour3DOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: TOUR, label: @config.tourLabel, variant: primary },
-                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.tourComplete "Complete" (str/concat "Station " (str/concat "" (+ @entity.selectedIndex 1)) " of " (str/concat "" (array/len @entity.stations)))), variant: (if @entity.tourComplete "success" "neutral") }
                   ] },
-                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: TOUR, label: @config.tourLabel, icon: "chevron-right", variant: primary },
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Explored " (str/concat "" (array/len @entity.visitedIds)) " of " (str/concat "" (array/len @entity.stations)) (if @entity.tourComplete " — tour complete!" "")) }
+                  ] },
+                { type: biology-canvas, keyMap: { Space: TOUR, ArrowRight: TOUR, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
                   mode: "3d",
                   camera: { mode: "perspective", zoom: @config.zoom, fov: @config.fov, azimuth: @config.azimuth,
                     target: { x: (object/get (array/nth @entity.stations @entity.selectedIndex) x), y: (object/get (array/nth @entity.stations @entity.selectedIndex) y), z: (object/get (array/nth @entity.stations @entity.selectedIndex) z) } },
@@ -294,8 +335,7 @@ orbital LearnTour3DOrbital {
                   interactive: true,
                   onShapeClick: "SELECT_STATION"
                 },
-                { type: typography, variant: body, content: @entity.narration },
-                { type: typography, variant: caption, content: (str/concat "Explored " (str/concat "" (array/len @entity.visitedIds)) " of " (str/concat "" (array/len @entity.stations)) (if @entity.tourComplete " — tour complete!" "")) }
+                { type: typography, variant: body, content: @entity.narration }
               ] }
           ]
         })
@@ -352,10 +392,14 @@ orbital LearnTour3DOrbital {
         @label "Title"
         @description "Title shown above the canvas."
         @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line."
+        @tier "presentation"
       stations : [Learn3DStation] = [
-        { id: "alpha", name: "Station Alpha", caption: "The first stop on the tour — the camera retargets here and the narration reads its caption.", x: 0, y: 0, z: 0, radius: 1, color: "#2563eb", shape: sphere, opacity: 1 },
-        { id: "beta", name: "Station Beta", caption: "The second stop — press Tour again or click a shape to advance the selection.", x: 3, y: 1, z: -1, radius: 0.8, color: "#7c3aed", shape: sphere, opacity: 1 },
-        { id: "gamma", name: "Station Gamma", caption: "The final stop — once every station has been visited the tour marks itself complete.", x: -3, y: -1, z: 1, radius: 0.8, color: "#0891b2", shape: sphere, opacity: 1 }
+        { id: "alpha", name: "Station Alpha", caption: "The first stop on the tour — the camera retargets here and the narration reads its caption.", x: 0, y: 0, z: 0, radius: 1, color: "series-1", shape: sphere, opacity: 1 },
+        { id: "beta", name: "Station Beta", caption: "The second stop — press Tour again or click a shape to advance the selection.", x: 3, y: 1, z: -1, radius: 0.8, color: "series-2", shape: sphere, opacity: 1 },
+        { id: "gamma", name: "Station Gamma", caption: "The final stop — once every station has been visited the tour marks itself complete.", x: -3, y: -1, z: 1, radius: 0.8, color: "series-3", shape: sphere, opacity: 1 }
       ]
         @label "Stations"
         @description "The station roster in didactic tour order — each with scene position, mesh shape, and a caption. Tour and clicks enlarge the selected station, retarget the camera onto its x/y/z, and narrate its caption."
@@ -371,7 +415,7 @@ orbital LearnTour3DOrbital {
         @description "Non-station scene geometry rendered under the tour stations (painted first, stations on top) — painted but never tour stops and never highlight-selected; SYNC_STATIONS swaps it together with the roster, so a composed preset coordinator can re-skin the whole scene per preset."
         @synonyms "backdrop, scenery, geometry, context nodes, 3d"
         @tier "domain"
-      tourLabel : string = "Tour"
+      tourLabel : string = "Next station"
         @label "Tour Button Label"
         @description "Label text for the button that advances the tour to the next station."
         @tier "presentation"
@@ -407,9 +451,9 @@ orbital LearnTour3DOrbital {
         @label "Height"
         @description "Canvas height in pixels."
         @tier "presentation"
-      backgroundColor : string = "#0f172a"
+      backgroundColor : string = ""
         @label "Background Color"
-        @description "Canvas background color — a dark stage makes translucent shells and station colors read in 3D."
+        @description "Canvas ground. Empty uses the theme drawing ground."
         @tier "presentation"
     }
   }

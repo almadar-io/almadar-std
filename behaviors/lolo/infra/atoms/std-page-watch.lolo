@@ -1,0 +1,86 @@
+app std-page-watch "1.0.0"
+"std-page-watch — watches every browser tab whose URL matches `match` for elements matching `itemSelector`, and reports each element once as ITEM with the `fields` read from it, now and as the page changes. Needs a host with the `page` service (a browser extension, which asks for access to exactly the `match` pages). Each item carries its tab and element id; compose std-page-treat to hide, blur, highlight or label it."
+
+orbital PageWatchOrbital {
+  type PageField = {
+    selector : string
+    attr : string
+    resolve : boolean
+  }
+
+  entity PageWatchRecord [runtime] {
+    watchId : string @description "Id of the attached watch" @synonyms "watch id, subscription" = ""
+    found : number @description "How many elements have been reported" @synonyms "count, items seen, reported" = 0
+    errorMessage : string @description "Why the watch could not be attached; blank = none" @synonyms "error, failure reason" = ""
+    status : "starting" | "watching" | "failed" @description "Whether the watch is attached" @synonyms "state, watching, connected" = starting
+  }
+
+  trait PageWatch -> PageWatchRecord [lifecycle, instance] {
+    initial: active
+
+    config {
+      statusSlot : slot = main
+        @label "Status slot"
+        @description "Where the atom shows its one-line status; an organism running it in the background sends it to `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+      match : string = "https://example.com/*"
+        @label "Pages"
+        @description "URL match pattern of the tabs to watch, in Chrome match-pattern syntax (`<scheme>://<host>/<path>` with `*` wildcards)"
+        @synonyms "site, url pattern, pages, domain"
+        @tier "domain"
+      itemSelector : string = ".item"
+        @label "Item selector"
+        @description "CSS selector of the elements to report"
+        @synonyms "selector, element, card, tile, row"
+        @tier "domain"
+      fields : Map string PageField = {}
+        @label "Fields"
+        @description "Field name to how to read it from each element: `selector` (a descendant; absent reads the element itself), `attr` (an attribute; absent reads the text) and `resolve` (the attribute is a URL: return it absolute)"
+        @synonyms "columns, properties, extract, read"
+        @tier "domain"
+      itemEvent : event = "PageWatch.ITEM_FOUND"
+        @label "Item input"
+        @description "The declared input each element arrives as; it follows the trait when a composer renames it"
+        @tier "internal"
+    }
+
+    state active {
+      INIT -> active
+        (call-service "page" "watch" { match: @config.match, selector: @config.itemSelector, fields: @config.fields, event: @config.itemEvent }
+          { emit: { success: WATCHING, failure: WATCH_FAILED } })
+        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: "Connecting to the pages…" })
+      WATCHING -> active
+        (set @entity.watchId ?watchId)
+        (set @entity.status watching)
+        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: (str/concat "Watching " @config.match) })
+      WATCH_FAILED -> active
+        (set @entity.errorMessage ?error)
+        (set @entity.status failed)
+        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: (str/concat "Can't watch these pages: " ?error) })
+      ITEM_FOUND -> active
+        (set @entity.found (+ @entity.found 1))
+        (emit ITEM { tab: ?tab, elementId: ?elementId, url: ?url, fields: ?fields })
+    }
+
+    emits {
+      WATCHING { watchId : string! }
+        @description "The watch is attached"
+        @tier "secondary"
+      WATCH_FAILED -> external { error : string! }
+        @description "The watch could not be attached (no page service, or no access to the pages)"
+        @tier "primary"
+      ITEM -> external { tab : number!, elementId : string!, url : string!, fields : Map string string }
+        @description "One matching element, reported once, with the fields read from it"
+        @synonyms "element found, item seen, new item"
+        @tier "primary"
+    }
+
+    listens {
+      ITEM_FOUND -> external { tab : number!, elementId : string!, url : string!, fields : Map string string }
+        @description "One matching element, delivered by the page service"
+    }
+  }
+
+  page "/page-watch" as PageWatchPage -> PageWatch
+}

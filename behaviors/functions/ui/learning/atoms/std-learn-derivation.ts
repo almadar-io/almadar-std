@@ -85,6 +85,8 @@ export interface StdLearnDerivationConfig {
   premises?: EntityRow[];
   /** Default: `"Reset"` */
   resetLabel?: string;
+  /** Default: `""` */
+  summary?: string;
   /** Default: `"Derivation Lab"` */
   title?: string;
   /** Default: `600` */

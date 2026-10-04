@@ -21,6 +21,7 @@ orbital CoupledSimOrbital {
     coefA : number = 0
     coefB : number = 0
     running : boolean = false
+    speed : number = 1
     pSamples : [CoupledSample]
     qSamples : [CoupledSample]
     curves : [CoupledCurve]
@@ -50,28 +51,49 @@ orbital CoupledSimOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: @config.taskText },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (>= @entity.t @config.duration) "Done" (if @entity.running "Running" "Paused")), variant: (if (>= @entity.t @config.duration) "success" (if @entity.running "primary" "neutral")) }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (>= @entity.t @config.duration) }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
                     { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
-                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm }
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "t = " (math/round @entity.t 1) " of " @config.duration) }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                        { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                        { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
+                      ] }
                   ] },
                 { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
-                    { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
-                  ] },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
-                    { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
-                  ] },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
-                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) " · " @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                    { type: typography, variant: body, content: @config.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                  ] }
               ] }
           ]
         })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (set @entity.running false)
+        (render-ui main null)
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (set @entity.active true)
@@ -93,25 +115,134 @@ orbital CoupledSimOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: @config.taskText },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (>= @entity.t @config.duration) "Done" (if @entity.running "Running" "Paused")), variant: (if (>= @entity.t @config.duration) "success" (if @entity.running "primary" "neutral")) }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (>= @entity.t @config.duration) }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
                     { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
-                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm }
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "t = " (math/round @entity.t 1) " of " @config.duration) }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                        { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                        { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
+                      ] }
                   ] },
                 { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
-                    { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
+                    { type: typography, variant: body, content: @config.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                  ] }
+              ] }
+          ]
+        })
+
+      TOGGLE_RUN -> idle when (and (== @entity.active true) (or (== @entity.running true) (< @entity.t @config.duration)))
+        (set @entity.running (not @entity.running))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (>= @entity.t @config.duration) "Done" (if @entity.running "Running" "Paused")), variant: (if (>= @entity.t @config.duration) "success" (if @entity.running "primary" "neutral")) }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (>= @entity.t @config.duration) }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "t = " (math/round @entity.t 1) " of " @config.duration) }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                        { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                        { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
+                      ] }
                   ] },
                 { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
-                    { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
+                    { type: typography, variant: body, content: @config.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                  ] }
+              ] }
+          ]
+        })
+        (emit RUN_TOGGLED { running: @entity.running })
+
+      SPEED_SET -> idle when (== @entity.active true)
+        (set @entity.speed ?speed)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (>= @entity.t @config.duration) "Done" (if @entity.running "Running" "Paused")), variant: (if (>= @entity.t @config.duration) "success" (if @entity.running "primary" "neutral")) }
                   ] },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
-                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) " · " @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (>= @entity.t @config.duration) }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "t = " (math/round @entity.t 1) " of " @config.duration) }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                        { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                        { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
+                      ] }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: body, content: @config.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                  ] }
               ] }
           ]
         })
@@ -123,25 +254,41 @@ orbital CoupledSimOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: @config.taskText },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (>= @entity.t @config.duration) "Done" (if @entity.running "Running" "Paused")), variant: (if (>= @entity.t @config.duration) "success" (if @entity.running "primary" "neutral")) }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (>= @entity.t @config.duration) }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
                     { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
-                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm }
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "t = " (math/round @entity.t 1) " of " @config.duration) }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                        { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                        { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
+                      ] }
                   ] },
                 { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
-                    { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
-                  ] },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
-                    { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
-                  ] },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
-                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) " · " @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                    { type: typography, variant: body, content: @config.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                  ] }
               ] }
           ]
         })
@@ -154,25 +301,41 @@ orbital CoupledSimOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: @config.taskText },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (>= @entity.t @config.duration) "Done" (if @entity.running "Running" "Paused")), variant: (if (>= @entity.t @config.duration) "success" (if @entity.running "primary" "neutral")) }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (>= @entity.t @config.duration) }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
                     { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
-                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm }
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "t = " (math/round @entity.t 1) " of " @config.duration) }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                        { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                        { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
+                      ] }
                   ] },
                 { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
-                    { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
-                  ] },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
-                    { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
-                  ] },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
-                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) " · " @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                    { type: typography, variant: body, content: @config.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                  ] }
               ] }
           ]
         })
@@ -196,25 +359,41 @@ orbital CoupledSimOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: @config.taskText },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (>= @entity.t @config.duration) "Done" (if @entity.running "Running" "Paused")), variant: (if (>= @entity.t @config.duration) "success" (if @entity.running "primary" "neutral")) }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (>= @entity.t @config.duration) }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
                     { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
-                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm }
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "t = " (math/round @entity.t 1) " of " @config.duration) }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                        { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                        { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
+                      ] }
                   ] },
                 { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
-                    { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
-                  ] },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
-                    { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
-                  ] },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
-                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) " · " @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                    { type: typography, variant: body, content: @config.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                  ] }
               ] }
           ]
         })
@@ -227,25 +406,41 @@ orbital CoupledSimOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: @config.taskText },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (>= @entity.t @config.duration) "Done" (if @entity.running "Running" "Paused")), variant: (if (>= @entity.t @config.duration) "success" (if @entity.running "primary" "neutral")) }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (>= @entity.t @config.duration) }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
                     { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
-                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm }
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "t = " (math/round @entity.t 1) " of " @config.duration) }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                        { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                        { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
+                      ] }
                   ] },
                 { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
-                    { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
-                  ] },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
-                    { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
-                  ] },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
-                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) " · " @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                    { type: typography, variant: body, content: @config.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                  ] }
               ] }
           ]
         })
@@ -258,25 +453,41 @@ orbital CoupledSimOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: @config.taskText },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (>= @entity.t @config.duration) "Done" (if @entity.running "Running" "Paused")), variant: (if (>= @entity.t @config.duration) "success" (if @entity.running "primary" "neutral")) }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (>= @entity.t @config.duration) }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
                     { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
-                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm }
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "t = " (math/round @entity.t 1) " of " @config.duration) }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                        { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                        { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
+                      ] }
                   ] },
                 { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
-                    { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
-                  ] },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
-                    { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
-                  ] },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
-                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) " · " @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                    { type: typography, variant: body, content: @config.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                  ] }
               ] }
           ]
         })
@@ -294,25 +505,41 @@ orbital CoupledSimOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: @config.taskText },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (>= @entity.t @config.duration) "Done" (if @entity.running "Running" "Paused")), variant: (if (>= @entity.t @config.duration) "success" (if @entity.running "primary" "neutral")) }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (>= @entity.t @config.duration) }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
                     { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
-                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm }
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "t = " (math/round @entity.t 1) " of " @config.duration) }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                        { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                        { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
+                      ] }
                   ] },
                 { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
-                    { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
-                  ] },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
-                    { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
-                  ] },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
-                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) " · " @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                    { type: typography, variant: body, content: @config.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                  ] }
               ] }
           ]
         })
@@ -323,7 +550,7 @@ orbital CoupledSimOrbital {
       coupledTick every 100ms
         when (and (== @entity.active true) (and (== @entity.running true) (< @entity.t @config.duration)))
         (let (
-            (dt (* 0.1 @config.timeScale))
+            (dt (* 0.1 (* @config.timeScale @entity.speed)))
             (a @entity.coefA)
             (b @entity.coefB)
             (P @entity.p)
@@ -342,7 +569,7 @@ orbital CoupledSimOrbital {
             (newQ (math/max 0 (+ @Q (* @dQ @dt))))
           )
           (do
-            (set @entity.t (math/min @config.duration (+ @entity.t 0.1)))
+            (set @entity.t (math/min @config.duration (+ @entity.t (* 0.1 @entity.speed))))
             (set @entity.p @newP)
             (set @entity.q @newQ)
             (set @entity.pSamples (array/append @entity.pSamples { x: @entity.t, y: @newP }))
@@ -360,6 +587,15 @@ orbital CoupledSimOrbital {
       }
         @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
         @tier "domain"
+      TOGGLE_RUN {
+      }
+        @description "Learner pressed the Play/Pause toggle — starts or freezes the coupled evolution."
+        @tier "domain"
+      SPEED_SET {
+        speed : number
+      }
+        @description "The learner picked a playback speed; the system evolves that many times faster."
+        @tier "presentation"
       RUN {
       }
         @description "Learner started (or resumed) the coupled evolution; the two curves draw live until Pause or the configured duration."
@@ -424,7 +660,11 @@ orbital CoupledSimOrbital {
         @tier "presentation"
       title : string = "Coupled System"
         @label "Title"
-        @description "Title shown above the simulation."
+        @description "The instrument's name, the header's one hero."
+        @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line."
         @tier "presentation"
       taskText : string = "Run the system, retune the rates, and shock it — watch how the two quantities push and pull each other."
         @label "Task Text"
@@ -514,10 +754,10 @@ orbital CoupledSimOrbital {
       gridStep : number = 50
         @label "Grid Step"
         @tier "presentation"
-      pColor : string = "#16a34a"
+      pColor : string = "series-1"
         @label "P Color"
         @tier "presentation"
-      qColor : string = "#dc2626"
+      qColor : string = "series-2"
         @label "Q Color"
         @tier "presentation"
       autoRun : boolean = true

@@ -28,6 +28,13 @@
             "required": true,
             "description": "What was said.",
             "synonyms": "text, message, body"
+          },
+          {
+            "name": "chatId",
+            "type": "string",
+            "required": false,
+            "description": "The conversation this message belongs to (an AgentChat id).",
+            "synonyms": "conversation, thread, session"
           }
         ],
         "persistence": "persistent"
@@ -37,7 +44,7 @@
       {
         "name": "AgentThread",
         "emittedEvents": [
-          "THREAD_FAILED",
+          "ASSISTANT_THREAD_FAILED",
           "CONVERSE",
           "AgentMessagesLoaded",
           "AgentMessagesLoadFailed",
@@ -46,11 +53,13 @@
           "AgentMessageSaveFailed"
         ],
         "listenedEvents": [
-          "SEND"
+          "ASSISTANT_CHAT_OPENED",
+          "ASSISTANT_SEND_IN_CHAT",
+          "ASSISTANT_REPLY_IN_CHAT"
         ],
         "events": [
           {
-            "name": "THREAD_FAILED",
+            "name": "ASSISTANT_THREAD_FAILED",
             "direction": "emit",
             "description": "The conversation could not be loaded or a message could not be stored.",
             "synonyms": "failed, error",
@@ -59,14 +68,14 @@
           {
             "name": "CONVERSE",
             "direction": "emit",
-            "description": "The conversation to answer, oldest first; the last turn is the request.",
+            "description": "The current conversation to answer, oldest first; the last turn is the request.",
             "synonyms": "ask, converse, request",
             "tier": "domain"
           },
           {
             "name": "AgentMessagesLoaded",
             "direction": "emit",
-            "description": "The conversation finished loading.",
+            "description": "The current conversation's messages finished loading (empty for a new conversation).",
             "tier": "internal"
           },
           {
@@ -97,15 +106,20 @@
             "direction": "listen"
           },
           {
-            "name": "SEND",
+            "name": "OPEN_CHAT",
             "direction": "listen",
-            "description": "Store the user's message and ask the assistant.",
+            "description": "Load a conversation's messages (none for a new one)."
+          },
+          {
+            "name": "SEND_IN_CHAT",
+            "direction": "listen",
+            "description": "Store the user's message in this conversation and ask the assistant.",
             "synonyms": "ask, message, chat"
           },
           {
-            "name": "REPLIED",
+            "name": "REPLY_IN_CHAT",
             "direction": "listen",
-            "description": "Store the assistant's answer."
+            "description": "Store the assistant's answer in this conversation."
           }
         ],
         "overridableConfigKeys": [],
@@ -117,8 +131,9 @@
           "AgentMessageSaved",
           "AgentMessagesLoadFailed",
           "INIT",
-          "REPLIED",
-          "SEND"
+          "OPEN_CHAT",
+          "REPLY_IN_CHAT",
+          "SEND_IN_CHAT"
         ],
         "definerKnobs": [],
         "entityRebindable": true,
@@ -129,11 +144,15 @@
         "effectRow": [
           {
             "kind": "emit",
-            "resource": "CONVERSE"
+            "resource": "ASSISTANT_THREAD_FAILED"
           },
           {
             "kind": "emit",
-            "resource": "THREAD_FAILED"
+            "resource": "AgentMessagesLoaded"
+          },
+          {
+            "kind": "emit",
+            "resource": "CONVERSE"
           },
           {
             "kind": "fetch",
@@ -155,20 +174,94 @@
       {
         "name": "AgentConversation",
         "emittedEvents": [
-          "SEND",
+          "ASSISTANT_HISTORY_REQUESTED",
+          "ASSISTANT_NEW_CHAT",
+          "NEW_CHAT_CLICKED",
+          "ASSISTANT_SEND",
+          "ASSISTANT_CHATS_REQUESTED",
+          "ASSISTANT_CHAT_SELECTED",
+          "ASSISTANT_MEMORIES_REQUESTED",
+          "OPEN_CHATS_CLICKED",
+          "OPEN_MEMORY_CLICKED",
+          "CHAT_PICKED",
           "ASK"
         ],
         "listenedEvents": [
           "AgentMessagesLoaded",
-          "THREAD_FAILED"
+          "ASSISTANT_THREAD_FAILED",
+          "ASSISTANT_STEP",
+          "ASSISTANT_REPLIED",
+          "ASSISTANT_REPLY_FAILED",
+          "ASSISTANT_CHATS_LOADED",
+          "ASSISTANT_MEMORIES_LOADED"
         ],
         "events": [
           {
-            "name": "SEND",
+            "name": "ASSISTANT_HISTORY_REQUESTED",
+            "direction": "emit",
+            "description": "This conversation view opened; the assistant thread loads the current conversation into it.",
+            "synonyms": "load history, restore conversation",
+            "tier": "domain"
+          },
+          {
+            "name": "ASSISTANT_NEW_CHAT",
+            "direction": "emit",
+            "description": "The user started a new conversation.",
+            "synonyms": "new chat, new conversation, start over",
+            "tier": "domain"
+          },
+          {
+            "name": "NEW_CHAT_CLICKED",
+            "direction": "emit",
+            "description": "Start a new conversation.",
+            "synonyms": "new chat, start over, clear",
+            "tier": "presentation"
+          },
+          {
+            "name": "ASSISTANT_SEND",
             "direction": "emit",
             "description": "The user asked something; AgentThread stores it and asks the assistant.",
             "synonyms": "ask, send, submit",
             "tier": "domain"
+          },
+          {
+            "name": "ASSISTANT_CHATS_REQUESTED",
+            "direction": "emit",
+            "description": "The user opened the conversation list; the conversation keeper sends the person's conversations.",
+            "synonyms": "conversations, history, past chats",
+            "tier": "domain"
+          },
+          {
+            "name": "ASSISTANT_CHAT_SELECTED",
+            "direction": "emit",
+            "description": "The user picked a past conversation to reopen.",
+            "synonyms": "open conversation, reopen chat",
+            "tier": "domain"
+          },
+          {
+            "name": "ASSISTANT_MEMORIES_REQUESTED",
+            "direction": "emit",
+            "description": "The user opened what the assistant remembers; the assistant's memory sends it.",
+            "synonyms": "memories, what I remember",
+            "tier": "domain"
+          },
+          {
+            "name": "OPEN_CHATS_CLICKED",
+            "direction": "emit",
+            "description": "Show past conversations.",
+            "tier": "presentation"
+          },
+          {
+            "name": "OPEN_MEMORY_CLICKED",
+            "direction": "emit",
+            "description": "Show what the assistant remembers.",
+            "tier": "presentation"
+          },
+          {
+            "name": "CHAT_PICKED",
+            "direction": "emit",
+            "description": "Reopen the picked conversation.",
+            "tier": "presentation"
           },
           {
             "name": "ASK",
@@ -198,12 +291,49 @@
             "description": "The assistant answered."
           },
           {
+            "name": "CHATS_LISTED",
+            "direction": "listen",
+            "description": "Show the person's conversations to pick from."
+          },
+          {
+            "name": "MEMORIES_LISTED",
+            "direction": "listen",
+            "description": "Show what the assistant remembers."
+          },
+          {
+            "name": "BACK_TO_CHAT",
+            "direction": "listen",
+            "description": "Back to the conversation."
+          },
+          {
             "name": "REPLY_FAILED",
             "direction": "listen",
             "description": "The assistant could not answer."
           }
         ],
         "overridableConfigKeys": [
+          {
+            "key": "backLabel",
+            "type": "string",
+            "default": "Back",
+            "label": "Back to the conversation",
+            "tier": "presentation"
+          },
+          {
+            "key": "chatsEmptyTitle",
+            "type": "string",
+            "default": "No conversations yet",
+            "label": "Empty conversation list",
+            "tier": "presentation"
+          },
+          {
+            "key": "chatsLabel",
+            "type": "string",
+            "default": "Conversations",
+            "label": "Past conversations button",
+            "description": "Shows the person's past conversations in place of the chat; picking one reopens it.",
+            "tier": "presentation"
+          },
           {
             "key": "emptyTitle",
             "type": "string",
@@ -214,7 +344,12 @@
           {
             "key": "links",
             "type": "[AgentLink]",
-            "default": [],
+            "default": [
+              {
+                "href": "/agent-session/chats",
+                "label": "All conversations"
+              }
+            ],
             "label": "Links above the conversation",
             "description": "Related pages (e.g. the run history).",
             "tier": "presentation",
@@ -235,10 +370,40 @@
             }
           },
           {
+            "key": "memoryEmptyTitle",
+            "type": "string",
+            "default": "Nothing remembered yet",
+            "label": "Empty memory list",
+            "tier": "presentation"
+          },
+          {
+            "key": "memoryLabel",
+            "type": "string",
+            "default": "What I remember",
+            "label": "Memory button",
+            "description": "Shows what the assistant remembers for this person in place of the chat.",
+            "tier": "presentation"
+          },
+          {
+            "key": "newChatLabel",
+            "type": "string",
+            "default": "New conversation",
+            "label": "New conversation button",
+            "description": "Starts a fresh conversation; earlier ones stay in the conversation list.",
+            "tier": "presentation"
+          },
+          {
             "key": "placeholder",
             "type": "string",
             "default": "Ask the assistant…",
             "label": "Message placeholder",
+            "tier": "presentation"
+          },
+          {
+            "key": "untitledLabel",
+            "type": "string",
+            "default": "New conversation",
+            "label": "Title of a conversation with no messages yet",
             "tier": "presentation"
           }
         ],
@@ -246,7 +411,14 @@
         "linkedEntity": "AgentConversationView",
         "transitionEvents": [
           "ASK",
+          "BACK_TO_CHAT",
+          "CHATS_LISTED",
+          "CHAT_PICKED",
           "INIT",
+          "MEMORIES_LISTED",
+          "NEW_CHAT_CLICKED",
+          "OPEN_CHATS_CLICKED",
+          "OPEN_MEMORY_CLICKED",
           "REPLIED",
           "REPLY_FAILED",
           "STEP",
@@ -264,7 +436,27 @@
         "effectRow": [
           {
             "kind": "emit",
-            "resource": "SEND"
+            "resource": "ASSISTANT_CHATS_REQUESTED"
+          },
+          {
+            "kind": "emit",
+            "resource": "ASSISTANT_CHAT_SELECTED"
+          },
+          {
+            "kind": "emit",
+            "resource": "ASSISTANT_HISTORY_REQUESTED"
+          },
+          {
+            "kind": "emit",
+            "resource": "ASSISTANT_MEMORIES_REQUESTED"
+          },
+          {
+            "kind": "emit",
+            "resource": "ASSISTANT_NEW_CHAT"
+          },
+          {
+            "kind": "emit",
+            "resource": "ASSISTANT_SEND"
           },
           {
             "kind": "render-ui",
@@ -290,19 +482,472 @@
     ],
     "emittedEvents": [
       "ASK",
+      "ASSISTANT_CHATS_REQUESTED",
+      "ASSISTANT_CHAT_SELECTED",
+      "ASSISTANT_HISTORY_REQUESTED",
+      "ASSISTANT_MEMORIES_REQUESTED",
+      "ASSISTANT_NEW_CHAT",
+      "ASSISTANT_SEND",
+      "ASSISTANT_THREAD_FAILED",
       "AgentConversationLoaded",
       "AgentMessageSaveFailed",
       "AgentMessageSaved",
       "AgentMessagesLoadFailed",
       "AgentMessagesLoaded",
+      "CHAT_PICKED",
       "CONVERSE",
-      "SEND",
-      "THREAD_FAILED"
+      "NEW_CHAT_CLICKED",
+      "OPEN_CHATS_CLICKED",
+      "OPEN_MEMORY_CLICKED"
     ],
     "listenedEvents": [
-      "AgentMessagesLoaded",
-      "SEND",
-      "THREAD_FAILED"
+      "ASSISTANT_CHATS_LOADED",
+      "ASSISTANT_CHAT_OPENED",
+      "ASSISTANT_MEMORIES_LOADED",
+      "ASSISTANT_REPLIED",
+      "ASSISTANT_REPLY_FAILED",
+      "ASSISTANT_REPLY_IN_CHAT",
+      "ASSISTANT_SEND_IN_CHAT",
+      "ASSISTANT_STEP",
+      "ASSISTANT_THREAD_FAILED",
+      "AgentMessagesLoaded"
+    ],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  },
+  {
+    "organism": "std-agent-session",
+    "orbital": "AgentChatsOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/agent/atoms/std-agent-session.ts",
+    "entities": [
+      {
+        "name": "AgentChat",
+        "fields": [
+          {
+            "name": "ownerId",
+            "type": "string",
+            "required": true,
+            "description": "Whose conversation this is (the real @user). The binding organism scopes @read to it.",
+            "synonyms": "user, owner, account"
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false,
+            "description": "The conversation's first request, shown in the conversation list; empty until the first message.",
+            "synonyms": "name, subject, topic"
+          },
+          {
+            "name": "startedAt",
+            "type": "number",
+            "required": false,
+            "description": "When the conversation started (ms).",
+            "synonyms": "created, opened"
+          },
+          {
+            "name": "lastActiveAt",
+            "type": "number",
+            "required": false,
+            "description": "When the conversation was last used (ms). The most recent one is the current conversation.",
+            "synonyms": "last used, updated, recent"
+          },
+          {
+            "name": "pendingMessage",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "pendingReply",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "AgentChatKeeper",
+        "emittedEvents": [
+          "ASSISTANT_CHAT_OPENED",
+          "ASSISTANT_SEND_IN_CHAT",
+          "ASSISTANT_REPLY_IN_CHAT",
+          "ASSISTANT_CHATS_CHANGED",
+          "ASSISTANT_THREAD_FAILED",
+          "ASSISTANT_CHATS_LOADED",
+          "ChatsForList",
+          "ChatsForHistory",
+          "ChatsForSend",
+          "ChatsForReply",
+          "ChatsForSelect",
+          "ChatReadyForSend",
+          "NewChatStarted",
+          "ChatSelected",
+          "AgentChatsLoadFailed"
+        ],
+        "listenedEvents": [
+          "ASSISTANT_SEND",
+          "ASSISTANT_HISTORY_REQUESTED",
+          "ASSISTANT_NEW_CHAT",
+          "ASSISTANT_CHAT_SELECTED",
+          "ASSISTANT_REPLIED",
+          "ASSISTANT_CHATS_REQUESTED"
+        ],
+        "events": [
+          {
+            "name": "ASSISTANT_CHAT_OPENED",
+            "direction": "emit",
+            "description": "This conversation is now the current one (empty for none yet); AgentThread loads its messages.",
+            "tier": "internal"
+          },
+          {
+            "name": "ASSISTANT_SEND_IN_CHAT",
+            "direction": "emit",
+            "description": "The user's message, placed in the current conversation.",
+            "tier": "internal"
+          },
+          {
+            "name": "ASSISTANT_REPLY_IN_CHAT",
+            "direction": "emit",
+            "description": "The assistant's answer, placed in the current conversation.",
+            "tier": "internal"
+          },
+          {
+            "name": "ASSISTANT_CHATS_CHANGED",
+            "direction": "emit",
+            "description": "A conversation was started, used or reopened; the conversation list refreshes.",
+            "synonyms": "conversations changed, history changed",
+            "tier": "domain"
+          },
+          {
+            "name": "ASSISTANT_THREAD_FAILED",
+            "direction": "emit",
+            "description": "A conversation could not be loaded or stored.",
+            "tier": "domain"
+          },
+          {
+            "name": "ASSISTANT_CHATS_LOADED",
+            "direction": "emit",
+            "description": "The person's conversations, most recently used first.",
+            "synonyms": "conversations, history",
+            "tier": "domain"
+          },
+          {
+            "name": "ChatsForList",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "ChatsForHistory",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "ChatsForSend",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "ChatsForReply",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "ChatsForSelect",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "ChatReadyForSend",
+            "direction": "emit",
+            "description": "The current conversation exists and is marked active — payload is the AgentChat row.",
+            "tier": "internal"
+          },
+          {
+            "name": "NewChatStarted",
+            "direction": "emit",
+            "description": "A new conversation started — payload is the AgentChat row.",
+            "tier": "internal"
+          },
+          {
+            "name": "ChatSelected",
+            "direction": "emit",
+            "description": "A past conversation was reopened — payload is the AgentChat row.",
+            "tier": "internal"
+          },
+          {
+            "name": "AgentChatsLoadFailed",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "LOAD_HISTORY",
+            "direction": "listen",
+            "description": "A conversation view opened; open the current conversation."
+          },
+          {
+            "name": "SEND",
+            "direction": "listen",
+            "description": "The user asked something; place it in the current conversation."
+          },
+          {
+            "name": "REPLIED",
+            "direction": "listen",
+            "description": "The assistant answered; place the answer in the current conversation."
+          },
+          {
+            "name": "NEW_CHAT",
+            "direction": "listen",
+            "description": "Start a new conversation; the previous one stays in the list."
+          },
+          {
+            "name": "SELECT_CHAT",
+            "direction": "listen",
+            "description": "Reopen a past conversation and make it the current one."
+          },
+          {
+            "name": "LIST_CHATS",
+            "direction": "listen",
+            "description": "Send the person's conversations to the conversation list."
+          }
+        ],
+        "overridableConfigKeys": [],
+        "capabilities": [],
+        "linkedEntity": "AgentChat",
+        "transitionEvents": [
+          "AgentChatsLoadFailed",
+          "ChatReadyForSend",
+          "ChatSelected",
+          "ChatsForHistory",
+          "ChatsForList",
+          "ChatsForReply",
+          "ChatsForSelect",
+          "ChatsForSend",
+          "INIT",
+          "LIST_CHATS",
+          "LOAD_HISTORY",
+          "NEW_CHAT",
+          "NewChatStarted",
+          "REPLIED",
+          "SELECT_CHAT",
+          "SEND"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "pendingMessage",
+            "pendingReply"
+          ]
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "ASSISTANT_CHATS_CHANGED"
+          },
+          {
+            "kind": "emit",
+            "resource": "ASSISTANT_CHATS_LOADED"
+          },
+          {
+            "kind": "emit",
+            "resource": "ASSISTANT_CHAT_OPENED"
+          },
+          {
+            "kind": "emit",
+            "resource": "ASSISTANT_REPLY_IN_CHAT"
+          },
+          {
+            "kind": "emit",
+            "resource": "ASSISTANT_SEND_IN_CHAT"
+          },
+          {
+            "kind": "emit",
+            "resource": "ASSISTANT_THREAD_FAILED"
+          },
+          {
+            "kind": "fetch",
+            "resource": "AgentChat"
+          },
+          {
+            "kind": "persist",
+            "resource": "AgentChat"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "toast"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.pendingMessage"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.pendingReply"
+          }
+        ],
+        "effectEntityRefs": [
+          "AgentChat"
+        ]
+      },
+      {
+        "name": "AgentChatList",
+        "emittedEvents": [
+          "ASSISTANT_CHAT_SELECTED",
+          "ASSISTANT_NEW_CHAT",
+          "AgentChatsLoaded",
+          "AgentChatsLoadFailed"
+        ],
+        "listenedEvents": [
+          "ASSISTANT_CHATS_CHANGED"
+        ],
+        "events": [
+          {
+            "name": "ASSISTANT_CHAT_SELECTED",
+            "direction": "emit",
+            "description": "The user reopened a past conversation.",
+            "synonyms": "open conversation, switch conversation",
+            "tier": "domain"
+          },
+          {
+            "name": "ASSISTANT_NEW_CHAT",
+            "direction": "emit",
+            "description": "The user started a new conversation.",
+            "synonyms": "new chat, new conversation, start over",
+            "tier": "domain"
+          },
+          {
+            "name": "AgentChatsLoaded",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "AgentChatsLoadFailed",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "CHATS_CHANGED",
+            "direction": "listen",
+            "description": "A conversation was started, used or reopened."
+          },
+          {
+            "name": "OPEN_CHAT",
+            "direction": "listen",
+            "description": "Reopen this conversation.",
+            "synonyms": "open, select, switch",
+            "tier": "presentation"
+          },
+          {
+            "name": "NEW_CHAT_CLICKED",
+            "direction": "listen",
+            "description": "Start a new conversation.",
+            "tier": "presentation"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "newChatLabel",
+            "type": "string",
+            "default": "New conversation",
+            "label": "New conversation button",
+            "tier": "presentation"
+          },
+          {
+            "key": "untitledLabel",
+            "type": "string",
+            "default": "New conversation",
+            "label": "Name of a conversation with no messages yet",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "AgentChat",
+        "transitionEvents": [
+          "AgentChatsLoadFailed",
+          "AgentChatsLoaded",
+          "CHATS_CHANGED",
+          "INIT",
+          "NEW_CHAT_CLICKED",
+          "OPEN_CHAT"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "ASSISTANT_CHAT_SELECTED"
+          },
+          {
+            "kind": "emit",
+            "resource": "ASSISTANT_NEW_CHAT"
+          },
+          {
+            "kind": "fetch",
+            "resource": "AgentChat"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "main"
+          }
+        ],
+        "effectEntityRefs": [
+          "AgentChat"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "AgentChatsPage",
+        "defaultPath": "/agent-session/chats",
+        "primaryEntity": "AgentChat"
+      }
+    ],
+    "emittedEvents": [
+      "ASSISTANT_CHATS_CHANGED",
+      "ASSISTANT_CHATS_LOADED",
+      "ASSISTANT_CHAT_OPENED",
+      "ASSISTANT_CHAT_SELECTED",
+      "ASSISTANT_NEW_CHAT",
+      "ASSISTANT_REPLY_IN_CHAT",
+      "ASSISTANT_SEND_IN_CHAT",
+      "ASSISTANT_THREAD_FAILED",
+      "AgentChatsLoadFailed",
+      "AgentChatsLoaded",
+      "ChatReadyForSend",
+      "ChatSelected",
+      "ChatsForHistory",
+      "ChatsForList",
+      "ChatsForReply",
+      "ChatsForSelect",
+      "ChatsForSend",
+      "NewChatStarted"
+    ],
+    "listenedEvents": [
+      "ASSISTANT_CHATS_CHANGED",
+      "ASSISTANT_CHATS_REQUESTED",
+      "ASSISTANT_CHAT_SELECTED",
+      "ASSISTANT_HISTORY_REQUESTED",
+      "ASSISTANT_NEW_CHAT",
+      "ASSISTANT_REPLIED",
+      "ASSISTANT_SEND"
     ],
     "exposure": "both",
     "provenance": "authored",

@@ -60,20 +60,34 @@ orbital ScenarioOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: (str/concat @config.metricALabel ": " (math/round @entity.metricA 0) " · " @config.metricBLabel ": " (math/round @entity.metricB 0) " · decisions: " (str/concat "" @entity.stepCount)) },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Ended" (str/concat "Decision " (+ @entity.stepCount 1))), variant: (if @entity.done "primary" "neutral") }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: md, wrap: true, children: [
+                    { type: stat-display, label: @config.metricALabel, value: (math/round @entity.metricA 0) },
+                    { type: stat-display, label: @config.metricBLabel, value: (math/round @entity.metricB 0) }
+                  ] },
                 { type: stack, direction: vertical, gap: md, children: @entity.view },
-                { type: stack, direction: vertical, gap: xs, children: (array/map (array/range 0 (array/len @entity.choices)) (fn (i)
-                    { type: button, action: CHOOSE, actionPayload: { index: @i }, label: (object/get (array/nth @entity.choices @i) label), variant: secondary, size: sm, disabled: (if @entity.done true false) })) },
-                { type: typography, variant: caption, content: @entity.feedback },
+                { type: stack, direction: vertical, gap: sm, children: (array/map (array/range 0 (array/len @entity.choices)) (fn (i)
+                    { type: button, action: CHOOSE, actionPayload: { index: @i }, label: (object/get (array/nth @entity.choices @i) label), variant: secondary, size: lg, disabled: (if @entity.done true false) })) },
+                { type: typography, variant: body, content: @entity.feedback },
                 { type: stack, direction: vertical, gap: xs, children: (array/map @entity.path (fn (line)
                     { type: typography, variant: caption, color: muted, content: @line })) },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RESTART, label: @config.restartLabel, variant: primary, disabled: (if @entity.done false true) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: RESTART, label: @config.restartLabel, icon: "rotate-ccw", variant: primary, disabled: (if @entity.done false true) },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Decisions " @entity.stepCount) }
                   ] }
               ] }
           ]
         })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (render-ui main null)
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (let (
@@ -101,16 +115,26 @@ orbital ScenarioOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: (str/concat @config.metricALabel ": " (math/round @entity.metricA 0) " · " @config.metricBLabel ": " (math/round @entity.metricB 0) " · decisions: " (str/concat "" @entity.stepCount)) },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Ended" (str/concat "Decision " (+ @entity.stepCount 1))), variant: (if @entity.done "primary" "neutral") }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: md, wrap: true, children: [
+                    { type: stat-display, label: @config.metricALabel, value: (math/round @entity.metricA 0) },
+                    { type: stat-display, label: @config.metricBLabel, value: (math/round @entity.metricB 0) }
+                  ] },
                 { type: stack, direction: vertical, gap: md, children: @entity.view },
-                { type: stack, direction: vertical, gap: xs, children: (array/map (array/range 0 (array/len @entity.choices)) (fn (i)
-                    { type: button, action: CHOOSE, actionPayload: { index: @i }, label: (object/get (array/nth @entity.choices @i) label), variant: secondary, size: sm, disabled: (if @entity.done true false) })) },
-                { type: typography, variant: caption, content: @entity.feedback },
+                { type: stack, direction: vertical, gap: sm, children: (array/map (array/range 0 (array/len @entity.choices)) (fn (i)
+                    { type: button, action: CHOOSE, actionPayload: { index: @i }, label: (object/get (array/nth @entity.choices @i) label), variant: secondary, size: lg, disabled: (if @entity.done true false) })) },
+                { type: typography, variant: body, content: @entity.feedback },
                 { type: stack, direction: vertical, gap: xs, children: (array/map @entity.path (fn (line)
                     { type: typography, variant: caption, color: muted, content: @line })) },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RESTART, label: @config.restartLabel, variant: primary, disabled: (if @entity.done false true) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: RESTART, label: @config.restartLabel, icon: "rotate-ccw", variant: primary, disabled: (if @entity.done false true) },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Decisions " @entity.stepCount) }
                   ] }
               ] }
           ]
@@ -156,16 +180,26 @@ orbital ScenarioOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: (str/concat @config.metricALabel ": " (math/round @entity.metricA 0) " · " @config.metricBLabel ": " (math/round @entity.metricB 0) " · decisions: " (str/concat "" @entity.stepCount)) },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Ended" (str/concat "Decision " (+ @entity.stepCount 1))), variant: (if @entity.done "primary" "neutral") }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: md, wrap: true, children: [
+                    { type: stat-display, label: @config.metricALabel, value: (math/round @entity.metricA 0) },
+                    { type: stat-display, label: @config.metricBLabel, value: (math/round @entity.metricB 0) }
+                  ] },
                 { type: stack, direction: vertical, gap: md, children: @entity.view },
-                { type: stack, direction: vertical, gap: xs, children: (array/map (array/range 0 (array/len @entity.choices)) (fn (i)
-                    { type: button, action: CHOOSE, actionPayload: { index: @i }, label: (object/get (array/nth @entity.choices @i) label), variant: secondary, size: sm, disabled: (if @entity.done true false) })) },
-                { type: typography, variant: caption, content: @entity.feedback },
+                { type: stack, direction: vertical, gap: sm, children: (array/map (array/range 0 (array/len @entity.choices)) (fn (i)
+                    { type: button, action: CHOOSE, actionPayload: { index: @i }, label: (object/get (array/nth @entity.choices @i) label), variant: secondary, size: lg, disabled: (if @entity.done true false) })) },
+                { type: typography, variant: body, content: @entity.feedback },
                 { type: stack, direction: vertical, gap: xs, children: (array/map @entity.path (fn (line)
                     { type: typography, variant: caption, color: muted, content: @line })) },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RESTART, label: @config.restartLabel, variant: primary, disabled: (if @entity.done false true) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: RESTART, label: @config.restartLabel, icon: "rotate-ccw", variant: primary, disabled: (if @entity.done false true) },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Decisions " @entity.stepCount) }
                   ] }
               ] }
           ]
@@ -198,16 +232,26 @@ orbital ScenarioOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: (str/concat @config.metricALabel ": " (math/round @entity.metricA 0) " · " @config.metricBLabel ": " (math/round @entity.metricB 0) " · decisions: " (str/concat "" @entity.stepCount)) },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Ended" (str/concat "Decision " (+ @entity.stepCount 1))), variant: (if @entity.done "primary" "neutral") }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: md, wrap: true, children: [
+                    { type: stat-display, label: @config.metricALabel, value: (math/round @entity.metricA 0) },
+                    { type: stat-display, label: @config.metricBLabel, value: (math/round @entity.metricB 0) }
+                  ] },
                 { type: stack, direction: vertical, gap: md, children: @entity.view },
-                { type: stack, direction: vertical, gap: xs, children: (array/map (array/range 0 (array/len @entity.choices)) (fn (i)
-                    { type: button, action: CHOOSE, actionPayload: { index: @i }, label: (object/get (array/nth @entity.choices @i) label), variant: secondary, size: sm, disabled: (if @entity.done true false) })) },
-                { type: typography, variant: caption, content: @entity.feedback },
+                { type: stack, direction: vertical, gap: sm, children: (array/map (array/range 0 (array/len @entity.choices)) (fn (i)
+                    { type: button, action: CHOOSE, actionPayload: { index: @i }, label: (object/get (array/nth @entity.choices @i) label), variant: secondary, size: lg, disabled: (if @entity.done true false) })) },
+                { type: typography, variant: body, content: @entity.feedback },
                 { type: stack, direction: vertical, gap: xs, children: (array/map @entity.path (fn (line)
                     { type: typography, variant: caption, color: muted, content: @line })) },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RESTART, label: @config.restartLabel, variant: primary, disabled: (if @entity.done false true) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: RESTART, label: @config.restartLabel, icon: "rotate-ccw", variant: primary, disabled: (if @entity.done false true) },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Decisions " @entity.stepCount) }
                   ] }
               ] }
           ]
@@ -257,6 +301,10 @@ orbital ScenarioOrbital {
       title : string = "Decision Scenario"
         @label "Title"
         @description "Title shown above the scenario."
+        @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what the scenario explores (keep it under ~65 characters). Empty shows no line."
         @tier "presentation"
       metricALabel : string = "Budget"
         @label "Metric A Label"

@@ -348,7 +348,7 @@
               "type": "string"
             },
             "revealColor": {
-              "default": "#3b82f6",
+              "default": "series-1",
               "label": "Reveal Color",
               "tier": "presentation",
               "type": "string"
@@ -489,6 +489,13 @@
               "label": "Scenarios",
               "tier": "domain",
               "type": "[PredictScenario]"
+            },
+            "summary": {
+              "default": "",
+              "description": "One line under the title saying what is being predicted (keep it under ~65 characters). Empty shows no line.",
+              "label": "Concept",
+              "tier": "presentation",
+              "type": "string"
             },
             "title": {
               "default": "Predict, Then Watch",
@@ -1077,9 +1084,106 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.done",
+                                    [
+                                      "str/concat",
+                                      "@entity.score",
+                                      " / ",
+                                      "@entity.totalScenarios",
+                                      " correct"
+                                    ],
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.phase",
+                                        "commit"
+                                      ],
+                                      "Predict",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.phase",
+                                          "reveal"
+                                        ],
+                                        "Revealing",
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.chosenIndex",
+                                            "@entity.correctIndex"
+                                          ],
+                                          "Correct",
+                                          "Incorrect"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.done",
+                                    "primary",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.phase",
+                                        "judged"
+                                      ],
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.chosenIndex",
+                                          "@entity.correctIndex"
+                                        ],
+                                        "success",
+                                        "error"
+                                      ],
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "label": [
@@ -1138,45 +1242,68 @@
                                       "index": "@i"
                                     },
                                     "disabled": [
-                                      "if",
-                                      [
-                                        "==",
-                                        "@entity.phase",
-                                        "commit"
-                                      ],
-                                      false,
-                                      true
+                                      "!=",
+                                      "@entity.phase",
+                                      "commit"
                                     ],
                                     "label": [
                                       "array/nth",
                                       "@entity.options",
                                       "@i"
                                     ],
-                                    "size": "sm",
+                                    "size": "lg",
                                     "type": "button",
                                     "variant": [
                                       "if",
                                       [
-                                        "and",
-                                        [
-                                          "!=",
-                                          "@entity.phase",
-                                          "commit"
-                                        ],
+                                        "==",
+                                        "@entity.phase",
+                                        "commit"
+                                      ],
+                                      "secondary",
+                                      [
+                                        "if",
                                         [
                                           "==",
-                                          "@entity.chosenIndex",
-                                          "@i"
+                                          "@entity.phase",
+                                          "reveal"
+                                        ],
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.chosenIndex",
+                                            "@i"
+                                          ],
+                                          "primary",
+                                          "ghost"
+                                        ],
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@i",
+                                            "@entity.correctIndex"
+                                          ],
+                                          "success",
+                                          [
+                                            "if",
+                                            [
+                                              "==",
+                                              "@entity.chosenIndex",
+                                              "@i"
+                                            ],
+                                            "danger",
+                                            "ghost"
+                                          ]
                                         ]
-                                      ],
-                                      "primary",
-                                      "secondary"
+                                      ]
                                     ]
                                   }
                                 ]
                               ],
-                              "direction": "horizontal",
-                              "gap": "xs",
+                              "direction": "vertical",
+                              "gap": "sm",
                               "type": "stack"
                             },
                             {
@@ -1185,6 +1312,10 @@
                               "gridStep": "@config.gridStep",
                               "height": "@config.height",
                               "interactive": false,
+                              "keyMap": {
+                                "ArrowRight": "NEXT",
+                                "KeyR": "RETRY"
+                              },
                               "points": [],
                               "shapes": [],
                               "showAxes": true,
@@ -1217,9 +1348,10 @@
                             {
                               "content": "@entity.feedback",
                               "type": "typography",
-                              "variant": "caption"
+                              "variant": "body"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "NEXT",
@@ -1241,6 +1373,7 @@
                                     false,
                                     true
                                   ],
+                                  "icon": "chevron-right",
                                   "label": "@config.nextLabel",
                                   "type": "button",
                                   "variant": "primary"
@@ -1253,20 +1386,28 @@
                                     false,
                                     true
                                   ],
+                                  "icon": "rotate-ccw",
                                   "label": "@config.retryLabel",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Correct ",
+                                    "@entity.score",
+                                    " of ",
+                                    "@entity.totalScenarios"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "label": "Correct predictions",
-                              "max": "@entity.totalScenarios",
-                              "type": "stat-display",
-                              "value": "@entity.score"
+                              "type": "stack",
+                              "wrap": true
                             }
                           ],
                           "direction": "vertical",
@@ -1286,6 +1427,43 @@
                   "==",
                   "@config.matchMode",
                   ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01M07581DK61J8ARTARPY4MNHW",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@config.matchMode",
+                      ""
+                    ]
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1466,9 +1644,106 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.done",
+                                    [
+                                      "str/concat",
+                                      "@entity.score",
+                                      " / ",
+                                      "@entity.totalScenarios",
+                                      " correct"
+                                    ],
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.phase",
+                                        "commit"
+                                      ],
+                                      "Predict",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.phase",
+                                          "reveal"
+                                        ],
+                                        "Revealing",
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.chosenIndex",
+                                            "@entity.correctIndex"
+                                          ],
+                                          "Correct",
+                                          "Incorrect"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.done",
+                                    "primary",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.phase",
+                                        "judged"
+                                      ],
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.chosenIndex",
+                                          "@entity.correctIndex"
+                                        ],
+                                        "success",
+                                        "error"
+                                      ],
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "label": [
@@ -1527,45 +1802,68 @@
                                       "index": "@i"
                                     },
                                     "disabled": [
-                                      "if",
-                                      [
-                                        "==",
-                                        "@entity.phase",
-                                        "commit"
-                                      ],
-                                      false,
-                                      true
+                                      "!=",
+                                      "@entity.phase",
+                                      "commit"
                                     ],
                                     "label": [
                                       "array/nth",
                                       "@entity.options",
                                       "@i"
                                     ],
-                                    "size": "sm",
+                                    "size": "lg",
                                     "type": "button",
                                     "variant": [
                                       "if",
                                       [
-                                        "and",
-                                        [
-                                          "!=",
-                                          "@entity.phase",
-                                          "commit"
-                                        ],
+                                        "==",
+                                        "@entity.phase",
+                                        "commit"
+                                      ],
+                                      "secondary",
+                                      [
+                                        "if",
                                         [
                                           "==",
-                                          "@entity.chosenIndex",
-                                          "@i"
+                                          "@entity.phase",
+                                          "reveal"
+                                        ],
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.chosenIndex",
+                                            "@i"
+                                          ],
+                                          "primary",
+                                          "ghost"
+                                        ],
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@i",
+                                            "@entity.correctIndex"
+                                          ],
+                                          "success",
+                                          [
+                                            "if",
+                                            [
+                                              "==",
+                                              "@entity.chosenIndex",
+                                              "@i"
+                                            ],
+                                            "danger",
+                                            "ghost"
+                                          ]
                                         ]
-                                      ],
-                                      "primary",
-                                      "secondary"
+                                      ]
                                     ]
                                   }
                                 ]
                               ],
-                              "direction": "horizontal",
-                              "gap": "xs",
+                              "direction": "vertical",
+                              "gap": "sm",
                               "type": "stack"
                             },
                             {
@@ -1574,6 +1872,10 @@
                               "gridStep": "@config.gridStep",
                               "height": "@config.height",
                               "interactive": false,
+                              "keyMap": {
+                                "ArrowRight": "NEXT",
+                                "KeyR": "RETRY"
+                              },
                               "points": [],
                               "shapes": [],
                               "showAxes": true,
@@ -1606,9 +1908,10 @@
                             {
                               "content": "@entity.feedback",
                               "type": "typography",
-                              "variant": "caption"
+                              "variant": "body"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "NEXT",
@@ -1630,6 +1933,7 @@
                                     false,
                                     true
                                   ],
+                                  "icon": "chevron-right",
                                   "label": "@config.nextLabel",
                                   "type": "button",
                                   "variant": "primary"
@@ -1642,20 +1946,28 @@
                                     false,
                                     true
                                   ],
+                                  "icon": "rotate-ccw",
                                   "label": "@config.retryLabel",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Correct ",
+                                    "@entity.score",
+                                    " of ",
+                                    "@entity.totalScenarios"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "label": "Correct predictions",
-                              "max": "@entity.totalScenarios",
-                              "type": "stat-display",
-                              "value": "@entity.score"
+                              "type": "stack",
+                              "wrap": true
                             }
                           ],
                           "direction": "vertical",
@@ -2096,9 +2408,106 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.done",
+                                    [
+                                      "str/concat",
+                                      "@entity.score",
+                                      " / ",
+                                      "@entity.totalScenarios",
+                                      " correct"
+                                    ],
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.phase",
+                                        "commit"
+                                      ],
+                                      "Predict",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.phase",
+                                          "reveal"
+                                        ],
+                                        "Revealing",
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.chosenIndex",
+                                            "@entity.correctIndex"
+                                          ],
+                                          "Correct",
+                                          "Incorrect"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.done",
+                                    "primary",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.phase",
+                                        "judged"
+                                      ],
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.chosenIndex",
+                                          "@entity.correctIndex"
+                                        ],
+                                        "success",
+                                        "error"
+                                      ],
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "label": [
@@ -2157,45 +2566,68 @@
                                       "index": "@i"
                                     },
                                     "disabled": [
-                                      "if",
-                                      [
-                                        "==",
-                                        "@entity.phase",
-                                        "commit"
-                                      ],
-                                      false,
-                                      true
+                                      "!=",
+                                      "@entity.phase",
+                                      "commit"
                                     ],
                                     "label": [
                                       "array/nth",
                                       "@entity.options",
                                       "@i"
                                     ],
-                                    "size": "sm",
+                                    "size": "lg",
                                     "type": "button",
                                     "variant": [
                                       "if",
                                       [
-                                        "and",
-                                        [
-                                          "!=",
-                                          "@entity.phase",
-                                          "commit"
-                                        ],
+                                        "==",
+                                        "@entity.phase",
+                                        "commit"
+                                      ],
+                                      "secondary",
+                                      [
+                                        "if",
                                         [
                                           "==",
-                                          "@entity.chosenIndex",
-                                          "@i"
+                                          "@entity.phase",
+                                          "reveal"
+                                        ],
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.chosenIndex",
+                                            "@i"
+                                          ],
+                                          "primary",
+                                          "ghost"
+                                        ],
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@i",
+                                            "@entity.correctIndex"
+                                          ],
+                                          "success",
+                                          [
+                                            "if",
+                                            [
+                                              "==",
+                                              "@entity.chosenIndex",
+                                              "@i"
+                                            ],
+                                            "danger",
+                                            "ghost"
+                                          ]
                                         ]
-                                      ],
-                                      "primary",
-                                      "secondary"
+                                      ]
                                     ]
                                   }
                                 ]
                               ],
-                              "direction": "horizontal",
-                              "gap": "xs",
+                              "direction": "vertical",
+                              "gap": "sm",
                               "type": "stack"
                             },
                             {
@@ -2204,6 +2636,10 @@
                               "gridStep": "@config.gridStep",
                               "height": "@config.height",
                               "interactive": false,
+                              "keyMap": {
+                                "ArrowRight": "NEXT",
+                                "KeyR": "RETRY"
+                              },
                               "points": [],
                               "shapes": [],
                               "showAxes": true,
@@ -2236,9 +2672,10 @@
                             {
                               "content": "@entity.feedback",
                               "type": "typography",
-                              "variant": "caption"
+                              "variant": "body"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "NEXT",
@@ -2260,6 +2697,7 @@
                                     false,
                                     true
                                   ],
+                                  "icon": "chevron-right",
                                   "label": "@config.nextLabel",
                                   "type": "button",
                                   "variant": "primary"
@@ -2272,20 +2710,28 @@
                                     false,
                                     true
                                   ],
+                                  "icon": "rotate-ccw",
                                   "label": "@config.retryLabel",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Correct ",
+                                    "@entity.score",
+                                    " of ",
+                                    "@entity.totalScenarios"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "label": "Correct predictions",
-                              "max": "@entity.totalScenarios",
-                              "type": "stat-display",
-                              "value": "@entity.score"
+                              "type": "stack",
+                              "wrap": true
                             }
                           ],
                           "direction": "vertical",
@@ -2492,9 +2938,106 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.done",
+                                    [
+                                      "str/concat",
+                                      "@entity.score",
+                                      " / ",
+                                      "@entity.totalScenarios",
+                                      " correct"
+                                    ],
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.phase",
+                                        "commit"
+                                      ],
+                                      "Predict",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.phase",
+                                          "reveal"
+                                        ],
+                                        "Revealing",
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.chosenIndex",
+                                            "@entity.correctIndex"
+                                          ],
+                                          "Correct",
+                                          "Incorrect"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.done",
+                                    "primary",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.phase",
+                                        "judged"
+                                      ],
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.chosenIndex",
+                                          "@entity.correctIndex"
+                                        ],
+                                        "success",
+                                        "error"
+                                      ],
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "label": [
@@ -2553,45 +3096,68 @@
                                       "index": "@i"
                                     },
                                     "disabled": [
-                                      "if",
-                                      [
-                                        "==",
-                                        "@entity.phase",
-                                        "commit"
-                                      ],
-                                      false,
-                                      true
+                                      "!=",
+                                      "@entity.phase",
+                                      "commit"
                                     ],
                                     "label": [
                                       "array/nth",
                                       "@entity.options",
                                       "@i"
                                     ],
-                                    "size": "sm",
+                                    "size": "lg",
                                     "type": "button",
                                     "variant": [
                                       "if",
                                       [
-                                        "and",
-                                        [
-                                          "!=",
-                                          "@entity.phase",
-                                          "commit"
-                                        ],
+                                        "==",
+                                        "@entity.phase",
+                                        "commit"
+                                      ],
+                                      "secondary",
+                                      [
+                                        "if",
                                         [
                                           "==",
-                                          "@entity.chosenIndex",
-                                          "@i"
+                                          "@entity.phase",
+                                          "reveal"
+                                        ],
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.chosenIndex",
+                                            "@i"
+                                          ],
+                                          "primary",
+                                          "ghost"
+                                        ],
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@i",
+                                            "@entity.correctIndex"
+                                          ],
+                                          "success",
+                                          [
+                                            "if",
+                                            [
+                                              "==",
+                                              "@entity.chosenIndex",
+                                              "@i"
+                                            ],
+                                            "danger",
+                                            "ghost"
+                                          ]
                                         ]
-                                      ],
-                                      "primary",
-                                      "secondary"
+                                      ]
                                     ]
                                   }
                                 ]
                               ],
-                              "direction": "horizontal",
-                              "gap": "xs",
+                              "direction": "vertical",
+                              "gap": "sm",
                               "type": "stack"
                             },
                             {
@@ -2600,6 +3166,10 @@
                               "gridStep": "@config.gridStep",
                               "height": "@config.height",
                               "interactive": false,
+                              "keyMap": {
+                                "ArrowRight": "NEXT",
+                                "KeyR": "RETRY"
+                              },
                               "points": [],
                               "shapes": [],
                               "showAxes": true,
@@ -2632,9 +3202,10 @@
                             {
                               "content": "@entity.feedback",
                               "type": "typography",
-                              "variant": "caption"
+                              "variant": "body"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "NEXT",
@@ -2656,6 +3227,7 @@
                                     false,
                                     true
                                   ],
+                                  "icon": "chevron-right",
                                   "label": "@config.nextLabel",
                                   "type": "button",
                                   "variant": "primary"
@@ -2668,20 +3240,28 @@
                                     false,
                                     true
                                   ],
+                                  "icon": "rotate-ccw",
                                   "label": "@config.retryLabel",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Correct ",
+                                    "@entity.score",
+                                    " of ",
+                                    "@entity.totalScenarios"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "label": "Correct predictions",
-                              "max": "@entity.totalScenarios",
-                              "type": "stat-display",
-                              "value": "@entity.score"
+                              "type": "stack",
+                              "wrap": true
                             }
                           ],
                           "direction": "vertical",

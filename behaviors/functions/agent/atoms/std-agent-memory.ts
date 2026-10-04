@@ -30,14 +30,42 @@ const ALIAS = 'AgentMemory';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdAgentMemoryEventKey = 'AgentMemoriesLoadFailed' | 'INIT' | 'MEMORY_STORED' | 'MemoriesForRecall' | 'MemoryEmbedFailed' | 'MemoryEmbedded' | 'RECALL' | 'RECALLED' | 'REMEMBER';
+export type StdAgentMemoryEventKey = 'ASSISTANT_MEMORIES_LOADED' | 'AgentMemoriesLoadFailed' | 'INIT' | 'LIST' | 'MEMORY_STORED' | 'MemoriesForList' | 'MemoriesForRecall' | 'MemoryEmbedFailed' | 'MemoryEmbedded' | 'MemoryListFailed' | 'RECALL' | 'RECALLED' | 'REMEMBER';
+
+/**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdAgentMemoryListenKey = 'ASSISTANT_MEMORIES_REQUESTED';
 
 /**
  * Payload shape for the `RECALLED` event.
  */
 export interface StdAgentMemoryRecalledPayload {
   messages: EntityRow[];
-  context: string;
+  context?: string;
+}
+
+/**
+ * Payload shape for the `ASSISTANT_MEMORIES_LOADED` event.
+ */
+export interface StdAgentMemoryAssistantMemoriesLoadedPayload {
+  data: EntityRow[];
+}
+
+/**
+ * Payload shape for the `MemoriesForList` event.
+ */
+export interface StdAgentMemoryMemoriesForListPayload {
+  data?: EntityRow[];
+}
+
+/**
+ * Payload shape for the `MemoryListFailed` event.
+ */
+export interface StdAgentMemoryMemoryListFailedPayload {
+  error?: string;
+  code?: string;
 }
 
 /**
@@ -351,6 +379,10 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
           },
           {
             'kind': 'emit',
+            'resource': 'ASSISTANT_MEMORIES_LOADED',
+          },
+          {
+            'kind': 'emit',
             'resource': 'RECALLED',
           },
           {
@@ -406,13 +438,122 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
               },
               {
                 'name': 'context',
-                'required': true,
                 'type': 'string',
               },
             ],
             'scope': 'external',
             'synonyms': 'recalled, remembered, context ready',
             'tier': 'domain',
+          },
+          {
+            'description': 'What the assistant remembers for this person, newest first (empty when nothing is, or the list could not load).',
+            'event': 'ASSISTANT_MEMORIES_LOADED',
+            'payloadSchema': [
+              {
+                'entity': 'AgentMemoryRow',
+                'name': 'data',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'content',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'number',
+                  },
+                ],
+                'required': true,
+                'type': '[object]',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'memories, what I remember',
+            'tier': 'domain',
+          },
+          {
+            'event': 'MemoriesForList',
+            'payloadSchema': [
+              {
+                'entity': 'AgentMemory',
+                'name': 'data',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'ownerId',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'content',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'embedding',
+                    'type': '[number]',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'pendingMessages',
+                    'properties': [
+                      {
+                        'name': 'role',
+                        'type': 'string',
+                      },
+                      {
+                        'name': 'content',
+                        'required': true,
+                        'type': 'string',
+                      },
+                    ],
+                    'type': '[object]',
+                  },
+                  {
+                    'name': 'pendingQuery',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'pendingContent',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'queryVector',
+                    'type': '[number]',
+                  },
+                ],
+                'type': '[object]',
+              },
+            ],
+            'scope': 'internal',
+            'tier': 'internal',
+          },
+          {
+            'event': 'MemoryListFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'scope': 'internal',
+            'tier': 'internal',
           },
           {
             'description': 'A new memory was stored — payload is the created AgentMemory row itself.',
@@ -533,6 +674,15 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
         },
         'entityRebindable': true,
         'linkedEntity': 'AgentMemory',
+        'listens': [
+          {
+            'event': 'ASSISTANT_MEMORIES_REQUESTED',
+            'source': {
+              'kind': 'any',
+            },
+            'triggers': 'LIST',
+          },
+        ],
         'name': 'AgentMemoryRecall',
         'scope': 'instance',
         'stateMachine': {
@@ -547,6 +697,90 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
               'name': 'Memory Stored',
               'synonyms': 'remembered, stored, saved',
               'tier': 'domain',
+            },
+            {
+              'description': 'List what the assistant remembers for this person.',
+              'key': 'LIST',
+              'name': 'List',
+            },
+            {
+              'key': 'MemoriesForList',
+              'name': 'Memories for list',
+              'payloadSchema': [
+                {
+                  'entity': 'AgentMemory',
+                  'name': 'data',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'ownerId',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'content',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'embedding',
+                      'type': '[number]',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'pendingMessages',
+                      'properties': [
+                        {
+                          'name': 'role',
+                          'type': 'string',
+                        },
+                        {
+                          'name': 'content',
+                          'required': true,
+                          'type': 'string',
+                        },
+                      ],
+                      'type': '[object]',
+                    },
+                    {
+                      'name': 'pendingQuery',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'pendingContent',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'queryVector',
+                      'type': '[number]',
+                    },
+                  ],
+                  'type': '[object]',
+                },
+              ],
+              'tier': 'internal',
+            },
+            {
+              'key': 'MemoryListFailed',
+              'name': 'Memory list failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'tier': 'internal',
             },
             {
               'description': 'Recall what is relevant to this conversation\'s last turn.',
@@ -708,11 +942,41 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                 },
                 {
                   'name': 'context',
-                  'required': true,
                   'type': 'string',
                 },
               ],
               'synonyms': 'recalled, remembered, context ready',
+              'tier': 'domain',
+            },
+            {
+              'description': 'What the assistant remembers for this person, newest first (empty when nothing is, or the list could not load).',
+              'key': 'ASSISTANT_MEMORIES_LOADED',
+              'name': 'Assistant Memories Loaded',
+              'payloadSchema': [
+                {
+                  'entity': 'AgentMemoryRow',
+                  'name': 'data',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'content',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'number',
+                    },
+                  ],
+                  'required': true,
+                  'type': '[object]',
+                },
+              ],
+              'synonyms': 'memories, what I remember',
               'tier': 'domain',
             },
           ],
@@ -750,6 +1014,77 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                 ],
               ],
               'event': 'MEMORY_STORED',
+              'from': 'ready',
+              'to': 'ready',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('AgentMemory' satisfies _StdAgentMemoryEntityName),
+                  {
+                    'emit': {
+                      'failure': 'MemoryListFailed',
+                      'success': 'MemoriesForList',
+                    },
+                  },
+                ],
+              ],
+              'event': 'LIST',
+              'from': 'ready',
+              'to': 'ready',
+            },
+            {
+              'effects': [
+                [
+                  'emit',
+                  'ASSISTANT_MEMORIES_LOADED',
+                  {
+                    'data': [
+                      'array/map',
+                      [
+                        'array/sort',
+                        '@payload.data',
+                        'createdAt',
+                        'desc',
+                      ],
+                      [
+                        'fn',
+                        'item',
+                        {
+                          'content': '@item.content',
+                          'createdAt': '@item.createdAt',
+                          'id': '@item.id',
+                        },
+                      ],
+                    ],
+                  },
+                ],
+              ],
+              'event': 'MemoriesForList',
+              'from': 'ready',
+              'to': 'ready',
+            },
+            {
+              'effects': [
+                [
+                  'emit',
+                  'ASSISTANT_MEMORIES_LOADED',
+                  {
+                    'data': [],
+                  },
+                ],
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'message': '@payload.error',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'MemoryListFailed',
               'from': 'ready',
               'to': 'ready',
             },

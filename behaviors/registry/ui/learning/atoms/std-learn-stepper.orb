@@ -198,6 +198,16 @@
                   "required": false,
                   "type": "string"
                 },
+                "fillStyle": {
+                  "name": "fillStyle",
+                  "required": false,
+                  "type": "string"
+                },
+                "fillTone": {
+                  "name": "fillTone",
+                  "required": false,
+                  "type": "string"
+                },
                 "fontSize": {
                   "name": "fontSize",
                   "required": false,
@@ -273,8 +283,23 @@
                   "required": false,
                   "type": "number"
                 },
+                "stroke": {
+                  "name": "stroke",
+                  "required": false,
+                  "type": "string"
+                },
                 "text": {
                   "name": "text",
+                  "required": false,
+                  "type": "string"
+                },
+                "textSize": {
+                  "name": "textSize",
+                  "required": false,
+                  "type": "string"
+                },
+                "tone": {
+                  "name": "tone",
                   "required": false,
                   "type": "string"
                 },
@@ -414,7 +439,8 @@
               "type": "number"
             },
             "backgroundColor": {
-              "default": "#f8fafc",
+              "default": "",
+              "description": "Canvas ground override; empty uses the theme's drawing ground.",
               "label": "Background Color",
               "tier": "presentation",
               "type": "string"
@@ -423,12 +449,12 @@
               "default": [
                 {
                   "category": "a",
-                  "color": "#7c3aed",
+                  "color": "series-1",
                   "label": "Category A"
                 },
                 {
                   "category": "b",
-                  "color": "#15803d",
+                  "color": "series-2",
                   "label": "Category B"
                 }
               ],
@@ -605,15 +631,22 @@
               "tier": "presentation",
               "type": "string"
             },
+            "summary": {
+              "default": "",
+              "description": "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line.",
+              "label": "Concept",
+              "tier": "presentation",
+              "type": "string"
+            },
             "title": {
               "default": "Stepper",
-              "description": "Title shown above the instrument.",
+              "description": "The instrument's name, the header's one hero.",
               "label": "Title",
               "tier": "presentation",
               "type": "string"
             },
             "unreachedColor": {
-              "default": "#d6d3d1",
+              "default": "muted",
               "description": "Color of stage markers the learner has not yet stepped to.",
               "label": "Unreached Marker Color",
               "tier": "presentation",
@@ -1138,10 +1171,10 @@
                         "baseShapes",
                         [
                           {
-                            "color": "#78716c",
                             "id": "axis",
-                            "lineWidth": 2.0,
                             "opacity": 1.0,
+                            "stroke": "normal",
+                            "tone": "axis",
                             "type": "line",
                             "x1": "@config.axisMarginLeft",
                             "x2": [
@@ -1154,14 +1187,14 @@
                           },
                           {
                             "align": "left",
-                            "color": "#78716c",
-                            "fontSize": 11.0,
                             "id": "minPositionLabel",
                             "text": [
                               "str/concat",
                               "",
                               "@config.minPosition"
                             ],
+                            "textSize": "xs",
+                            "tone": "label",
                             "type": "text",
                             "x": "@config.axisMarginLeft",
                             "y": [
@@ -1172,14 +1205,14 @@
                           },
                           {
                             "align": "right",
-                            "color": "#78716c",
-                            "fontSize": 11.0,
                             "id": "maxPositionLabel",
                             "text": [
                               "str/concat",
                               "",
                               "@config.maxPosition"
                             ],
+                            "textSize": "xs",
+                            "tone": "label",
                             "type": "text",
                             "x": [
                               "-",
@@ -1336,27 +1369,27 @@
                                   "@isCurrent",
                                   [
                                     {
-                                      "color": "@catColor",
-                                      "fill": "transparent",
+                                      "fillStyle": "outline",
                                       "id": [
                                         "str/concat",
                                         "ring-",
                                         "@s.position"
                                       ],
-                                      "lineWidth": 3.0,
                                       "opacity": 1.0,
                                       "radius": [
                                         "+",
                                         "@rad",
                                         5.0
                                       ],
+                                      "stroke": "bold",
+                                      "tone": "@catColor",
                                       "type": "circle",
                                       "x": "@xPos",
                                       "y": "@config.axisY"
                                     },
                                     {
-                                      "color": "@col",
-                                      "fill": "@col",
+                                      "fillStyle": "solid",
+                                      "fillTone": "@col",
                                       "id": [
                                         "str/concat",
                                         "marker-",
@@ -1364,6 +1397,7 @@
                                       ],
                                       "opacity": "@finalOpacity",
                                       "radius": "@rad",
+                                      "tone": "@col",
                                       "type": "circle",
                                       "x": "@xPos",
                                       "y": "@config.axisY"
@@ -1371,8 +1405,8 @@
                                   ],
                                   [
                                     {
-                                      "color": "@col",
-                                      "fill": "@col",
+                                      "fillStyle": "solid",
+                                      "fillTone": "@col",
                                       "id": [
                                         "str/concat",
                                         "marker-",
@@ -1380,6 +1414,7 @@
                                       ],
                                       "opacity": "@finalOpacity",
                                       "radius": "@rad",
+                                      "tone": "@col",
                                       "type": "circle",
                                       "x": "@xPos",
                                       "y": "@config.axisY"
@@ -1392,11 +1427,99 @@
                         ]
                       ],
                       [
+                        "legendShapes",
+                        [
+                          "array/flatten",
+                          [
+                            "array/map",
+                            "@config.categories",
+                            [
+                              {
+                                "fillStyle": "solid",
+                                "fillTone": [
+                                  "object/get",
+                                  "@item",
+                                  "color"
+                                ],
+                                "id": [
+                                  "str/concat",
+                                  "legend-dot-",
+                                  "@index"
+                                ],
+                                "opacity": 1.0,
+                                "radius": 5.0,
+                                "tone": [
+                                  "object/get",
+                                  "@item",
+                                  "color"
+                                ],
+                                "type": "circle",
+                                "x": [
+                                  "+",
+                                  "@config.axisMarginLeft",
+                                  [
+                                    "*",
+                                    "@index",
+                                    [
+                                      "/",
+                                      "@axisWidth",
+                                      [
+                                        "array/len",
+                                        "@config.categories"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                "y": 22.0
+                              },
+                              {
+                                "align": "left",
+                                "id": [
+                                  "str/concat",
+                                  "legend-label-",
+                                  "@index"
+                                ],
+                                "text": [
+                                  "object/get",
+                                  "@item",
+                                  "label"
+                                ],
+                                "textSize": "xs",
+                                "tone": "label",
+                                "type": "text",
+                                "x": [
+                                  "+",
+                                  [
+                                    "+",
+                                    "@config.axisMarginLeft",
+                                    [
+                                      "*",
+                                      "@index",
+                                      [
+                                        "/",
+                                        "@axisWidth",
+                                        [
+                                          "array/len",
+                                          "@config.categories"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  12.0
+                                ],
+                                "y": 26.0
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
                         "allShapes",
                         [
                           "array/concat",
                           "@baseShapes",
-                          "@markerShapes"
+                          "@markerShapes",
+                          "@legendShapes"
                         ]
                       ],
                       [
@@ -1409,6 +1532,16 @@
                               "actionPayload": {
                                 "category": "all"
                               },
+                              "aria-pressed": [
+                                "if",
+                                [
+                                  "==",
+                                  "@entity.activeFilter",
+                                  "all"
+                                ],
+                                "true",
+                                "false"
+                              ],
                               "label": "@config.allLabel",
                               "size": "sm",
                               "type": "button",
@@ -1419,7 +1552,7 @@
                                   "@entity.activeFilter",
                                   "all"
                                 ],
-                                "primary",
+                                "secondary",
                                 "ghost"
                               ]
                             }
@@ -1439,6 +1572,20 @@
                                     "category"
                                   ]
                                 },
+                                "aria-pressed": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@entity.activeFilter",
+                                    [
+                                      "object/get",
+                                      "@cc",
+                                      "category"
+                                    ]
+                                  ],
+                                  "true",
+                                  "false"
+                                ],
                                 "label": [
                                   "object/get",
                                   "@cc",
@@ -1457,7 +1604,7 @@
                                       "category"
                                     ]
                                   ],
-                                  "primary",
+                                  "secondary",
                                   "ghost"
                                 ]
                               }
@@ -1518,33 +1665,176 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    [
+                                      "<=",
+                                      "@entity.cursorIndex",
+                                      -1.0
+                                    ],
+                                    "Not started",
+                                    [
+                                      "if",
+                                      [
+                                        ">=",
+                                        "@entity.cursorIndex",
+                                        [
+                                          "-",
+                                          [
+                                            "array/len",
+                                            "@config.stages"
+                                          ],
+                                          1.0
+                                        ]
+                                      ],
+                                      "Complete",
+                                      [
+                                        "str/concat",
+                                        "Stage ",
+                                        [
+                                          "+",
+                                          "@entity.cursorIndex",
+                                          1.0
+                                        ],
+                                        " of ",
+                                        [
+                                          "array/len",
+                                          "@config.stages"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      "<=",
+                                      "@entity.cursorIndex",
+                                      -1.0
+                                    ],
+                                    "neutral",
+                                    [
+                                      "if",
+                                      [
+                                        ">=",
+                                        "@entity.cursorIndex",
+                                        [
+                                          "-",
+                                          [
+                                            "array/len",
+                                            "@config.stages"
+                                          ],
+                                          1.0
+                                        ]
+                                      ],
+                                      "success",
+                                      "primary"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
-                              "label": [
-                                "str/concat",
-                                "Stage ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "+",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "NEXT",
+                                  "disabled": [
+                                    ">=",
                                     "@entity.cursorIndex",
-                                    1.0
-                                  ]
-                                ],
-                                " of ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "array/len",
-                                    "@config.stages"
-                                  ]
-                                ]
+                                    [
+                                      "-",
+                                      [
+                                        "array/len",
+                                        "@config.stages"
+                                      ],
+                                      1.0
+                                    ]
+                                  ],
+                                  "icon": "chevron-right",
+                                  "label": "Next",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "PREV",
+                                  "disabled": [
+                                    "<=",
+                                    "@entity.cursorIndex",
+                                    -1.0
+                                  ],
+                                  "icon": "chevron-left",
+                                  "label": "Prev",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET_STEPPER",
+                                  "icon": "rotate-ccw",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Stage ",
+                                    [
+                                      "+",
+                                      "@entity.cursorIndex",
+                                      1.0
+                                    ],
+                                    " of ",
+                                    [
+                                      "array/len",
+                                      "@config.stages"
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
                               ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
                               "max": [
                                 "array/len",
                                 "@config.stages"
@@ -1558,28 +1848,14 @@
                               ]
                             },
                             {
+                              "align": "center",
+                              "aria-label": "Category lens",
+                              "children": "@entity.filterButtons",
                               "direction": "horizontal",
-                              "items": [
-                                "array/map",
-                                "@config.categories",
-                                [
-                                  "fn",
-                                  "cc",
-                                  {
-                                    "color": [
-                                      "object/get",
-                                      "@cc",
-                                      "color"
-                                    ],
-                                    "label": [
-                                      "object/get",
-                                      "@cc",
-                                      "label"
-                                    ]
-                                  }
-                                ]
-                              ],
-                              "type": "chart-legend"
+                              "gap": "xs",
+                              "role": "group",
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": "@config.animate",
@@ -1588,6 +1864,11 @@
                               "gridStep": 1.0,
                               "height": "@config.height",
                               "interactive": "@config.interactive",
+                              "keyMap": {
+                                "ArrowLeft": "PREV",
+                                "ArrowRight": "NEXT",
+                                "KeyR": "RESET_STEPPER"
+                              },
                               "points": [],
                               "shapes": "@entity.shapes",
                               "showAxes": false,
@@ -1599,64 +1880,6 @@
                               "xMin": 0.0,
                               "yMax": "@config.height",
                               "yMin": 0.0
-                            },
-                            {
-                              "children": "@entity.filterButtons",
-                              "direction": "horizontal",
-                              "gap": "xs",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "action": "PREV",
-                                  "disabled": [
-                                    "if",
-                                    [
-                                      "<=",
-                                      "@entity.cursorIndex",
-                                      -1.0
-                                    ],
-                                    true,
-                                    false
-                                  ],
-                                  "label": "Prev",
-                                  "type": "button",
-                                  "variant": "ghost"
-                                },
-                                {
-                                  "action": "NEXT",
-                                  "disabled": [
-                                    "if",
-                                    [
-                                      ">=",
-                                      "@entity.cursorIndex",
-                                      [
-                                        "-",
-                                        [
-                                          "array/len",
-                                          "@config.stages"
-                                        ],
-                                        1.0
-                                      ]
-                                    ],
-                                    true,
-                                    false
-                                  ],
-                                  "label": "Next",
-                                  "type": "button",
-                                  "variant": "primary"
-                                },
-                                {
-                                  "action": "RESET_STEPPER",
-                                  "label": "Reset",
-                                  "type": "button",
-                                  "variant": "ghost"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack"
                             },
                             {
                               "children": [
@@ -1713,9 +1936,11 @@
                               ],
                               "direction": "horizontal",
                               "gap": "xs",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
+                              "color": "muted",
                               "content": "@entity.visibleThreadNote",
                               "type": "typography",
                               "variant": "caption"
@@ -1738,6 +1963,43 @@
                   "==",
                   "@config.matchMode",
                   ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01KZEGGJW89GS6HN8CC3SMVV3J",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@config.matchMode",
+                      ""
+                    ]
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -2060,10 +2322,10 @@
                         "baseShapes",
                         [
                           {
-                            "color": "#78716c",
                             "id": "axis",
-                            "lineWidth": 2.0,
                             "opacity": 1.0,
+                            "stroke": "normal",
+                            "tone": "axis",
                             "type": "line",
                             "x1": "@config.axisMarginLeft",
                             "x2": [
@@ -2076,14 +2338,14 @@
                           },
                           {
                             "align": "left",
-                            "color": "#78716c",
-                            "fontSize": 11.0,
                             "id": "minPositionLabel",
                             "text": [
                               "str/concat",
                               "",
                               "@config.minPosition"
                             ],
+                            "textSize": "xs",
+                            "tone": "label",
                             "type": "text",
                             "x": "@config.axisMarginLeft",
                             "y": [
@@ -2094,14 +2356,14 @@
                           },
                           {
                             "align": "right",
-                            "color": "#78716c",
-                            "fontSize": 11.0,
                             "id": "maxPositionLabel",
                             "text": [
                               "str/concat",
                               "",
                               "@config.maxPosition"
                             ],
+                            "textSize": "xs",
+                            "tone": "label",
                             "type": "text",
                             "x": [
                               "-",
@@ -2258,27 +2520,27 @@
                                   "@isCurrent",
                                   [
                                     {
-                                      "color": "@catColor",
-                                      "fill": "transparent",
+                                      "fillStyle": "outline",
                                       "id": [
                                         "str/concat",
                                         "ring-",
                                         "@s.position"
                                       ],
-                                      "lineWidth": 3.0,
                                       "opacity": 1.0,
                                       "radius": [
                                         "+",
                                         "@rad",
                                         5.0
                                       ],
+                                      "stroke": "bold",
+                                      "tone": "@catColor",
                                       "type": "circle",
                                       "x": "@xPos",
                                       "y": "@config.axisY"
                                     },
                                     {
-                                      "color": "@col",
-                                      "fill": "@col",
+                                      "fillStyle": "solid",
+                                      "fillTone": "@col",
                                       "id": [
                                         "str/concat",
                                         "marker-",
@@ -2286,6 +2548,7 @@
                                       ],
                                       "opacity": "@finalOpacity",
                                       "radius": "@rad",
+                                      "tone": "@col",
                                       "type": "circle",
                                       "x": "@xPos",
                                       "y": "@config.axisY"
@@ -2293,8 +2556,8 @@
                                   ],
                                   [
                                     {
-                                      "color": "@col",
-                                      "fill": "@col",
+                                      "fillStyle": "solid",
+                                      "fillTone": "@col",
                                       "id": [
                                         "str/concat",
                                         "marker-",
@@ -2302,6 +2565,7 @@
                                       ],
                                       "opacity": "@finalOpacity",
                                       "radius": "@rad",
+                                      "tone": "@col",
                                       "type": "circle",
                                       "x": "@xPos",
                                       "y": "@config.axisY"
@@ -2314,11 +2578,99 @@
                         ]
                       ],
                       [
+                        "legendShapes",
+                        [
+                          "array/flatten",
+                          [
+                            "array/map",
+                            "@config.categories",
+                            [
+                              {
+                                "fillStyle": "solid",
+                                "fillTone": [
+                                  "object/get",
+                                  "@item",
+                                  "color"
+                                ],
+                                "id": [
+                                  "str/concat",
+                                  "legend-dot-",
+                                  "@index"
+                                ],
+                                "opacity": 1.0,
+                                "radius": 5.0,
+                                "tone": [
+                                  "object/get",
+                                  "@item",
+                                  "color"
+                                ],
+                                "type": "circle",
+                                "x": [
+                                  "+",
+                                  "@config.axisMarginLeft",
+                                  [
+                                    "*",
+                                    "@index",
+                                    [
+                                      "/",
+                                      "@axisWidth",
+                                      [
+                                        "array/len",
+                                        "@config.categories"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                "y": 22.0
+                              },
+                              {
+                                "align": "left",
+                                "id": [
+                                  "str/concat",
+                                  "legend-label-",
+                                  "@index"
+                                ],
+                                "text": [
+                                  "object/get",
+                                  "@item",
+                                  "label"
+                                ],
+                                "textSize": "xs",
+                                "tone": "label",
+                                "type": "text",
+                                "x": [
+                                  "+",
+                                  [
+                                    "+",
+                                    "@config.axisMarginLeft",
+                                    [
+                                      "*",
+                                      "@index",
+                                      [
+                                        "/",
+                                        "@axisWidth",
+                                        [
+                                          "array/len",
+                                          "@config.categories"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  12.0
+                                ],
+                                "y": 26.0
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
                         "allShapes",
                         [
                           "array/concat",
                           "@baseShapes",
-                          "@markerShapes"
+                          "@markerShapes",
+                          "@legendShapes"
                         ]
                       ],
                       [
@@ -2331,6 +2683,16 @@
                               "actionPayload": {
                                 "category": "all"
                               },
+                              "aria-pressed": [
+                                "if",
+                                [
+                                  "==",
+                                  "@entity.activeFilter",
+                                  "all"
+                                ],
+                                "true",
+                                "false"
+                              ],
                               "label": "@config.allLabel",
                               "size": "sm",
                               "type": "button",
@@ -2341,7 +2703,7 @@
                                   "@entity.activeFilter",
                                   "all"
                                 ],
-                                "primary",
+                                "secondary",
                                 "ghost"
                               ]
                             }
@@ -2361,6 +2723,20 @@
                                     "category"
                                   ]
                                 },
+                                "aria-pressed": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@entity.activeFilter",
+                                    [
+                                      "object/get",
+                                      "@cc",
+                                      "category"
+                                    ]
+                                  ],
+                                  "true",
+                                  "false"
+                                ],
                                 "label": [
                                   "object/get",
                                   "@cc",
@@ -2379,7 +2755,7 @@
                                       "category"
                                     ]
                                   ],
-                                  "primary",
+                                  "secondary",
                                   "ghost"
                                 ]
                               }
@@ -2440,33 +2816,176 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    [
+                                      "<=",
+                                      "@entity.cursorIndex",
+                                      -1.0
+                                    ],
+                                    "Not started",
+                                    [
+                                      "if",
+                                      [
+                                        ">=",
+                                        "@entity.cursorIndex",
+                                        [
+                                          "-",
+                                          [
+                                            "array/len",
+                                            "@config.stages"
+                                          ],
+                                          1.0
+                                        ]
+                                      ],
+                                      "Complete",
+                                      [
+                                        "str/concat",
+                                        "Stage ",
+                                        [
+                                          "+",
+                                          "@entity.cursorIndex",
+                                          1.0
+                                        ],
+                                        " of ",
+                                        [
+                                          "array/len",
+                                          "@config.stages"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      "<=",
+                                      "@entity.cursorIndex",
+                                      -1.0
+                                    ],
+                                    "neutral",
+                                    [
+                                      "if",
+                                      [
+                                        ">=",
+                                        "@entity.cursorIndex",
+                                        [
+                                          "-",
+                                          [
+                                            "array/len",
+                                            "@config.stages"
+                                          ],
+                                          1.0
+                                        ]
+                                      ],
+                                      "success",
+                                      "primary"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
-                              "label": [
-                                "str/concat",
-                                "Stage ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "+",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "NEXT",
+                                  "disabled": [
+                                    ">=",
                                     "@entity.cursorIndex",
-                                    1.0
-                                  ]
-                                ],
-                                " of ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "array/len",
-                                    "@config.stages"
-                                  ]
-                                ]
+                                    [
+                                      "-",
+                                      [
+                                        "array/len",
+                                        "@config.stages"
+                                      ],
+                                      1.0
+                                    ]
+                                  ],
+                                  "icon": "chevron-right",
+                                  "label": "Next",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "PREV",
+                                  "disabled": [
+                                    "<=",
+                                    "@entity.cursorIndex",
+                                    -1.0
+                                  ],
+                                  "icon": "chevron-left",
+                                  "label": "Prev",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET_STEPPER",
+                                  "icon": "rotate-ccw",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Stage ",
+                                    [
+                                      "+",
+                                      "@entity.cursorIndex",
+                                      1.0
+                                    ],
+                                    " of ",
+                                    [
+                                      "array/len",
+                                      "@config.stages"
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
                               ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
                               "max": [
                                 "array/len",
                                 "@config.stages"
@@ -2480,28 +2999,14 @@
                               ]
                             },
                             {
+                              "align": "center",
+                              "aria-label": "Category lens",
+                              "children": "@entity.filterButtons",
                               "direction": "horizontal",
-                              "items": [
-                                "array/map",
-                                "@config.categories",
-                                [
-                                  "fn",
-                                  "cc",
-                                  {
-                                    "color": [
-                                      "object/get",
-                                      "@cc",
-                                      "color"
-                                    ],
-                                    "label": [
-                                      "object/get",
-                                      "@cc",
-                                      "label"
-                                    ]
-                                  }
-                                ]
-                              ],
-                              "type": "chart-legend"
+                              "gap": "xs",
+                              "role": "group",
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": "@config.animate",
@@ -2510,6 +3015,11 @@
                               "gridStep": 1.0,
                               "height": "@config.height",
                               "interactive": "@config.interactive",
+                              "keyMap": {
+                                "ArrowLeft": "PREV",
+                                "ArrowRight": "NEXT",
+                                "KeyR": "RESET_STEPPER"
+                              },
                               "points": [],
                               "shapes": "@entity.shapes",
                               "showAxes": false,
@@ -2521,64 +3031,6 @@
                               "xMin": 0.0,
                               "yMax": "@config.height",
                               "yMin": 0.0
-                            },
-                            {
-                              "children": "@entity.filterButtons",
-                              "direction": "horizontal",
-                              "gap": "xs",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "action": "PREV",
-                                  "disabled": [
-                                    "if",
-                                    [
-                                      "<=",
-                                      "@entity.cursorIndex",
-                                      -1.0
-                                    ],
-                                    true,
-                                    false
-                                  ],
-                                  "label": "Prev",
-                                  "type": "button",
-                                  "variant": "ghost"
-                                },
-                                {
-                                  "action": "NEXT",
-                                  "disabled": [
-                                    "if",
-                                    [
-                                      ">=",
-                                      "@entity.cursorIndex",
-                                      [
-                                        "-",
-                                        [
-                                          "array/len",
-                                          "@config.stages"
-                                        ],
-                                        1.0
-                                      ]
-                                    ],
-                                    true,
-                                    false
-                                  ],
-                                  "label": "Next",
-                                  "type": "button",
-                                  "variant": "primary"
-                                },
-                                {
-                                  "action": "RESET_STEPPER",
-                                  "label": "Reset",
-                                  "type": "button",
-                                  "variant": "ghost"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack"
                             },
                             {
                               "children": [
@@ -2635,9 +3087,11 @@
                               ],
                               "direction": "horizontal",
                               "gap": "xs",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
+                              "color": "muted",
                               "content": "@entity.visibleThreadNote",
                               "type": "typography",
                               "variant": "caption"
@@ -2982,10 +3436,10 @@
                         "baseShapes",
                         [
                           {
-                            "color": "#78716c",
                             "id": "axis",
-                            "lineWidth": 2.0,
                             "opacity": 1.0,
+                            "stroke": "normal",
+                            "tone": "axis",
                             "type": "line",
                             "x1": "@config.axisMarginLeft",
                             "x2": [
@@ -2998,14 +3452,14 @@
                           },
                           {
                             "align": "left",
-                            "color": "#78716c",
-                            "fontSize": 11.0,
                             "id": "minPositionLabel",
                             "text": [
                               "str/concat",
                               "",
                               "@config.minPosition"
                             ],
+                            "textSize": "xs",
+                            "tone": "label",
                             "type": "text",
                             "x": "@config.axisMarginLeft",
                             "y": [
@@ -3016,14 +3470,14 @@
                           },
                           {
                             "align": "right",
-                            "color": "#78716c",
-                            "fontSize": 11.0,
                             "id": "maxPositionLabel",
                             "text": [
                               "str/concat",
                               "",
                               "@config.maxPosition"
                             ],
+                            "textSize": "xs",
+                            "tone": "label",
                             "type": "text",
                             "x": [
                               "-",
@@ -3180,27 +3634,27 @@
                                   "@isCurrent",
                                   [
                                     {
-                                      "color": "@catColor",
-                                      "fill": "transparent",
+                                      "fillStyle": "outline",
                                       "id": [
                                         "str/concat",
                                         "ring-",
                                         "@s.position"
                                       ],
-                                      "lineWidth": 3.0,
                                       "opacity": 1.0,
                                       "radius": [
                                         "+",
                                         "@rad",
                                         5.0
                                       ],
+                                      "stroke": "bold",
+                                      "tone": "@catColor",
                                       "type": "circle",
                                       "x": "@xPos",
                                       "y": "@config.axisY"
                                     },
                                     {
-                                      "color": "@col",
-                                      "fill": "@col",
+                                      "fillStyle": "solid",
+                                      "fillTone": "@col",
                                       "id": [
                                         "str/concat",
                                         "marker-",
@@ -3208,6 +3662,7 @@
                                       ],
                                       "opacity": "@finalOpacity",
                                       "radius": "@rad",
+                                      "tone": "@col",
                                       "type": "circle",
                                       "x": "@xPos",
                                       "y": "@config.axisY"
@@ -3215,8 +3670,8 @@
                                   ],
                                   [
                                     {
-                                      "color": "@col",
-                                      "fill": "@col",
+                                      "fillStyle": "solid",
+                                      "fillTone": "@col",
                                       "id": [
                                         "str/concat",
                                         "marker-",
@@ -3224,6 +3679,7 @@
                                       ],
                                       "opacity": "@finalOpacity",
                                       "radius": "@rad",
+                                      "tone": "@col",
                                       "type": "circle",
                                       "x": "@xPos",
                                       "y": "@config.axisY"
@@ -3236,11 +3692,99 @@
                         ]
                       ],
                       [
+                        "legendShapes",
+                        [
+                          "array/flatten",
+                          [
+                            "array/map",
+                            "@config.categories",
+                            [
+                              {
+                                "fillStyle": "solid",
+                                "fillTone": [
+                                  "object/get",
+                                  "@item",
+                                  "color"
+                                ],
+                                "id": [
+                                  "str/concat",
+                                  "legend-dot-",
+                                  "@index"
+                                ],
+                                "opacity": 1.0,
+                                "radius": 5.0,
+                                "tone": [
+                                  "object/get",
+                                  "@item",
+                                  "color"
+                                ],
+                                "type": "circle",
+                                "x": [
+                                  "+",
+                                  "@config.axisMarginLeft",
+                                  [
+                                    "*",
+                                    "@index",
+                                    [
+                                      "/",
+                                      "@axisWidth",
+                                      [
+                                        "array/len",
+                                        "@config.categories"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                "y": 22.0
+                              },
+                              {
+                                "align": "left",
+                                "id": [
+                                  "str/concat",
+                                  "legend-label-",
+                                  "@index"
+                                ],
+                                "text": [
+                                  "object/get",
+                                  "@item",
+                                  "label"
+                                ],
+                                "textSize": "xs",
+                                "tone": "label",
+                                "type": "text",
+                                "x": [
+                                  "+",
+                                  [
+                                    "+",
+                                    "@config.axisMarginLeft",
+                                    [
+                                      "*",
+                                      "@index",
+                                      [
+                                        "/",
+                                        "@axisWidth",
+                                        [
+                                          "array/len",
+                                          "@config.categories"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  12.0
+                                ],
+                                "y": 26.0
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
                         "allShapes",
                         [
                           "array/concat",
                           "@baseShapes",
-                          "@markerShapes"
+                          "@markerShapes",
+                          "@legendShapes"
                         ]
                       ],
                       [
@@ -3253,6 +3797,16 @@
                               "actionPayload": {
                                 "category": "all"
                               },
+                              "aria-pressed": [
+                                "if",
+                                [
+                                  "==",
+                                  "@entity.activeFilter",
+                                  "all"
+                                ],
+                                "true",
+                                "false"
+                              ],
                               "label": "@config.allLabel",
                               "size": "sm",
                               "type": "button",
@@ -3263,7 +3817,7 @@
                                   "@entity.activeFilter",
                                   "all"
                                 ],
-                                "primary",
+                                "secondary",
                                 "ghost"
                               ]
                             }
@@ -3283,6 +3837,20 @@
                                     "category"
                                   ]
                                 },
+                                "aria-pressed": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@entity.activeFilter",
+                                    [
+                                      "object/get",
+                                      "@cc",
+                                      "category"
+                                    ]
+                                  ],
+                                  "true",
+                                  "false"
+                                ],
                                 "label": [
                                   "object/get",
                                   "@cc",
@@ -3301,7 +3869,7 @@
                                       "category"
                                     ]
                                   ],
-                                  "primary",
+                                  "secondary",
                                   "ghost"
                                 ]
                               }
@@ -3362,33 +3930,176 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    [
+                                      "<=",
+                                      "@entity.cursorIndex",
+                                      -1.0
+                                    ],
+                                    "Not started",
+                                    [
+                                      "if",
+                                      [
+                                        ">=",
+                                        "@entity.cursorIndex",
+                                        [
+                                          "-",
+                                          [
+                                            "array/len",
+                                            "@config.stages"
+                                          ],
+                                          1.0
+                                        ]
+                                      ],
+                                      "Complete",
+                                      [
+                                        "str/concat",
+                                        "Stage ",
+                                        [
+                                          "+",
+                                          "@entity.cursorIndex",
+                                          1.0
+                                        ],
+                                        " of ",
+                                        [
+                                          "array/len",
+                                          "@config.stages"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      "<=",
+                                      "@entity.cursorIndex",
+                                      -1.0
+                                    ],
+                                    "neutral",
+                                    [
+                                      "if",
+                                      [
+                                        ">=",
+                                        "@entity.cursorIndex",
+                                        [
+                                          "-",
+                                          [
+                                            "array/len",
+                                            "@config.stages"
+                                          ],
+                                          1.0
+                                        ]
+                                      ],
+                                      "success",
+                                      "primary"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
-                              "label": [
-                                "str/concat",
-                                "Stage ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "+",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "NEXT",
+                                  "disabled": [
+                                    ">=",
                                     "@entity.cursorIndex",
-                                    1.0
-                                  ]
-                                ],
-                                " of ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "array/len",
-                                    "@config.stages"
-                                  ]
-                                ]
+                                    [
+                                      "-",
+                                      [
+                                        "array/len",
+                                        "@config.stages"
+                                      ],
+                                      1.0
+                                    ]
+                                  ],
+                                  "icon": "chevron-right",
+                                  "label": "Next",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "PREV",
+                                  "disabled": [
+                                    "<=",
+                                    "@entity.cursorIndex",
+                                    -1.0
+                                  ],
+                                  "icon": "chevron-left",
+                                  "label": "Prev",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET_STEPPER",
+                                  "icon": "rotate-ccw",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Stage ",
+                                    [
+                                      "+",
+                                      "@entity.cursorIndex",
+                                      1.0
+                                    ],
+                                    " of ",
+                                    [
+                                      "array/len",
+                                      "@config.stages"
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
                               ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
                               "max": [
                                 "array/len",
                                 "@config.stages"
@@ -3402,28 +4113,14 @@
                               ]
                             },
                             {
+                              "align": "center",
+                              "aria-label": "Category lens",
+                              "children": "@entity.filterButtons",
                               "direction": "horizontal",
-                              "items": [
-                                "array/map",
-                                "@config.categories",
-                                [
-                                  "fn",
-                                  "cc",
-                                  {
-                                    "color": [
-                                      "object/get",
-                                      "@cc",
-                                      "color"
-                                    ],
-                                    "label": [
-                                      "object/get",
-                                      "@cc",
-                                      "label"
-                                    ]
-                                  }
-                                ]
-                              ],
-                              "type": "chart-legend"
+                              "gap": "xs",
+                              "role": "group",
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": "@config.animate",
@@ -3432,6 +4129,11 @@
                               "gridStep": 1.0,
                               "height": "@config.height",
                               "interactive": "@config.interactive",
+                              "keyMap": {
+                                "ArrowLeft": "PREV",
+                                "ArrowRight": "NEXT",
+                                "KeyR": "RESET_STEPPER"
+                              },
                               "points": [],
                               "shapes": "@entity.shapes",
                               "showAxes": false,
@@ -3443,64 +4145,6 @@
                               "xMin": 0.0,
                               "yMax": "@config.height",
                               "yMin": 0.0
-                            },
-                            {
-                              "children": "@entity.filterButtons",
-                              "direction": "horizontal",
-                              "gap": "xs",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "action": "PREV",
-                                  "disabled": [
-                                    "if",
-                                    [
-                                      "<=",
-                                      "@entity.cursorIndex",
-                                      -1.0
-                                    ],
-                                    true,
-                                    false
-                                  ],
-                                  "label": "Prev",
-                                  "type": "button",
-                                  "variant": "ghost"
-                                },
-                                {
-                                  "action": "NEXT",
-                                  "disabled": [
-                                    "if",
-                                    [
-                                      ">=",
-                                      "@entity.cursorIndex",
-                                      [
-                                        "-",
-                                        [
-                                          "array/len",
-                                          "@config.stages"
-                                        ],
-                                        1.0
-                                      ]
-                                    ],
-                                    true,
-                                    false
-                                  ],
-                                  "label": "Next",
-                                  "type": "button",
-                                  "variant": "primary"
-                                },
-                                {
-                                  "action": "RESET_STEPPER",
-                                  "label": "Reset",
-                                  "type": "button",
-                                  "variant": "ghost"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack"
                             },
                             {
                               "children": [
@@ -3557,9 +4201,11 @@
                               ],
                               "direction": "horizontal",
                               "gap": "xs",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
+                              "color": "muted",
                               "content": "@entity.visibleThreadNote",
                               "type": "typography",
                               "variant": "caption"
@@ -3906,10 +4552,10 @@
                         "baseShapes",
                         [
                           {
-                            "color": "#78716c",
                             "id": "axis",
-                            "lineWidth": 2.0,
                             "opacity": 1.0,
+                            "stroke": "normal",
+                            "tone": "axis",
                             "type": "line",
                             "x1": "@config.axisMarginLeft",
                             "x2": [
@@ -3922,14 +4568,14 @@
                           },
                           {
                             "align": "left",
-                            "color": "#78716c",
-                            "fontSize": 11.0,
                             "id": "minPositionLabel",
                             "text": [
                               "str/concat",
                               "",
                               "@config.minPosition"
                             ],
+                            "textSize": "xs",
+                            "tone": "label",
                             "type": "text",
                             "x": "@config.axisMarginLeft",
                             "y": [
@@ -3940,14 +4586,14 @@
                           },
                           {
                             "align": "right",
-                            "color": "#78716c",
-                            "fontSize": 11.0,
                             "id": "maxPositionLabel",
                             "text": [
                               "str/concat",
                               "",
                               "@config.maxPosition"
                             ],
+                            "textSize": "xs",
+                            "tone": "label",
                             "type": "text",
                             "x": [
                               "-",
@@ -4104,27 +4750,27 @@
                                   "@isCurrent",
                                   [
                                     {
-                                      "color": "@catColor",
-                                      "fill": "transparent",
+                                      "fillStyle": "outline",
                                       "id": [
                                         "str/concat",
                                         "ring-",
                                         "@s.position"
                                       ],
-                                      "lineWidth": 3.0,
                                       "opacity": 1.0,
                                       "radius": [
                                         "+",
                                         "@rad",
                                         5.0
                                       ],
+                                      "stroke": "bold",
+                                      "tone": "@catColor",
                                       "type": "circle",
                                       "x": "@xPos",
                                       "y": "@config.axisY"
                                     },
                                     {
-                                      "color": "@col",
-                                      "fill": "@col",
+                                      "fillStyle": "solid",
+                                      "fillTone": "@col",
                                       "id": [
                                         "str/concat",
                                         "marker-",
@@ -4132,6 +4778,7 @@
                                       ],
                                       "opacity": "@finalOpacity",
                                       "radius": "@rad",
+                                      "tone": "@col",
                                       "type": "circle",
                                       "x": "@xPos",
                                       "y": "@config.axisY"
@@ -4139,8 +4786,8 @@
                                   ],
                                   [
                                     {
-                                      "color": "@col",
-                                      "fill": "@col",
+                                      "fillStyle": "solid",
+                                      "fillTone": "@col",
                                       "id": [
                                         "str/concat",
                                         "marker-",
@@ -4148,6 +4795,7 @@
                                       ],
                                       "opacity": "@finalOpacity",
                                       "radius": "@rad",
+                                      "tone": "@col",
                                       "type": "circle",
                                       "x": "@xPos",
                                       "y": "@config.axisY"
@@ -4160,11 +4808,99 @@
                         ]
                       ],
                       [
+                        "legendShapes",
+                        [
+                          "array/flatten",
+                          [
+                            "array/map",
+                            "@config.categories",
+                            [
+                              {
+                                "fillStyle": "solid",
+                                "fillTone": [
+                                  "object/get",
+                                  "@item",
+                                  "color"
+                                ],
+                                "id": [
+                                  "str/concat",
+                                  "legend-dot-",
+                                  "@index"
+                                ],
+                                "opacity": 1.0,
+                                "radius": 5.0,
+                                "tone": [
+                                  "object/get",
+                                  "@item",
+                                  "color"
+                                ],
+                                "type": "circle",
+                                "x": [
+                                  "+",
+                                  "@config.axisMarginLeft",
+                                  [
+                                    "*",
+                                    "@index",
+                                    [
+                                      "/",
+                                      "@axisWidth",
+                                      [
+                                        "array/len",
+                                        "@config.categories"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                "y": 22.0
+                              },
+                              {
+                                "align": "left",
+                                "id": [
+                                  "str/concat",
+                                  "legend-label-",
+                                  "@index"
+                                ],
+                                "text": [
+                                  "object/get",
+                                  "@item",
+                                  "label"
+                                ],
+                                "textSize": "xs",
+                                "tone": "label",
+                                "type": "text",
+                                "x": [
+                                  "+",
+                                  [
+                                    "+",
+                                    "@config.axisMarginLeft",
+                                    [
+                                      "*",
+                                      "@index",
+                                      [
+                                        "/",
+                                        "@axisWidth",
+                                        [
+                                          "array/len",
+                                          "@config.categories"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  12.0
+                                ],
+                                "y": 26.0
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
                         "allShapes",
                         [
                           "array/concat",
                           "@baseShapes",
-                          "@markerShapes"
+                          "@markerShapes",
+                          "@legendShapes"
                         ]
                       ],
                       [
@@ -4177,6 +4913,16 @@
                               "actionPayload": {
                                 "category": "all"
                               },
+                              "aria-pressed": [
+                                "if",
+                                [
+                                  "==",
+                                  "@entity.activeFilter",
+                                  "all"
+                                ],
+                                "true",
+                                "false"
+                              ],
                               "label": "@config.allLabel",
                               "size": "sm",
                               "type": "button",
@@ -4187,7 +4933,7 @@
                                   "@entity.activeFilter",
                                   "all"
                                 ],
-                                "primary",
+                                "secondary",
                                 "ghost"
                               ]
                             }
@@ -4207,6 +4953,20 @@
                                     "category"
                                   ]
                                 },
+                                "aria-pressed": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@entity.activeFilter",
+                                    [
+                                      "object/get",
+                                      "@cc",
+                                      "category"
+                                    ]
+                                  ],
+                                  "true",
+                                  "false"
+                                ],
                                 "label": [
                                   "object/get",
                                   "@cc",
@@ -4225,7 +4985,7 @@
                                       "category"
                                     ]
                                   ],
-                                  "primary",
+                                  "secondary",
                                   "ghost"
                                 ]
                               }
@@ -4286,33 +5046,176 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    [
+                                      "<=",
+                                      "@entity.cursorIndex",
+                                      -1.0
+                                    ],
+                                    "Not started",
+                                    [
+                                      "if",
+                                      [
+                                        ">=",
+                                        "@entity.cursorIndex",
+                                        [
+                                          "-",
+                                          [
+                                            "array/len",
+                                            "@config.stages"
+                                          ],
+                                          1.0
+                                        ]
+                                      ],
+                                      "Complete",
+                                      [
+                                        "str/concat",
+                                        "Stage ",
+                                        [
+                                          "+",
+                                          "@entity.cursorIndex",
+                                          1.0
+                                        ],
+                                        " of ",
+                                        [
+                                          "array/len",
+                                          "@config.stages"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      "<=",
+                                      "@entity.cursorIndex",
+                                      -1.0
+                                    ],
+                                    "neutral",
+                                    [
+                                      "if",
+                                      [
+                                        ">=",
+                                        "@entity.cursorIndex",
+                                        [
+                                          "-",
+                                          [
+                                            "array/len",
+                                            "@config.stages"
+                                          ],
+                                          1.0
+                                        ]
+                                      ],
+                                      "success",
+                                      "primary"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
-                              "label": [
-                                "str/concat",
-                                "Stage ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "+",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "NEXT",
+                                  "disabled": [
+                                    ">=",
                                     "@entity.cursorIndex",
-                                    1.0
-                                  ]
-                                ],
-                                " of ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "array/len",
-                                    "@config.stages"
-                                  ]
-                                ]
+                                    [
+                                      "-",
+                                      [
+                                        "array/len",
+                                        "@config.stages"
+                                      ],
+                                      1.0
+                                    ]
+                                  ],
+                                  "icon": "chevron-right",
+                                  "label": "Next",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "PREV",
+                                  "disabled": [
+                                    "<=",
+                                    "@entity.cursorIndex",
+                                    -1.0
+                                  ],
+                                  "icon": "chevron-left",
+                                  "label": "Prev",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET_STEPPER",
+                                  "icon": "rotate-ccw",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Stage ",
+                                    [
+                                      "+",
+                                      "@entity.cursorIndex",
+                                      1.0
+                                    ],
+                                    " of ",
+                                    [
+                                      "array/len",
+                                      "@config.stages"
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
                               ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
                               "max": [
                                 "array/len",
                                 "@config.stages"
@@ -4326,28 +5229,14 @@
                               ]
                             },
                             {
+                              "align": "center",
+                              "aria-label": "Category lens",
+                              "children": "@entity.filterButtons",
                               "direction": "horizontal",
-                              "items": [
-                                "array/map",
-                                "@config.categories",
-                                [
-                                  "fn",
-                                  "cc",
-                                  {
-                                    "color": [
-                                      "object/get",
-                                      "@cc",
-                                      "color"
-                                    ],
-                                    "label": [
-                                      "object/get",
-                                      "@cc",
-                                      "label"
-                                    ]
-                                  }
-                                ]
-                              ],
-                              "type": "chart-legend"
+                              "gap": "xs",
+                              "role": "group",
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": "@config.animate",
@@ -4356,6 +5245,11 @@
                               "gridStep": 1.0,
                               "height": "@config.height",
                               "interactive": "@config.interactive",
+                              "keyMap": {
+                                "ArrowLeft": "PREV",
+                                "ArrowRight": "NEXT",
+                                "KeyR": "RESET_STEPPER"
+                              },
                               "points": [],
                               "shapes": "@entity.shapes",
                               "showAxes": false,
@@ -4367,64 +5261,6 @@
                               "xMin": 0.0,
                               "yMax": "@config.height",
                               "yMin": 0.0
-                            },
-                            {
-                              "children": "@entity.filterButtons",
-                              "direction": "horizontal",
-                              "gap": "xs",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "action": "PREV",
-                                  "disabled": [
-                                    "if",
-                                    [
-                                      "<=",
-                                      "@entity.cursorIndex",
-                                      -1.0
-                                    ],
-                                    true,
-                                    false
-                                  ],
-                                  "label": "Prev",
-                                  "type": "button",
-                                  "variant": "ghost"
-                                },
-                                {
-                                  "action": "NEXT",
-                                  "disabled": [
-                                    "if",
-                                    [
-                                      ">=",
-                                      "@entity.cursorIndex",
-                                      [
-                                        "-",
-                                        [
-                                          "array/len",
-                                          "@config.stages"
-                                        ],
-                                        1.0
-                                      ]
-                                    ],
-                                    true,
-                                    false
-                                  ],
-                                  "label": "Next",
-                                  "type": "button",
-                                  "variant": "primary"
-                                },
-                                {
-                                  "action": "RESET_STEPPER",
-                                  "label": "Reset",
-                                  "type": "button",
-                                  "variant": "ghost"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack"
                             },
                             {
                               "children": [
@@ -4481,9 +5317,11 @@
                               ],
                               "direction": "horizontal",
                               "gap": "xs",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
+                              "color": "muted",
                               "content": "@entity.visibleThreadNote",
                               "type": "typography",
                               "variant": "caption"
@@ -4822,10 +5660,10 @@
                         "baseShapes",
                         [
                           {
-                            "color": "#78716c",
                             "id": "axis",
-                            "lineWidth": 2.0,
                             "opacity": 1.0,
+                            "stroke": "normal",
+                            "tone": "axis",
                             "type": "line",
                             "x1": "@config.axisMarginLeft",
                             "x2": [
@@ -4838,14 +5676,14 @@
                           },
                           {
                             "align": "left",
-                            "color": "#78716c",
-                            "fontSize": 11.0,
                             "id": "minPositionLabel",
                             "text": [
                               "str/concat",
                               "",
                               "@config.minPosition"
                             ],
+                            "textSize": "xs",
+                            "tone": "label",
                             "type": "text",
                             "x": "@config.axisMarginLeft",
                             "y": [
@@ -4856,14 +5694,14 @@
                           },
                           {
                             "align": "right",
-                            "color": "#78716c",
-                            "fontSize": 11.0,
                             "id": "maxPositionLabel",
                             "text": [
                               "str/concat",
                               "",
                               "@config.maxPosition"
                             ],
+                            "textSize": "xs",
+                            "tone": "label",
                             "type": "text",
                             "x": [
                               "-",
@@ -5020,27 +5858,27 @@
                                   "@isCurrent",
                                   [
                                     {
-                                      "color": "@catColor",
-                                      "fill": "transparent",
+                                      "fillStyle": "outline",
                                       "id": [
                                         "str/concat",
                                         "ring-",
                                         "@s.position"
                                       ],
-                                      "lineWidth": 3.0,
                                       "opacity": 1.0,
                                       "radius": [
                                         "+",
                                         "@rad",
                                         5.0
                                       ],
+                                      "stroke": "bold",
+                                      "tone": "@catColor",
                                       "type": "circle",
                                       "x": "@xPos",
                                       "y": "@config.axisY"
                                     },
                                     {
-                                      "color": "@col",
-                                      "fill": "@col",
+                                      "fillStyle": "solid",
+                                      "fillTone": "@col",
                                       "id": [
                                         "str/concat",
                                         "marker-",
@@ -5048,6 +5886,7 @@
                                       ],
                                       "opacity": "@finalOpacity",
                                       "radius": "@rad",
+                                      "tone": "@col",
                                       "type": "circle",
                                       "x": "@xPos",
                                       "y": "@config.axisY"
@@ -5055,8 +5894,8 @@
                                   ],
                                   [
                                     {
-                                      "color": "@col",
-                                      "fill": "@col",
+                                      "fillStyle": "solid",
+                                      "fillTone": "@col",
                                       "id": [
                                         "str/concat",
                                         "marker-",
@@ -5064,6 +5903,7 @@
                                       ],
                                       "opacity": "@finalOpacity",
                                       "radius": "@rad",
+                                      "tone": "@col",
                                       "type": "circle",
                                       "x": "@xPos",
                                       "y": "@config.axisY"
@@ -5076,11 +5916,99 @@
                         ]
                       ],
                       [
+                        "legendShapes",
+                        [
+                          "array/flatten",
+                          [
+                            "array/map",
+                            "@config.categories",
+                            [
+                              {
+                                "fillStyle": "solid",
+                                "fillTone": [
+                                  "object/get",
+                                  "@item",
+                                  "color"
+                                ],
+                                "id": [
+                                  "str/concat",
+                                  "legend-dot-",
+                                  "@index"
+                                ],
+                                "opacity": 1.0,
+                                "radius": 5.0,
+                                "tone": [
+                                  "object/get",
+                                  "@item",
+                                  "color"
+                                ],
+                                "type": "circle",
+                                "x": [
+                                  "+",
+                                  "@config.axisMarginLeft",
+                                  [
+                                    "*",
+                                    "@index",
+                                    [
+                                      "/",
+                                      "@axisWidth",
+                                      [
+                                        "array/len",
+                                        "@config.categories"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                "y": 22.0
+                              },
+                              {
+                                "align": "left",
+                                "id": [
+                                  "str/concat",
+                                  "legend-label-",
+                                  "@index"
+                                ],
+                                "text": [
+                                  "object/get",
+                                  "@item",
+                                  "label"
+                                ],
+                                "textSize": "xs",
+                                "tone": "label",
+                                "type": "text",
+                                "x": [
+                                  "+",
+                                  [
+                                    "+",
+                                    "@config.axisMarginLeft",
+                                    [
+                                      "*",
+                                      "@index",
+                                      [
+                                        "/",
+                                        "@axisWidth",
+                                        [
+                                          "array/len",
+                                          "@config.categories"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  12.0
+                                ],
+                                "y": 26.0
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
                         "allShapes",
                         [
                           "array/concat",
                           "@baseShapes",
-                          "@markerShapes"
+                          "@markerShapes",
+                          "@legendShapes"
                         ]
                       ],
                       [
@@ -5093,6 +6021,16 @@
                               "actionPayload": {
                                 "category": "all"
                               },
+                              "aria-pressed": [
+                                "if",
+                                [
+                                  "==",
+                                  "@entity.activeFilter",
+                                  "all"
+                                ],
+                                "true",
+                                "false"
+                              ],
                               "label": "@config.allLabel",
                               "size": "sm",
                               "type": "button",
@@ -5103,7 +6041,7 @@
                                   "@entity.activeFilter",
                                   "all"
                                 ],
-                                "primary",
+                                "secondary",
                                 "ghost"
                               ]
                             }
@@ -5123,6 +6061,20 @@
                                     "category"
                                   ]
                                 },
+                                "aria-pressed": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@entity.activeFilter",
+                                    [
+                                      "object/get",
+                                      "@cc",
+                                      "category"
+                                    ]
+                                  ],
+                                  "true",
+                                  "false"
+                                ],
                                 "label": [
                                   "object/get",
                                   "@cc",
@@ -5141,7 +6093,7 @@
                                       "category"
                                     ]
                                   ],
-                                  "primary",
+                                  "secondary",
                                   "ghost"
                                 ]
                               }
@@ -5202,33 +6154,176 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    [
+                                      "<=",
+                                      "@entity.cursorIndex",
+                                      -1.0
+                                    ],
+                                    "Not started",
+                                    [
+                                      "if",
+                                      [
+                                        ">=",
+                                        "@entity.cursorIndex",
+                                        [
+                                          "-",
+                                          [
+                                            "array/len",
+                                            "@config.stages"
+                                          ],
+                                          1.0
+                                        ]
+                                      ],
+                                      "Complete",
+                                      [
+                                        "str/concat",
+                                        "Stage ",
+                                        [
+                                          "+",
+                                          "@entity.cursorIndex",
+                                          1.0
+                                        ],
+                                        " of ",
+                                        [
+                                          "array/len",
+                                          "@config.stages"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      "<=",
+                                      "@entity.cursorIndex",
+                                      -1.0
+                                    ],
+                                    "neutral",
+                                    [
+                                      "if",
+                                      [
+                                        ">=",
+                                        "@entity.cursorIndex",
+                                        [
+                                          "-",
+                                          [
+                                            "array/len",
+                                            "@config.stages"
+                                          ],
+                                          1.0
+                                        ]
+                                      ],
+                                      "success",
+                                      "primary"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
-                              "label": [
-                                "str/concat",
-                                "Stage ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "+",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "NEXT",
+                                  "disabled": [
+                                    ">=",
                                     "@entity.cursorIndex",
-                                    1.0
-                                  ]
-                                ],
-                                " of ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "array/len",
-                                    "@config.stages"
-                                  ]
-                                ]
+                                    [
+                                      "-",
+                                      [
+                                        "array/len",
+                                        "@config.stages"
+                                      ],
+                                      1.0
+                                    ]
+                                  ],
+                                  "icon": "chevron-right",
+                                  "label": "Next",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "PREV",
+                                  "disabled": [
+                                    "<=",
+                                    "@entity.cursorIndex",
+                                    -1.0
+                                  ],
+                                  "icon": "chevron-left",
+                                  "label": "Prev",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET_STEPPER",
+                                  "icon": "rotate-ccw",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Stage ",
+                                    [
+                                      "+",
+                                      "@entity.cursorIndex",
+                                      1.0
+                                    ],
+                                    " of ",
+                                    [
+                                      "array/len",
+                                      "@config.stages"
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
                               ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
                               "max": [
                                 "array/len",
                                 "@config.stages"
@@ -5242,28 +6337,14 @@
                               ]
                             },
                             {
+                              "align": "center",
+                              "aria-label": "Category lens",
+                              "children": "@entity.filterButtons",
                               "direction": "horizontal",
-                              "items": [
-                                "array/map",
-                                "@config.categories",
-                                [
-                                  "fn",
-                                  "cc",
-                                  {
-                                    "color": [
-                                      "object/get",
-                                      "@cc",
-                                      "color"
-                                    ],
-                                    "label": [
-                                      "object/get",
-                                      "@cc",
-                                      "label"
-                                    ]
-                                  }
-                                ]
-                              ],
-                              "type": "chart-legend"
+                              "gap": "xs",
+                              "role": "group",
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": "@config.animate",
@@ -5272,6 +6353,11 @@
                               "gridStep": 1.0,
                               "height": "@config.height",
                               "interactive": "@config.interactive",
+                              "keyMap": {
+                                "ArrowLeft": "PREV",
+                                "ArrowRight": "NEXT",
+                                "KeyR": "RESET_STEPPER"
+                              },
                               "points": [],
                               "shapes": "@entity.shapes",
                               "showAxes": false,
@@ -5283,64 +6369,6 @@
                               "xMin": 0.0,
                               "yMax": "@config.height",
                               "yMin": 0.0
-                            },
-                            {
-                              "children": "@entity.filterButtons",
-                              "direction": "horizontal",
-                              "gap": "xs",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "action": "PREV",
-                                  "disabled": [
-                                    "if",
-                                    [
-                                      "<=",
-                                      "@entity.cursorIndex",
-                                      -1.0
-                                    ],
-                                    true,
-                                    false
-                                  ],
-                                  "label": "Prev",
-                                  "type": "button",
-                                  "variant": "ghost"
-                                },
-                                {
-                                  "action": "NEXT",
-                                  "disabled": [
-                                    "if",
-                                    [
-                                      ">=",
-                                      "@entity.cursorIndex",
-                                      [
-                                        "-",
-                                        [
-                                          "array/len",
-                                          "@config.stages"
-                                        ],
-                                        1.0
-                                      ]
-                                    ],
-                                    true,
-                                    false
-                                  ],
-                                  "label": "Next",
-                                  "type": "button",
-                                  "variant": "primary"
-                                },
-                                {
-                                  "action": "RESET_STEPPER",
-                                  "label": "Reset",
-                                  "type": "button",
-                                  "variant": "ghost"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack"
                             },
                             {
                               "children": [
@@ -5397,9 +6425,11 @@
                               ],
                               "direction": "horizontal",
                               "gap": "xs",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
+                              "color": "muted",
                               "content": "@entity.visibleThreadNote",
                               "type": "typography",
                               "variant": "caption"
@@ -5743,10 +6773,10 @@
                         "baseShapes",
                         [
                           {
-                            "color": "#78716c",
                             "id": "axis",
-                            "lineWidth": 2.0,
                             "opacity": 1.0,
+                            "stroke": "normal",
+                            "tone": "axis",
                             "type": "line",
                             "x1": "@config.axisMarginLeft",
                             "x2": [
@@ -5759,14 +6789,14 @@
                           },
                           {
                             "align": "left",
-                            "color": "#78716c",
-                            "fontSize": 11.0,
                             "id": "minPositionLabel",
                             "text": [
                               "str/concat",
                               "",
                               "@config.minPosition"
                             ],
+                            "textSize": "xs",
+                            "tone": "label",
                             "type": "text",
                             "x": "@config.axisMarginLeft",
                             "y": [
@@ -5777,14 +6807,14 @@
                           },
                           {
                             "align": "right",
-                            "color": "#78716c",
-                            "fontSize": 11.0,
                             "id": "maxPositionLabel",
                             "text": [
                               "str/concat",
                               "",
                               "@config.maxPosition"
                             ],
+                            "textSize": "xs",
+                            "tone": "label",
                             "type": "text",
                             "x": [
                               "-",
@@ -5941,27 +6971,27 @@
                                   "@isCurrent",
                                   [
                                     {
-                                      "color": "@catColor",
-                                      "fill": "transparent",
+                                      "fillStyle": "outline",
                                       "id": [
                                         "str/concat",
                                         "ring-",
                                         "@s.position"
                                       ],
-                                      "lineWidth": 3.0,
                                       "opacity": 1.0,
                                       "radius": [
                                         "+",
                                         "@rad",
                                         5.0
                                       ],
+                                      "stroke": "bold",
+                                      "tone": "@catColor",
                                       "type": "circle",
                                       "x": "@xPos",
                                       "y": "@config.axisY"
                                     },
                                     {
-                                      "color": "@col",
-                                      "fill": "@col",
+                                      "fillStyle": "solid",
+                                      "fillTone": "@col",
                                       "id": [
                                         "str/concat",
                                         "marker-",
@@ -5969,6 +6999,7 @@
                                       ],
                                       "opacity": "@finalOpacity",
                                       "radius": "@rad",
+                                      "tone": "@col",
                                       "type": "circle",
                                       "x": "@xPos",
                                       "y": "@config.axisY"
@@ -5976,8 +7007,8 @@
                                   ],
                                   [
                                     {
-                                      "color": "@col",
-                                      "fill": "@col",
+                                      "fillStyle": "solid",
+                                      "fillTone": "@col",
                                       "id": [
                                         "str/concat",
                                         "marker-",
@@ -5985,6 +7016,7 @@
                                       ],
                                       "opacity": "@finalOpacity",
                                       "radius": "@rad",
+                                      "tone": "@col",
                                       "type": "circle",
                                       "x": "@xPos",
                                       "y": "@config.axisY"
@@ -5997,11 +7029,99 @@
                         ]
                       ],
                       [
+                        "legendShapes",
+                        [
+                          "array/flatten",
+                          [
+                            "array/map",
+                            "@config.categories",
+                            [
+                              {
+                                "fillStyle": "solid",
+                                "fillTone": [
+                                  "object/get",
+                                  "@item",
+                                  "color"
+                                ],
+                                "id": [
+                                  "str/concat",
+                                  "legend-dot-",
+                                  "@index"
+                                ],
+                                "opacity": 1.0,
+                                "radius": 5.0,
+                                "tone": [
+                                  "object/get",
+                                  "@item",
+                                  "color"
+                                ],
+                                "type": "circle",
+                                "x": [
+                                  "+",
+                                  "@config.axisMarginLeft",
+                                  [
+                                    "*",
+                                    "@index",
+                                    [
+                                      "/",
+                                      "@axisWidth",
+                                      [
+                                        "array/len",
+                                        "@config.categories"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                "y": 22.0
+                              },
+                              {
+                                "align": "left",
+                                "id": [
+                                  "str/concat",
+                                  "legend-label-",
+                                  "@index"
+                                ],
+                                "text": [
+                                  "object/get",
+                                  "@item",
+                                  "label"
+                                ],
+                                "textSize": "xs",
+                                "tone": "label",
+                                "type": "text",
+                                "x": [
+                                  "+",
+                                  [
+                                    "+",
+                                    "@config.axisMarginLeft",
+                                    [
+                                      "*",
+                                      "@index",
+                                      [
+                                        "/",
+                                        "@axisWidth",
+                                        [
+                                          "array/len",
+                                          "@config.categories"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  12.0
+                                ],
+                                "y": 26.0
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
                         "allShapes",
                         [
                           "array/concat",
                           "@baseShapes",
-                          "@markerShapes"
+                          "@markerShapes",
+                          "@legendShapes"
                         ]
                       ],
                       [
@@ -6014,6 +7134,16 @@
                               "actionPayload": {
                                 "category": "all"
                               },
+                              "aria-pressed": [
+                                "if",
+                                [
+                                  "==",
+                                  "@entity.activeFilter",
+                                  "all"
+                                ],
+                                "true",
+                                "false"
+                              ],
                               "label": "@config.allLabel",
                               "size": "sm",
                               "type": "button",
@@ -6024,7 +7154,7 @@
                                   "@entity.activeFilter",
                                   "all"
                                 ],
-                                "primary",
+                                "secondary",
                                 "ghost"
                               ]
                             }
@@ -6044,6 +7174,20 @@
                                     "category"
                                   ]
                                 },
+                                "aria-pressed": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@entity.activeFilter",
+                                    [
+                                      "object/get",
+                                      "@cc",
+                                      "category"
+                                    ]
+                                  ],
+                                  "true",
+                                  "false"
+                                ],
                                 "label": [
                                   "object/get",
                                   "@cc",
@@ -6062,7 +7206,7 @@
                                       "category"
                                     ]
                                   ],
-                                  "primary",
+                                  "secondary",
                                   "ghost"
                                 ]
                               }
@@ -6123,33 +7267,176 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    [
+                                      "<=",
+                                      "@entity.cursorIndex",
+                                      -1.0
+                                    ],
+                                    "Not started",
+                                    [
+                                      "if",
+                                      [
+                                        ">=",
+                                        "@entity.cursorIndex",
+                                        [
+                                          "-",
+                                          [
+                                            "array/len",
+                                            "@config.stages"
+                                          ],
+                                          1.0
+                                        ]
+                                      ],
+                                      "Complete",
+                                      [
+                                        "str/concat",
+                                        "Stage ",
+                                        [
+                                          "+",
+                                          "@entity.cursorIndex",
+                                          1.0
+                                        ],
+                                        " of ",
+                                        [
+                                          "array/len",
+                                          "@config.stages"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      "<=",
+                                      "@entity.cursorIndex",
+                                      -1.0
+                                    ],
+                                    "neutral",
+                                    [
+                                      "if",
+                                      [
+                                        ">=",
+                                        "@entity.cursorIndex",
+                                        [
+                                          "-",
+                                          [
+                                            "array/len",
+                                            "@config.stages"
+                                          ],
+                                          1.0
+                                        ]
+                                      ],
+                                      "success",
+                                      "primary"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
-                              "label": [
-                                "str/concat",
-                                "Stage ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "+",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "NEXT",
+                                  "disabled": [
+                                    ">=",
                                     "@entity.cursorIndex",
-                                    1.0
-                                  ]
-                                ],
-                                " of ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "array/len",
-                                    "@config.stages"
-                                  ]
-                                ]
+                                    [
+                                      "-",
+                                      [
+                                        "array/len",
+                                        "@config.stages"
+                                      ],
+                                      1.0
+                                    ]
+                                  ],
+                                  "icon": "chevron-right",
+                                  "label": "Next",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "PREV",
+                                  "disabled": [
+                                    "<=",
+                                    "@entity.cursorIndex",
+                                    -1.0
+                                  ],
+                                  "icon": "chevron-left",
+                                  "label": "Prev",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET_STEPPER",
+                                  "icon": "rotate-ccw",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Stage ",
+                                    [
+                                      "+",
+                                      "@entity.cursorIndex",
+                                      1.0
+                                    ],
+                                    " of ",
+                                    [
+                                      "array/len",
+                                      "@config.stages"
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
                               ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
                               "max": [
                                 "array/len",
                                 "@config.stages"
@@ -6163,28 +7450,14 @@
                               ]
                             },
                             {
+                              "align": "center",
+                              "aria-label": "Category lens",
+                              "children": "@entity.filterButtons",
                               "direction": "horizontal",
-                              "items": [
-                                "array/map",
-                                "@config.categories",
-                                [
-                                  "fn",
-                                  "cc",
-                                  {
-                                    "color": [
-                                      "object/get",
-                                      "@cc",
-                                      "color"
-                                    ],
-                                    "label": [
-                                      "object/get",
-                                      "@cc",
-                                      "label"
-                                    ]
-                                  }
-                                ]
-                              ],
-                              "type": "chart-legend"
+                              "gap": "xs",
+                              "role": "group",
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": "@config.animate",
@@ -6193,6 +7466,11 @@
                               "gridStep": 1.0,
                               "height": "@config.height",
                               "interactive": "@config.interactive",
+                              "keyMap": {
+                                "ArrowLeft": "PREV",
+                                "ArrowRight": "NEXT",
+                                "KeyR": "RESET_STEPPER"
+                              },
                               "points": [],
                               "shapes": "@entity.shapes",
                               "showAxes": false,
@@ -6204,64 +7482,6 @@
                               "xMin": 0.0,
                               "yMax": "@config.height",
                               "yMin": 0.0
-                            },
-                            {
-                              "children": "@entity.filterButtons",
-                              "direction": "horizontal",
-                              "gap": "xs",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "action": "PREV",
-                                  "disabled": [
-                                    "if",
-                                    [
-                                      "<=",
-                                      "@entity.cursorIndex",
-                                      -1.0
-                                    ],
-                                    true,
-                                    false
-                                  ],
-                                  "label": "Prev",
-                                  "type": "button",
-                                  "variant": "ghost"
-                                },
-                                {
-                                  "action": "NEXT",
-                                  "disabled": [
-                                    "if",
-                                    [
-                                      ">=",
-                                      "@entity.cursorIndex",
-                                      [
-                                        "-",
-                                        [
-                                          "array/len",
-                                          "@config.stages"
-                                        ],
-                                        1.0
-                                      ]
-                                    ],
-                                    true,
-                                    false
-                                  ],
-                                  "label": "Next",
-                                  "type": "button",
-                                  "variant": "primary"
-                                },
-                                {
-                                  "action": "RESET_STEPPER",
-                                  "label": "Reset",
-                                  "type": "button",
-                                  "variant": "ghost"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack"
                             },
                             {
                               "children": [
@@ -6318,9 +7538,11 @@
                               ],
                               "direction": "horizontal",
                               "gap": "xs",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
+                              "color": "muted",
                               "content": "@entity.visibleThreadNote",
                               "type": "typography",
                               "variant": "caption"
@@ -6501,6 +7723,26 @@
           {
             "name": "opacity",
             "type": "number"
+          },
+          {
+            "name": "tone",
+            "type": "string"
+          },
+          {
+            "name": "fillTone",
+            "type": "string"
+          },
+          {
+            "name": "stroke",
+            "type": "string"
+          },
+          {
+            "name": "textSize",
+            "type": "string"
+          },
+          {
+            "name": "fillStyle",
+            "type": "string"
           }
         ],
         "LearnStepperShapePoint": [

@@ -240,8 +240,8 @@
           "category": "interaction",
           "config": {
             "backgroundColor": {
-              "default": "#f8fafc",
-              "description": "Canvas background color.",
+              "default": "",
+              "description": "Canvas ground. Empty uses the theme drawing ground.",
               "label": "Background Color",
               "tier": "presentation",
               "type": "string"
@@ -261,7 +261,7 @@
               "type": "number"
             },
             "highlightColor": {
-              "default": "#f59e0b",
+              "default": "highlight",
               "description": "Ring color drawn around the selected part.",
               "label": "Highlight Color",
               "tier": "presentation",
@@ -270,25 +270,25 @@
             "links": {
               "default": [
                 {
-                  "color": "#cbd5e1",
+                  "color": "guide",
                   "from": "input",
                   "label": "",
                   "to": "processor"
                 },
                 {
-                  "color": "#cbd5e1",
+                  "color": "guide",
                   "from": "processor",
                   "label": "",
                   "to": "storage"
                 },
                 {
-                  "color": "#cbd5e1",
+                  "color": "guide",
                   "from": "processor",
                   "label": "",
                   "to": "output"
                 },
                 {
-                  "color": "#cbd5e1",
+                  "color": "guide",
                   "from": "controller",
                   "label": "",
                   "to": "processor"
@@ -342,7 +342,7 @@
             "parts": {
               "default": [
                 {
-                  "color": "#2563eb",
+                  "color": "series-1",
                   "description": "Receives raw data or requests from the outside world and hands them to the processor.",
                   "id": "input",
                   "label": "Input",
@@ -351,7 +351,7 @@
                   "y": 200.0
                 },
                 {
-                  "color": "#7c3aed",
+                  "color": "series-2",
                   "description": "The central component that transforms incoming data according to the system's rules.",
                   "id": "processor",
                   "label": "Processor",
@@ -360,7 +360,7 @@
                   "y": 200.0
                 },
                 {
-                  "color": "#0891b2",
+                  "color": "series-3",
                   "description": "Persists data so it can be retrieved later, even after the system restarts.",
                   "id": "storage",
                   "label": "Storage",
@@ -369,7 +369,7 @@
                   "y": 320.0
                 },
                 {
-                  "color": "#16a34a",
+                  "color": "series-4",
                   "description": "Delivers the processor's results back out to users or other systems.",
                   "id": "output",
                   "label": "Output",
@@ -378,7 +378,7 @@
                   "y": 200.0
                 },
                 {
-                  "color": "#dc2626",
+                  "color": "series-5",
                   "description": "Coordinates timing and configuration for the processor without touching the data itself.",
                   "id": "controller",
                   "label": "Controller",
@@ -432,6 +432,13 @@
               "synonyms": "part, node, component, label, annotation",
               "tier": "domain",
               "type": "[LearnDiagramPart]"
+            },
+            "summary": {
+              "default": "",
+              "description": "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line.",
+              "label": "Concept",
+              "tier": "presentation",
+              "type": "string"
             },
             "title": {
               "default": "System Diagram",
@@ -771,9 +778,92 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.selectedId",
+                                      ""
+                                    ],
+                                    "Overview",
+                                    [
+                                      "str/concat",
+                                      "Part ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "+",
+                                          "@entity.selectedIndex",
+                                          1.0
+                                        ]
+                                      ],
+                                      " of ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "array/len",
+                                          "@entity.parts"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.selectedId",
+                                      ""
+                                    ],
+                                    "neutral",
+                                    "primary"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": "@entity.partButtons",
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "backgroundColor": "@config.backgroundColor",
@@ -851,7 +941,6 @@
                                 [
                                   {
                                     "color": "@config.highlightColor",
-                                    "lineWidth": 4.0,
                                     "radius": [
                                       "+",
                                       [
@@ -865,6 +954,7 @@
                                       ],
                                       10.0
                                     ],
+                                    "stroke": "bold",
                                     "type": "circle",
                                     "x": [
                                       "object/get",
@@ -895,12 +985,6 @@
                               "padding": "md",
                               "type": "card",
                               "variant": "bordered"
-                            },
-                            {
-                              "children": "@entity.partButtons",
-                              "direction": "horizontal",
-                              "gap": "xs",
-                              "type": "stack"
                             }
                           ],
                           "direction": "vertical",
@@ -920,6 +1004,43 @@
                   "==",
                   "@config.matchMode",
                   ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01M055GQ281Y3NWPNNPD786Z1S",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@config.matchMode",
+                      ""
+                    ]
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1074,9 +1195,92 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.selectedId",
+                                      ""
+                                    ],
+                                    "Overview",
+                                    [
+                                      "str/concat",
+                                      "Part ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "+",
+                                          "@entity.selectedIndex",
+                                          1.0
+                                        ]
+                                      ],
+                                      " of ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "array/len",
+                                          "@entity.parts"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.selectedId",
+                                      ""
+                                    ],
+                                    "neutral",
+                                    "primary"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": "@entity.partButtons",
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "backgroundColor": "@config.backgroundColor",
@@ -1154,7 +1358,6 @@
                                 [
                                   {
                                     "color": "@config.highlightColor",
-                                    "lineWidth": 4.0,
                                     "radius": [
                                       "+",
                                       [
@@ -1168,6 +1371,7 @@
                                       ],
                                       10.0
                                     ],
+                                    "stroke": "bold",
                                     "type": "circle",
                                     "x": [
                                       "object/get",
@@ -1198,12 +1402,6 @@
                               "padding": "md",
                               "type": "card",
                               "variant": "bordered"
-                            },
-                            {
-                              "children": "@entity.partButtons",
-                              "direction": "horizontal",
-                              "gap": "xs",
-                              "type": "stack"
                             }
                           ],
                           "direction": "vertical",
@@ -1437,9 +1635,92 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.selectedId",
+                                      ""
+                                    ],
+                                    "Overview",
+                                    [
+                                      "str/concat",
+                                      "Part ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "+",
+                                          "@entity.selectedIndex",
+                                          1.0
+                                        ]
+                                      ],
+                                      " of ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "array/len",
+                                          "@entity.parts"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.selectedId",
+                                      ""
+                                    ],
+                                    "neutral",
+                                    "primary"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": "@entity.partButtons",
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "backgroundColor": "@config.backgroundColor",
@@ -1517,7 +1798,6 @@
                                 [
                                   {
                                     "color": "@config.highlightColor",
-                                    "lineWidth": 4.0,
                                     "radius": [
                                       "+",
                                       [
@@ -1531,6 +1811,7 @@
                                       ],
                                       10.0
                                     ],
+                                    "stroke": "bold",
                                     "type": "circle",
                                     "x": [
                                       "object/get",
@@ -1561,12 +1842,6 @@
                               "padding": "md",
                               "type": "card",
                               "variant": "bordered"
-                            },
-                            {
-                              "children": "@entity.partButtons",
-                              "direction": "horizontal",
-                              "gap": "xs",
-                              "type": "stack"
                             }
                           ],
                           "direction": "vertical",
@@ -1727,9 +2002,92 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.selectedId",
+                                      ""
+                                    ],
+                                    "Overview",
+                                    [
+                                      "str/concat",
+                                      "Part ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "+",
+                                          "@entity.selectedIndex",
+                                          1.0
+                                        ]
+                                      ],
+                                      " of ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "array/len",
+                                          "@entity.parts"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.selectedId",
+                                      ""
+                                    ],
+                                    "neutral",
+                                    "primary"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": "@entity.partButtons",
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "backgroundColor": "@config.backgroundColor",
@@ -1807,7 +2165,6 @@
                                 [
                                   {
                                     "color": "@config.highlightColor",
-                                    "lineWidth": 4.0,
                                     "radius": [
                                       "+",
                                       [
@@ -1821,6 +2178,7 @@
                                       ],
                                       10.0
                                     ],
+                                    "stroke": "bold",
                                     "type": "circle",
                                     "x": [
                                       "object/get",
@@ -1851,12 +2209,6 @@
                               "padding": "md",
                               "type": "card",
                               "variant": "bordered"
-                            },
-                            {
-                              "children": "@entity.partButtons",
-                              "direction": "horizontal",
-                              "gap": "xs",
-                              "type": "stack"
                             }
                           ],
                           "direction": "vertical",

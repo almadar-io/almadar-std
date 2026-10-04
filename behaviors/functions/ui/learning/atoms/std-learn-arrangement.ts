@@ -59,13 +59,13 @@ export interface StdLearnArrangementConfig {
   animate?: boolean;
   /** Default: `"Check"` */
   checkLabel?: string;
-  /** Default: `"#16a34a"` */
+  /** Default: `"success"` */
   correctColor?: string;
-  /** Default: `"#e2e8f0"` */
+  /** Default: `"fill"` */
   emptySlotColor?: string;
   /** Default: `220` */
   height?: number;
-  /** Default: `"#dc2626"` */
+  /** Default: `"error"` */
   incorrectColor?: string;
   /** Default: `false` */
   interactive?: boolean;
@@ -73,26 +73,28 @@ export interface StdLearnArrangementConfig {
   items?: EntityRow[];
   /** Default: `""` */
   matchMode?: string;
-  /** Default: `"#94a3b8"` */
+  /** Default: `"series-2"` */
   pendingColor?: string;
   /** Default: `"Retry"` */
   retryLabel?: string;
-  /** Default: `"#334155"` */
+  /** Default: `"ink"` */
   slotBorderColor?: string;
-  /** Default: `13` */
-  slotFontSize?: number;
+  /** Default: `"sm"` */
+  slotFontSize?: string;
   /** Default: `60` */
   slotHeight?: number;
   /** Default: `40` */
   slotLeft?: number;
   /** Default: `120` */
   slotSpacing?: number;
-  /** Default: `"#0f172a"` */
+  /** Default: `"label"` */
   slotTextColor?: string;
   /** Default: `100` */
   slotWidth?: number;
   /** Default: `70` */
   slotY?: number;
+  /** Default: `""` */
+  summary?: string;
   /** Default: `"Build the Order"` */
   title?: string;
   /** Default: `"Undo"` */

@@ -7,12 +7,13 @@ orbital HotspotOrbital {
     x : number!
     y : number!
     radius : number
-    color : string!
-    fill : string
+    tone : string
+    fillTone : string
+    fillStyle : string
+    stroke : string
+    textSize : string
     text : string
-    fontSize : number
     align : "left" | "center" | "right"
-    lineWidth : number
   }
   type HotspotShape = {
     id : string!
@@ -53,8 +54,8 @@ orbital HotspotOrbital {
       INIT -> idle when (== @config.matchMode "")
         (let (
             (first (array/nth @config.prompts 0))
-            (circles (array/map @config.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), color: (object/get @s color "#3b82f6"), fill: (object/get @s color "#3b82f6") })))
-            (labels (array/map @config.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), fontSize: 12, align: "center", color: "#0f172a" })))
+            (circles (array/map @config.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), tone: (object/get @s color "series-1"), fillTone: (object/get @s color "series-1"), fillStyle: "solid" })))
+            (labels (array/map @config.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), textSize: "xs", align: "center", tone: "label" })))
           )
           (do
             (set @entity.active true)
@@ -74,32 +75,42 @@ orbital HotspotOrbital {
               { type: card, variant: bordered, padding: md, children: [
                   { type: typography, variant: body, content: @entity.promptText }
                 ] },
-              { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.canvasShapes, interactive: true, animate: false, onShapeClick: "TAP_SHAPE" },
+              { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.canvasShapes, interactive: true, animate: false, onShapeClick: "TAP_SHAPE", keyMap: { Space: NEXT, ArrowRight: NEXT, KeyR: RETRY } },
               { type: stack, direction: horizontal, gap: xs, children: [
-                  { type: typography, variant: caption, content: @entity.feedback }
+                  { type: typography, variant: body, content: @entity.feedback }
                 ] },
-              { type: stack, direction: horizontal, gap: sm, children: [
-                  { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: (if @entity.found false true) }
-                ] },
-              { type: stat-display, label: "First-try score", value: @entity.score, max: @entity.totalPrompts }
+              { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                  { type: button, action: NEXT, label: @config.nextLabel, icon: "chevron-right", variant: primary, disabled: (if @entity.found false true) },
+                  { type: typography, variant: caption, color: muted, content: (str/concat "First-try " @entity.score " of " @entity.totalPrompts) }
+                ] }
             ])))
         (render-ui main {
           type: box
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Round complete" (if @entity.found "Correct" (if (> @entity.tries 0) "Try again" (str/concat "Score " @entity.score " / " @entity.totalPrompts)))), variant: (if @entity.done "primary" (if @entity.found "success" (if (> @entity.tries 0) "error" "neutral"))) }
+                  ] },
                 { type: progress-bar, value: (+ @entity.promptIndex 1), max: @entity.totalPrompts, showPercentage: false, label: (str/concat "Prompt " (str/concat "" (+ @entity.promptIndex 1)) " of " (str/concat "" @entity.totalPrompts)) },
                 { type: stack, direction: vertical, gap: md, children: @entity.view }
               ] }
           ]
         })
 
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (render-ui main null)
+
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (let (
             (first (array/nth @config.prompts 0))
-            (circles (array/map @config.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), color: (object/get @s color "#3b82f6"), fill: (object/get @s color "#3b82f6") })))
-            (labels (array/map @config.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), fontSize: 12, align: "center", color: "#0f172a" })))
+            (circles (array/map @config.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), tone: (object/get @s color "series-1"), fillTone: (object/get @s color "series-1"), fillStyle: "solid" })))
+            (labels (array/map @config.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), textSize: "xs", align: "center", tone: "label" })))
           )
           (do
             (set @entity.active true)
@@ -119,21 +130,27 @@ orbital HotspotOrbital {
               { type: card, variant: bordered, padding: md, children: [
                   { type: typography, variant: body, content: @entity.promptText }
                 ] },
-              { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.canvasShapes, interactive: true, animate: false, onShapeClick: "TAP_SHAPE" },
+              { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.canvasShapes, interactive: true, animate: false, onShapeClick: "TAP_SHAPE", keyMap: { Space: NEXT, ArrowRight: NEXT, KeyR: RETRY } },
               { type: stack, direction: horizontal, gap: xs, children: [
-                  { type: typography, variant: caption, content: @entity.feedback }
+                  { type: typography, variant: body, content: @entity.feedback }
                 ] },
-              { type: stack, direction: horizontal, gap: sm, children: [
-                  { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: (if @entity.found false true) }
-                ] },
-              { type: stat-display, label: "First-try score", value: @entity.score, max: @entity.totalPrompts }
+              { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                  { type: button, action: NEXT, label: @config.nextLabel, icon: "chevron-right", variant: primary, disabled: (if @entity.found false true) },
+                  { type: typography, variant: caption, color: muted, content: (str/concat "First-try " @entity.score " of " @entity.totalPrompts) }
+                ] }
             ])))
         (render-ui main {
           type: box
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Round complete" (if @entity.found "Correct" (if (> @entity.tries 0) "Try again" (str/concat "Score " @entity.score " / " @entity.totalPrompts)))), variant: (if @entity.done "primary" (if @entity.found "success" (if (> @entity.tries 0) "error" "neutral"))) }
+                  ] },
                 { type: progress-bar, value: (+ @entity.promptIndex 1), max: @entity.totalPrompts, showPercentage: false, label: (str/concat "Prompt " (str/concat "" (+ @entity.promptIndex 1)) " of " (str/concat "" @entity.totalPrompts)) },
                 { type: stack, direction: vertical, gap: md, children: @entity.view }
               ] }
@@ -147,10 +164,10 @@ orbital HotspotOrbital {
             (tapped (array/find @config.shapes (fn s (== (object/get @s id) @tappedId))))
             (tappedLabel (object/get @tapped label ""))
             (target (array/find @config.shapes (fn s (== (object/get @s id) @entity.targetId))))
-            (circles (array/map @config.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), color: (object/get @s color "#3b82f6"), fill: (object/get @s color "#3b82f6") })))
-            (labels (array/map @config.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), fontSize: 12, align: "center", color: "#0f172a" })))
+            (circles (array/map @config.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), tone: (object/get @s color "series-1"), fillTone: (object/get @s color "series-1"), fillStyle: "solid" })))
+            (labels (array/map @config.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), textSize: "xs", align: "center", tone: "label" })))
             (ring (if @hit
-              [ { type: circle, id: "hit-ring", x: (object/get @target x), y: (object/get @target y), radius: (+ (object/get @target radius 22) 6), color: @config.hitColor, fill: "transparent", lineWidth: 4 } ]
+              [ { type: circle, id: "hit-ring", x: (object/get @target x), y: (object/get @target y), radius: (+ (object/get @target radius 22) 6), tone: @config.hitColor, fillStyle: "outline", stroke: "bold" } ]
               []))
             (newFound (if @hit true false))
             (newScore (if (and @hit (== @entity.tries 0)) (+ @entity.score 1) @entity.score))
@@ -162,28 +179,27 @@ orbital HotspotOrbital {
               { type: card, variant: bordered, padding: md, children: [
                   { type: typography, variant: body, content: @entity.promptText }
                 ] },
-              { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @newCanvasShapes, interactive: true, animate: false, onShapeClick: "TAP_SHAPE" },
+              { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @newCanvasShapes, interactive: true, animate: false, onShapeClick: "TAP_SHAPE", keyMap: { Space: NEXT, ArrowRight: NEXT, KeyR: RETRY } },
               { type: stack, direction: horizontal, gap: xs, children: [
-                  { type: badge, variant: success, label: "Found" },
-                  { type: typography, variant: caption, content: @newFeedback }
+                  { type: typography, variant: body, content: @newFeedback }
                 ] },
-              { type: stack, direction: horizontal, gap: sm, children: [
-                  { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: false }
-                ] },
-              { type: stat-display, label: "First-try score", value: @newScore, max: @entity.totalPrompts }
+              { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                  { type: button, action: NEXT, label: @config.nextLabel, icon: "chevron-right", variant: primary, disabled: false },
+                  { type: typography, variant: caption, color: muted, content: (str/concat "First-try " @newScore " of " @entity.totalPrompts) }
+                ] }
             ])
             (notFoundView [
               { type: card, variant: bordered, padding: md, children: [
                   { type: typography, variant: body, content: @entity.promptText }
                 ] },
-              { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @newCanvasShapes, interactive: true, animate: false, onShapeClick: "TAP_SHAPE" },
+              { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @newCanvasShapes, interactive: true, animate: false, onShapeClick: "TAP_SHAPE", keyMap: { Space: NEXT, ArrowRight: NEXT, KeyR: RETRY } },
               { type: stack, direction: horizontal, gap: xs, children: [
-                  { type: typography, variant: caption, content: @newFeedback }
+                  { type: typography, variant: body, content: @newFeedback }
                 ] },
-              { type: stack, direction: horizontal, gap: sm, children: [
-                  { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: true }
-                ] },
-              { type: stat-display, label: "First-try score", value: @newScore, max: @entity.totalPrompts }
+              { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                  { type: button, action: NEXT, label: @config.nextLabel, icon: "chevron-right", variant: primary, disabled: true },
+                  { type: typography, variant: caption, color: muted, content: (str/concat "First-try " @newScore " of " @entity.totalPrompts) }
+                ] }
             ])
           )
           (do
@@ -198,7 +214,13 @@ orbital HotspotOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Round complete" (if @entity.found "Correct" (if (> @entity.tries 0) "Try again" (str/concat "Score " @entity.score " / " @entity.totalPrompts)))), variant: (if @entity.done "primary" (if @entity.found "success" (if (> @entity.tries 0) "error" "neutral"))) }
+                  ] },
                 { type: progress-bar, value: (+ @entity.promptIndex 1), max: @entity.totalPrompts, showPercentage: false, label: (str/concat "Prompt " (str/concat "" (+ @entity.promptIndex 1)) " of " (str/concat "" @entity.totalPrompts)) },
                 { type: stack, direction: vertical, gap: md, children: @entity.view }
               ] }
@@ -212,8 +234,8 @@ orbital HotspotOrbital {
             (nextIndex (+ @entity.promptIndex 1))
             (finished (>= @nextIndex (array/len @config.prompts)))
             (next (array/nth @config.prompts (math/min @nextIndex (- (array/len @config.prompts) 1))))
-            (circles (array/map @config.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), color: (object/get @s color "#3b82f6"), fill: (object/get @s color "#3b82f6") })))
-            (labels (array/map @config.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), fontSize: 12, align: "center", color: "#0f172a" })))
+            (circles (array/map @config.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), tone: (object/get @s color "series-1"), fillTone: (object/get @s color "series-1"), fillStyle: "solid" })))
+            (labels (array/map @config.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), textSize: "xs", align: "center", tone: "label" })))
           )
           (do
             (set @entity.promptIndex (if @finished @entity.promptIndex @nextIndex))
@@ -229,20 +251,20 @@ orbital HotspotOrbital {
               [
                 { type: typography, variant: h4, content: "Round Complete" },
                 { type: stat-display, label: "First-try score", value: @entity.score, max: @entity.totalPrompts },
-                { type: button, action: RETRY, label: @config.retryLabel, variant: primary }
+                { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: primary }
               ]
               [
                 { type: card, variant: bordered, padding: md, children: [
                     { type: typography, variant: body, content: @entity.promptText }
                   ] },
-                { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.canvasShapes, interactive: true, animate: false, onShapeClick: "TAP_SHAPE" },
+                { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.canvasShapes, interactive: true, animate: false, onShapeClick: "TAP_SHAPE", keyMap: { Space: NEXT, ArrowRight: NEXT, KeyR: RETRY } },
                 { type: stack, direction: horizontal, gap: xs, children: [
-                    { type: typography, variant: caption, content: @entity.feedback }
+                    { type: typography, variant: body, content: @entity.feedback }
                   ] },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: (if @entity.found false true) }
-                  ] },
-                { type: stat-display, label: "First-try score", value: @entity.score, max: @entity.totalPrompts }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: NEXT, label: @config.nextLabel, icon: "chevron-right", variant: primary, disabled: (if @entity.found false true) },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "First-try " @entity.score " of " @entity.totalPrompts) }
+                  ] }
               ])))
           )
         (render-ui main {
@@ -250,7 +272,13 @@ orbital HotspotOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Round complete" (if @entity.found "Correct" (if (> @entity.tries 0) "Try again" (str/concat "Score " @entity.score " / " @entity.totalPrompts)))), variant: (if @entity.done "primary" (if @entity.found "success" (if (> @entity.tries 0) "error" "neutral"))) }
+                  ] },
                 { type: progress-bar, value: (+ @entity.promptIndex 1), max: @entity.totalPrompts, showPercentage: false, label: (str/concat "Prompt " (str/concat "" (+ @entity.promptIndex 1)) " of " (str/concat "" @entity.totalPrompts)) },
                 { type: stack, direction: vertical, gap: md, children: @entity.view }
               ] }
@@ -261,8 +289,8 @@ orbital HotspotOrbital {
       RETRY -> idle when (and (== @entity.active true) (== @entity.done true))
         (let (
             (first (array/nth @config.prompts 0))
-            (circles (array/map @config.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), color: (object/get @s color "#3b82f6"), fill: (object/get @s color "#3b82f6") })))
-            (labels (array/map @config.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), fontSize: 12, align: "center", color: "#0f172a" })))
+            (circles (array/map @config.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), tone: (object/get @s color "series-1"), fillTone: (object/get @s color "series-1"), fillStyle: "solid" })))
+            (labels (array/map @config.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), textSize: "xs", align: "center", tone: "label" })))
           )
           (do
             (set @entity.promptIndex 0)
@@ -279,21 +307,27 @@ orbital HotspotOrbital {
               { type: card, variant: bordered, padding: md, children: [
                   { type: typography, variant: body, content: @entity.promptText }
                 ] },
-              { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.canvasShapes, interactive: true, animate: false, onShapeClick: "TAP_SHAPE" },
+              { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.canvasShapes, interactive: true, animate: false, onShapeClick: "TAP_SHAPE", keyMap: { Space: NEXT, ArrowRight: NEXT, KeyR: RETRY } },
               { type: stack, direction: horizontal, gap: xs, children: [
-                  { type: typography, variant: caption, content: @entity.feedback }
+                  { type: typography, variant: body, content: @entity.feedback }
                 ] },
-              { type: stack, direction: horizontal, gap: sm, children: [
-                  { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: (if @entity.found false true) }
-                ] },
-              { type: stat-display, label: "First-try score", value: @entity.score, max: @entity.totalPrompts }
+              { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                  { type: button, action: NEXT, label: @config.nextLabel, icon: "chevron-right", variant: primary, disabled: (if @entity.found false true) },
+                  { type: typography, variant: caption, color: muted, content: (str/concat "First-try " @entity.score " of " @entity.totalPrompts) }
+                ] }
             ])))
         (render-ui main {
           type: box
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Round complete" (if @entity.found "Correct" (if (> @entity.tries 0) "Try again" (str/concat "Score " @entity.score " / " @entity.totalPrompts)))), variant: (if @entity.done "primary" (if @entity.found "success" (if (> @entity.tries 0) "error" "neutral"))) }
+                  ] },
                 { type: progress-bar, value: (+ @entity.promptIndex 1), max: @entity.totalPrompts, showPercentage: false, label: (str/concat "Prompt " (str/concat "" (+ @entity.promptIndex 1)) " of " (str/concat "" @entity.totalPrompts)) },
                 { type: stack, direction: vertical, gap: md, children: @entity.view }
               ] }
@@ -362,12 +396,16 @@ orbital HotspotOrbital {
         @label "Title"
         @description "Title shown above the canvas."
         @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what is being identified (keep it under ~65 characters). Empty shows no line."
+        @tier "presentation"
       shapes : [HotspotShape] = [
-        { id: "nucleus", label: "Nucleus", x: 300, y: 170, radius: 34, color: "#8b5cf6" },
-        { id: "membrane", label: "Membrane", x: 130, y: 120, radius: 26, color: "#3b82f6" },
-        { id: "mitochondrion", label: "Mitochondrion", x: 460, y: 120, radius: 24, color: "#f59e0b" },
-        { id: "ribosome", label: "Ribosome", x: 200, y: 280, radius: 18, color: "#16a34a" },
-        { id: "vacuole", label: "Vacuole", x: 420, y: 280, radius: 28, color: "#06b6d4" }
+        { id: "nucleus", label: "Nucleus", x: 300, y: 170, radius: 34, color: "series-1" },
+        { id: "membrane", label: "Membrane", x: 130, y: 120, radius: 26, color: "series-2" },
+        { id: "mitochondrion", label: "Mitochondrion", x: 460, y: 120, radius: 24, color: "series-3" },
+        { id: "ribosome", label: "Ribosome", x: 200, y: 280, radius: 18, color: "series-4" },
+        { id: "vacuole", label: "Vacuole", x: 420, y: 280, radius: 28, color: "series-5" }
       ]
         @label "Hotspots"
         @description "The labeled parts of the scene; each carries an id, display label, canvas position, radius, and color. Realizations declare their own subject's parts here."
@@ -380,7 +418,7 @@ orbital HotspotOrbital {
         @label "Prompts"
         @description "The question roster; each prompt names a target hotspot id and an explanation revealed on a hit."
         @tier "domain"
-      hitColor : string = "#16a34a"
+      hitColor : string = "success"
         @label "Hit Ring Color"
         @description "Color of the highlight ring drawn around the target once found."
         @tier "presentation"
@@ -396,7 +434,7 @@ orbital HotspotOrbital {
       height : number = 380
         @label "Height"
         @tier "presentation"
-      backgroundColor : string = "#f8fafc"
+      backgroundColor : string = ""
         @label "Background Color"
         @tier "presentation"
     }

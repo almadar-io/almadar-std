@@ -241,15 +241,26 @@
               "tier": "presentation",
               "type": "boolean"
             },
+            "aspect": {
+              "default": "fit",
+              "description": "How the x and y ranges map to the canvas. `fit` stretches each range to fill the plot (function plots); `equal` uses one scale for both axes so circles stay round (geometry). Default `fit`.",
+              "label": "Aspect",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "fit",
+                "equal"
+              ]
+            },
             "axisColor": {
-              "default": "var(--color-muted-foreground, #374151)",
-              "description": "Axis line color; resolves theme tokens (default `var(--color-muted-foreground, #374151)`).",
+              "default": "axis",
+              "description": "Axis line color: a tone name, token or literal (default the `axis` tone).",
               "label": "Axis Color",
               "tier": "presentation",
               "type": "string"
             },
             "backgroundColor": {
-              "description": "Canvas fill color; `var(--token, fallback)` strings resolve against the active theme. Default transparent.",
+              "description": "Canvas ground: a tone name, `var()` token or literal. Default the theme's `--surface-diagram`.",
               "label": "Background Color",
               "tier": "presentation",
               "type": "string"
@@ -429,8 +440,8 @@
               "type": "string"
             },
             "gridColor": {
-              "default": "var(--color-border, #9ca3af)",
-              "description": "Grid line color; resolves theme tokens (default `var(--color-border, #9ca3af)`).",
+              "default": "grid",
+              "description": "Grid line color: a tone name, token or literal (default the `grid` tone).",
               "label": "Grid Color",
               "tier": "presentation",
               "type": "string"
@@ -565,8 +576,7 @@
               "type": "Map<string,string>"
             },
             "labelFontSize": {
-              "default": 12.0,
-              "description": "Base font size in px for all other canvas annotations (points, vectors, guides, curves, regions, angles, hops; default 12).",
+              "description": "Font size in px for all other canvas annotations (default the theme's diagram label size).",
               "label": "Label Font Size",
               "tier": "presentation",
               "type": "number"
@@ -818,6 +828,16 @@
                 "treeitem"
               ]
             },
+            "series": {
+              "default": [],
+              "description": "Overrides the theme's categorical palette (`series-1…N`) for this canvas — real-world conventions like CPK atom colors or resistor bands. Unset, the theme's `--color-series-*` apply.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Series",
+              "tier": "presentation",
+              "type": "[string]"
+            },
             "shapes": {
               "default": [],
               "description": "Extra declarative shapes in canvas pixel coordinates.",
@@ -866,6 +886,56 @@
                     "name": "fill",
                     "required": false,
                     "type": "string"
+                  },
+                  "fillStyle": {
+                    "name": "fillStyle",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "solid",
+                      "tint",
+                      "outline",
+                      "hatch"
+                    ]
+                  },
+                  "fillTone": {
+                    "name": "fillTone",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "ink",
+                      "label",
+                      "guide",
+                      "axis",
+                      "grid",
+                      "highlight",
+                      "fill",
+                      "series-1",
+                      "series-2",
+                      "series-3",
+                      "series-4",
+                      "series-5",
+                      "series-6",
+                      "series-7",
+                      "series-8",
+                      "primary",
+                      "accent",
+                      "success",
+                      "warning",
+                      "error",
+                      "info",
+                      "muted"
+                    ]
+                  },
+                  "font": {
+                    "name": "font",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "body",
+                      "display",
+                      "mono"
+                    ]
                   },
                   "fontFamily": {
                     "name": "fontFamily",
@@ -968,10 +1038,71 @@
                     "required": false,
                     "type": "number"
                   },
+                  "stroke": {
+                    "name": "stroke",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "thin",
+                      "normal",
+                      "bold"
+                    ]
+                  },
                   "text": {
                     "name": "text",
                     "required": false,
                     "type": "string"
+                  },
+                  "textCase": {
+                    "name": "textCase",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "theme",
+                      "verbatim"
+                    ]
+                  },
+                  "textSize": {
+                    "name": "textSize",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "xs",
+                      "sm",
+                      "base",
+                      "lg",
+                      "xl",
+                      "2xl"
+                    ]
+                  },
+                  "tone": {
+                    "name": "tone",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "ink",
+                      "label",
+                      "guide",
+                      "axis",
+                      "grid",
+                      "highlight",
+                      "fill",
+                      "series-1",
+                      "series-2",
+                      "series-3",
+                      "series-4",
+                      "series-5",
+                      "series-6",
+                      "series-7",
+                      "series-8",
+                      "primary",
+                      "accent",
+                      "success",
+                      "warning",
+                      "error",
+                      "info",
+                      "muted"
+                    ]
                   },
                   "type": {
                     "name": "type",
@@ -1086,8 +1217,7 @@
               "type": "number"
             },
             "tickLabelFontSize": {
-              "default": 10.0,
-              "description": "Font size in px for axis tick labels (default 10).",
+              "description": "Font size in px for axis tick labels (default the theme's `xs` step).",
               "label": "Tick Label Font Size",
               "tier": "presentation",
               "type": "number"
@@ -1336,6 +1466,10 @@
                 "key": "UPDATE",
                 "name": "Update",
                 "payloadSchema": [
+                  {
+                    "name": "series",
+                    "type": "[string]"
+                  },
                   {
                     "name": "curves",
                     "properties": [
@@ -1618,6 +1752,34 @@
                   {
                     "name": "shapes",
                     "properties": [
+                      {
+                        "name": "tone",
+                        "type": "string"
+                      },
+                      {
+                        "name": "fillTone",
+                        "type": "string"
+                      },
+                      {
+                        "name": "stroke",
+                        "type": "string"
+                      },
+                      {
+                        "name": "textSize",
+                        "type": "string"
+                      },
+                      {
+                        "name": "font",
+                        "type": "string"
+                      },
+                      {
+                        "name": "textCase",
+                        "type": "string"
+                      },
+                      {
+                        "name": "fillStyle",
+                        "type": "string"
+                      },
                       {
                         "name": "type",
                         "required": true,
@@ -1914,6 +2076,7 @@
                       "aria-live": "@config.ariaLive",
                       "aria-pressed": "@config.ariaPressed",
                       "aria-selected": "@config.ariaSelected",
+                      "aspect": "@config.aspect",
                       "axisColor": "@config.axisColor",
                       "backgroundColor": "@config.backgroundColor",
                       "bars": "@config.bars",
@@ -1941,6 +2104,7 @@
                       "readouts": "@config.readouts",
                       "regions": "@config.regions",
                       "role": "@config.role",
+                      "series": "@config.series",
                       "shapes": "@config.shapes",
                       "showAxes": "@config.showAxes",
                       "showCurveLabels": "@config.showCurveLabels",
@@ -1984,6 +2148,7 @@
                       "aria-live": "@config.ariaLive",
                       "aria-pressed": "@config.ariaPressed",
                       "aria-selected": "@config.ariaSelected",
+                      "aspect": "@config.aspect",
                       "axisColor": "@config.axisColor",
                       "backgroundColor": "@config.backgroundColor",
                       "bars": "@payload.bars",
@@ -2011,6 +2176,7 @@
                       "readouts": "@payload.readouts",
                       "regions": "@payload.regions",
                       "role": "@config.role",
+                      "series": "@payload.series",
                       "shapes": "@payload.shapes",
                       "showAxes": "@config.showAxes",
                       "showCurveLabels": "@config.showCurveLabels",
@@ -2345,6 +2511,34 @@
           }
         ],
         "MathCanvasShapesItem": [
+          {
+            "name": "tone",
+            "type": "string"
+          },
+          {
+            "name": "fillTone",
+            "type": "string"
+          },
+          {
+            "name": "stroke",
+            "type": "string"
+          },
+          {
+            "name": "textSize",
+            "type": "string"
+          },
+          {
+            "name": "font",
+            "type": "string"
+          },
+          {
+            "name": "textCase",
+            "type": "string"
+          },
+          {
+            "name": "fillStyle",
+            "type": "string"
+          },
           {
             "name": "type",
             "required": true,

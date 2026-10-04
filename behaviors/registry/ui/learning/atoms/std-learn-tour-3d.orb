@@ -399,8 +399,8 @@
               "type": "[Learn3DStation]"
             },
             "backgroundColor": {
-              "default": "#0f172a",
-              "description": "Canvas background color — a dark stage makes translucent shells and station colors read in 3D.",
+              "default": "",
+              "description": "Canvas ground. Empty uses the theme drawing ground.",
               "label": "Background Color",
               "tier": "presentation",
               "type": "string"
@@ -655,7 +655,7 @@
               "default": [
                 {
                   "caption": "The first stop on the tour — the camera retargets here and the narration reads its caption.",
-                  "color": "#2563eb",
+                  "color": "series-1",
                   "id": "alpha",
                   "name": "Station Alpha",
                   "opacity": 1.0,
@@ -667,7 +667,7 @@
                 },
                 {
                   "caption": "The second stop — press Tour again or click a shape to advance the selection.",
-                  "color": "#7c3aed",
+                  "color": "series-2",
                   "id": "beta",
                   "name": "Station Beta",
                   "opacity": 1.0,
@@ -679,7 +679,7 @@
                 },
                 {
                   "caption": "The final stop — once every station has been visited the tour marks itself complete.",
-                  "color": "#0891b2",
+                  "color": "series-3",
                   "id": "gamma",
                   "name": "Station Gamma",
                   "opacity": 1.0,
@@ -751,6 +751,13 @@
               "tier": "domain",
               "type": "[Learn3DStation]"
             },
+            "summary": {
+              "default": "",
+              "description": "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line.",
+              "label": "Concept",
+              "tier": "presentation",
+              "type": "string"
+            },
             "title": {
               "default": "3D Guided Tour",
               "description": "Title shown above the canvas.",
@@ -759,7 +766,7 @@
               "type": "string"
             },
             "tourLabel": {
-              "default": "Tour",
+              "default": "Next station",
               "description": "Label text for the button that advances the tour to the next station.",
               "label": "Tour Button Label",
               "tier": "presentation",
@@ -1264,28 +1271,131 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.tourComplete",
+                                    "Complete",
+                                    [
+                                      "str/concat",
+                                      "Station ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "+",
+                                          "@entity.selectedIndex",
+                                          1.0
+                                        ]
+                                      ],
+                                      " of ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "array/len",
+                                          "@entity.stations"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.tourComplete",
+                                    "success",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "TOUR",
+                                  "icon": "chevron-right",
                                   "label": "@config.tourLabel",
                                   "type": "button",
                                   "variant": "primary"
                                 },
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "@config.resetLabel",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Explored ",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      [
+                                        "array/len",
+                                        "@entity.visitedIds"
+                                      ]
+                                    ],
+                                    " of ",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      [
+                                        "array/len",
+                                        "@entity.stations"
+                                      ]
+                                    ],
+                                    [
+                                      "if",
+                                      "@entity.tourComplete",
+                                      " — tour complete!",
+                                      ""
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "backgroundColor": "@config.backgroundColor",
@@ -1327,6 +1437,11 @@
                               "edges": "@entity.edges",
                               "height": "@config.height",
                               "interactive": true,
+                              "keyMap": {
+                                "ArrowRight": "TOUR",
+                                "KeyR": "RESET",
+                                "Space": "TOUR"
+                              },
                               "lighting": "@config.lighting",
                               "mode": "3d",
                               "nodes": [
@@ -1418,37 +1533,6 @@
                               "content": "@entity.narration",
                               "type": "typography",
                               "variant": "body"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "Explored ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "array/len",
-                                    "@entity.visitedIds"
-                                  ]
-                                ],
-                                " of ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "array/len",
-                                    "@entity.stations"
-                                  ]
-                                ],
-                                [
-                                  "if",
-                                  "@entity.tourComplete",
-                                  " — tour complete!",
-                                  ""
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
                             }
                           ],
                           "direction": "vertical",
@@ -1502,6 +1586,43 @@
                   "==",
                   "@config.matchMode",
                   ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01M07RCKW2FDQK2QD7WX4GTRMJ",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@config.matchMode",
+                      ""
+                    ]
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1604,28 +1725,131 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.tourComplete",
+                                    "Complete",
+                                    [
+                                      "str/concat",
+                                      "Station ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "+",
+                                          "@entity.selectedIndex",
+                                          1.0
+                                        ]
+                                      ],
+                                      " of ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "array/len",
+                                          "@entity.stations"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.tourComplete",
+                                    "success",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "TOUR",
+                                  "icon": "chevron-right",
                                   "label": "@config.tourLabel",
                                   "type": "button",
                                   "variant": "primary"
                                 },
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "@config.resetLabel",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Explored ",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      [
+                                        "array/len",
+                                        "@entity.visitedIds"
+                                      ]
+                                    ],
+                                    " of ",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      [
+                                        "array/len",
+                                        "@entity.stations"
+                                      ]
+                                    ],
+                                    [
+                                      "if",
+                                      "@entity.tourComplete",
+                                      " — tour complete!",
+                                      ""
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "backgroundColor": "@config.backgroundColor",
@@ -1667,6 +1891,11 @@
                               "edges": "@entity.edges",
                               "height": "@config.height",
                               "interactive": true,
+                              "keyMap": {
+                                "ArrowRight": "TOUR",
+                                "KeyR": "RESET",
+                                "Space": "TOUR"
+                              },
                               "lighting": "@config.lighting",
                               "mode": "3d",
                               "nodes": [
@@ -1758,37 +1987,6 @@
                               "content": "@entity.narration",
                               "type": "typography",
                               "variant": "body"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "Explored ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "array/len",
-                                    "@entity.visitedIds"
-                                  ]
-                                ],
-                                " of ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "array/len",
-                                    "@entity.stations"
-                                  ]
-                                ],
-                                [
-                                  "if",
-                                  "@entity.tourComplete",
-                                  " — tour complete!",
-                                  ""
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
                             }
                           ],
                           "direction": "vertical",
@@ -2014,28 +2212,131 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.tourComplete",
+                                    "Complete",
+                                    [
+                                      "str/concat",
+                                      "Station ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "+",
+                                          "@entity.selectedIndex",
+                                          1.0
+                                        ]
+                                      ],
+                                      " of ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "array/len",
+                                          "@entity.stations"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.tourComplete",
+                                    "success",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "TOUR",
+                                  "icon": "chevron-right",
                                   "label": "@config.tourLabel",
                                   "type": "button",
                                   "variant": "primary"
                                 },
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "@config.resetLabel",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Explored ",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      [
+                                        "array/len",
+                                        "@entity.visitedIds"
+                                      ]
+                                    ],
+                                    " of ",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      [
+                                        "array/len",
+                                        "@entity.stations"
+                                      ]
+                                    ],
+                                    [
+                                      "if",
+                                      "@entity.tourComplete",
+                                      " — tour complete!",
+                                      ""
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "backgroundColor": "@config.backgroundColor",
@@ -2077,6 +2378,11 @@
                               "edges": "@entity.edges",
                               "height": "@config.height",
                               "interactive": true,
+                              "keyMap": {
+                                "ArrowRight": "TOUR",
+                                "KeyR": "RESET",
+                                "Space": "TOUR"
+                              },
                               "lighting": "@config.lighting",
                               "mode": "3d",
                               "nodes": [
@@ -2168,37 +2474,6 @@
                               "content": "@entity.narration",
                               "type": "typography",
                               "variant": "body"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "Explored ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "array/len",
-                                    "@entity.visitedIds"
-                                  ]
-                                ],
-                                " of ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "array/len",
-                                    "@entity.stations"
-                                  ]
-                                ],
-                                [
-                                  "if",
-                                  "@entity.tourComplete",
-                                  " — tour complete!",
-                                  ""
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
                             }
                           ],
                           "direction": "vertical",
@@ -2449,28 +2724,131 @@
                             {
                               "children": [
                                 {
-                                  "content": "@entity.title",
-                                  "type": "typography",
-                                  "variant": "h4"
+                                  "align": "start",
+                                  "children": [
+                                    {
+                                      "children": [
+                                        {
+                                          "content": "@entity.title",
+                                          "type": "typography",
+                                          "variant": "h4"
+                                        },
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@config.summary",
+                                            ""
+                                          ],
+                                          null,
+                                          {
+                                            "color": "muted",
+                                            "content": "@config.summary",
+                                            "type": "typography",
+                                            "variant": "body2"
+                                          }
+                                        ]
+                                      ],
+                                      "direction": "vertical",
+                                      "gap": "xs",
+                                      "type": "stack"
+                                    },
+                                    {
+                                      "label": [
+                                        "if",
+                                        "@entity.tourComplete",
+                                        "Complete",
+                                        [
+                                          "str/concat",
+                                          "Station ",
+                                          [
+                                            "str/concat",
+                                            "",
+                                            [
+                                              "+",
+                                              "@entity.selectedIndex",
+                                              1.0
+                                            ]
+                                          ],
+                                          " of ",
+                                          [
+                                            "str/concat",
+                                            "",
+                                            [
+                                              "array/len",
+                                              "@entity.stations"
+                                            ]
+                                          ]
+                                        ]
+                                      ],
+                                      "type": "badge",
+                                      "variant": [
+                                        "if",
+                                        "@entity.tourComplete",
+                                        "success",
+                                        "neutral"
+                                      ]
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "justify": "between",
+                                  "type": "stack"
                                 },
                                 {
+                                  "align": "center",
                                   "children": [
                                     {
                                       "action": "TOUR",
+                                      "icon": "chevron-right",
                                       "label": "@config.tourLabel",
                                       "type": "button",
                                       "variant": "primary"
                                     },
                                     {
                                       "action": "RESET",
+                                      "icon": "rotate-ccw",
                                       "label": "@config.resetLabel",
                                       "type": "button",
                                       "variant": "ghost"
+                                    },
+                                    {
+                                      "color": "muted",
+                                      "content": [
+                                        "str/concat",
+                                        "Explored ",
+                                        [
+                                          "str/concat",
+                                          "",
+                                          [
+                                            "array/len",
+                                            "@entity.visitedIds"
+                                          ]
+                                        ],
+                                        " of ",
+                                        [
+                                          "str/concat",
+                                          "",
+                                          [
+                                            "array/len",
+                                            "@entity.stations"
+                                          ]
+                                        ],
+                                        [
+                                          "if",
+                                          "@entity.tourComplete",
+                                          " — tour complete!",
+                                          ""
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
                                     }
                                   ],
                                   "direction": "horizontal",
                                   "gap": "sm",
-                                  "type": "stack"
+                                  "type": "stack",
+                                  "wrap": true
                                 },
                                 {
                                   "backgroundColor": "@config.backgroundColor",
@@ -2512,6 +2890,11 @@
                                   "edges": "@entity.edges",
                                   "height": "@config.height",
                                   "interactive": true,
+                                  "keyMap": {
+                                    "ArrowRight": "TOUR",
+                                    "KeyR": "RESET",
+                                    "Space": "TOUR"
+                                  },
                                   "lighting": "@config.lighting",
                                   "mode": "3d",
                                   "nodes": [
@@ -2603,37 +2986,6 @@
                                   "content": "@entity.narration",
                                   "type": "typography",
                                   "variant": "body"
-                                },
-                                {
-                                  "content": [
-                                    "str/concat",
-                                    "Explored ",
-                                    [
-                                      "str/concat",
-                                      "",
-                                      [
-                                        "array/len",
-                                        "@entity.visitedIds"
-                                      ]
-                                    ],
-                                    " of ",
-                                    [
-                                      "str/concat",
-                                      "",
-                                      [
-                                        "array/len",
-                                        "@entity.stations"
-                                      ]
-                                    ],
-                                    [
-                                      "if",
-                                      "@entity.tourComplete",
-                                      " — tour complete!",
-                                      ""
-                                    ]
-                                  ],
-                                  "type": "typography",
-                                  "variant": "caption"
                                 }
                               ],
                               "direction": "vertical",
@@ -2766,28 +3118,131 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.tourComplete",
+                                    "Complete",
+                                    [
+                                      "str/concat",
+                                      "Station ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "+",
+                                          "@entity.selectedIndex",
+                                          1.0
+                                        ]
+                                      ],
+                                      " of ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "array/len",
+                                          "@entity.stations"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.tourComplete",
+                                    "success",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "TOUR",
+                                  "icon": "chevron-right",
                                   "label": "@config.tourLabel",
                                   "type": "button",
                                   "variant": "primary"
                                 },
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "@config.resetLabel",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Explored ",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      [
+                                        "array/len",
+                                        "@entity.visitedIds"
+                                      ]
+                                    ],
+                                    " of ",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      [
+                                        "array/len",
+                                        "@entity.stations"
+                                      ]
+                                    ],
+                                    [
+                                      "if",
+                                      "@entity.tourComplete",
+                                      " — tour complete!",
+                                      ""
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "backgroundColor": "@config.backgroundColor",
@@ -2829,6 +3284,11 @@
                               "edges": "@entity.edges",
                               "height": "@config.height",
                               "interactive": true,
+                              "keyMap": {
+                                "ArrowRight": "TOUR",
+                                "KeyR": "RESET",
+                                "Space": "TOUR"
+                              },
                               "lighting": "@config.lighting",
                               "mode": "3d",
                               "nodes": [
@@ -2920,37 +3380,6 @@
                               "content": "@entity.narration",
                               "type": "typography",
                               "variant": "body"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "Explored ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "array/len",
-                                    "@entity.visitedIds"
-                                  ]
-                                ],
-                                " of ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "array/len",
-                                    "@entity.stations"
-                                  ]
-                                ],
-                                [
-                                  "if",
-                                  "@entity.tourComplete",
-                                  " — tour complete!",
-                                  ""
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
                             }
                           ],
                           "direction": "vertical",
@@ -3096,28 +3525,131 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.tourComplete",
+                                    "Complete",
+                                    [
+                                      "str/concat",
+                                      "Station ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "+",
+                                          "@entity.selectedIndex",
+                                          1.0
+                                        ]
+                                      ],
+                                      " of ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "array/len",
+                                          "@entity.stations"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.tourComplete",
+                                    "success",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "TOUR",
+                                  "icon": "chevron-right",
                                   "label": "@config.tourLabel",
                                   "type": "button",
                                   "variant": "primary"
                                 },
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "@config.resetLabel",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Explored ",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      [
+                                        "array/len",
+                                        "@entity.visitedIds"
+                                      ]
+                                    ],
+                                    " of ",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      [
+                                        "array/len",
+                                        "@entity.stations"
+                                      ]
+                                    ],
+                                    [
+                                      "if",
+                                      "@entity.tourComplete",
+                                      " — tour complete!",
+                                      ""
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "backgroundColor": "@config.backgroundColor",
@@ -3159,6 +3691,11 @@
                               "edges": "@entity.edges",
                               "height": "@config.height",
                               "interactive": true,
+                              "keyMap": {
+                                "ArrowRight": "TOUR",
+                                "KeyR": "RESET",
+                                "Space": "TOUR"
+                              },
                               "lighting": "@config.lighting",
                               "mode": "3d",
                               "nodes": [
@@ -3250,37 +3787,6 @@
                               "content": "@entity.narration",
                               "type": "typography",
                               "variant": "body"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "Explored ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "array/len",
-                                    "@entity.visitedIds"
-                                  ]
-                                ],
-                                " of ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  [
-                                    "array/len",
-                                    "@entity.stations"
-                                  ]
-                                ],
-                                [
-                                  "if",
-                                  "@entity.tourComplete",
-                                  " — tour complete!",
-                                  ""
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
                             }
                           ],
                           "direction": "vertical",

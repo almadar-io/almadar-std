@@ -79,14 +79,21 @@ orbital LearnDoserOrbital {
             padding: md
             children: [
               { type: stack, direction: vertical, gap: md, children: [
-                  { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: ADD_SMALL, label: (str/concat "+ " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: primary },
-                    { type: button, action: ADD_LARGE, label: (str/concat "+ " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: secondary },
-                    { type: button, action: TOGGLE_DRIP, label: (if @entity.running "Pause" "Auto-dose"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
-                  ] },
-                  { type: chemistry-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, containers: @entity.containers, readouts: @entity.readouts, traces: [ { series: [ { samples: @entity.doseSeries, label: @config.quantityLabel } ], xLabel: "step", yLabel: @config.quantityLabel } ] },
+                  { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                      { type: stack, direction: vertical, gap: xs, children: [
+                          { type: typography, variant: h4, content: @entity.title },
+                          (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                        ] },
+                      { type: badge, label: (if @entity.done "Locked" (if @entity.running "Auto-dosing" "Ready")), variant: (if @entity.done "warning" (if @entity.running "primary" "neutral")) }
+                    ] },
+                  { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                      { type: button, action: ADD_SMALL, label: (str/concat "Add " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: primary, disabled: @entity.done },
+                      { type: button, action: ADD_LARGE, label: (str/concat "Add " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: secondary, disabled: @entity.done },
+                      (if @entity.running { type: button, action: TOGGLE_DRIP, label: "Pause", icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_DRIP, label: "Auto-dose", icon: "play", variant: secondary, aria-pressed: "false", disabled: @entity.done }),
+                      { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                      { type: typography, variant: caption, color: muted, content: (str/concat @config.quantityLabel (str/concat " " (str/concat (str/concat "" (math/round @entity.dose 2)) (str/concat " of " (str/concat (str/concat "" @config.capacity) (if (== @config.unit "") "" (str/concat " " @config.unit))))))) }
+                    ] },
+                  { type: chemistry-canvas, series: @config.series, keyMap: { Space: TOGGLE_DRIP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, containers: @entity.containers, readouts: @entity.readouts, traces: [ { series: [ { samples: @entity.doseSeries, label: @config.quantityLabel } ], xLabel: "step", yLabel: @config.quantityLabel } ] },
                   { type: typography, variant: body, content: @entity.narration }
                 ] }
             ]
@@ -96,17 +103,29 @@ orbital LearnDoserOrbital {
             padding: md
             children: [
               { type: stack, direction: vertical, gap: md, children: [
-                  { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: ADD_SMALL, label: (str/concat "+ " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: primary },
-                    { type: button, action: ADD_LARGE, label: (str/concat "+ " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: secondary },
-                    { type: button, action: TOGGLE_DRIP, label: (if @entity.running "Pause" "Auto-dose"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
-                  ] }
+                  { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                      { type: stack, direction: vertical, gap: xs, children: [
+                          { type: typography, variant: h4, content: @entity.title },
+                          (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                        ] },
+                      { type: badge, label: (if @entity.done "Locked" (if @entity.running "Auto-dosing" "Ready")), variant: (if @entity.done "warning" (if @entity.running "primary" "neutral")) }
+                    ] },
+                  { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                      { type: button, action: ADD_SMALL, label: (str/concat "Add " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: primary, disabled: @entity.done },
+                      { type: button, action: ADD_LARGE, label: (str/concat "Add " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: secondary, disabled: @entity.done },
+                      (if @entity.running { type: button, action: TOGGLE_DRIP, label: "Pause", icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_DRIP, label: "Auto-dose", icon: "play", variant: secondary, aria-pressed: "false", disabled: @entity.done }),
+                      { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                      { type: typography, variant: caption, color: muted, content: (str/concat @config.quantityLabel (str/concat " " (str/concat (str/concat "" (math/round @entity.dose 2)) (str/concat " of " (str/concat (str/concat "" @config.capacity) (if (== @config.unit "") "" (str/concat " " @config.unit))))))) }
+                    ] }
                 ] }
             ]
           }))
         (emit DOSER_UPDATED { running: @entity.running, dose: @entity.dose, bandLabel: @entity.bandLabel, done: @entity.done })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (set @entity.running false)
+        (render-ui main null)
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (set @entity.active true)
@@ -141,14 +160,21 @@ orbital LearnDoserOrbital {
             padding: md
             children: [
               { type: stack, direction: vertical, gap: md, children: [
-                  { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: ADD_SMALL, label: (str/concat "+ " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: primary },
-                    { type: button, action: ADD_LARGE, label: (str/concat "+ " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: secondary },
-                    { type: button, action: TOGGLE_DRIP, label: (if @entity.running "Pause" "Auto-dose"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
-                  ] },
-                  { type: chemistry-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, containers: @entity.containers, readouts: @entity.readouts, traces: [ { series: [ { samples: @entity.doseSeries, label: @config.quantityLabel } ], xLabel: "step", yLabel: @config.quantityLabel } ] },
+                  { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                      { type: stack, direction: vertical, gap: xs, children: [
+                          { type: typography, variant: h4, content: @entity.title },
+                          (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                        ] },
+                      { type: badge, label: (if @entity.done "Locked" (if @entity.running "Auto-dosing" "Ready")), variant: (if @entity.done "warning" (if @entity.running "primary" "neutral")) }
+                    ] },
+                  { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                      { type: button, action: ADD_SMALL, label: (str/concat "Add " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: primary, disabled: @entity.done },
+                      { type: button, action: ADD_LARGE, label: (str/concat "Add " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: secondary, disabled: @entity.done },
+                      (if @entity.running { type: button, action: TOGGLE_DRIP, label: "Pause", icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_DRIP, label: "Auto-dose", icon: "play", variant: secondary, aria-pressed: "false", disabled: @entity.done }),
+                      { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                      { type: typography, variant: caption, color: muted, content: (str/concat @config.quantityLabel (str/concat " " (str/concat (str/concat "" (math/round @entity.dose 2)) (str/concat " of " (str/concat (str/concat "" @config.capacity) (if (== @config.unit "") "" (str/concat " " @config.unit))))))) }
+                    ] },
+                  { type: chemistry-canvas, series: @config.series, keyMap: { Space: TOGGLE_DRIP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, containers: @entity.containers, readouts: @entity.readouts, traces: [ { series: [ { samples: @entity.doseSeries, label: @config.quantityLabel } ], xLabel: "step", yLabel: @config.quantityLabel } ] },
                   { type: typography, variant: body, content: @entity.narration }
                 ] }
             ]
@@ -158,13 +184,20 @@ orbital LearnDoserOrbital {
             padding: md
             children: [
               { type: stack, direction: vertical, gap: md, children: [
-                  { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: ADD_SMALL, label: (str/concat "+ " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: primary },
-                    { type: button, action: ADD_LARGE, label: (str/concat "+ " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: secondary },
-                    { type: button, action: TOGGLE_DRIP, label: (if @entity.running "Pause" "Auto-dose"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
-                  ] }
+                  { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                      { type: stack, direction: vertical, gap: xs, children: [
+                          { type: typography, variant: h4, content: @entity.title },
+                          (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                        ] },
+                      { type: badge, label: (if @entity.done "Locked" (if @entity.running "Auto-dosing" "Ready")), variant: (if @entity.done "warning" (if @entity.running "primary" "neutral")) }
+                    ] },
+                  { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                      { type: button, action: ADD_SMALL, label: (str/concat "Add " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: primary, disabled: @entity.done },
+                      { type: button, action: ADD_LARGE, label: (str/concat "Add " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: secondary, disabled: @entity.done },
+                      (if @entity.running { type: button, action: TOGGLE_DRIP, label: "Pause", icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_DRIP, label: "Auto-dose", icon: "play", variant: secondary, aria-pressed: "false", disabled: @entity.done }),
+                      { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                      { type: typography, variant: caption, color: muted, content: (str/concat @config.quantityLabel (str/concat " " (str/concat (str/concat "" (math/round @entity.dose 2)) (str/concat " of " (str/concat (str/concat "" @config.capacity) (if (== @config.unit "") "" (str/concat " " @config.unit))))))) }
+                    ] }
                 ] }
             ]
           }))
@@ -198,14 +231,21 @@ orbital LearnDoserOrbital {
             padding: md
             children: [
               { type: stack, direction: vertical, gap: md, children: [
-                  { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: ADD_SMALL, label: (str/concat "+ " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: primary },
-                    { type: button, action: ADD_LARGE, label: (str/concat "+ " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: secondary },
-                    { type: button, action: TOGGLE_DRIP, label: (if @entity.running "Pause" "Auto-dose"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
-                  ] },
-                  { type: chemistry-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, containers: @entity.containers, readouts: @entity.readouts, traces: [ { series: [ { samples: @entity.doseSeries, label: @config.quantityLabel } ], xLabel: "step", yLabel: @config.quantityLabel } ] },
+                  { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                      { type: stack, direction: vertical, gap: xs, children: [
+                          { type: typography, variant: h4, content: @entity.title },
+                          (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                        ] },
+                      { type: badge, label: (if @entity.done "Locked" (if @entity.running "Auto-dosing" "Ready")), variant: (if @entity.done "warning" (if @entity.running "primary" "neutral")) }
+                    ] },
+                  { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                      { type: button, action: ADD_SMALL, label: (str/concat "Add " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: primary, disabled: @entity.done },
+                      { type: button, action: ADD_LARGE, label: (str/concat "Add " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: secondary, disabled: @entity.done },
+                      (if @entity.running { type: button, action: TOGGLE_DRIP, label: "Pause", icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_DRIP, label: "Auto-dose", icon: "play", variant: secondary, aria-pressed: "false", disabled: @entity.done }),
+                      { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                      { type: typography, variant: caption, color: muted, content: (str/concat @config.quantityLabel (str/concat " " (str/concat (str/concat "" (math/round @entity.dose 2)) (str/concat " of " (str/concat (str/concat "" @config.capacity) (if (== @config.unit "") "" (str/concat " " @config.unit))))))) }
+                    ] },
+                  { type: chemistry-canvas, series: @config.series, keyMap: { Space: TOGGLE_DRIP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, containers: @entity.containers, readouts: @entity.readouts, traces: [ { series: [ { samples: @entity.doseSeries, label: @config.quantityLabel } ], xLabel: "step", yLabel: @config.quantityLabel } ] },
                   { type: typography, variant: body, content: @entity.narration }
                 ] }
             ]
@@ -215,13 +255,20 @@ orbital LearnDoserOrbital {
             padding: md
             children: [
               { type: stack, direction: vertical, gap: md, children: [
-                  { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: ADD_SMALL, label: (str/concat "+ " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: primary },
-                    { type: button, action: ADD_LARGE, label: (str/concat "+ " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: secondary },
-                    { type: button, action: TOGGLE_DRIP, label: (if @entity.running "Pause" "Auto-dose"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
-                  ] }
+                  { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                      { type: stack, direction: vertical, gap: xs, children: [
+                          { type: typography, variant: h4, content: @entity.title },
+                          (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                        ] },
+                      { type: badge, label: (if @entity.done "Locked" (if @entity.running "Auto-dosing" "Ready")), variant: (if @entity.done "warning" (if @entity.running "primary" "neutral")) }
+                    ] },
+                  { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                      { type: button, action: ADD_SMALL, label: (str/concat "Add " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: primary, disabled: @entity.done },
+                      { type: button, action: ADD_LARGE, label: (str/concat "Add " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: secondary, disabled: @entity.done },
+                      (if @entity.running { type: button, action: TOGGLE_DRIP, label: "Pause", icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_DRIP, label: "Auto-dose", icon: "play", variant: secondary, aria-pressed: "false", disabled: @entity.done }),
+                      { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                      { type: typography, variant: caption, color: muted, content: (str/concat @config.quantityLabel (str/concat " " (str/concat (str/concat "" (math/round @entity.dose 2)) (str/concat " of " (str/concat (str/concat "" @config.capacity) (if (== @config.unit "") "" (str/concat " " @config.unit))))))) }
+                    ] }
                 ] }
             ]
           }))
@@ -256,14 +303,21 @@ orbital LearnDoserOrbital {
             padding: md
             children: [
               { type: stack, direction: vertical, gap: md, children: [
-                  { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: ADD_SMALL, label: (str/concat "+ " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: primary },
-                    { type: button, action: ADD_LARGE, label: (str/concat "+ " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: secondary },
-                    { type: button, action: TOGGLE_DRIP, label: (if @entity.running "Pause" "Auto-dose"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
-                  ] },
-                  { type: chemistry-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, containers: @entity.containers, readouts: @entity.readouts, traces: [ { series: [ { samples: @entity.doseSeries, label: @config.quantityLabel } ], xLabel: "step", yLabel: @config.quantityLabel } ] },
+                  { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                      { type: stack, direction: vertical, gap: xs, children: [
+                          { type: typography, variant: h4, content: @entity.title },
+                          (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                        ] },
+                      { type: badge, label: (if @entity.done "Locked" (if @entity.running "Auto-dosing" "Ready")), variant: (if @entity.done "warning" (if @entity.running "primary" "neutral")) }
+                    ] },
+                  { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                      { type: button, action: ADD_SMALL, label: (str/concat "Add " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: primary, disabled: @entity.done },
+                      { type: button, action: ADD_LARGE, label: (str/concat "Add " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: secondary, disabled: @entity.done },
+                      (if @entity.running { type: button, action: TOGGLE_DRIP, label: "Pause", icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_DRIP, label: "Auto-dose", icon: "play", variant: secondary, aria-pressed: "false", disabled: @entity.done }),
+                      { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                      { type: typography, variant: caption, color: muted, content: (str/concat @config.quantityLabel (str/concat " " (str/concat (str/concat "" (math/round @entity.dose 2)) (str/concat " of " (str/concat (str/concat "" @config.capacity) (if (== @config.unit "") "" (str/concat " " @config.unit))))))) }
+                    ] },
+                  { type: chemistry-canvas, series: @config.series, keyMap: { Space: TOGGLE_DRIP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, containers: @entity.containers, readouts: @entity.readouts, traces: [ { series: [ { samples: @entity.doseSeries, label: @config.quantityLabel } ], xLabel: "step", yLabel: @config.quantityLabel } ] },
                   { type: typography, variant: body, content: @entity.narration }
                 ] }
             ]
@@ -273,13 +327,20 @@ orbital LearnDoserOrbital {
             padding: md
             children: [
               { type: stack, direction: vertical, gap: md, children: [
-                  { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: ADD_SMALL, label: (str/concat "+ " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: primary },
-                    { type: button, action: ADD_LARGE, label: (str/concat "+ " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: secondary },
-                    { type: button, action: TOGGLE_DRIP, label: (if @entity.running "Pause" "Auto-dose"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
-                  ] }
+                  { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                      { type: stack, direction: vertical, gap: xs, children: [
+                          { type: typography, variant: h4, content: @entity.title },
+                          (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                        ] },
+                      { type: badge, label: (if @entity.done "Locked" (if @entity.running "Auto-dosing" "Ready")), variant: (if @entity.done "warning" (if @entity.running "primary" "neutral")) }
+                    ] },
+                  { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                      { type: button, action: ADD_SMALL, label: (str/concat "Add " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: primary, disabled: @entity.done },
+                      { type: button, action: ADD_LARGE, label: (str/concat "Add " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: secondary, disabled: @entity.done },
+                      (if @entity.running { type: button, action: TOGGLE_DRIP, label: "Pause", icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_DRIP, label: "Auto-dose", icon: "play", variant: secondary, aria-pressed: "false", disabled: @entity.done }),
+                      { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                      { type: typography, variant: caption, color: muted, content: (str/concat @config.quantityLabel (str/concat " " (str/concat (str/concat "" (math/round @entity.dose 2)) (str/concat " of " (str/concat (str/concat "" @config.capacity) (if (== @config.unit "") "" (str/concat " " @config.unit))))))) }
+                    ] }
                 ] }
             ]
           }))
@@ -295,14 +356,21 @@ orbital LearnDoserOrbital {
             padding: md
             children: [
               { type: stack, direction: vertical, gap: md, children: [
-                  { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: ADD_SMALL, label: (str/concat "+ " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: primary },
-                    { type: button, action: ADD_LARGE, label: (str/concat "+ " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: secondary },
-                    { type: button, action: TOGGLE_DRIP, label: (if @entity.running "Pause" "Auto-dose"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
-                  ] },
-                  { type: chemistry-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, containers: @entity.containers, readouts: @entity.readouts, traces: [ { series: [ { samples: @entity.doseSeries, label: @config.quantityLabel } ], xLabel: "step", yLabel: @config.quantityLabel } ] },
+                  { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                      { type: stack, direction: vertical, gap: xs, children: [
+                          { type: typography, variant: h4, content: @entity.title },
+                          (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                        ] },
+                      { type: badge, label: (if @entity.done "Locked" (if @entity.running "Auto-dosing" "Ready")), variant: (if @entity.done "warning" (if @entity.running "primary" "neutral")) }
+                    ] },
+                  { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                      { type: button, action: ADD_SMALL, label: (str/concat "Add " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: primary, disabled: @entity.done },
+                      { type: button, action: ADD_LARGE, label: (str/concat "Add " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: secondary, disabled: @entity.done },
+                      (if @entity.running { type: button, action: TOGGLE_DRIP, label: "Pause", icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_DRIP, label: "Auto-dose", icon: "play", variant: secondary, aria-pressed: "false", disabled: @entity.done }),
+                      { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                      { type: typography, variant: caption, color: muted, content: (str/concat @config.quantityLabel (str/concat " " (str/concat (str/concat "" (math/round @entity.dose 2)) (str/concat " of " (str/concat (str/concat "" @config.capacity) (if (== @config.unit "") "" (str/concat " " @config.unit))))))) }
+                    ] },
+                  { type: chemistry-canvas, series: @config.series, keyMap: { Space: TOGGLE_DRIP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, containers: @entity.containers, readouts: @entity.readouts, traces: [ { series: [ { samples: @entity.doseSeries, label: @config.quantityLabel } ], xLabel: "step", yLabel: @config.quantityLabel } ] },
                   { type: typography, variant: body, content: @entity.narration }
                 ] }
             ]
@@ -312,13 +380,20 @@ orbital LearnDoserOrbital {
             padding: md
             children: [
               { type: stack, direction: vertical, gap: md, children: [
-                  { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: ADD_SMALL, label: (str/concat "+ " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: primary },
-                    { type: button, action: ADD_LARGE, label: (str/concat "+ " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: secondary },
-                    { type: button, action: TOGGLE_DRIP, label: (if @entity.running "Pause" "Auto-dose"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
-                  ] }
+                  { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                      { type: stack, direction: vertical, gap: xs, children: [
+                          { type: typography, variant: h4, content: @entity.title },
+                          (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                        ] },
+                      { type: badge, label: (if @entity.done "Locked" (if @entity.running "Auto-dosing" "Ready")), variant: (if @entity.done "warning" (if @entity.running "primary" "neutral")) }
+                    ] },
+                  { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                      { type: button, action: ADD_SMALL, label: (str/concat "Add " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: primary, disabled: @entity.done },
+                      { type: button, action: ADD_LARGE, label: (str/concat "Add " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: secondary, disabled: @entity.done },
+                      (if @entity.running { type: button, action: TOGGLE_DRIP, label: "Pause", icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_DRIP, label: "Auto-dose", icon: "play", variant: secondary, aria-pressed: "false", disabled: @entity.done }),
+                      { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                      { type: typography, variant: caption, color: muted, content: (str/concat @config.quantityLabel (str/concat " " (str/concat (str/concat "" (math/round @entity.dose 2)) (str/concat " of " (str/concat (str/concat "" @config.capacity) (if (== @config.unit "") "" (str/concat " " @config.unit))))))) }
+                    ] }
                 ] }
             ]
           }))
@@ -356,14 +431,21 @@ orbital LearnDoserOrbital {
             padding: md
             children: [
               { type: stack, direction: vertical, gap: md, children: [
-                  { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: ADD_SMALL, label: (str/concat "+ " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: primary },
-                    { type: button, action: ADD_LARGE, label: (str/concat "+ " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: secondary },
-                    { type: button, action: TOGGLE_DRIP, label: (if @entity.running "Pause" "Auto-dose"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
-                  ] },
-                  { type: chemistry-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, containers: @entity.containers, readouts: @entity.readouts, traces: [ { series: [ { samples: @entity.doseSeries, label: @config.quantityLabel } ], xLabel: "step", yLabel: @config.quantityLabel } ] },
+                  { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                      { type: stack, direction: vertical, gap: xs, children: [
+                          { type: typography, variant: h4, content: @entity.title },
+                          (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                        ] },
+                      { type: badge, label: (if @entity.done "Locked" (if @entity.running "Auto-dosing" "Ready")), variant: (if @entity.done "warning" (if @entity.running "primary" "neutral")) }
+                    ] },
+                  { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                      { type: button, action: ADD_SMALL, label: (str/concat "Add " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: primary, disabled: @entity.done },
+                      { type: button, action: ADD_LARGE, label: (str/concat "Add " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: secondary, disabled: @entity.done },
+                      (if @entity.running { type: button, action: TOGGLE_DRIP, label: "Pause", icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_DRIP, label: "Auto-dose", icon: "play", variant: secondary, aria-pressed: "false", disabled: @entity.done }),
+                      { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                      { type: typography, variant: caption, color: muted, content: (str/concat @config.quantityLabel (str/concat " " (str/concat (str/concat "" (math/round @entity.dose 2)) (str/concat " of " (str/concat (str/concat "" @config.capacity) (if (== @config.unit "") "" (str/concat " " @config.unit))))))) }
+                    ] },
+                  { type: chemistry-canvas, series: @config.series, keyMap: { Space: TOGGLE_DRIP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, containers: @entity.containers, readouts: @entity.readouts, traces: [ { series: [ { samples: @entity.doseSeries, label: @config.quantityLabel } ], xLabel: "step", yLabel: @config.quantityLabel } ] },
                   { type: typography, variant: body, content: @entity.narration }
                 ] }
             ]
@@ -373,13 +455,20 @@ orbital LearnDoserOrbital {
             padding: md
             children: [
               { type: stack, direction: vertical, gap: md, children: [
-                  { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: ADD_SMALL, label: (str/concat "+ " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: primary },
-                    { type: button, action: ADD_LARGE, label: (str/concat "+ " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: secondary },
-                    { type: button, action: TOGGLE_DRIP, label: (if @entity.running "Pause" "Auto-dose"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
-                  ] }
+                  { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                      { type: stack, direction: vertical, gap: xs, children: [
+                          { type: typography, variant: h4, content: @entity.title },
+                          (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                        ] },
+                      { type: badge, label: (if @entity.done "Locked" (if @entity.running "Auto-dosing" "Ready")), variant: (if @entity.done "warning" (if @entity.running "primary" "neutral")) }
+                    ] },
+                  { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                      { type: button, action: ADD_SMALL, label: (str/concat "Add " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: primary, disabled: @entity.done },
+                      { type: button, action: ADD_LARGE, label: (str/concat "Add " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: secondary, disabled: @entity.done },
+                      (if @entity.running { type: button, action: TOGGLE_DRIP, label: "Pause", icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_DRIP, label: "Auto-dose", icon: "play", variant: secondary, aria-pressed: "false", disabled: @entity.done }),
+                      { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                      { type: typography, variant: caption, color: muted, content: (str/concat @config.quantityLabel (str/concat " " (str/concat (str/concat "" (math/round @entity.dose 2)) (str/concat " of " (str/concat (str/concat "" @config.capacity) (if (== @config.unit "") "" (str/concat " " @config.unit))))))) }
+                    ] }
                 ] }
             ]
           }))
@@ -447,6 +536,10 @@ orbital LearnDoserOrbital {
         @label "Title"
         @description "Title shown above the instrument."
         @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line."
+        @tier "presentation"
       width : number = 600
         @label "Width"
         @description "Canvas width in pixels."
@@ -455,9 +548,13 @@ orbital LearnDoserOrbital {
         @label "Height"
         @description "Canvas height in pixels."
         @tier "presentation"
-      backgroundColor : string = "#fafafa"
+      backgroundColor : string = ""
         @label "Background Color"
-        @description "Canvas background color."
+        @description "Canvas ground. Empty uses the theme drawing ground."
+        @tier "presentation"
+      series : [string] = []
+        @label "Palette"
+        @description "Overrides the theme's categorical palette on the canvas (series-1…N) — a subject's real-world color convention, such as indicator colors. Empty uses the theme's palette."
         @tier "presentation"
       showCanvas : boolean = true
         @label "Show Canvas"
@@ -501,8 +598,8 @@ orbital LearnDoserOrbital {
         @description "Maximum points kept in the dose-history trace; older points drop off once exceeded."
         @tier "domain"
       bands : [DoserBand] = [
-        { upperBound: 50, label: "Low", color: "#94a3b8", terminal: false },
-        { upperBound: 999999999, label: "High", color: "#16a34a", terminal: true }
+        { upperBound: 50, label: "Low", color: "muted", terminal: false },
+        { upperBound: 999999999, label: "High", color: "success", terminal: true }
       ]
         @label "Bands"
         @description "Ordered ascending roster of dose bands/zones — each carries the dose upper bound it covers, a label, a color, and whether crossing into it is terminal (irreversible; sets done true until Reset). The accumulated dose is classified into the first band whose upperBound it does not exceed, falling through to the last band beyond all bounds."
@@ -518,9 +615,9 @@ orbital LearnDoserOrbital {
         @description "Label for the vessel that drains as dose is delivered from it."
         @synonyms "source, burette, supply, dispenser"
         @tier "presentation"
-      sourceColor : string = "#60a5fa"
+      sourceColor : string = "series-1"
         @label "Source Color"
-        @description "Fill color for the source vessel."
+        @description "Tone name for the source vessel fill (for example series-1)."
         @tier "presentation"
     }
   }

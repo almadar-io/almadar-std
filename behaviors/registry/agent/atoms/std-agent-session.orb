@@ -1,5 +1,5 @@
 {
-  "description": "std-agent-session — the conversation with an in-app assistant. AgentThread owns the persisted AgentMessage rows (role, content, ownerId stamped with the real @user, createdAt): SEND stores the user's message, reloads the thread and emits CONVERSE with the whole conversation, oldest first, for std-agent-tool-loop to answer; REPLIED stores the reply. AgentConversation is what the user sees, in the browser: the thread as chat bubbles with every step the assistant takes interleaved live (STEP: each model call, each tool it used and what the app answered), a thinking row while it works, and a chat bar. Rows are meant to be private to their owner: owner-scoped access needs an [identity] roster, so the binding organism declares the @read/@create scoping on AgentMessage — this generic atom cannot.",
+  "description": "std-agent-session — the conversation with an in-app assistant. AgentThread owns the persisted AgentMessage rows (role, content, ownerId stamped with the real @user, createdAt): SEND stores the user's message, reloads the thread and emits CONVERSE with the whole conversation, oldest first, for std-agent-tool-loop to answer; REPLIED stores the reply. AgentConversation is what the user sees, in the browser: the thread as chat bubbles with every step the assistant takes interleaved live (STEP: each model call, each tool it used and what the app answered), a thinking row while it works, and a chat bar. The two talk over the assistant contract, from any orbital: AgentConversation emits ASSISTANT_SEND and hears AgentMessagesLoaded, ASSISTANT_THREAD_FAILED, ASSISTANT_STEP, ASSISTANT_REPLIED and ASSISTANT_REPLY_FAILED; AgentThread hears ASSISTANT_SEND. So a conversation placed on any section's page reaches the app's one assistant (std-agent-assistant) with no wiring. Rows are meant to be private to their owner: owner-scoped access needs an [identity] roster, so the binding organism declares the @read/@create scoping on AgentMessage — this generic atom cannot.",
   "ledger": {
     "entries": {
       "ent_01M3TYMQH8YF6HGJJVC3GRECJP": {
@@ -18,19 +18,18 @@
         "owner": "workspace",
         "renames": []
       },
+      "ent_01M429JRCV2YV1V4KFNT8ASWTV": {
+        "bakedName": "AgentChat",
+        "curName": "AgentChat",
+        "id": "ent_01M429JRCV2YV1V4KFNT8ASWTV",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
       "evt_01M3TYMQH81AV51TX8HBD3BVVY": {
         "bakedName": "INIT",
         "curName": "INIT",
         "id": "evt_01M3TYMQH81AV51TX8HBD3BVVY",
-        "kind": "event",
-        "owner": "workspace",
-        "parent": "trt_01M3TYMQH8QP9883EWJYRT49M8",
-        "renames": []
-      },
-      "evt_01M3TYMQH87CAV0ETMWW6P6W6P": {
-        "bakedName": "SEND",
-        "curName": "SEND",
-        "id": "evt_01M3TYMQH87CAV0ETMWW6P6W6P",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01M3TYMQH8QP9883EWJYRT49M8",
@@ -90,28 +89,10 @@
         "parent": "trt_01M3TYMQH8QP9883EWJYRT49M8",
         "renames": []
       },
-      "evt_01M3TYMQH8PJZ22902FWBBMMK4": {
-        "bakedName": "REPLIED",
-        "curName": "REPLIED",
-        "id": "evt_01M3TYMQH8PJZ22902FWBBMMK4",
-        "kind": "event",
-        "owner": "workspace",
-        "parent": "trt_01M3TYMQH8QP9883EWJYRT49M8",
-        "renames": []
-      },
       "evt_01M3WC4PY11N0BPZ1WZMMGJGR8": {
         "bakedName": "THREAD_LOADED",
         "curName": "THREAD_LOADED",
         "id": "evt_01M3WC4PY11N0BPZ1WZMMGJGR8",
-        "kind": "event",
-        "owner": "workspace",
-        "parent": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
-        "renames": []
-      },
-      "evt_01M3WC4PY16PAX6BAR4QCWZMJR": {
-        "bakedName": "SEND",
-        "curName": "SEND",
-        "id": "evt_01M3WC4PY16PAX6BAR4QCWZMJR",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
@@ -153,19 +134,433 @@
         "parent": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
         "renames": []
       },
-      "evt_01M3WC4PY1SBZM2NR5EQ1JARQK": {
-        "bakedName": "THREAD_FAILED",
-        "curName": "THREAD_FAILED",
-        "id": "evt_01M3WC4PY1SBZM2NR5EQ1JARQK",
+      "evt_01M3WC4PY1TK0PTERMDE5BWR5W": {
+        "bakedName": "ASK",
+        "curName": "ASK",
+        "id": "evt_01M3WC4PY1TK0PTERMDE5BWR5W",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
+        "renames": []
+      },
+      "evt_01M41HQTH54GY51QWJDQFYYXSQ": {
+        "bakedName": "ASSISTANT_SEND",
+        "curName": "ASSISTANT_SEND",
+        "id": "evt_01M41HQTH54GY51QWJDQFYYXSQ",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
+        "renames": []
+      },
+      "evt_01M41HQTH581WGC5CWT6DH2TXF": {
+        "bakedName": "ASSISTANT_THREAD_FAILED",
+        "curName": "ASSISTANT_THREAD_FAILED",
+        "id": "evt_01M41HQTH581WGC5CWT6DH2TXF",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01M3TYMQH8QP9883EWJYRT49M8",
         "renames": []
       },
-      "evt_01M3WC4PY1TK0PTERMDE5BWR5W": {
-        "bakedName": "ASK",
-        "curName": "ASK",
-        "id": "evt_01M3WC4PY1TK0PTERMDE5BWR5W",
+      "evt_01M429JRCV04S2KAA9WMZ9HFYK": {
+        "bakedName": "CHATS_CHANGED",
+        "curName": "CHATS_CHANGED",
+        "id": "evt_01M429JRCV04S2KAA9WMZ9HFYK",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M429JRCV6EG32JMMXDQM2BKJ",
+        "renames": []
+      },
+      "evt_01M429JRCV15NX6T9P8KEQN48D": {
+        "bakedName": "ASSISTANT_NEW_CHAT",
+        "curName": "ASSISTANT_NEW_CHAT",
+        "id": "evt_01M429JRCV15NX6T9P8KEQN48D",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M429JRCV6EG32JMMXDQM2BKJ",
+        "renames": []
+      },
+      "evt_01M429JRCV4F0AQB34G2D8T0Q7": {
+        "bakedName": "AgentChatsLoaded",
+        "curName": "AgentChatsLoaded",
+        "id": "evt_01M429JRCV4F0AQB34G2D8T0Q7",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M429JRCV6EG32JMMXDQM2BKJ",
+        "renames": []
+      },
+      "evt_01M429JRCV8FWNPGQDTJHFTEB0": {
+        "bakedName": "ASSISTANT_CHAT_SELECTED",
+        "curName": "ASSISTANT_CHAT_SELECTED",
+        "id": "evt_01M429JRCV8FWNPGQDTJHFTEB0",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M429JRCV6EG32JMMXDQM2BKJ",
+        "renames": []
+      },
+      "evt_01M429JRCVFFBMVKCMDJ17PDZS": {
+        "bakedName": "AgentChatsLoadFailed",
+        "curName": "AgentChatsLoadFailed",
+        "id": "evt_01M429JRCVFFBMVKCMDJ17PDZS",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M429JRCV6EG32JMMXDQM2BKJ",
+        "renames": []
+      },
+      "evt_01M429JRCVFQB2NB9XF5GES0QK": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M429JRCVFQB2NB9XF5GES0QK",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M429JRCV6EG32JMMXDQM2BKJ",
+        "renames": []
+      },
+      "evt_01M429JRCVH33QHFSKCKGCBH7X": {
+        "bakedName": "NEW_CHAT_CLICKED",
+        "curName": "NEW_CHAT_CLICKED",
+        "id": "evt_01M429JRCVH33QHFSKCKGCBH7X",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M429JRCV6EG32JMMXDQM2BKJ",
+        "renames": []
+      },
+      "evt_01M429JRCVKG4PC7A0JM0JY6C2": {
+        "bakedName": "ASSISTANT_HISTORY_REQUESTED",
+        "curName": "ASSISTANT_HISTORY_REQUESTED",
+        "id": "evt_01M429JRCVKG4PC7A0JM0JY6C2",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
+        "renames": []
+      },
+      "evt_01M429JRCVQ2MRYA2GV7Q1DJR7": {
+        "bakedName": "OPEN_CHAT",
+        "curName": "OPEN_CHAT",
+        "id": "evt_01M429JRCVQ2MRYA2GV7Q1DJR7",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M429JRCV6EG32JMMXDQM2BKJ",
+        "renames": []
+      },
+      "evt_01M429JRCVQYFSHXHKCFPGSMGT": {
+        "bakedName": "ASSISTANT_NEW_CHAT",
+        "curName": "ASSISTANT_NEW_CHAT",
+        "id": "evt_01M429JRCVQYFSHXHKCFPGSMGT",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
+        "renames": []
+      },
+      "evt_01M429JRCVXSW91SHA7ACNCB0F": {
+        "bakedName": "NEW_CHAT_CLICKED",
+        "curName": "NEW_CHAT_CLICKED",
+        "id": "evt_01M429JRCVXSW91SHA7ACNCB0F",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
+        "renames": []
+      },
+      "evt_01M42AXGB61QHE03ME8ZK8XRB4": {
+        "bakedName": "SELECT_CHAT",
+        "curName": "SELECT_CHAT",
+        "id": "evt_01M42AXGB61QHE03ME8ZK8XRB4",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ",
+        "renames": []
+      },
+      "evt_01M42AXGB62E9GKHP71YD7WB7X": {
+        "bakedName": "LOAD_HISTORY",
+        "curName": "LOAD_HISTORY",
+        "id": "evt_01M42AXGB62E9GKHP71YD7WB7X",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ",
+        "renames": []
+      },
+      "evt_01M42AXGB62XJ6G1WDJKSZA27R": {
+        "bakedName": "ChatsForSelect",
+        "curName": "ChatsForSelect",
+        "id": "evt_01M42AXGB62XJ6G1WDJKSZA27R",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ",
+        "renames": []
+      },
+      "evt_01M42AXGB64E8N3RM9SEXGH1K1": {
+        "bakedName": "SEND_IN_CHAT",
+        "curName": "SEND_IN_CHAT",
+        "id": "evt_01M42AXGB64E8N3RM9SEXGH1K1",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3TYMQH8QP9883EWJYRT49M8",
+        "renames": []
+      },
+      "evt_01M42AXGB6AGV2HHXHY8B3AHW5": {
+        "bakedName": "ASSISTANT_SEND_IN_CHAT",
+        "curName": "ASSISTANT_SEND_IN_CHAT",
+        "id": "evt_01M42AXGB6AGV2HHXHY8B3AHW5",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ",
+        "renames": []
+      },
+      "evt_01M42AXGB6BHK6CZVCHG1DNYJW": {
+        "bakedName": "AgentChatsLoadFailed",
+        "curName": "AgentChatsLoadFailed",
+        "id": "evt_01M42AXGB6BHK6CZVCHG1DNYJW",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ",
+        "renames": []
+      },
+      "evt_01M42AXGB6BQJAVR0XVMJTYR9K": {
+        "bakedName": "ChatsForReply",
+        "curName": "ChatsForReply",
+        "id": "evt_01M42AXGB6BQJAVR0XVMJTYR9K",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ",
+        "renames": []
+      },
+      "evt_01M42AXGB6FZ7DRFMHZM65HXAB": {
+        "bakedName": "ChatsForHistory",
+        "curName": "ChatsForHistory",
+        "id": "evt_01M42AXGB6FZ7DRFMHZM65HXAB",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ",
+        "renames": []
+      },
+      "evt_01M42AXGB6H065VD6BMHQ5R4PQ": {
+        "bakedName": "ChatReadyForSend",
+        "curName": "ChatReadyForSend",
+        "id": "evt_01M42AXGB6H065VD6BMHQ5R4PQ",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ",
+        "renames": []
+      },
+      "evt_01M42AXGB6HCW17E0H3PY7HEAG": {
+        "bakedName": "OPEN_CHAT",
+        "curName": "OPEN_CHAT",
+        "id": "evt_01M42AXGB6HCW17E0H3PY7HEAG",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3TYMQH8QP9883EWJYRT49M8",
+        "renames": []
+      },
+      "evt_01M42AXGB6KR7AS28C2HQ4R9PZ": {
+        "bakedName": "ASSISTANT_REPLY_IN_CHAT",
+        "curName": "ASSISTANT_REPLY_IN_CHAT",
+        "id": "evt_01M42AXGB6KR7AS28C2HQ4R9PZ",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ",
+        "renames": []
+      },
+      "evt_01M42AXGB6NCSF7005KGBBX879": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M42AXGB6NCSF7005KGBBX879",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ",
+        "renames": []
+      },
+      "evt_01M42AXGB6NDHJ20NTQB18YN8F": {
+        "bakedName": "REPLY_IN_CHAT",
+        "curName": "REPLY_IN_CHAT",
+        "id": "evt_01M42AXGB6NDHJ20NTQB18YN8F",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3TYMQH8QP9883EWJYRT49M8",
+        "renames": []
+      },
+      "evt_01M42AXGB6P6KMYBP3KVHRJ1RV": {
+        "bakedName": "NEW_CHAT",
+        "curName": "NEW_CHAT",
+        "id": "evt_01M42AXGB6P6KMYBP3KVHRJ1RV",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ",
+        "renames": []
+      },
+      "evt_01M42AXGB6QG79WCGD4G200TND": {
+        "bakedName": "ASSISTANT_CHAT_OPENED",
+        "curName": "ASSISTANT_CHAT_OPENED",
+        "id": "evt_01M42AXGB6QG79WCGD4G200TND",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ",
+        "renames": []
+      },
+      "evt_01M42AXGB6RSEPF3JJVSD0VZ3T": {
+        "bakedName": "ChatSelected",
+        "curName": "ChatSelected",
+        "id": "evt_01M42AXGB6RSEPF3JJVSD0VZ3T",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ",
+        "renames": []
+      },
+      "evt_01M42AXGB6RZ31FP4M56835VN9": {
+        "bakedName": "REPLIED",
+        "curName": "REPLIED",
+        "id": "evt_01M42AXGB6RZ31FP4M56835VN9",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ",
+        "renames": []
+      },
+      "evt_01M42AXGB6S8JPH777C8QN5CJ4": {
+        "bakedName": "NewChatStarted",
+        "curName": "NewChatStarted",
+        "id": "evt_01M42AXGB6S8JPH777C8QN5CJ4",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ",
+        "renames": []
+      },
+      "evt_01M42AXGB6SPYM11W6MTCY0SQW": {
+        "bakedName": "ASSISTANT_THREAD_FAILED",
+        "curName": "ASSISTANT_THREAD_FAILED",
+        "id": "evt_01M42AXGB6SPYM11W6MTCY0SQW",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ",
+        "renames": []
+      },
+      "evt_01M42AXGB6VABQ0WV28SDQAXW2": {
+        "bakedName": "ChatsForSend",
+        "curName": "ChatsForSend",
+        "id": "evt_01M42AXGB6VABQ0WV28SDQAXW2",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ",
+        "renames": []
+      },
+      "evt_01M42AXGB6WJACSA76BBADRBXE": {
+        "bakedName": "ASSISTANT_CHATS_CHANGED",
+        "curName": "ASSISTANT_CHATS_CHANGED",
+        "id": "evt_01M42AXGB6WJACSA76BBADRBXE",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ",
+        "renames": []
+      },
+      "evt_01M42AXGB6YA8JDEF2K9SVWY4F": {
+        "bakedName": "SEND",
+        "curName": "SEND",
+        "id": "evt_01M42AXGB6YA8JDEF2K9SVWY4F",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ",
+        "renames": []
+      },
+      "evt_01M42F8KA623G0Z6VCEA15JJT8": {
+        "bakedName": "MEMORIES_LISTED",
+        "curName": "MEMORIES_LISTED",
+        "id": "evt_01M42F8KA623G0Z6VCEA15JJT8",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
+        "renames": []
+      },
+      "evt_01M42F8KA62N7K8D8M8ED9M9W4": {
+        "bakedName": "CHAT_PICKED",
+        "curName": "CHAT_PICKED",
+        "id": "evt_01M42F8KA62N7K8D8M8ED9M9W4",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
+        "renames": []
+      },
+      "evt_01M42F8KA6ABZRF8QBHP1GKCGP": {
+        "bakedName": "OPEN_MEMORY_CLICKED",
+        "curName": "OPEN_MEMORY_CLICKED",
+        "id": "evt_01M42F8KA6ABZRF8QBHP1GKCGP",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
+        "renames": []
+      },
+      "evt_01M42F8KA6D4P2ZYYQRNT64HWB": {
+        "bakedName": "ASSISTANT_CHATS_REQUESTED",
+        "curName": "ASSISTANT_CHATS_REQUESTED",
+        "id": "evt_01M42F8KA6D4P2ZYYQRNT64HWB",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
+        "renames": []
+      },
+      "evt_01M42F8KA6E9GQM6E86NWFJ6Z4": {
+        "bakedName": "ASSISTANT_MEMORIES_REQUESTED",
+        "curName": "ASSISTANT_MEMORIES_REQUESTED",
+        "id": "evt_01M42F8KA6E9GQM6E86NWFJ6Z4",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
+        "renames": []
+      },
+      "evt_01M42F8KA6FZ0FWZA08ME02A2J": {
+        "bakedName": "LIST_CHATS",
+        "curName": "LIST_CHATS",
+        "id": "evt_01M42F8KA6FZ0FWZA08ME02A2J",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ",
+        "renames": []
+      },
+      "evt_01M42F8KA6GDTKXX7MB080M6R8": {
+        "bakedName": "ASSISTANT_CHAT_SELECTED",
+        "curName": "ASSISTANT_CHAT_SELECTED",
+        "id": "evt_01M42F8KA6GDTKXX7MB080M6R8",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
+        "renames": []
+      },
+      "evt_01M42F8KA6SF5R6W6EDRCK9HAN": {
+        "bakedName": "OPEN_CHATS_CLICKED",
+        "curName": "OPEN_CHATS_CLICKED",
+        "id": "evt_01M42F8KA6SF5R6W6EDRCK9HAN",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
+        "renames": []
+      },
+      "evt_01M42F8KA6SMX0FDVA2VS1NPJQ": {
+        "bakedName": "ChatsForList",
+        "curName": "ChatsForList",
+        "id": "evt_01M42F8KA6SMX0FDVA2VS1NPJQ",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ",
+        "renames": []
+      },
+      "evt_01M42F8KA6T30Z2R0J9DGDB1Q2": {
+        "bakedName": "ASSISTANT_CHATS_LOADED",
+        "curName": "ASSISTANT_CHATS_LOADED",
+        "id": "evt_01M42F8KA6T30Z2R0J9DGDB1Q2",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ",
+        "renames": []
+      },
+      "evt_01M42F8KA6Y435Y3QRXQKV1Q5G": {
+        "bakedName": "CHATS_LISTED",
+        "curName": "CHATS_LISTED",
+        "id": "evt_01M42F8KA6Y435Y3QRXQKV1Q5G",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
+        "renames": []
+      },
+      "evt_01M42H05A3RD90XB7A33B3QETE": {
+        "bakedName": "BACK_TO_CHAT",
+        "curName": "BACK_TO_CHAT",
+        "id": "evt_01M42H05A3RD90XB7A33B3QETE",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
@@ -179,10 +574,26 @@
         "owner": "workspace",
         "renames": []
       },
+      "orb_01M42BPQV808JRWSBJ1QD3EX7J": {
+        "bakedName": "AgentChatsOrbital",
+        "curName": "AgentChatsOrbital",
+        "id": "orb_01M42BPQV808JRWSBJ1QD3EX7J",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
       "pag_01KXG04EKX7V6ARWHY4AXMTN6E": {
         "bakedName": "AgentSessionPage",
         "curName": "AgentSessionPage",
         "id": "pag_01KXG04EKX7V6ARWHY4AXMTN6E",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01M42BPQV8G845Q028D3JXY4TH": {
+        "bakedName": "AgentChatsPage",
+        "curName": "AgentChatsPage",
+        "id": "pag_01M42BPQV8G845Q028D3JXY4TH",
         "kind": "page",
         "owner": "workspace",
         "renames": []
@@ -199,6 +610,22 @@
         "bakedName": "AgentConversation",
         "curName": "AgentConversation",
         "id": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M429JRCV6EG32JMMXDQM2BKJ": {
+        "bakedName": "AgentChatList",
+        "curName": "AgentChatList",
+        "id": "trt_01M429JRCV6EG32JMMXDQM2BKJ",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ": {
+        "bakedName": "AgentChatKeeper",
+        "curName": "AgentChatKeeper",
+        "id": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ",
         "kind": "trait",
         "owner": "workspace",
         "renames": []
@@ -532,6 +959,13 @@
             "name": "createdAt",
             "synonyms": "time, timestamp",
             "type": "number"
+          },
+          {
+            "default": "",
+            "description": "The conversation this message belongs to (an AgentChat id).",
+            "name": "chatId",
+            "synonyms": "conversation, thread, session",
+            "type": "string"
           }
         ],
         "id": "ent_01M3TYMQH8YF6HGJJVC3GRECJP",
@@ -563,11 +997,15 @@
           "effectRow": [
             {
               "kind": "emit",
-              "resource": "CONVERSE"
+              "resource": "ASSISTANT_THREAD_FAILED"
             },
             {
               "kind": "emit",
-              "resource": "THREAD_FAILED"
+              "resource": "AgentMessagesLoaded"
+            },
+            {
+              "kind": "emit",
+              "resource": "CONVERSE"
             },
             {
               "kind": "fetch",
@@ -585,8 +1023,8 @@
           "emits": [
             {
               "description": "The conversation could not be loaded or a message could not be stored.",
-              "event": "THREAD_FAILED",
-              "eventId": "evt_01M3WC4PY1SBZM2NR5EQ1JARQK",
+              "event": "ASSISTANT_THREAD_FAILED",
+              "eventId": "evt_01M41HQTH581WGC5CWT6DH2TXF",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -599,7 +1037,7 @@
               "tier": "domain"
             },
             {
-              "description": "The conversation to answer, oldest first; the last turn is the request.",
+              "description": "The current conversation to answer, oldest first; the last turn is the request.",
               "event": "CONVERSE",
               "eventId": "evt_01M3TYMQH8CS3YHB2R90D5J678",
               "payloadSchema": [
@@ -627,7 +1065,7 @@
               "tier": "domain"
             },
             {
-              "description": "The conversation finished loading.",
+              "description": "The current conversation's messages finished loading (empty for a new conversation).",
               "event": "AgentMessagesLoaded",
               "eventId": "evt_01M3TYMQH87K7NK4H6DHKPYPM6",
               "payloadSchema": [
@@ -657,6 +1095,10 @@
                     {
                       "name": "createdAt",
                       "type": "number"
+                    },
+                    {
+                      "name": "chatId",
+                      "type": "string"
                     }
                   ],
                   "type": "[object]"
@@ -712,6 +1154,10 @@
                     {
                       "name": "createdAt",
                       "type": "number"
+                    },
+                    {
+                      "name": "chatId",
+                      "type": "string"
                     }
                   ],
                   "type": "[object]"
@@ -748,6 +1194,10 @@
                 {
                   "name": "createdAt",
                   "type": "number"
+                },
+                {
+                  "name": "chatId",
+                  "type": "string"
                 }
               ],
               "scope": "internal",
@@ -784,15 +1234,28 @@
           "linkedEntityId": "ent_01M3TYMQH8YF6HGJJVC3GRECJP",
           "listens": [
             {
-              "event": "SEND",
-              "eventId": "evt_01M3TYMQH87CAV0ETMWW6P6W6P",
+              "event": "ASSISTANT_CHAT_OPENED",
               "source": {
-                "kind": "trait",
-                "trait": "AgentConversation",
-                "traitId": "trt_01M3WC4PY19N3FHQ4JQF6R9SA4"
+                "kind": "any"
               },
-              "triggers": "SEND",
-              "triggersId": "evt_01M3TYMQH87CAV0ETMWW6P6W6P"
+              "triggers": "OPEN_CHAT",
+              "triggersId": "evt_01M42AXGB6HCW17E0H3PY7HEAG"
+            },
+            {
+              "event": "ASSISTANT_SEND_IN_CHAT",
+              "source": {
+                "kind": "any"
+              },
+              "triggers": "SEND_IN_CHAT",
+              "triggersId": "evt_01M42AXGB64E8N3RM9SEXGH1K1"
+            },
+            {
+              "event": "ASSISTANT_REPLY_IN_CHAT",
+              "source": {
+                "kind": "any"
+              },
+              "triggers": "REPLY_IN_CHAT",
+              "triggersId": "evt_01M42AXGB6NDHJ20NTQB18YN8F"
             }
           ],
           "name": "AgentThread",
@@ -805,11 +1268,28 @@
                 "name": "Initialize"
               },
               {
-                "description": "Store the user's message and ask the assistant.",
-                "id": "evt_01M3TYMQH87CAV0ETMWW6P6W6P",
-                "key": "SEND",
-                "name": "Send",
+                "description": "Load a conversation's messages (none for a new one).",
+                "id": "evt_01M42AXGB6HCW17E0H3PY7HEAG",
+                "key": "OPEN_CHAT",
+                "name": "Open Chat",
                 "payloadSchema": [
+                  {
+                    "name": "chatId",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "description": "Store the user's message in this conversation and ask the assistant.",
+                "id": "evt_01M42AXGB64E8N3RM9SEXGH1K1",
+                "key": "SEND_IN_CHAT",
+                "name": "Send In Chat",
+                "payloadSchema": [
+                  {
+                    "name": "chatId",
+                    "required": true,
+                    "type": "string"
+                  },
                   {
                     "name": "message",
                     "required": true,
@@ -847,6 +1327,10 @@
                   {
                     "name": "createdAt",
                     "type": "number"
+                  },
+                  {
+                    "name": "chatId",
+                    "type": "string"
                   }
                 ],
                 "tier": "internal"
@@ -882,6 +1366,10 @@
                       {
                         "name": "createdAt",
                         "type": "number"
+                      },
+                      {
+                        "name": "chatId",
+                        "type": "string"
                       }
                     ],
                     "type": "[object]"
@@ -890,11 +1378,15 @@
                 "tier": "internal"
               },
               {
-                "description": "Store the assistant's answer.",
-                "id": "evt_01M3TYMQH8PJZ22902FWBBMMK4",
-                "key": "REPLIED",
-                "name": "Replied",
+                "description": "Store the assistant's answer in this conversation.",
+                "id": "evt_01M42AXGB6NDHJ20NTQB18YN8F",
+                "key": "REPLY_IN_CHAT",
+                "name": "Reply In Chat",
                 "payloadSchema": [
+                  {
+                    "name": "chatId",
+                    "type": "string"
+                  },
                   {
                     "name": "reply",
                     "required": true,
@@ -938,9 +1430,9 @@
               },
               {
                 "description": "The conversation could not be loaded or a message could not be stored.",
-                "id": "evt_01M3WC4PY1SBZM2NR5EQ1JARQK",
-                "key": "THREAD_FAILED",
-                "name": "Thread Failed",
+                "id": "evt_01M41HQTH581WGC5CWT6DH2TXF",
+                "key": "ASSISTANT_THREAD_FAILED",
+                "name": "Assistant Thread Failed",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -952,7 +1444,7 @@
                 "tier": "domain"
               },
               {
-                "description": "The conversation to answer, oldest first; the last turn is the request.",
+                "description": "The current conversation to answer, oldest first; the last turn is the request.",
                 "id": "evt_01M3TYMQH8CS3YHB2R90D5J678",
                 "key": "CONVERSE",
                 "name": "Converse",
@@ -980,7 +1472,7 @@
                 "tier": "domain"
               },
               {
-                "description": "The conversation finished loading.",
+                "description": "The current conversation's messages finished loading (empty for a new conversation).",
                 "id": "evt_01M3TYMQH87K7NK4H6DHKPYPM6",
                 "key": "AgentMessagesLoaded",
                 "name": "AgentMessage s loaded",
@@ -1011,6 +1503,10 @@
                       {
                         "name": "createdAt",
                         "type": "number"
+                      },
+                      {
+                        "name": "chatId",
+                        "type": "string"
                       }
                     ],
                     "type": "[object]"
@@ -1027,6 +1523,36 @@
             ],
             "transitions": [
               {
+                "event": "INIT",
+                "eventId": "evt_01M3TYMQH81AV51TX8HBD3BVVY",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "AgentMessagesLoaded",
+                    {
+                      "data": []
+                    }
+                  ]
+                ],
+                "event": "OPEN_CHAT",
+                "eventId": "evt_01M42AXGB6HCW17E0H3PY7HEAG",
+                "from": "ready",
+                "guard": [
+                  "=",
+                  [
+                    "str/default",
+                    "@payload.chatId",
+                    ""
+                  ],
+                  ""
+                ],
+                "to": "ready"
+              },
+              {
                 "effects": [
                   [
                     "fetch",
@@ -1035,13 +1561,34 @@
                       "emit": {
                         "failure": "AgentMessagesLoadFailed",
                         "success": "AgentMessagesLoaded"
-                      }
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "chatId"
+                        ],
+                        "@payload.chatId"
+                      ]
                     }
                   ]
                 ],
-                "event": "INIT",
-                "eventId": "evt_01M3TYMQH81AV51TX8HBD3BVVY",
+                "event": "OPEN_CHAT",
+                "eventId": "evt_01M42AXGB6HCW17E0H3PY7HEAG",
                 "from": "ready",
+                "guard": [
+                  "not",
+                  [
+                    "=",
+                    [
+                      "str/default",
+                      "@payload.chatId",
+                      ""
+                    ],
+                    ""
+                  ]
+                ],
                 "to": "ready"
               },
               {
@@ -1051,6 +1598,7 @@
                     "create",
                     "AgentMessage",
                     {
+                      "chatId": "@payload.chatId",
                       "content": "@payload.message",
                       "createdAt": "@now",
                       "ownerId": "@user.id",
@@ -1064,8 +1612,8 @@
                     }
                   ]
                 ],
-                "event": "SEND",
-                "eventId": "evt_01M3TYMQH87CAV0ETMWW6P6W6P",
+                "event": "SEND_IN_CHAT",
+                "eventId": "evt_01M42AXGB64E8N3RM9SEXGH1K1",
                 "from": "ready",
                 "guard": [
                   "not",
@@ -1090,7 +1638,16 @@
                       "emit": {
                         "failure": "AgentMessagesLoadFailed",
                         "success": "AgentConversationLoaded"
-                      }
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "chatId"
+                        ],
+                        "@payload.chatId"
+                      ]
                     }
                   ]
                 ],
@@ -1137,6 +1694,7 @@
                     "create",
                     "AgentMessage",
                     {
+                      "chatId": "@payload.chatId",
                       "content": "@payload.reply",
                       "createdAt": "@now",
                       "ownerId": "@user.id",
@@ -1144,8 +1702,8 @@
                     }
                   ]
                 ],
-                "event": "REPLIED",
-                "eventId": "evt_01M3TYMQH8PJZ22902FWBBMMK4",
+                "event": "REPLY_IN_CHAT",
+                "eventId": "evt_01M42AXGB6NDHJ20NTQB18YN8F",
                 "from": "ready",
                 "to": "ready"
               },
@@ -1153,7 +1711,7 @@
                 "effects": [
                   [
                     "emit",
-                    "THREAD_FAILED",
+                    "ASSISTANT_THREAD_FAILED",
                     {
                       "error": "@payload.error"
                     }
@@ -1177,7 +1735,7 @@
                 "effects": [
                   [
                     "emit",
-                    "THREAD_FAILED",
+                    "ASSISTANT_THREAD_FAILED",
                     {
                       "error": "@payload.error"
                     }
@@ -1203,6 +1761,25 @@
         {
           "category": "interaction",
           "config": {
+            "backLabel": {
+              "default": "Back",
+              "label": "Back to the conversation",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "chatsEmptyTitle": {
+              "default": "No conversations yet",
+              "label": "Empty conversation list",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "chatsLabel": {
+              "default": "Conversations",
+              "description": "Shows the person's past conversations in place of the chat; picking one reopens it.",
+              "label": "Past conversations button",
+              "tier": "presentation",
+              "type": "string"
+            },
             "emptyTitle": {
               "default": "Ask me to do something in this app",
               "label": "Empty conversation title",
@@ -1210,7 +1787,12 @@
               "type": "string"
             },
             "links": {
-              "default": [],
+              "default": [
+                {
+                  "href": "/agent-session/chats",
+                  "label": "All conversations"
+                }
+              ],
               "description": "Related pages (e.g. the run history).",
               "items": {
                 "properties": {
@@ -1231,9 +1813,35 @@
               "tier": "presentation",
               "type": "[AgentLink]"
             },
+            "memoryEmptyTitle": {
+              "default": "Nothing remembered yet",
+              "label": "Empty memory list",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "memoryLabel": {
+              "default": "What I remember",
+              "description": "Shows what the assistant remembers for this person in place of the chat.",
+              "label": "Memory button",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "newChatLabel": {
+              "default": "New conversation",
+              "description": "Starts a fresh conversation; earlier ones stay in the conversation list.",
+              "label": "New conversation button",
+              "tier": "presentation",
+              "type": "string"
+            },
             "placeholder": {
               "default": "Ask the assistant…",
               "label": "Message placeholder",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "untitledLabel": {
+              "default": "New conversation",
+              "label": "Title of a conversation with no messages yet",
               "tier": "presentation",
               "type": "string"
             }
@@ -1241,7 +1849,27 @@
           "effectRow": [
             {
               "kind": "emit",
-              "resource": "SEND"
+              "resource": "ASSISTANT_CHATS_REQUESTED"
+            },
+            {
+              "kind": "emit",
+              "resource": "ASSISTANT_CHAT_SELECTED"
+            },
+            {
+              "kind": "emit",
+              "resource": "ASSISTANT_HISTORY_REQUESTED"
+            },
+            {
+              "kind": "emit",
+              "resource": "ASSISTANT_MEMORIES_REQUESTED"
+            },
+            {
+              "kind": "emit",
+              "resource": "ASSISTANT_NEW_CHAT"
+            },
+            {
+              "kind": "emit",
+              "resource": "ASSISTANT_SEND"
             },
             {
               "kind": "render-ui",
@@ -1258,9 +1886,32 @@
           ],
           "emits": [
             {
+              "description": "This conversation view opened; the assistant thread loads the current conversation into it.",
+              "event": "ASSISTANT_HISTORY_REQUESTED",
+              "eventId": "evt_01M429JRCVKG4PC7A0JM0JY6C2",
+              "scope": "external",
+              "synonyms": "load history, restore conversation",
+              "tier": "domain"
+            },
+            {
+              "description": "The user started a new conversation.",
+              "event": "ASSISTANT_NEW_CHAT",
+              "eventId": "evt_01M429JRCVQYFSHXHKCFPGSMGT",
+              "scope": "external",
+              "synonyms": "new chat, new conversation, start over",
+              "tier": "domain"
+            },
+            {
+              "description": "Start a new conversation.",
+              "event": "NEW_CHAT_CLICKED",
+              "eventId": "evt_01M429JRCVXSW91SHA7ACNCB0F",
+              "synonyms": "new chat, start over, clear",
+              "tier": "presentation"
+            },
+            {
               "description": "The user asked something; AgentThread stores it and asks the assistant.",
-              "event": "SEND",
-              "eventId": "evt_01M3WC4PY16PAX6BAR4QCWZMJR",
+              "event": "ASSISTANT_SEND",
+              "eventId": "evt_01M41HQTH54GY51QWJDQFYYXSQ",
               "payloadSchema": [
                 {
                   "name": "message",
@@ -1271,6 +1922,81 @@
               "scope": "external",
               "synonyms": "ask, send, submit",
               "tier": "domain"
+            },
+            {
+              "description": "The user opened the conversation list; the conversation keeper sends the person's conversations.",
+              "event": "ASSISTANT_CHATS_REQUESTED",
+              "eventId": "evt_01M42F8KA6D4P2ZYYQRNT64HWB",
+              "scope": "external",
+              "synonyms": "conversations, history, past chats",
+              "tier": "domain"
+            },
+            {
+              "description": "The user picked a past conversation to reopen.",
+              "event": "ASSISTANT_CHAT_SELECTED",
+              "eventId": "evt_01M42F8KA6GDTKXX7MB080M6R8",
+              "payloadSchema": [
+                {
+                  "name": "chatId",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "open conversation, reopen chat",
+              "tier": "domain"
+            },
+            {
+              "description": "The user opened what the assistant remembers; the assistant's memory sends it.",
+              "event": "ASSISTANT_MEMORIES_REQUESTED",
+              "eventId": "evt_01M42F8KA6E9GQM6E86NWFJ6Z4",
+              "scope": "external",
+              "synonyms": "memories, what I remember",
+              "tier": "domain"
+            },
+            {
+              "description": "Show past conversations.",
+              "event": "OPEN_CHATS_CLICKED",
+              "eventId": "evt_01M42F8KA6SF5R6W6EDRCK9HAN",
+              "tier": "presentation"
+            },
+            {
+              "description": "Show what the assistant remembers.",
+              "event": "OPEN_MEMORY_CLICKED",
+              "eventId": "evt_01M42F8KA6ABZRF8QBHP1GKCGP",
+              "tier": "presentation"
+            },
+            {
+              "description": "Reopen the picked conversation.",
+              "event": "CHAT_PICKED",
+              "eventId": "evt_01M42F8KA62N7K8D8M8ED9M9W4",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "row",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "title",
+                      "type": "string"
+                    },
+                    {
+                      "name": "lastActiveAt",
+                      "type": "number"
+                    }
+                  ],
+                  "type": "object"
+                }
+              ],
+              "tier": "presentation"
             },
             {
               "description": "Send the typed message.",
@@ -1306,23 +2032,59 @@
               "event": "AgentMessagesLoaded",
               "eventId": "evt_01M3TYMQH87K7NK4H6DHKPYPM6",
               "source": {
-                "kind": "trait",
-                "trait": "AgentThread",
-                "traitId": "trt_01M3TYMQH8QP9883EWJYRT49M8"
+                "kind": "any"
               },
               "triggers": "THREAD_LOADED",
               "triggersId": "evt_01M3WC4PY11N0BPZ1WZMMGJGR8"
             },
             {
-              "event": "THREAD_FAILED",
-              "eventId": "evt_01M3WC4PY1SBZM2NR5EQ1JARQK",
+              "event": "ASSISTANT_THREAD_FAILED",
+              "eventId": "evt_01M41HQTH581WGC5CWT6DH2TXF",
               "source": {
-                "kind": "trait",
-                "trait": "AgentThread",
-                "traitId": "trt_01M3TYMQH8QP9883EWJYRT49M8"
+                "kind": "any"
               },
               "triggers": "REPLY_FAILED",
               "triggersId": "evt_01M3WC4PY1FP4JAXE259KW86F8"
+            },
+            {
+              "event": "ASSISTANT_STEP",
+              "source": {
+                "kind": "any"
+              },
+              "triggers": "STEP",
+              "triggersId": "evt_01M3WC4PY1REQ5RNNQBSR6JFXP"
+            },
+            {
+              "event": "ASSISTANT_REPLIED",
+              "source": {
+                "kind": "any"
+              },
+              "triggers": "REPLIED",
+              "triggersId": "evt_01M3WC4PY17CBXZBP39ZBSYT2B"
+            },
+            {
+              "event": "ASSISTANT_REPLY_FAILED",
+              "source": {
+                "kind": "any"
+              },
+              "triggers": "REPLY_FAILED",
+              "triggersId": "evt_01M3WC4PY1FP4JAXE259KW86F8"
+            },
+            {
+              "event": "ASSISTANT_CHATS_LOADED",
+              "source": {
+                "kind": "any"
+              },
+              "triggers": "CHATS_LISTED",
+              "triggersId": "evt_01M42F8KA6Y435Y3QRXQKV1Q5G"
+            },
+            {
+              "event": "ASSISTANT_MEMORIES_LOADED",
+              "source": {
+                "kind": "any"
+              },
+              "triggers": "MEMORIES_LISTED",
+              "triggersId": "evt_01M42F8KA623G0Z6VCEA15JJT8"
             }
           ],
           "name": "AgentConversation",
@@ -1405,6 +2167,122 @@
                 ]
               },
               {
+                "description": "Start a new conversation.",
+                "id": "evt_01M429JRCVXSW91SHA7ACNCB0F",
+                "key": "NEW_CHAT_CLICKED",
+                "name": "New Chat Clicked",
+                "synonyms": "new chat, start over, clear",
+                "tier": "presentation"
+              },
+              {
+                "description": "Show past conversations.",
+                "id": "evt_01M42F8KA6SF5R6W6EDRCK9HAN",
+                "key": "OPEN_CHATS_CLICKED",
+                "name": "Open Chats Clicked",
+                "tier": "presentation"
+              },
+              {
+                "description": "Show the person's conversations to pick from.",
+                "id": "evt_01M42F8KA6Y435Y3QRXQKV1Q5G",
+                "key": "CHATS_LISTED",
+                "name": "Chats Listed",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "lastActiveAt",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ]
+              },
+              {
+                "description": "Reopen the picked conversation.",
+                "id": "evt_01M42F8KA62N7K8D8M8ED9M9W4",
+                "key": "CHAT_PICKED",
+                "name": "Chat Picked",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "row",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "lastActiveAt",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "tier": "presentation"
+              },
+              {
+                "description": "Show what the assistant remembers.",
+                "id": "evt_01M42F8KA6ABZRF8QBHP1GKCGP",
+                "key": "OPEN_MEMORY_CLICKED",
+                "name": "Open Memory Clicked",
+                "tier": "presentation"
+              },
+              {
+                "description": "Show what the assistant remembers.",
+                "id": "evt_01M42F8KA623G0Z6VCEA15JJT8",
+                "key": "MEMORIES_LISTED",
+                "name": "Memories Listed",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "content",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ]
+              },
+              {
+                "description": "Back to the conversation.",
+                "id": "evt_01M42H05A3RD90XB7A33B3QETE",
+                "key": "BACK_TO_CHAT",
+                "name": "Back To Chat"
+              },
+              {
                 "description": "The assistant could not answer.",
                 "id": "evt_01M3WC4PY1FP4JAXE259KW86F8",
                 "key": "REPLY_FAILED",
@@ -1418,10 +2296,26 @@
                 ]
               },
               {
+                "description": "This conversation view opened; the assistant thread loads the current conversation into it.",
+                "id": "evt_01M429JRCVKG4PC7A0JM0JY6C2",
+                "key": "ASSISTANT_HISTORY_REQUESTED",
+                "name": "Assistant History Requested",
+                "synonyms": "load history, restore conversation",
+                "tier": "domain"
+              },
+              {
+                "description": "The user started a new conversation.",
+                "id": "evt_01M429JRCVQYFSHXHKCFPGSMGT",
+                "key": "ASSISTANT_NEW_CHAT",
+                "name": "Assistant New Chat",
+                "synonyms": "new chat, new conversation, start over",
+                "tier": "domain"
+              },
+              {
                 "description": "The user asked something; AgentThread stores it and asks the assistant.",
-                "id": "evt_01M3WC4PY16PAX6BAR4QCWZMJR",
-                "key": "SEND",
-                "name": "Send",
+                "id": "evt_01M41HQTH54GY51QWJDQFYYXSQ",
+                "key": "ASSISTANT_SEND",
+                "name": "Assistant Send",
                 "payloadSchema": [
                   {
                     "name": "message",
@@ -1430,6 +2324,37 @@
                   }
                 ],
                 "synonyms": "ask, send, submit",
+                "tier": "domain"
+              },
+              {
+                "description": "The user opened the conversation list; the conversation keeper sends the person's conversations.",
+                "id": "evt_01M42F8KA6D4P2ZYYQRNT64HWB",
+                "key": "ASSISTANT_CHATS_REQUESTED",
+                "name": "Assistant Chats Requested",
+                "synonyms": "conversations, history, past chats",
+                "tier": "domain"
+              },
+              {
+                "description": "The user picked a past conversation to reopen.",
+                "id": "evt_01M42F8KA6GDTKXX7MB080M6R8",
+                "key": "ASSISTANT_CHAT_SELECTED",
+                "name": "Assistant Chat Selected",
+                "payloadSchema": [
+                  {
+                    "name": "chatId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "open conversation, reopen chat",
+                "tier": "domain"
+              },
+              {
+                "description": "The user opened what the assistant remembers; the assistant's memory sends it.",
+                "id": "evt_01M42F8KA6E9GQM6E86NWFJ6Z4",
+                "key": "ASSISTANT_MEMORIES_REQUESTED",
+                "name": "Assistant Memories Requested",
+                "synonyms": "memories, what I remember",
                 "tier": "domain"
               }
             ],
@@ -1443,28 +2368,79 @@
               {
                 "effects": [
                   [
+                    "emit",
+                    "ASSISTANT_HISTORY_REQUESTED",
+                    {}
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
                       "children": [
                         {
+                          "align": "center",
                           "children": [
-                            "array/map",
-                            "@config.links",
-                            [
-                              "fn",
-                              "item",
-                              {
-                                "href": "@item.href",
-                                "label": "@item.label",
-                                "type": "button",
-                                "variant": "ghost"
-                              }
-                            ]
+                            {
+                              "action": "NEW_CHAT_CLICKED",
+                              "aria-label": "@config.newChatLabel",
+                              "icon": "message-square-plus",
+                              "label": "@config.newChatLabel",
+                              "size": "sm",
+                              "type": "button",
+                              "variant": "secondary"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "OPEN_CHATS_CLICKED",
+                                  "aria-label": "@config.chatsLabel",
+                                  "label": "@config.chatsLabel",
+                                  "size": "sm",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "action": "OPEN_MEMORY_CLICKED",
+                                  "aria-label": "@config.memoryLabel",
+                                  "label": "@config.memoryLabel",
+                                  "size": "sm",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "children": [
+                                    "array/map",
+                                    "@config.links",
+                                    [
+                                      "fn",
+                                      "item",
+                                      {
+                                        "href": "@item.href",
+                                        "label": "@item.label",
+                                        "size": "sm",
+                                        "type": "button",
+                                        "variant": "ghost"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "className": "shrink-0",
+                              "direction": "horizontal",
+                              "gap": "none",
+                              "type": "stack"
+                            }
                           ],
+                          "className": "shrink-0",
                           "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack"
+                          "justify": "between",
+                          "type": "stack",
+                          "wrap": true
                         },
                         {
                           "activities": "@entity.entries",
@@ -1524,23 +2500,69 @@
                     {
                       "children": [
                         {
+                          "align": "center",
                           "children": [
-                            "array/map",
-                            "@config.links",
-                            [
-                              "fn",
-                              "item",
-                              {
-                                "href": "@item.href",
-                                "label": "@item.label",
-                                "type": "button",
-                                "variant": "ghost"
-                              }
-                            ]
+                            {
+                              "action": "NEW_CHAT_CLICKED",
+                              "aria-label": "@config.newChatLabel",
+                              "icon": "message-square-plus",
+                              "label": "@config.newChatLabel",
+                              "size": "sm",
+                              "type": "button",
+                              "variant": "secondary"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "OPEN_CHATS_CLICKED",
+                                  "aria-label": "@config.chatsLabel",
+                                  "label": "@config.chatsLabel",
+                                  "size": "sm",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "action": "OPEN_MEMORY_CLICKED",
+                                  "aria-label": "@config.memoryLabel",
+                                  "label": "@config.memoryLabel",
+                                  "size": "sm",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "children": [
+                                    "array/map",
+                                    "@config.links",
+                                    [
+                                      "fn",
+                                      "item",
+                                      {
+                                        "href": "@item.href",
+                                        "label": "@item.label",
+                                        "size": "sm",
+                                        "type": "button",
+                                        "variant": "ghost"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "className": "shrink-0",
+                              "direction": "horizontal",
+                              "gap": "none",
+                              "type": "stack"
+                            }
                           ],
+                          "className": "shrink-0",
                           "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack"
+                          "justify": "between",
+                          "type": "stack",
+                          "wrap": true
                         },
                         {
                           "activities": "@entity.entries",
@@ -1592,7 +2614,7 @@
                   ],
                   [
                     "emit",
-                    "SEND",
+                    "ASSISTANT_SEND",
                     {
                       "message": "@payload.message"
                     }
@@ -1603,23 +2625,69 @@
                     {
                       "children": [
                         {
+                          "align": "center",
                           "children": [
-                            "array/map",
-                            "@config.links",
-                            [
-                              "fn",
-                              "item",
-                              {
-                                "href": "@item.href",
-                                "label": "@item.label",
-                                "type": "button",
-                                "variant": "ghost"
-                              }
-                            ]
+                            {
+                              "action": "NEW_CHAT_CLICKED",
+                              "aria-label": "@config.newChatLabel",
+                              "icon": "message-square-plus",
+                              "label": "@config.newChatLabel",
+                              "size": "sm",
+                              "type": "button",
+                              "variant": "secondary"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "OPEN_CHATS_CLICKED",
+                                  "aria-label": "@config.chatsLabel",
+                                  "label": "@config.chatsLabel",
+                                  "size": "sm",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "action": "OPEN_MEMORY_CLICKED",
+                                  "aria-label": "@config.memoryLabel",
+                                  "label": "@config.memoryLabel",
+                                  "size": "sm",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "children": [
+                                    "array/map",
+                                    "@config.links",
+                                    [
+                                      "fn",
+                                      "item",
+                                      {
+                                        "href": "@item.href",
+                                        "label": "@item.label",
+                                        "size": "sm",
+                                        "type": "button",
+                                        "variant": "ghost"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "className": "shrink-0",
+                              "direction": "horizontal",
+                              "gap": "none",
+                              "type": "stack"
+                            }
                           ],
+                          "className": "shrink-0",
                           "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack"
+                          "justify": "between",
+                          "type": "stack",
+                          "wrap": true
                         },
                         {
                           "activities": "@entity.entries",
@@ -1684,23 +2752,69 @@
                     {
                       "children": [
                         {
+                          "align": "center",
                           "children": [
-                            "array/map",
-                            "@config.links",
-                            [
-                              "fn",
-                              "item",
-                              {
-                                "href": "@item.href",
-                                "label": "@item.label",
-                                "type": "button",
-                                "variant": "ghost"
-                              }
-                            ]
+                            {
+                              "action": "NEW_CHAT_CLICKED",
+                              "aria-label": "@config.newChatLabel",
+                              "icon": "message-square-plus",
+                              "label": "@config.newChatLabel",
+                              "size": "sm",
+                              "type": "button",
+                              "variant": "secondary"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "OPEN_CHATS_CLICKED",
+                                  "aria-label": "@config.chatsLabel",
+                                  "label": "@config.chatsLabel",
+                                  "size": "sm",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "action": "OPEN_MEMORY_CLICKED",
+                                  "aria-label": "@config.memoryLabel",
+                                  "label": "@config.memoryLabel",
+                                  "size": "sm",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "children": [
+                                    "array/map",
+                                    "@config.links",
+                                    [
+                                      "fn",
+                                      "item",
+                                      {
+                                        "href": "@item.href",
+                                        "label": "@item.label",
+                                        "size": "sm",
+                                        "type": "button",
+                                        "variant": "ghost"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "className": "shrink-0",
+                              "direction": "horizontal",
+                              "gap": "none",
+                              "type": "stack"
+                            }
                           ],
+                          "className": "shrink-0",
                           "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack"
+                          "justify": "between",
+                          "type": "stack",
+                          "wrap": true
                         },
                         {
                           "activities": "@entity.entries",
@@ -1756,23 +2870,69 @@
                     {
                       "children": [
                         {
+                          "align": "center",
                           "children": [
-                            "array/map",
-                            "@config.links",
-                            [
-                              "fn",
-                              "item",
-                              {
-                                "href": "@item.href",
-                                "label": "@item.label",
-                                "type": "button",
-                                "variant": "ghost"
-                              }
-                            ]
+                            {
+                              "action": "NEW_CHAT_CLICKED",
+                              "aria-label": "@config.newChatLabel",
+                              "icon": "message-square-plus",
+                              "label": "@config.newChatLabel",
+                              "size": "sm",
+                              "type": "button",
+                              "variant": "secondary"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "OPEN_CHATS_CLICKED",
+                                  "aria-label": "@config.chatsLabel",
+                                  "label": "@config.chatsLabel",
+                                  "size": "sm",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "action": "OPEN_MEMORY_CLICKED",
+                                  "aria-label": "@config.memoryLabel",
+                                  "label": "@config.memoryLabel",
+                                  "size": "sm",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "children": [
+                                    "array/map",
+                                    "@config.links",
+                                    [
+                                      "fn",
+                                      "item",
+                                      {
+                                        "href": "@item.href",
+                                        "label": "@item.label",
+                                        "size": "sm",
+                                        "type": "button",
+                                        "variant": "ghost"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "className": "shrink-0",
+                              "direction": "horizontal",
+                              "gap": "none",
+                              "type": "stack"
+                            }
                           ],
+                          "className": "shrink-0",
                           "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack"
+                          "justify": "between",
+                          "type": "stack",
+                          "wrap": true
                         },
                         {
                           "activities": "@entity.entries",
@@ -1806,6 +2966,516 @@
                   [
                     "set",
                     "@entity.entries",
+                    []
+                  ],
+                  [
+                    "emit",
+                    "ASSISTANT_NEW_CHAT",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "action": "NEW_CHAT_CLICKED",
+                              "aria-label": "@config.newChatLabel",
+                              "icon": "message-square-plus",
+                              "label": "@config.newChatLabel",
+                              "size": "sm",
+                              "type": "button",
+                              "variant": "secondary"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "OPEN_CHATS_CLICKED",
+                                  "aria-label": "@config.chatsLabel",
+                                  "label": "@config.chatsLabel",
+                                  "size": "sm",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "action": "OPEN_MEMORY_CLICKED",
+                                  "aria-label": "@config.memoryLabel",
+                                  "label": "@config.memoryLabel",
+                                  "size": "sm",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "children": [
+                                    "array/map",
+                                    "@config.links",
+                                    [
+                                      "fn",
+                                      "item",
+                                      {
+                                        "href": "@item.href",
+                                        "label": "@item.label",
+                                        "size": "sm",
+                                        "type": "button",
+                                        "variant": "ghost"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "className": "shrink-0",
+                              "direction": "horizontal",
+                              "gap": "none",
+                              "type": "stack"
+                            }
+                          ],
+                          "className": "shrink-0",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "between",
+                          "type": "stack",
+                          "wrap": true
+                        },
+                        {
+                          "activities": "@entity.entries",
+                          "className": "flex-1",
+                          "emptyTitle": "@config.emptyTitle",
+                          "idPrefix": "agent-conversation",
+                          "rawLlmPreferenceKey": "agent-conversation-raw-llm",
+                          "type": "agent-chat-feed",
+                          "working": "@entity.working"
+                        },
+                        {
+                          "placeholder": "@config.placeholder",
+                          "sendEvent": "ASK",
+                          "type": "chat-bar"
+                        }
+                      ],
+                      "className": "h-full min-h-0 flex-1",
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "NEW_CHAT_CLICKED",
+                "eventId": "evt_01M429JRCVXSW91SHA7ACNCB0F",
+                "from": "idle",
+                "guard": [
+                  "not",
+                  "@entity.working"
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "ASSISTANT_CHATS_REQUESTED",
+                    {}
+                  ]
+                ],
+                "event": "OPEN_CHATS_CLICKED",
+                "eventId": "evt_01M42F8KA6SF5R6W6EDRCK9HAN",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "action": "BACK_TO_CHAT",
+                              "aria-label": "@config.backLabel",
+                              "icon": "arrow-left",
+                              "label": "@config.backLabel",
+                              "size": "sm",
+                              "type": "button",
+                              "variant": "ghost"
+                            },
+                            {
+                              "content": "@config.chatsLabel",
+                              "type": "typography",
+                              "variant": "h4"
+                            }
+                          ],
+                          "className": "shrink-0",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "emptyMessage": "@config.chatsEmptyTitle",
+                          "entity": "@payload.data",
+                          "fields": [],
+                          "gap": "none",
+                          "itemClickEvent": "CHAT_PICKED",
+                          "renderItem": [
+                            "fn",
+                            "item",
+                            {
+                              "children": [
+                                {
+                                  "className": "truncate",
+                                  "content": [
+                                    "if",
+                                    [
+                                      "=",
+                                      [
+                                        "str/default",
+                                        "@item.title",
+                                        ""
+                                      ],
+                                      ""
+                                    ],
+                                    "@config.untitledLabel",
+                                    "@item.title"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "body"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": "@item.lastActiveAt",
+                                  "format": "date",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "none",
+                              "type": "stack"
+                            }
+                          ],
+                          "type": "data-list",
+                          "variant": "compact"
+                        }
+                      ],
+                      "className": "h-full min-h-0 flex-1 overflow-y-auto",
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "CHATS_LISTED",
+                "eventId": "evt_01M42F8KA6Y435Y3QRXQKV1Q5G",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "ASSISTANT_CHAT_SELECTED",
+                    {
+                      "chatId": "@payload.id"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "action": "NEW_CHAT_CLICKED",
+                              "aria-label": "@config.newChatLabel",
+                              "icon": "message-square-plus",
+                              "label": "@config.newChatLabel",
+                              "size": "sm",
+                              "type": "button",
+                              "variant": "secondary"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "OPEN_CHATS_CLICKED",
+                                  "aria-label": "@config.chatsLabel",
+                                  "label": "@config.chatsLabel",
+                                  "size": "sm",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "action": "OPEN_MEMORY_CLICKED",
+                                  "aria-label": "@config.memoryLabel",
+                                  "label": "@config.memoryLabel",
+                                  "size": "sm",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "children": [
+                                    "array/map",
+                                    "@config.links",
+                                    [
+                                      "fn",
+                                      "item",
+                                      {
+                                        "href": "@item.href",
+                                        "label": "@item.label",
+                                        "size": "sm",
+                                        "type": "button",
+                                        "variant": "ghost"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "className": "shrink-0",
+                              "direction": "horizontal",
+                              "gap": "none",
+                              "type": "stack"
+                            }
+                          ],
+                          "className": "shrink-0",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "between",
+                          "type": "stack",
+                          "wrap": true
+                        },
+                        {
+                          "activities": "@entity.entries",
+                          "className": "flex-1",
+                          "emptyTitle": "@config.emptyTitle",
+                          "idPrefix": "agent-conversation",
+                          "rawLlmPreferenceKey": "agent-conversation-raw-llm",
+                          "type": "agent-chat-feed",
+                          "working": "@entity.working"
+                        },
+                        {
+                          "placeholder": "@config.placeholder",
+                          "sendEvent": "ASK",
+                          "type": "chat-bar"
+                        }
+                      ],
+                      "className": "h-full min-h-0 flex-1",
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "CHAT_PICKED",
+                "eventId": "evt_01M42F8KA62N7K8D8M8ED9M9W4",
+                "from": "idle",
+                "guard": [
+                  "not",
+                  "@entity.working"
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "ASSISTANT_MEMORIES_REQUESTED",
+                    {}
+                  ]
+                ],
+                "event": "OPEN_MEMORY_CLICKED",
+                "eventId": "evt_01M42F8KA6ABZRF8QBHP1GKCGP",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "action": "BACK_TO_CHAT",
+                              "aria-label": "@config.backLabel",
+                              "icon": "arrow-left",
+                              "label": "@config.backLabel",
+                              "size": "sm",
+                              "type": "button",
+                              "variant": "ghost"
+                            },
+                            {
+                              "content": "@config.memoryLabel",
+                              "type": "typography",
+                              "variant": "h4"
+                            }
+                          ],
+                          "className": "shrink-0",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "emptyMessage": "@config.memoryEmptyTitle",
+                          "entity": "@payload.data",
+                          "fields": [],
+                          "gap": "sm",
+                          "renderItem": [
+                            "fn",
+                            "item",
+                            {
+                              "children": [
+                                {
+                                  "content": "@item.content",
+                                  "type": "typography",
+                                  "variant": "body"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": "@item.createdAt",
+                                  "format": "date",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "none",
+                              "type": "stack"
+                            }
+                          ],
+                          "type": "data-list"
+                        }
+                      ],
+                      "className": "h-full min-h-0 flex-1 overflow-y-auto",
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "MEMORIES_LISTED",
+                "eventId": "evt_01M42F8KA623G0Z6VCEA15JJT8",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "action": "NEW_CHAT_CLICKED",
+                              "aria-label": "@config.newChatLabel",
+                              "icon": "message-square-plus",
+                              "label": "@config.newChatLabel",
+                              "size": "sm",
+                              "type": "button",
+                              "variant": "secondary"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "OPEN_CHATS_CLICKED",
+                                  "aria-label": "@config.chatsLabel",
+                                  "label": "@config.chatsLabel",
+                                  "size": "sm",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "action": "OPEN_MEMORY_CLICKED",
+                                  "aria-label": "@config.memoryLabel",
+                                  "label": "@config.memoryLabel",
+                                  "size": "sm",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "children": [
+                                    "array/map",
+                                    "@config.links",
+                                    [
+                                      "fn",
+                                      "item",
+                                      {
+                                        "href": "@item.href",
+                                        "label": "@item.label",
+                                        "size": "sm",
+                                        "type": "button",
+                                        "variant": "ghost"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "className": "shrink-0",
+                              "direction": "horizontal",
+                              "gap": "none",
+                              "type": "stack"
+                            }
+                          ],
+                          "className": "shrink-0",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "between",
+                          "type": "stack",
+                          "wrap": true
+                        },
+                        {
+                          "activities": "@entity.entries",
+                          "className": "flex-1",
+                          "emptyTitle": "@config.emptyTitle",
+                          "idPrefix": "agent-conversation",
+                          "rawLlmPreferenceKey": "agent-conversation-raw-llm",
+                          "type": "agent-chat-feed",
+                          "working": "@entity.working"
+                        },
+                        {
+                          "placeholder": "@config.placeholder",
+                          "sendEvent": "ASK",
+                          "type": "chat-bar"
+                        }
+                      ],
+                      "className": "h-full min-h-0 flex-1",
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "BACK_TO_CHAT",
+                "eventId": "evt_01M42H05A3RD90XB7A33B3QETE",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.entries",
                     [
                       "array/append",
                       "@entity.entries",
@@ -1827,23 +3497,69 @@
                     {
                       "children": [
                         {
+                          "align": "center",
                           "children": [
-                            "array/map",
-                            "@config.links",
-                            [
-                              "fn",
-                              "item",
-                              {
-                                "href": "@item.href",
-                                "label": "@item.label",
-                                "type": "button",
-                                "variant": "ghost"
-                              }
-                            ]
+                            {
+                              "action": "NEW_CHAT_CLICKED",
+                              "aria-label": "@config.newChatLabel",
+                              "icon": "message-square-plus",
+                              "label": "@config.newChatLabel",
+                              "size": "sm",
+                              "type": "button",
+                              "variant": "secondary"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "OPEN_CHATS_CLICKED",
+                                  "aria-label": "@config.chatsLabel",
+                                  "label": "@config.chatsLabel",
+                                  "size": "sm",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "action": "OPEN_MEMORY_CLICKED",
+                                  "aria-label": "@config.memoryLabel",
+                                  "label": "@config.memoryLabel",
+                                  "size": "sm",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "children": [
+                                    "array/map",
+                                    "@config.links",
+                                    [
+                                      "fn",
+                                      "item",
+                                      {
+                                        "href": "@item.href",
+                                        "label": "@item.label",
+                                        "size": "sm",
+                                        "type": "button",
+                                        "variant": "ghost"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "className": "shrink-0",
+                              "direction": "horizontal",
+                              "gap": "none",
+                              "type": "stack"
+                            }
                           ],
+                          "className": "shrink-0",
                           "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack"
+                          "justify": "between",
+                          "type": "stack",
+                          "wrap": true
                         },
                         {
                           "activities": "@entity.entries",
@@ -1887,6 +3603,21 @@
             "name": "content",
             "required": true,
             "type": "string"
+          }
+        ],
+        "AgentChatRow": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "lastActiveAt",
+            "type": "number"
           }
         ],
         "AgentErrorEntry": [
@@ -2048,6 +3779,2679 @@
           {
             "name": "timestamp",
             "required": true,
+            "type": "number"
+          }
+        ],
+        "AgentMemoryRow": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "content",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "createdAt",
+            "type": "number"
+          }
+        ],
+        "AgentMessageEntry": [
+          {
+            "name": "type",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "role",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "content",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "required": true,
+            "type": "number"
+          }
+        ],
+        "AgentThreadRow": [
+          {
+            "name": "role",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "content",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "createdAt",
+            "type": "number"
+          }
+        ],
+        "AgentToolCallActivity": [
+          {
+            "name": "type",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "tool",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "type": "AgentToolKind"
+          },
+          {
+            "name": "argsText",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "isExecuting",
+            "type": "boolean"
+          }
+        ],
+        "AgentToolResultActivity": [
+          {
+            "name": "type",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "tool",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "type": "AgentToolKind"
+          },
+          {
+            "name": "success",
+            "required": true,
+            "type": "boolean"
+          },
+          {
+            "name": "detail",
+            "type": "string"
+          },
+          {
+            "name": "rows",
+            "type": "number"
+          },
+          {
+            "name": "resultText",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "required": true,
+            "type": "number"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "collection": "agentChats",
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Whose conversation this is (the real @user). The binding organism scopes @read to it.",
+            "name": "ownerId",
+            "required": true,
+            "synonyms": "user, owner, account",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "The conversation's first request, shown in the conversation list; empty until the first message.",
+            "name": "title",
+            "synonyms": "name, subject, topic",
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "description": "When the conversation started (ms).",
+            "name": "startedAt",
+            "synonyms": "created, opened",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "description": "When the conversation was last used (ms). The most recent one is the current conversation.",
+            "name": "lastActiveAt",
+            "synonyms": "last used, updated, recent",
+            "type": "number"
+          },
+          {
+            "default": "",
+            "intrinsic": true,
+            "name": "pendingMessage",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "intrinsic": true,
+            "name": "pendingReply",
+            "type": "string"
+          }
+        ],
+        "id": "ent_01M429JRCV2YV1V4KFNT8ASWTV",
+        "name": "AgentChat",
+        "persistence": "persistent"
+      },
+      "id": "orb_01M42BPQV808JRWSBJ1QD3EX7J",
+      "name": "AgentChatsOrbital",
+      "pages": [
+        {
+          "id": "pag_01M42BPQV8G845Q028D3JXY4TH",
+          "name": "AgentChatsPage",
+          "path": "/agent-session/chats",
+          "traits": [
+            {
+              "ref": "AgentChatList",
+              "refId": "trt_01M429JRCV6EG32JMMXDQM2BKJ"
+            },
+            {
+              "ref": "AgentChatKeeper",
+              "refId": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "ASSISTANT_CHATS_CHANGED"
+            },
+            {
+              "kind": "emit",
+              "resource": "ASSISTANT_CHATS_LOADED"
+            },
+            {
+              "kind": "emit",
+              "resource": "ASSISTANT_CHAT_OPENED"
+            },
+            {
+              "kind": "emit",
+              "resource": "ASSISTANT_REPLY_IN_CHAT"
+            },
+            {
+              "kind": "emit",
+              "resource": "ASSISTANT_SEND_IN_CHAT"
+            },
+            {
+              "kind": "emit",
+              "resource": "ASSISTANT_THREAD_FAILED"
+            },
+            {
+              "kind": "fetch",
+              "resource": "AgentChat"
+            },
+            {
+              "kind": "persist",
+              "resource": "AgentChat"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.pendingMessage"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.pendingReply"
+            }
+          ],
+          "emits": [
+            {
+              "description": "This conversation is now the current one (empty for none yet); AgentThread loads its messages.",
+              "event": "ASSISTANT_CHAT_OPENED",
+              "eventId": "evt_01M42AXGB6QG79WCGD4G200TND",
+              "payloadSchema": [
+                {
+                  "name": "chatId",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "internal"
+            },
+            {
+              "description": "The user's message, placed in the current conversation.",
+              "event": "ASSISTANT_SEND_IN_CHAT",
+              "eventId": "evt_01M42AXGB6AGV2HHXHY8B3AHW5",
+              "payloadSchema": [
+                {
+                  "name": "chatId",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "internal"
+            },
+            {
+              "description": "The assistant's answer, placed in the current conversation.",
+              "event": "ASSISTANT_REPLY_IN_CHAT",
+              "eventId": "evt_01M42AXGB6KR7AS28C2HQ4R9PZ",
+              "payloadSchema": [
+                {
+                  "name": "chatId",
+                  "type": "string"
+                },
+                {
+                  "name": "reply",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "internal"
+            },
+            {
+              "description": "A conversation was started, used or reopened; the conversation list refreshes.",
+              "event": "ASSISTANT_CHATS_CHANGED",
+              "eventId": "evt_01M42AXGB6WJACSA76BBADRBXE",
+              "scope": "external",
+              "synonyms": "conversations changed, history changed",
+              "tier": "domain"
+            },
+            {
+              "description": "A conversation could not be loaded or stored.",
+              "event": "ASSISTANT_THREAD_FAILED",
+              "eventId": "evt_01M42AXGB6SPYM11W6MTCY0SQW",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "The person's conversations, most recently used first.",
+              "event": "ASSISTANT_CHATS_LOADED",
+              "eventId": "evt_01M42F8KA6T30Z2R0J9DGDB1Q2",
+              "payloadSchema": [
+                {
+                  "entity": "AgentChatRow",
+                  "name": "data",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "title",
+                      "type": "string"
+                    },
+                    {
+                      "name": "lastActiveAt",
+                      "type": "number"
+                    }
+                  ],
+                  "required": true,
+                  "type": "[object]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "conversations, history",
+              "tier": "domain"
+            },
+            {
+              "event": "ChatsForList",
+              "eventId": "evt_01M42F8KA6SMX0FDVA2VS1NPJQ",
+              "payloadSchema": [
+                {
+                  "entity": "AgentChat",
+                  "name": "data",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "ownerId",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "title",
+                      "type": "string"
+                    },
+                    {
+                      "name": "startedAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "lastActiveAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "pendingMessage",
+                      "type": "string"
+                    },
+                    {
+                      "name": "pendingReply",
+                      "type": "string"
+                    }
+                  ],
+                  "type": "[object]"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            },
+            {
+              "event": "ChatsForHistory",
+              "eventId": "evt_01M42AXGB6FZ7DRFMHZM65HXAB",
+              "payloadSchema": [
+                {
+                  "entity": "AgentChat",
+                  "name": "data",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "ownerId",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "title",
+                      "type": "string"
+                    },
+                    {
+                      "name": "startedAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "lastActiveAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "pendingMessage",
+                      "type": "string"
+                    },
+                    {
+                      "name": "pendingReply",
+                      "type": "string"
+                    }
+                  ],
+                  "type": "[object]"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            },
+            {
+              "event": "ChatsForSend",
+              "eventId": "evt_01M42AXGB6VABQ0WV28SDQAXW2",
+              "payloadSchema": [
+                {
+                  "entity": "AgentChat",
+                  "name": "data",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "ownerId",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "title",
+                      "type": "string"
+                    },
+                    {
+                      "name": "startedAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "lastActiveAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "pendingMessage",
+                      "type": "string"
+                    },
+                    {
+                      "name": "pendingReply",
+                      "type": "string"
+                    }
+                  ],
+                  "type": "[object]"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            },
+            {
+              "event": "ChatsForReply",
+              "eventId": "evt_01M42AXGB6BQJAVR0XVMJTYR9K",
+              "payloadSchema": [
+                {
+                  "entity": "AgentChat",
+                  "name": "data",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "ownerId",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "title",
+                      "type": "string"
+                    },
+                    {
+                      "name": "startedAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "lastActiveAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "pendingMessage",
+                      "type": "string"
+                    },
+                    {
+                      "name": "pendingReply",
+                      "type": "string"
+                    }
+                  ],
+                  "type": "[object]"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            },
+            {
+              "event": "ChatsForSelect",
+              "eventId": "evt_01M42AXGB62XJ6G1WDJKSZA27R",
+              "payloadSchema": [
+                {
+                  "entity": "AgentChat",
+                  "name": "data",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "ownerId",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "title",
+                      "type": "string"
+                    },
+                    {
+                      "name": "startedAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "lastActiveAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "pendingMessage",
+                      "type": "string"
+                    },
+                    {
+                      "name": "pendingReply",
+                      "type": "string"
+                    }
+                  ],
+                  "type": "[object]"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            },
+            {
+              "description": "The current conversation exists and is marked active — payload is the AgentChat row.",
+              "event": "ChatReadyForSend",
+              "eventId": "evt_01M42AXGB6H065VD6BMHQ5R4PQ",
+              "payloadEntity": "AgentChat",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "ownerId",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "title",
+                  "type": "string"
+                },
+                {
+                  "name": "startedAt",
+                  "type": "number"
+                },
+                {
+                  "name": "lastActiveAt",
+                  "type": "number"
+                },
+                {
+                  "name": "pendingMessage",
+                  "type": "string"
+                },
+                {
+                  "name": "pendingReply",
+                  "type": "string"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            },
+            {
+              "description": "A new conversation started — payload is the AgentChat row.",
+              "event": "NewChatStarted",
+              "eventId": "evt_01M42AXGB6S8JPH777C8QN5CJ4",
+              "payloadEntity": "AgentChat",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "ownerId",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "title",
+                  "type": "string"
+                },
+                {
+                  "name": "startedAt",
+                  "type": "number"
+                },
+                {
+                  "name": "lastActiveAt",
+                  "type": "number"
+                },
+                {
+                  "name": "pendingMessage",
+                  "type": "string"
+                },
+                {
+                  "name": "pendingReply",
+                  "type": "string"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            },
+            {
+              "description": "A past conversation was reopened — payload is the AgentChat row.",
+              "event": "ChatSelected",
+              "eventId": "evt_01M42AXGB6RSEPF3JJVSD0VZ3T",
+              "payloadEntity": "AgentChat",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "ownerId",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "title",
+                  "type": "string"
+                },
+                {
+                  "name": "startedAt",
+                  "type": "number"
+                },
+                {
+                  "name": "lastActiveAt",
+                  "type": "number"
+                },
+                {
+                  "name": "pendingMessage",
+                  "type": "string"
+                },
+                {
+                  "name": "pendingReply",
+                  "type": "string"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            },
+            {
+              "event": "AgentChatsLoadFailed",
+              "eventId": "evt_01M42AXGB6BHK6CZVCHG1DNYJW",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "internal"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "pendingMessage",
+              "pendingReply"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "entityRefIds": {
+            "AgentChat": "ent_01M429JRCV2YV1V4KFNT8ASWTV"
+          },
+          "id": "trt_01M42AXGB6BAV5Z8KRHFCDQMQQ",
+          "linkedEntity": "AgentChat",
+          "linkedEntityId": "ent_01M429JRCV2YV1V4KFNT8ASWTV",
+          "listens": [
+            {
+              "event": "ASSISTANT_SEND",
+              "source": {
+                "kind": "any"
+              },
+              "triggers": "SEND",
+              "triggersId": "evt_01M42AXGB6YA8JDEF2K9SVWY4F"
+            },
+            {
+              "event": "ASSISTANT_HISTORY_REQUESTED",
+              "source": {
+                "kind": "any"
+              },
+              "triggers": "LOAD_HISTORY",
+              "triggersId": "evt_01M42AXGB62E9GKHP71YD7WB7X"
+            },
+            {
+              "event": "ASSISTANT_NEW_CHAT",
+              "eventId": "evt_01M429JRCV15NX6T9P8KEQN48D",
+              "source": {
+                "kind": "any"
+              },
+              "triggers": "NEW_CHAT",
+              "triggersId": "evt_01M42AXGB6P6KMYBP3KVHRJ1RV"
+            },
+            {
+              "event": "ASSISTANT_CHAT_SELECTED",
+              "eventId": "evt_01M429JRCV8FWNPGQDTJHFTEB0",
+              "source": {
+                "kind": "any"
+              },
+              "triggers": "SELECT_CHAT",
+              "triggersId": "evt_01M42AXGB61QHE03ME8ZK8XRB4"
+            },
+            {
+              "event": "ASSISTANT_REPLIED",
+              "source": {
+                "kind": "any"
+              },
+              "triggers": "REPLIED",
+              "triggersId": "evt_01M42AXGB6RZ31FP4M56835VN9"
+            },
+            {
+              "event": "ASSISTANT_CHATS_REQUESTED",
+              "source": {
+                "kind": "any"
+              },
+              "triggers": "LIST_CHATS",
+              "triggersId": "evt_01M42F8KA6FZ0FWZA08ME02A2J"
+            }
+          ],
+          "name": "AgentChatKeeper",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M42AXGB6NCSF7005KGBBX879",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "A conversation view opened; open the current conversation.",
+                "id": "evt_01M42AXGB62E9GKHP71YD7WB7X",
+                "key": "LOAD_HISTORY",
+                "name": "Load History"
+              },
+              {
+                "id": "evt_01M42AXGB6FZ7DRFMHZM65HXAB",
+                "key": "ChatsForHistory",
+                "name": "Chats for history",
+                "payloadSchema": [
+                  {
+                    "entity": "AgentChat",
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "startedAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "lastActiveAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "pendingMessage",
+                        "type": "string"
+                      },
+                      {
+                        "name": "pendingReply",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "description": "The user asked something; place it in the current conversation.",
+                "id": "evt_01M42AXGB6YA8JDEF2K9SVWY4F",
+                "key": "SEND",
+                "name": "Send",
+                "payloadSchema": [
+                  {
+                    "name": "message",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M42AXGB6VABQ0WV28SDQAXW2",
+                "key": "ChatsForSend",
+                "name": "Chats for send",
+                "payloadSchema": [
+                  {
+                    "entity": "AgentChat",
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "startedAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "lastActiveAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "pendingMessage",
+                        "type": "string"
+                      },
+                      {
+                        "name": "pendingReply",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "description": "The current conversation exists and is marked active — payload is the AgentChat row.",
+                "id": "evt_01M42AXGB6H065VD6BMHQ5R4PQ",
+                "key": "ChatReadyForSend",
+                "name": "Chat ready for send",
+                "payloadEntity": "AgentChat",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "ownerId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "title",
+                    "type": "string"
+                  },
+                  {
+                    "name": "startedAt",
+                    "type": "number"
+                  },
+                  {
+                    "name": "lastActiveAt",
+                    "type": "number"
+                  },
+                  {
+                    "name": "pendingMessage",
+                    "type": "string"
+                  },
+                  {
+                    "name": "pendingReply",
+                    "type": "string"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "description": "The assistant answered; place the answer in the current conversation.",
+                "id": "evt_01M42AXGB6RZ31FP4M56835VN9",
+                "key": "REPLIED",
+                "name": "Replied",
+                "payloadSchema": [
+                  {
+                    "name": "reply",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M42AXGB6BQJAVR0XVMJTYR9K",
+                "key": "ChatsForReply",
+                "name": "Chats for reply",
+                "payloadSchema": [
+                  {
+                    "entity": "AgentChat",
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "startedAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "lastActiveAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "pendingMessage",
+                        "type": "string"
+                      },
+                      {
+                        "name": "pendingReply",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "description": "Start a new conversation; the previous one stays in the list.",
+                "id": "evt_01M42AXGB6P6KMYBP3KVHRJ1RV",
+                "key": "NEW_CHAT",
+                "name": "New Chat"
+              },
+              {
+                "description": "A new conversation started — payload is the AgentChat row.",
+                "id": "evt_01M42AXGB6S8JPH777C8QN5CJ4",
+                "key": "NewChatStarted",
+                "name": "New chat started",
+                "payloadEntity": "AgentChat",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "ownerId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "title",
+                    "type": "string"
+                  },
+                  {
+                    "name": "startedAt",
+                    "type": "number"
+                  },
+                  {
+                    "name": "lastActiveAt",
+                    "type": "number"
+                  },
+                  {
+                    "name": "pendingMessage",
+                    "type": "string"
+                  },
+                  {
+                    "name": "pendingReply",
+                    "type": "string"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "description": "Reopen a past conversation and make it the current one.",
+                "id": "evt_01M42AXGB61QHE03ME8ZK8XRB4",
+                "key": "SELECT_CHAT",
+                "name": "Select Chat",
+                "payloadSchema": [
+                  {
+                    "name": "chatId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M42AXGB62XJ6G1WDJKSZA27R",
+                "key": "ChatsForSelect",
+                "name": "Chats for select",
+                "payloadSchema": [
+                  {
+                    "entity": "AgentChat",
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "startedAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "lastActiveAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "pendingMessage",
+                        "type": "string"
+                      },
+                      {
+                        "name": "pendingReply",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "description": "A past conversation was reopened — payload is the AgentChat row.",
+                "id": "evt_01M42AXGB6RSEPF3JJVSD0VZ3T",
+                "key": "ChatSelected",
+                "name": "Chat selected",
+                "payloadEntity": "AgentChat",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "ownerId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "title",
+                    "type": "string"
+                  },
+                  {
+                    "name": "startedAt",
+                    "type": "number"
+                  },
+                  {
+                    "name": "lastActiveAt",
+                    "type": "number"
+                  },
+                  {
+                    "name": "pendingMessage",
+                    "type": "string"
+                  },
+                  {
+                    "name": "pendingReply",
+                    "type": "string"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "description": "Send the person's conversations to the conversation list.",
+                "id": "evt_01M42F8KA6FZ0FWZA08ME02A2J",
+                "key": "LIST_CHATS",
+                "name": "List Chats"
+              },
+              {
+                "id": "evt_01M42F8KA6SMX0FDVA2VS1NPJQ",
+                "key": "ChatsForList",
+                "name": "Chats for list",
+                "payloadSchema": [
+                  {
+                    "entity": "AgentChat",
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "startedAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "lastActiveAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "pendingMessage",
+                        "type": "string"
+                      },
+                      {
+                        "name": "pendingReply",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "id": "evt_01M42AXGB6BHK6CZVCHG1DNYJW",
+                "key": "AgentChatsLoadFailed",
+                "name": "AgentChat s load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "description": "This conversation is now the current one (empty for none yet); AgentThread loads its messages.",
+                "id": "evt_01M42AXGB6QG79WCGD4G200TND",
+                "key": "ASSISTANT_CHAT_OPENED",
+                "name": "Assistant Chat Opened",
+                "payloadSchema": [
+                  {
+                    "name": "chatId",
+                    "type": "string"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "description": "The user's message, placed in the current conversation.",
+                "id": "evt_01M42AXGB6AGV2HHXHY8B3AHW5",
+                "key": "ASSISTANT_SEND_IN_CHAT",
+                "name": "Assistant Send In Chat",
+                "payloadSchema": [
+                  {
+                    "name": "chatId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "message",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "description": "The assistant's answer, placed in the current conversation.",
+                "id": "evt_01M42AXGB6KR7AS28C2HQ4R9PZ",
+                "key": "ASSISTANT_REPLY_IN_CHAT",
+                "name": "Assistant Reply In Chat",
+                "payloadSchema": [
+                  {
+                    "name": "chatId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "reply",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "description": "A conversation was started, used or reopened; the conversation list refreshes.",
+                "id": "evt_01M42AXGB6WJACSA76BBADRBXE",
+                "key": "ASSISTANT_CHATS_CHANGED",
+                "name": "Assistant Chats Changed",
+                "synonyms": "conversations changed, history changed",
+                "tier": "domain"
+              },
+              {
+                "description": "A conversation could not be loaded or stored.",
+                "id": "evt_01M42AXGB6SPYM11W6MTCY0SQW",
+                "key": "ASSISTANT_THREAD_FAILED",
+                "name": "Assistant Thread Failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "The person's conversations, most recently used first.",
+                "id": "evt_01M42F8KA6T30Z2R0J9DGDB1Q2",
+                "key": "ASSISTANT_CHATS_LOADED",
+                "name": "Assistant Chats Loaded",
+                "payloadSchema": [
+                  {
+                    "entity": "AgentChatRow",
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "lastActiveAt",
+                        "type": "number"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
+                  }
+                ],
+                "synonyms": "conversations, history",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "ready"
+              }
+            ],
+            "transitions": [
+              {
+                "event": "INIT",
+                "eventId": "evt_01M42AXGB6NCSF7005KGBBX879",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentChat",
+                    {
+                      "emit": {
+                        "failure": "AgentChatsLoadFailed",
+                        "success": "ChatsForHistory"
+                      }
+                    }
+                  ]
+                ],
+                "event": "LOAD_HISTORY",
+                "eventId": "evt_01M42AXGB62E9GKHP71YD7WB7X",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "ASSISTANT_CHAT_OPENED",
+                    {
+                      "chatId": [
+                        "if",
+                        [
+                          ">",
+                          [
+                            "array/len",
+                            "@payload.data"
+                          ],
+                          0.0
+                        ],
+                        [
+                          "object/get",
+                          [
+                            "array/first",
+                            [
+                              "array/sort",
+                              "@payload.data",
+                              "lastActiveAt",
+                              "desc"
+                            ]
+                          ],
+                          "id"
+                        ],
+                        ""
+                      ]
+                    }
+                  ]
+                ],
+                "event": "ChatsForHistory",
+                "eventId": "evt_01M42AXGB6FZ7DRFMHZM65HXAB",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pendingMessage",
+                    "@payload.message"
+                  ],
+                  [
+                    "fetch",
+                    "AgentChat",
+                    {
+                      "emit": {
+                        "failure": "AgentChatsLoadFailed",
+                        "success": "ChatsForSend"
+                      }
+                    }
+                  ]
+                ],
+                "event": "SEND",
+                "eventId": "evt_01M42AXGB6YA8JDEF2K9SVWY4F",
+                "from": "ready",
+                "guard": [
+                  "not",
+                  [
+                    "=",
+                    [
+                      "str/default",
+                      "@payload.message",
+                      ""
+                    ],
+                    ""
+                  ]
+                ],
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "AgentChat",
+                    {
+                      "lastActiveAt": "@now",
+                      "ownerId": "@user.id",
+                      "startedAt": "@now",
+                      "title": "@entity.pendingMessage"
+                    },
+                    {
+                      "emit": {
+                        "failure": "AgentChatsLoadFailed",
+                        "success": "ChatReadyForSend"
+                      }
+                    }
+                  ]
+                ],
+                "event": "ChatsForSend",
+                "eventId": "evt_01M42AXGB6VABQ0WV28SDQAXW2",
+                "from": "ready",
+                "guard": [
+                  "=",
+                  [
+                    "array/len",
+                    "@payload.data"
+                  ],
+                  0.0
+                ],
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "AgentChat",
+                    {
+                      "id": [
+                        "object/get",
+                        [
+                          "array/first",
+                          [
+                            "array/sort",
+                            "@payload.data",
+                            "lastActiveAt",
+                            "desc"
+                          ]
+                        ],
+                        "id"
+                      ],
+                      "lastActiveAt": "@now",
+                      "ownerId": [
+                        "object/get",
+                        [
+                          "array/first",
+                          [
+                            "array/sort",
+                            "@payload.data",
+                            "lastActiveAt",
+                            "desc"
+                          ]
+                        ],
+                        "ownerId"
+                      ],
+                      "startedAt": [
+                        "object/get",
+                        [
+                          "array/first",
+                          [
+                            "array/sort",
+                            "@payload.data",
+                            "lastActiveAt",
+                            "desc"
+                          ]
+                        ],
+                        "startedAt"
+                      ],
+                      "title": [
+                        "if",
+                        [
+                          "=",
+                          [
+                            "str/default",
+                            [
+                              "object/get",
+                              [
+                                "array/first",
+                                [
+                                  "array/sort",
+                                  "@payload.data",
+                                  "lastActiveAt",
+                                  "desc"
+                                ]
+                              ],
+                              "title"
+                            ],
+                            ""
+                          ],
+                          ""
+                        ],
+                        "@entity.pendingMessage",
+                        [
+                          "object/get",
+                          [
+                            "array/first",
+                            [
+                              "array/sort",
+                              "@payload.data",
+                              "lastActiveAt",
+                              "desc"
+                            ]
+                          ],
+                          "title"
+                        ]
+                      ]
+                    },
+                    {
+                      "emit": {
+                        "failure": "AgentChatsLoadFailed",
+                        "success": "ChatReadyForSend"
+                      }
+                    }
+                  ]
+                ],
+                "event": "ChatsForSend",
+                "eventId": "evt_01M42AXGB6VABQ0WV28SDQAXW2",
+                "from": "ready",
+                "guard": [
+                  ">",
+                  [
+                    "array/len",
+                    "@payload.data"
+                  ],
+                  0.0
+                ],
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "ASSISTANT_SEND_IN_CHAT",
+                    {
+                      "chatId": "@payload.id",
+                      "message": "@entity.pendingMessage"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "ASSISTANT_CHATS_CHANGED",
+                    {}
+                  ]
+                ],
+                "event": "ChatReadyForSend",
+                "eventId": "evt_01M42AXGB6H065VD6BMHQ5R4PQ",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pendingReply",
+                    "@payload.reply"
+                  ],
+                  [
+                    "fetch",
+                    "AgentChat",
+                    {
+                      "emit": {
+                        "failure": "AgentChatsLoadFailed",
+                        "success": "ChatsForReply"
+                      }
+                    }
+                  ]
+                ],
+                "event": "REPLIED",
+                "eventId": "evt_01M42AXGB6RZ31FP4M56835VN9",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "ASSISTANT_REPLY_IN_CHAT",
+                    {
+                      "chatId": [
+                        "if",
+                        [
+                          ">",
+                          [
+                            "array/len",
+                            "@payload.data"
+                          ],
+                          0.0
+                        ],
+                        [
+                          "object/get",
+                          [
+                            "array/first",
+                            [
+                              "array/sort",
+                              "@payload.data",
+                              "lastActiveAt",
+                              "desc"
+                            ]
+                          ],
+                          "id"
+                        ],
+                        ""
+                      ],
+                      "reply": "@entity.pendingReply"
+                    }
+                  ]
+                ],
+                "event": "ChatsForReply",
+                "eventId": "evt_01M42AXGB6BQJAVR0XVMJTYR9K",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "AgentChat",
+                    {
+                      "lastActiveAt": "@now",
+                      "ownerId": "@user.id",
+                      "startedAt": "@now",
+                      "title": ""
+                    },
+                    {
+                      "emit": {
+                        "failure": "AgentChatsLoadFailed",
+                        "success": "NewChatStarted"
+                      }
+                    }
+                  ]
+                ],
+                "event": "NEW_CHAT",
+                "eventId": "evt_01M42AXGB6P6KMYBP3KVHRJ1RV",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "ASSISTANT_CHAT_OPENED",
+                    {
+                      "chatId": "@payload.id"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "ASSISTANT_CHATS_CHANGED",
+                    {}
+                  ]
+                ],
+                "event": "NewChatStarted",
+                "eventId": "evt_01M42AXGB6S8JPH777C8QN5CJ4",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentChat",
+                    {
+                      "emit": {
+                        "failure": "AgentChatsLoadFailed",
+                        "success": "ChatsForSelect"
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "id"
+                        ],
+                        "@payload.chatId"
+                      ]
+                    }
+                  ]
+                ],
+                "event": "SELECT_CHAT",
+                "eventId": "evt_01M42AXGB61QHE03ME8ZK8XRB4",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "AgentChat",
+                    {
+                      "id": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "id"
+                      ],
+                      "lastActiveAt": "@now",
+                      "ownerId": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "ownerId"
+                      ],
+                      "startedAt": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "startedAt"
+                      ],
+                      "title": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "title"
+                      ]
+                    },
+                    {
+                      "emit": {
+                        "failure": "AgentChatsLoadFailed",
+                        "success": "ChatSelected"
+                      }
+                    }
+                  ]
+                ],
+                "event": "ChatsForSelect",
+                "eventId": "evt_01M42AXGB62XJ6G1WDJKSZA27R",
+                "from": "ready",
+                "guard": [
+                  ">",
+                  [
+                    "array/len",
+                    "@payload.data"
+                  ],
+                  0.0
+                ],
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "ASSISTANT_CHAT_OPENED",
+                    {
+                      "chatId": "@payload.id"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "ASSISTANT_CHATS_CHANGED",
+                    {}
+                  ]
+                ],
+                "event": "ChatSelected",
+                "eventId": "evt_01M42AXGB6RSEPF3JJVSD0VZ3T",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentChat",
+                    {
+                      "emit": {
+                        "failure": "AgentChatsLoadFailed",
+                        "success": "ChatsForList"
+                      }
+                    }
+                  ]
+                ],
+                "event": "LIST_CHATS",
+                "eventId": "evt_01M42F8KA6FZ0FWZA08ME02A2J",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "ASSISTANT_CHATS_LOADED",
+                    {
+                      "data": [
+                        "array/map",
+                        [
+                          "array/sort",
+                          "@payload.data",
+                          "lastActiveAt",
+                          "desc"
+                        ],
+                        [
+                          "fn",
+                          "item",
+                          {
+                            "id": "@item.id",
+                            "lastActiveAt": "@item.lastActiveAt",
+                            "title": "@item.title"
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                ],
+                "event": "ChatsForList",
+                "eventId": "evt_01M42F8KA6SMX0FDVA2VS1NPJQ",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "ASSISTANT_THREAD_FAILED",
+                    {
+                      "error": "@payload.error"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ],
+                "event": "AgentChatsLoadFailed",
+                "eventId": "evt_01M42AXGB6BHK6CZVCHG1DNYJW",
+                "from": "ready",
+                "to": "ready"
+              }
+            ]
+          }
+        },
+        {
+          "category": "interaction",
+          "config": {
+            "newChatLabel": {
+              "default": "New conversation",
+              "label": "New conversation button",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "untitledLabel": {
+              "default": "New conversation",
+              "label": "Name of a conversation with no messages yet",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "ASSISTANT_CHAT_SELECTED"
+            },
+            {
+              "kind": "emit",
+              "resource": "ASSISTANT_NEW_CHAT"
+            },
+            {
+              "kind": "fetch",
+              "resource": "AgentChat"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "main"
+            }
+          ],
+          "emits": [
+            {
+              "description": "The user reopened a past conversation.",
+              "event": "ASSISTANT_CHAT_SELECTED",
+              "eventId": "evt_01M429JRCV8FWNPGQDTJHFTEB0",
+              "payloadSchema": [
+                {
+                  "name": "chatId",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "open conversation, switch conversation",
+              "tier": "domain"
+            },
+            {
+              "description": "The user started a new conversation.",
+              "event": "ASSISTANT_NEW_CHAT",
+              "eventId": "evt_01M429JRCV15NX6T9P8KEQN48D",
+              "scope": "external",
+              "synonyms": "new chat, new conversation, start over",
+              "tier": "domain"
+            },
+            {
+              "event": "AgentChatsLoaded",
+              "eventId": "evt_01M429JRCV4F0AQB34G2D8T0Q7",
+              "payloadSchema": [
+                {
+                  "entity": "AgentChat",
+                  "name": "data",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "ownerId",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "title",
+                      "type": "string"
+                    },
+                    {
+                      "name": "startedAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "lastActiveAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "pendingMessage",
+                      "type": "string"
+                    },
+                    {
+                      "name": "pendingReply",
+                      "type": "string"
+                    }
+                  ],
+                  "type": "[object]"
+                }
+              ],
+              "scope": "external",
+              "tier": "internal"
+            },
+            {
+              "event": "AgentChatsLoadFailed",
+              "eventId": "evt_01M429JRCVFFBMVKCMDJ17PDZS",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "internal"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "entityRefIds": {
+            "AgentChat": "ent_01M429JRCV2YV1V4KFNT8ASWTV"
+          },
+          "id": "trt_01M429JRCV6EG32JMMXDQM2BKJ",
+          "linkedEntity": "AgentChat",
+          "linkedEntityId": "ent_01M429JRCV2YV1V4KFNT8ASWTV",
+          "listens": [
+            {
+              "event": "ASSISTANT_CHATS_CHANGED",
+              "eventId": "evt_01M42AXGB6WJACSA76BBADRBXE",
+              "source": {
+                "kind": "any"
+              },
+              "triggers": "CHATS_CHANGED",
+              "triggersId": "evt_01M429JRCV04S2KAA9WMZ9HFYK"
+            }
+          ],
+          "name": "AgentChatList",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M429JRCVFQB2NB9XF5GES0QK",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "id": "evt_01M429JRCV4F0AQB34G2D8T0Q7",
+                "key": "AgentChatsLoaded",
+                "name": "AgentChat s loaded",
+                "payloadSchema": [
+                  {
+                    "entity": "AgentChat",
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "startedAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "lastActiveAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "pendingMessage",
+                        "type": "string"
+                      },
+                      {
+                        "name": "pendingReply",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "id": "evt_01M429JRCVFFBMVKCMDJ17PDZS",
+                "key": "AgentChatsLoadFailed",
+                "name": "AgentChat s load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "description": "A conversation was started, used or reopened.",
+                "id": "evt_01M429JRCV04S2KAA9WMZ9HFYK",
+                "key": "CHATS_CHANGED",
+                "name": "Chats Changed"
+              },
+              {
+                "description": "Reopen this conversation.",
+                "id": "evt_01M429JRCVQ2MRYA2GV7Q1DJR7",
+                "key": "OPEN_CHAT",
+                "name": "Open Chat",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "entity": "AgentChat",
+                    "name": "row",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "startedAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "lastActiveAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "pendingMessage",
+                        "type": "string"
+                      },
+                      {
+                        "name": "pendingReply",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "synonyms": "open, select, switch",
+                "tier": "presentation"
+              },
+              {
+                "description": "Start a new conversation.",
+                "id": "evt_01M429JRCVH33QHFSKCKGCBH7X",
+                "key": "NEW_CHAT_CLICKED",
+                "name": "New Chat Clicked",
+                "tier": "presentation"
+              },
+              {
+                "description": "The user reopened a past conversation.",
+                "id": "evt_01M429JRCV8FWNPGQDTJHFTEB0",
+                "key": "ASSISTANT_CHAT_SELECTED",
+                "name": "Assistant Chat Selected",
+                "payloadSchema": [
+                  {
+                    "name": "chatId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "open conversation, switch conversation",
+                "tier": "domain"
+              },
+              {
+                "description": "The user started a new conversation.",
+                "id": "evt_01M429JRCV15NX6T9P8KEQN48D",
+                "key": "ASSISTANT_NEW_CHAT",
+                "name": "Assistant New Chat",
+                "synonyms": "new chat, new conversation, start over",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "loading"
+              },
+              {
+                "name": "browsing"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentChat",
+                    {
+                      "emit": {
+                        "failure": "AgentChatsLoadFailed",
+                        "success": "AgentChatsLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "rows": 4.0,
+                      "type": "skeleton",
+                      "variant": "list"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M429JRCVFQB2NB9XF5GES0QK",
+                "from": "loading",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "action": "NEW_CHAT_CLICKED",
+                          "aria-label": "@config.newChatLabel",
+                          "className": "w-full",
+                          "icon": "message-square-plus",
+                          "label": "@config.newChatLabel",
+                          "type": "button",
+                          "variant": "secondary"
+                        },
+                        {
+                          "emptyDescription": "Your conversations with the assistant appear here.",
+                          "emptyIcon": "messages-square",
+                          "emptyTitle": "No conversations yet",
+                          "entity": [
+                            "array/sort",
+                            "@payload.data",
+                            "lastActiveAt",
+                            "desc"
+                          ],
+                          "itemClickEvent": "OPEN_CHAT",
+                          "renderItem": [
+                            "fn",
+                            "item",
+                            {
+                              "children": [
+                                {
+                                  "className": "truncate",
+                                  "content": [
+                                    "if",
+                                    [
+                                      "=",
+                                      [
+                                        "str/default",
+                                        "@item.title",
+                                        ""
+                                      ],
+                                      ""
+                                    ],
+                                    "@config.untitledLabel",
+                                    "@item.title"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "none",
+                              "type": "stack"
+                            }
+                          ],
+                          "type": "data-list",
+                          "variant": "compact"
+                        }
+                      ],
+                      "className": "h-full min-h-0 overflow-y-auto",
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "AgentChatsLoaded",
+                "eventId": "evt_01M429JRCV4F0AQB34G2D8T0Q7",
+                "from": "loading",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "title": "Couldn't load your conversations",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ],
+                "event": "AgentChatsLoadFailed",
+                "eventId": "evt_01M429JRCVFFBMVKCMDJ17PDZS",
+                "from": "loading",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentChat",
+                    {
+                      "emit": {
+                        "failure": "AgentChatsLoadFailed",
+                        "success": "AgentChatsLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "rows": 4.0,
+                      "type": "skeleton",
+                      "variant": "list"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M429JRCVFQB2NB9XF5GES0QK",
+                "from": "browsing",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentChat",
+                    {
+                      "emit": {
+                        "failure": "AgentChatsLoadFailed",
+                        "success": "AgentChatsLoaded"
+                      }
+                    }
+                  ]
+                ],
+                "event": "CHATS_CHANGED",
+                "eventId": "evt_01M429JRCV04S2KAA9WMZ9HFYK",
+                "from": "browsing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "action": "NEW_CHAT_CLICKED",
+                          "aria-label": "@config.newChatLabel",
+                          "className": "w-full",
+                          "icon": "message-square-plus",
+                          "label": "@config.newChatLabel",
+                          "type": "button",
+                          "variant": "secondary"
+                        },
+                        {
+                          "emptyDescription": "Your conversations with the assistant appear here.",
+                          "emptyIcon": "messages-square",
+                          "emptyTitle": "No conversations yet",
+                          "entity": [
+                            "array/sort",
+                            "@payload.data",
+                            "lastActiveAt",
+                            "desc"
+                          ],
+                          "itemClickEvent": "OPEN_CHAT",
+                          "renderItem": [
+                            "fn",
+                            "item",
+                            {
+                              "children": [
+                                {
+                                  "className": "truncate",
+                                  "content": [
+                                    "if",
+                                    [
+                                      "=",
+                                      [
+                                        "str/default",
+                                        "@item.title",
+                                        ""
+                                      ],
+                                      ""
+                                    ],
+                                    "@config.untitledLabel",
+                                    "@item.title"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "none",
+                              "type": "stack"
+                            }
+                          ],
+                          "type": "data-list",
+                          "variant": "compact"
+                        }
+                      ],
+                      "className": "h-full min-h-0 overflow-y-auto",
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "AgentChatsLoaded",
+                "eventId": "evt_01M429JRCV4F0AQB34G2D8T0Q7",
+                "from": "browsing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "title": "Couldn't load your conversations",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ],
+                "event": "AgentChatsLoadFailed",
+                "eventId": "evt_01M429JRCVFFBMVKCMDJ17PDZS",
+                "from": "browsing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "ASSISTANT_CHAT_SELECTED",
+                    {
+                      "chatId": "@payload.id"
+                    }
+                  ]
+                ],
+                "event": "OPEN_CHAT",
+                "eventId": "evt_01M429JRCVQ2MRYA2GV7Q1DJR7",
+                "from": "browsing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "ASSISTANT_NEW_CHAT",
+                    {}
+                  ]
+                ],
+                "event": "NEW_CHAT_CLICKED",
+                "eventId": "evt_01M429JRCVH33QHFSKCKGCBH7X",
+                "from": "browsing",
+                "to": "browsing"
+              }
+            ]
+          }
+        }
+      ],
+      "types": {
+        "AgentChatMessage": [
+          {
+            "name": "role",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "content",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "AgentChatRow": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "lastActiveAt",
+            "type": "number"
+          }
+        ],
+        "AgentErrorEntry": [
+          {
+            "name": "type",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "message",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "required": true,
+            "type": "number"
+          }
+        ],
+        "AgentLink": [
+          {
+            "name": "label",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "href",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "AgentLlmCall": [
+          {
+            "name": "service",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "provider",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "model",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "systemPrompt",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "userPrompt",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "toolCallsJson",
+            "type": "string"
+          },
+          {
+            "name": "attempt",
+            "type": "number"
+          },
+          {
+            "name": "durationMs",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "promptTokens",
+            "type": "number"
+          },
+          {
+            "name": "completionTokens",
+            "type": "number"
+          },
+          {
+            "name": "cachedPromptTokens",
+            "type": "number"
+          },
+          {
+            "name": "costUSD",
+            "type": "number"
+          }
+        ],
+        "AgentLlmResponseActivity": [
+          {
+            "name": "type",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "content",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "llm",
+            "properties": [
+              {
+                "name": "service",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "name": "provider",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "name": "model",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "name": "systemPrompt",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "name": "userPrompt",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "name": "toolCallsJson",
+                "type": "string"
+              },
+              {
+                "name": "attempt",
+                "type": "number"
+              },
+              {
+                "name": "durationMs",
+                "required": true,
+                "type": "number"
+              },
+              {
+                "name": "promptTokens",
+                "type": "number"
+              },
+              {
+                "name": "completionTokens",
+                "type": "number"
+              },
+              {
+                "name": "cachedPromptTokens",
+                "type": "number"
+              },
+              {
+                "name": "costUSD",
+                "type": "number"
+              }
+            ],
+            "type": "object"
+          },
+          {
+            "name": "timestamp",
+            "required": true,
+            "type": "number"
+          }
+        ],
+        "AgentMemoryRow": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "content",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "createdAt",
             "type": "number"
           }
         ],

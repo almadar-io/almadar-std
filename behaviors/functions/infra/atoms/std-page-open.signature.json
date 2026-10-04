@@ -1,0 +1,146 @@
+[
+  {
+    "organism": "std-page-open",
+    "orbital": "PageOpenOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/infra/atoms/std-page-open.ts",
+    "entities": [
+      {
+        "name": "PageOpenRecord",
+        "fields": [
+          {
+            "name": "opened",
+            "type": "number",
+            "required": false,
+            "description": "How many pages were opened",
+            "synonyms": "count"
+          },
+          {
+            "name": "errorMessage",
+            "type": "string",
+            "required": false,
+            "description": "Why the last page could not be opened; blank = none",
+            "synonyms": "error, failure reason"
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "PageOpen",
+        "emittedEvents": [
+          "TAB_OPENED",
+          "OPEN_CALL_FAILED",
+          "OPENED",
+          "OPEN_FAILED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "TAB_OPENED",
+            "direction": "emit",
+            "description": "The page service opened the tab",
+            "tier": "secondary"
+          },
+          {
+            "name": "OPEN_CALL_FAILED",
+            "direction": "emit",
+            "description": "The page service could not open the tab",
+            "tier": "secondary"
+          },
+          {
+            "name": "OPENED",
+            "direction": "emit",
+            "description": "The page is open in a new, focused tab",
+            "synonyms": "opened, launched, visited",
+            "tier": "primary"
+          },
+          {
+            "name": "OPEN_FAILED",
+            "direction": "emit",
+            "description": "The page could not be opened",
+            "tier": "primary"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "OPEN",
+            "direction": "listen",
+            "description": "Open `url` in a new, focused tab — wire it to something the person does"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "statusSlot",
+            "type": "slot",
+            "default": "main",
+            "label": "Status slot",
+            "description": "Where the atom shows its one-line status; an organism running it in the background sends it to `system`",
+            "synonyms": "status area, slot",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "PageOpenRecord",
+        "transitionEvents": [
+          "INIT",
+          "OPEN",
+          "OPEN_CALL_FAILED",
+          "TAB_OPENED"
+        ],
+        "definerKnobs": [],
+        "effectRow": [
+          {
+            "kind": "call-service",
+            "resource": "page.openTab"
+          },
+          {
+            "kind": "emit",
+            "resource": "OPENED"
+          },
+          {
+            "kind": "emit",
+            "resource": "OPEN_FAILED"
+          },
+          {
+            "kind": "render-ui",
+            "resolved": false,
+            "resource": "@config.statusSlot"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "toast"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.errorMessage"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.opened"
+          }
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "PageOpenPage",
+        "defaultPath": "/page-open",
+        "primaryEntity": "PageOpenRecord"
+      }
+    ],
+    "emittedEvents": [
+      "OPENED",
+      "OPEN_CALL_FAILED",
+      "OPEN_FAILED",
+      "TAB_OPENED"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

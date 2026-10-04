@@ -60,7 +60,7 @@ export interface StdLearnSampleAccumulatorConfig {
   bias?: number;
   /** Default: `10` */
   binCount?: number;
-  /** Default: `"#2563eb"` */
+  /** Default: `"series-1"` */
   color?: string;
   /** Default: `400` */
   height?: number;
@@ -68,6 +68,8 @@ export interface StdLearnSampleAccumulatorConfig {
   matchMode?: string;
   /** Default: `"uniform"` */
   sourceKind?: string;
+  /** Default: `""` */
+  summary?: string;
   /** Default: `"Sample Accumulator"` */
   title?: string;
   /** Default: `600` */

@@ -58,6 +58,9 @@ import {
   stdAgentSessionAgentSessionOrbital,
   StdAgentSessionAgentSessionOrbitalManifest,
   isStdAgentSessionAgentSessionOrbitalParams,
+  stdAgentSessionAgentChatsOrbital,
+  StdAgentSessionAgentChatsOrbitalManifest,
+  isStdAgentSessionAgentChatsOrbitalParams,
 } from './agent/atoms/std-agent-session.js';
 import {
   stdAgentToolCallAgentToolCallOrbital,
@@ -364,6 +367,26 @@ import {
   StdObjectiveBoard3dObjectiveBoard3DOrbitalManifest,
   isStdObjectiveBoard3dObjectiveBoard3DOrbitalParams,
 } from './ui/game/organisms/std-objective-board-3d.js';
+import {
+  stdPageOpenPageOpenOrbital,
+  StdPageOpenPageOpenOrbitalManifest,
+  isStdPageOpenPageOpenOrbitalParams,
+} from './infra/atoms/std-page-open.js';
+import {
+  stdPageSearchPageSearchOrbital,
+  StdPageSearchPageSearchOrbitalManifest,
+  isStdPageSearchPageSearchOrbitalParams,
+} from './infra/atoms/std-page-search.js';
+import {
+  stdPageTreatPageTreatOrbital,
+  StdPageTreatPageTreatOrbitalManifest,
+  isStdPageTreatPageTreatOrbitalParams,
+} from './infra/atoms/std-page-treat.js';
+import {
+  stdPageWatchPageWatchOrbital,
+  StdPageWatchPageWatchOrbitalManifest,
+  isStdPageWatchPageWatchOrbitalParams,
+} from './infra/atoms/std-page-watch.js';
 import {
   stdPaginationPagedItemOrbital,
   StdPaginationPagedItemOrbitalManifest,
@@ -728,6 +751,15 @@ REGISTRY_MUT.set('std-agent-session::AgentSessionOrbital', {
     return stdAgentSessionAgentSessionOrbital(p);
   },
   manifest: StdAgentSessionAgentSessionOrbitalManifest,
+});
+REGISTRY_MUT.set('std-agent-session::AgentChatsOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdAgentSessionAgentChatsOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-agent-session::AgentChatsOrbital');
+    }
+    return stdAgentSessionAgentChatsOrbital(p);
+  },
+  manifest: StdAgentSessionAgentChatsOrbitalManifest,
 });
 REGISTRY_MUT.set('std-agent-tool-call::AgentToolCallOrbital', {
   factory: (p: object): OrbitalDefinition => {
@@ -1277,6 +1309,42 @@ REGISTRY_MUT.set('std-objective-board-3d::ObjectiveBoard3DOrbital', {
     return stdObjectiveBoard3dObjectiveBoard3DOrbital(p);
   },
   manifest: StdObjectiveBoard3dObjectiveBoard3DOrbitalManifest,
+});
+REGISTRY_MUT.set('std-page-open::PageOpenOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdPageOpenPageOpenOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-page-open::PageOpenOrbital');
+    }
+    return stdPageOpenPageOpenOrbital(p);
+  },
+  manifest: StdPageOpenPageOpenOrbitalManifest,
+});
+REGISTRY_MUT.set('std-page-search::PageSearchOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdPageSearchPageSearchOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-page-search::PageSearchOrbital');
+    }
+    return stdPageSearchPageSearchOrbital(p);
+  },
+  manifest: StdPageSearchPageSearchOrbitalManifest,
+});
+REGISTRY_MUT.set('std-page-treat::PageTreatOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdPageTreatPageTreatOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-page-treat::PageTreatOrbital');
+    }
+    return stdPageTreatPageTreatOrbital(p);
+  },
+  manifest: StdPageTreatPageTreatOrbitalManifest,
+});
+REGISTRY_MUT.set('std-page-watch::PageWatchOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdPageWatchPageWatchOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-page-watch::PageWatchOrbital');
+    }
+    return stdPageWatchPageWatchOrbital(p);
+  },
+  manifest: StdPageWatchPageWatchOrbitalManifest,
 });
 REGISTRY_MUT.set('std-pagination::PagedItemOrbital', {
   factory: (p: object): OrbitalDefinition => {

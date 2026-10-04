@@ -65,13 +65,18 @@
         "name": "AgentMemoryRecall",
         "emittedEvents": [
           "RECALLED",
+          "ASSISTANT_MEMORIES_LOADED",
+          "MemoriesForList",
+          "MemoryListFailed",
           "MEMORY_STORED",
           "AgentMemoriesLoadFailed",
           "MemoriesForRecall",
           "MemoryEmbedded",
           "MemoryEmbedFailed"
         ],
-        "listenedEvents": [],
+        "listenedEvents": [
+          "ASSISTANT_MEMORIES_REQUESTED"
+        ],
         "events": [
           {
             "name": "RECALLED",
@@ -79,6 +84,23 @@
             "description": "The conversation, with what the assistant remembers that is closest to its last turn.",
             "synonyms": "recalled, remembered, context ready",
             "tier": "domain"
+          },
+          {
+            "name": "ASSISTANT_MEMORIES_LOADED",
+            "direction": "emit",
+            "description": "What the assistant remembers for this person, newest first (empty when nothing is, or the list could not load).",
+            "synonyms": "memories, what I remember",
+            "tier": "domain"
+          },
+          {
+            "name": "MemoriesForList",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "MemoryListFailed",
+            "direction": "emit",
+            "tier": "internal"
           },
           {
             "name": "MEMORY_STORED",
@@ -112,6 +134,11 @@
             "direction": "listen"
           },
           {
+            "name": "LIST",
+            "direction": "listen",
+            "description": "List what the assistant remembers for this person."
+          },
+          {
             "name": "RECALL",
             "direction": "listen",
             "description": "Recall what is relevant to this conversation's last turn."
@@ -137,10 +164,13 @@
         "transitionEvents": [
           "AgentMemoriesLoadFailed",
           "INIT",
+          "LIST",
           "MEMORY_STORED",
+          "MemoriesForList",
           "MemoriesForRecall",
           "MemoryEmbedFailed",
           "MemoryEmbedded",
+          "MemoryListFailed",
           "RECALL",
           "REMEMBER"
         ],
@@ -159,6 +189,10 @@
           {
             "kind": "call-service",
             "resource": "llm.embed"
+          },
+          {
+            "kind": "emit",
+            "resource": "ASSISTANT_MEMORIES_LOADED"
           },
           {
             "kind": "emit",
@@ -265,15 +299,19 @@
       }
     ],
     "emittedEvents": [
+      "ASSISTANT_MEMORIES_LOADED",
       "AgentMemoriesLoadFailed",
       "AgentMemoriesLoaded",
       "MEMORY_STORED",
+      "MemoriesForList",
       "MemoriesForRecall",
       "MemoryEmbedFailed",
       "MemoryEmbedded",
+      "MemoryListFailed",
       "RECALLED"
     ],
     "listenedEvents": [
+      "ASSISTANT_MEMORIES_REQUESTED",
       "MEMORY_STORED"
     ],
     "exposure": "both",

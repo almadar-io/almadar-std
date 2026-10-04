@@ -1,0 +1,867 @@
+{
+  "description": "std-page-search — runs one search on a site in a background tab: opens `searchUrl` with the query as the `queryParam` parameter, reads up to `maxResults` elements matching `resultSelector` (waiting up to `waitMs` for the results to appear), closes the tab, and reports RESULTS with the fields read from each. One search at a time: SEARCH is accepted again once RESULTS or SEARCH_FAILED is reported. It never clicks anything. Needs a host with the `page` service (a browser extension with access to the search pages).",
+  "ledger": {
+    "entries": {
+      "ent_01M431PMYFFV3AXQCTDF8PDBSK": {
+        "bakedName": "PageSearchRecord",
+        "curName": "PageSearchRecord",
+        "id": "ent_01M431PMYFFV3AXQCTDF8PDBSK",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01M431PMYF0GMPGSCESN3GPAVD": {
+        "bakedName": "TAB_OPENED",
+        "curName": "TAB_OPENED",
+        "id": "evt_01M431PMYF0GMPGSCESN3GPAVD",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M431PMYFCQ3KGNQ8M6PR63XH",
+        "renames": []
+      },
+      "evt_01M431PMYF3XJS2JVHD73VS0NB": {
+        "bakedName": "RESULTS_READ",
+        "curName": "RESULTS_READ",
+        "id": "evt_01M431PMYF3XJS2JVHD73VS0NB",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M431PMYFCQ3KGNQ8M6PR63XH",
+        "renames": []
+      },
+      "evt_01M431PMYF43RSRVDHQVS7T6ZS": {
+        "bakedName": "SEARCH",
+        "curName": "SEARCH",
+        "id": "evt_01M431PMYF43RSRVDHQVS7T6ZS",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M431PMYFCQ3KGNQ8M6PR63XH",
+        "renames": []
+      },
+      "evt_01M431PMYF7T08MQPSJ2EHXT1V": {
+        "bakedName": "SEARCH_FAILED",
+        "curName": "SEARCH_FAILED",
+        "id": "evt_01M431PMYF7T08MQPSJ2EHXT1V",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M431PMYFCQ3KGNQ8M6PR63XH",
+        "renames": []
+      },
+      "evt_01M431PMYFFDAVS6XHWBM6PMK7": {
+        "bakedName": "SEARCH_CALL_FAILED",
+        "curName": "SEARCH_CALL_FAILED",
+        "id": "evt_01M431PMYFFDAVS6XHWBM6PMK7",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M431PMYFCQ3KGNQ8M6PR63XH",
+        "renames": []
+      },
+      "evt_01M431PMYFGR7XGF0Q8JMF1QK9": {
+        "bakedName": "RESULTS",
+        "curName": "RESULTS",
+        "id": "evt_01M431PMYFGR7XGF0Q8JMF1QK9",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M431PMYFCQ3KGNQ8M6PR63XH",
+        "renames": []
+      },
+      "evt_01M431PMYFM6PAHXRH26X3ABMC": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M431PMYFM6PAHXRH26X3ABMC",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M431PMYFCQ3KGNQ8M6PR63XH",
+        "renames": []
+      },
+      "orb_01M431PMYFFWS5D4TGQ03C461C": {
+        "bakedName": "PageSearchOrbital",
+        "curName": "PageSearchOrbital",
+        "id": "orb_01M431PMYFFWS5D4TGQ03C461C",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01M431PMYFKQD11Q93ASZHEM7A": {
+        "bakedName": "PageSearchPage",
+        "curName": "PageSearchPage",
+        "id": "pag_01M431PMYFKQD11Q93ASZHEM7A",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M431PMYFCQ3KGNQ8M6PR63XH": {
+        "bakedName": "PageSearch",
+        "curName": "PageSearch",
+        "id": "trt_01M431PMYFCQ3KGNQ8M6PR63XH",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "std-page-search",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "default": "",
+            "description": "The search being run",
+            "name": "query",
+            "synonyms": "search term, terms, topic",
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "description": "The background tab running the search; 0 = none",
+            "name": "tab",
+            "synonyms": "tab id",
+            "type": "number"
+          },
+          {
+            "default": "",
+            "description": "Why the last search failed; blank = none",
+            "name": "errorMessage",
+            "synonyms": "error, failure reason",
+            "type": "string"
+          },
+          {
+            "default": "idle",
+            "description": "Whether a search is running",
+            "name": "status",
+            "synonyms": "state, busy",
+            "type": "string",
+            "values": [
+              "idle",
+              "searching"
+            ]
+          }
+        ],
+        "id": "ent_01M431PMYFFV3AXQCTDF8PDBSK",
+        "name": "PageSearchRecord",
+        "persistence": "runtime"
+      },
+      "id": "orb_01M431PMYFFWS5D4TGQ03C461C",
+      "name": "PageSearchOrbital",
+      "pages": [
+        {
+          "id": "pag_01M431PMYFKQD11Q93ASZHEM7A",
+          "name": "PageSearchPage",
+          "path": "/page-search",
+          "traits": [
+            {
+              "ref": "PageSearch",
+              "refId": "trt_01M431PMYFCQ3KGNQ8M6PR63XH"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "fields": {
+              "default": {},
+              "description": "Field name to how to read it from each result: `selector` (a descendant; absent reads the result itself), `attr` (an attribute; absent reads the text) and `resolve` (the attribute is a URL: return it absolute)",
+              "items": {
+                "properties": {
+                  "attr": {
+                    "name": "attr",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "resolve": {
+                    "name": "resolve",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "selector": {
+                    "name": "selector",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Fields",
+              "synonyms": "columns, properties, extract",
+              "tier": "domain",
+              "type": "Map<string,PageField>"
+            },
+            "maxResults": {
+              "default": 10.0,
+              "description": "Most results read from one search",
+              "label": "Results per search",
+              "synonyms": "limit, count, how many",
+              "tier": "policy",
+              "type": "number"
+            },
+            "queryParam": {
+              "default": "q",
+              "description": "Name of the URL parameter that carries the search terms",
+              "label": "Query parameter",
+              "synonyms": "query key, search parameter",
+              "tier": "domain",
+              "type": "string"
+            },
+            "resultSelector": {
+              "default": ".result",
+              "description": "CSS selector of one result on the results page",
+              "label": "Result selector",
+              "synonyms": "result, item, card, tile",
+              "tier": "domain",
+              "type": "string"
+            },
+            "resultsMatch": {
+              "default": "https://example.com/search*",
+              "description": "URL match pattern the results page lies in (Chrome match-pattern syntax); the search page must match it, and the extension asks for access to exactly these pages",
+              "label": "Results pages",
+              "synonyms": "site, url pattern, results url",
+              "tier": "domain",
+              "type": "string"
+            },
+            "searchUrl": {
+              "default": "https://example.com/search",
+              "description": "URL of the site's search results page, without the query",
+              "label": "Search page",
+              "synonyms": "search url, results page, endpoint",
+              "tier": "domain",
+              "type": "string"
+            },
+            "statusSlot": {
+              "default": "main",
+              "description": "Where the atom shows its one-line status; an organism running it in the background sends it to `system`",
+              "label": "Status slot",
+              "synonyms": "status area, slot",
+              "tier": "presentation",
+              "type": "slot"
+            },
+            "waitMs": {
+              "default": 8000.0,
+              "description": "How long to wait for the results page to load and its first result to appear",
+              "label": "Wait for results (ms)",
+              "synonyms": "timeout, wait, patience",
+              "tier": "infra",
+              "type": "number"
+            }
+          },
+          "effectRow": [
+            {
+              "kind": "call-service",
+              "resource": "page.closeTab"
+            },
+            {
+              "kind": "call-service",
+              "resource": "page.openTab"
+            },
+            {
+              "kind": "call-service",
+              "resource": "page.query"
+            },
+            {
+              "kind": "emit",
+              "resource": "RESULTS"
+            },
+            {
+              "kind": "emit",
+              "resource": "SEARCH_FAILED"
+            },
+            {
+              "kind": "render-ui",
+              "resolved": false,
+              "resource": "@config.statusSlot"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.errorMessage"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.query"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.status"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.tab"
+            }
+          ],
+          "emits": [
+            {
+              "description": "The background tab for the search is open",
+              "event": "TAB_OPENED",
+              "eventId": "evt_01M431PMYF0GMPGSCESN3GPAVD",
+              "payloadSchema": [
+                {
+                  "name": "tab",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "tier": "secondary"
+            },
+            {
+              "description": "The results were read from the search page",
+              "event": "RESULTS_READ",
+              "eventId": "evt_01M431PMYF3XJS2JVHD73VS0NB",
+              "payloadSchema": [
+                {
+                  "name": "tab",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "entity": "PageResult",
+                  "name": "elements",
+                  "properties": [
+                    {
+                      "name": "elementId",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "fields",
+                      "type": "Map<string,string>"
+                    }
+                  ],
+                  "required": true,
+                  "type": "[object]"
+                }
+              ],
+              "tier": "secondary"
+            },
+            {
+              "description": "Opening the search page or reading it failed",
+              "event": "SEARCH_CALL_FAILED",
+              "eventId": "evt_01M431PMYFFDAVS6XHWBM6PMK7",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "tier": "secondary"
+            },
+            {
+              "description": "What one search found: each result's element id and the fields read from it",
+              "event": "RESULTS",
+              "eventId": "evt_01M431PMYFGR7XGF0Q8JMF1QK9",
+              "payloadSchema": [
+                {
+                  "name": "query",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "entity": "PageResult",
+                  "name": "results",
+                  "properties": [
+                    {
+                      "name": "elementId",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "fields",
+                      "type": "Map<string,string>"
+                    }
+                  ],
+                  "required": true,
+                  "type": "[object]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "search results, found, hits",
+              "tier": "primary"
+            },
+            {
+              "description": "The search could not be run or read",
+              "event": "SEARCH_FAILED",
+              "eventId": "evt_01M431PMYF7T08MQPSJ2EHXT1V",
+              "payloadSchema": [
+                {
+                  "name": "query",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "error",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "primary"
+            }
+          ],
+          "entityRefIds": {
+            "PageSearchRecord": "ent_01M431PMYFFV3AXQCTDF8PDBSK"
+          },
+          "id": "trt_01M431PMYFCQ3KGNQ8M6PR63XH",
+          "linkedEntity": "PageSearchRecord",
+          "linkedEntityId": "ent_01M431PMYFFV3AXQCTDF8PDBSK",
+          "name": "PageSearch",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M431PMYFM6PAHXRH26X3ABMC",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Search the site for `query`",
+                "external": true,
+                "id": "evt_01M431PMYF43RSRVDHQVS7T6ZS",
+                "key": "SEARCH",
+                "name": "Search",
+                "payloadSchema": [
+                  {
+                    "name": "query",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "description": "The background tab for the search is open",
+                "id": "evt_01M431PMYF0GMPGSCESN3GPAVD",
+                "key": "TAB_OPENED",
+                "name": "Tab Opened",
+                "payloadSchema": [
+                  {
+                    "name": "tab",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "secondary"
+              },
+              {
+                "description": "The results were read from the search page",
+                "id": "evt_01M431PMYF3XJS2JVHD73VS0NB",
+                "key": "RESULTS_READ",
+                "name": "Results Read",
+                "payloadSchema": [
+                  {
+                    "name": "tab",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "entity": "PageResult",
+                    "name": "elements",
+                    "properties": [
+                      {
+                        "name": "elementId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "fields",
+                        "type": "Map<string,string>"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
+                  }
+                ],
+                "tier": "secondary"
+              },
+              {
+                "description": "Opening the search page or reading it failed",
+                "id": "evt_01M431PMYFFDAVS6XHWBM6PMK7",
+                "key": "SEARCH_CALL_FAILED",
+                "name": "Search Call Failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "secondary"
+              },
+              {
+                "description": "What one search found: each result's element id and the fields read from it",
+                "id": "evt_01M431PMYFGR7XGF0Q8JMF1QK9",
+                "key": "RESULTS",
+                "name": "Results",
+                "payloadSchema": [
+                  {
+                    "name": "query",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "entity": "PageResult",
+                    "name": "results",
+                    "properties": [
+                      {
+                        "name": "elementId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "fields",
+                        "type": "Map<string,string>"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
+                  }
+                ],
+                "synonyms": "search results, found, hits",
+                "tier": "primary"
+              },
+              {
+                "description": "The search could not be run or read",
+                "id": "evt_01M431PMYF7T08MQPSJ2EHXT1V",
+                "key": "SEARCH_FAILED",
+                "name": "Search Failed",
+                "payloadSchema": [
+                  {
+                    "name": "query",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "error",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "primary"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              },
+              {
+                "name": "searching"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "@config.statusSlot",
+                    {
+                      "content": "Ready to search",
+                      "role": "status",
+                      "type": "typography",
+                      "variant": "body"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M431PMYFM6PAHXRH26X3ABMC",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.query",
+                    "@payload.query"
+                  ],
+                  [
+                    "set",
+                    "@entity.tab",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "searching"
+                  ],
+                  [
+                    "call-service",
+                    "page",
+                    "openTab",
+                    {
+                      "active": false,
+                      "match": "@config.resultsMatch",
+                      "params": [
+                        "object/set",
+                        {},
+                        "@config.queryParam",
+                        "@payload.query"
+                      ],
+                      "url": "@config.searchUrl"
+                    },
+                    {
+                      "emit": {
+                        "failure": "SEARCH_CALL_FAILED",
+                        "success": "TAB_OPENED"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "@config.statusSlot",
+                    {
+                      "content": [
+                        "str/concat",
+                        "Searching for ",
+                        "@payload.query"
+                      ],
+                      "role": "status",
+                      "type": "typography",
+                      "variant": "body"
+                    }
+                  ]
+                ],
+                "event": "SEARCH",
+                "eventId": "evt_01M431PMYF43RSRVDHQVS7T6ZS",
+                "from": "idle",
+                "to": "searching"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "@config.statusSlot",
+                    {
+                      "content": [
+                        "str/concat",
+                        "Searching for ",
+                        "@entity.query"
+                      ],
+                      "role": "status",
+                      "type": "typography",
+                      "variant": "body"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M431PMYFM6PAHXRH26X3ABMC",
+                "from": "searching",
+                "to": "searching"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.tab",
+                    "@payload.tab"
+                  ],
+                  [
+                    "call-service",
+                    "page",
+                    "query",
+                    {
+                      "fields": "@config.fields",
+                      "limit": "@config.maxResults",
+                      "selector": "@config.resultSelector",
+                      "tab": "@payload.tab",
+                      "waitMs": "@config.waitMs"
+                    },
+                    {
+                      "emit": {
+                        "failure": "SEARCH_CALL_FAILED",
+                        "success": "RESULTS_READ"
+                      }
+                    }
+                  ]
+                ],
+                "event": "TAB_OPENED",
+                "eventId": "evt_01M431PMYF0GMPGSCESN3GPAVD",
+                "from": "searching",
+                "to": "searching"
+              },
+              {
+                "effects": [
+                  [
+                    "call-service",
+                    "page",
+                    "closeTab",
+                    {
+                      "tab": "@payload.tab"
+                    }
+                  ],
+                  [
+                    "set",
+                    "@entity.tab",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "emit",
+                    "RESULTS",
+                    {
+                      "query": "@entity.query",
+                      "results": "@payload.elements"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "@config.statusSlot",
+                    {
+                      "content": [
+                        "str/concat",
+                        "Searched for ",
+                        "@entity.query"
+                      ],
+                      "role": "status",
+                      "type": "typography",
+                      "variant": "body"
+                    }
+                  ]
+                ],
+                "event": "RESULTS_READ",
+                "eventId": "evt_01M431PMYF3XJS2JVHD73VS0NB",
+                "from": "searching",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "call-service",
+                    "page",
+                    "closeTab",
+                    {
+                      "tab": "@entity.tab"
+                    }
+                  ],
+                  [
+                    "set",
+                    "@entity.tab",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.errorMessage",
+                    "@payload.error"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "emit",
+                    "SEARCH_FAILED",
+                    {
+                      "error": "@payload.error",
+                      "query": "@entity.query"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "@config.statusSlot",
+                    {
+                      "content": [
+                        "str/concat",
+                        "Couldn't search: ",
+                        "@payload.error"
+                      ],
+                      "role": "status",
+                      "type": "typography",
+                      "variant": "body"
+                    }
+                  ]
+                ],
+                "event": "SEARCH_CALL_FAILED",
+                "eventId": "evt_01M431PMYFFDAVS6XHWBM6PMK7",
+                "from": "searching",
+                "guard": [
+                  ">",
+                  "@entity.tab",
+                  0.0
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.errorMessage",
+                    "@payload.error"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "emit",
+                    "SEARCH_FAILED",
+                    {
+                      "error": "@payload.error",
+                      "query": "@entity.query"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "@config.statusSlot",
+                    {
+                      "content": [
+                        "str/concat",
+                        "Couldn't search: ",
+                        "@payload.error"
+                      ],
+                      "role": "status",
+                      "type": "typography",
+                      "variant": "body"
+                    }
+                  ]
+                ],
+                "event": "SEARCH_CALL_FAILED",
+                "eventId": "evt_01M431PMYFFDAVS6XHWBM6PMK7",
+                "from": "searching",
+                "guard": [
+                  "==",
+                  "@entity.tab",
+                  0.0
+                ],
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ],
+      "types": {
+        "PageField": [
+          {
+            "name": "selector",
+            "type": "string"
+          },
+          {
+            "name": "attr",
+            "type": "string"
+          },
+          {
+            "name": "resolve",
+            "type": "boolean"
+          }
+        ],
+        "PageResult": [
+          {
+            "name": "elementId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "fields",
+            "type": "Map<string,string>"
+          }
+        ]
+      }
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}

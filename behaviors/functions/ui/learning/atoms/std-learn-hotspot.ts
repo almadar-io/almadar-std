@@ -72,11 +72,11 @@ export interface StdLearnHotspotLearnRoundCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnHotspotConfig {
-  /** Default: `"#f8fafc"` */
+  /** Default: `""` */
   backgroundColor?: string;
   /** Default: `380` */
   height?: number;
-  /** Default: `"#16a34a"` */
+  /** Default: `"success"` */
   hitColor?: string;
   /** Default: `""` */
   matchMode?: string;
@@ -86,8 +86,10 @@ export interface StdLearnHotspotConfig {
   prompts?: EntityRow[];
   /** Default: `"Try Again"` */
   retryLabel?: string;
-  /** Default: `[{"color":"#8b5cf6","id":"nucleus","label":"Nucleus","radius":34,"x":300,"y":170},{"color":"#3b82f6","id":"membrane","label":"Membrane","radius":26,"x":130,"y":120},{"color":"#f59e0b","id":"mitochondrion","label":"Mitochondrion","radius":24,"x":460,"y":120},{"color":"#16a34a","id":"ribosome","label":"Ribosome","radius":18,"x":200,"y":280},{"color":"#06b6d4","id":"vacuole","label":"Vacuole","radius":28,"x":420,"y":280}]` */
+  /** Default: `[{"color":"series-1","id":"nucleus","label":"Nucleus","radius":34,"x":300,"y":170},{"color":"series-2","id":"membrane","label":"Membrane","radius":26,"x":130,"y":120},{"color":"series-3","id":"mitochondrion","label":"Mitochondrion","radius":24,"x":460,"y":120},{"color":"series-4","id":"ribosome","label":"Ribosome","radius":18,"x":200,"y":280},{"color":"series-5","id":"vacuole","label":"Vacuole","radius":28,"x":420,"y":280}]` */
   shapes?: EntityRow[];
+  /** Default: `""` */
+  summary?: string;
   /** Default: `"Tap the Part"` */
   title?: string;
   /** Default: `600` */

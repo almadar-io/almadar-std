@@ -51,7 +51,7 @@ export interface StdLearnTreeTreeUpdatedPayload {
 export interface StdLearnTreeConfig {
   /** Default: `false` */
   autoRun?: boolean;
-  /** Default: `"#f8fafc"` */
+  /** Default: `""` */
   backgroundColor?: string;
   /** Default: `false` */
   balanced?: boolean;
@@ -61,6 +61,8 @@ export interface StdLearnTreeConfig {
   matchMode?: string;
   /** Default: `true` */
   showComparisons?: boolean;
+  /** Default: `""` */
+  summary?: string;
   /** Default: `"Ordered Tree"` */
   title?: string;
   /** Default: `"inorder"` */

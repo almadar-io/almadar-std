@@ -62,9 +62,9 @@ export interface StdLearnStepperConfig {
   axisMarginRight?: number;
   /** Default: `220` */
   axisY?: number;
-  /** Default: `"#f8fafc"` */
+  /** Default: `""` */
   backgroundColor?: string;
-  /** Default: `[{"category":"a","color":"#7c3aed","label":"Category A"},{"category":"b","color":"#15803d","label":"Category B"}]` */
+  /** Default: `[{"category":"a","color":"series-1","label":"Category A"},{"category":"b","color":"series-2","label":"Category B"}]` */
   categories?: EntityRow[];
   /** Default: `[{"category":"a","summary":"Viewed through Category A alone, only the stages tagged A are highlighted."},{"category":"b","summary":"Viewed through Category B alone, only the stages tagged B are highlighted."}]` */
   categorySummaries?: EntityRow[];
@@ -86,9 +86,11 @@ export interface StdLearnStepperConfig {
   stages?: EntityRow[];
   /** Default: `"Press Next to begin."` */
   startPrompt?: string;
+  /** Default: `""` */
+  summary?: string;
   /** Default: `"Stepper"` */
   title?: string;
-  /** Default: `"#d6d3d1"` */
+  /** Default: `"muted"` */
   unreachedColor?: string;
   /** Default: `640` */
   width?: number;

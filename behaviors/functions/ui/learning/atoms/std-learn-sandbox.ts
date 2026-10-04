@@ -49,17 +49,17 @@ export interface StdLearnSandboxSystemChangedPayload {
 export interface StdLearnSandboxConfig {
   /** Default: `false` */
   animate?: boolean;
-  /** Default: `"#f8fafc"` */
+  /** Default: `""` */
   backgroundColor?: string;
-  /** Default: `"#cbd5e1"` */
+  /** Default: `"muted"` */
   disabledColor?: string;
-  /** Default: `"#e2e8f0"` */
+  /** Default: `"guide"` */
   disabledEdgeColor?: string;
   /** Default: `[{"enabled":true,"id":"a","label":"Module A","weight":15,"x":100,"y":80},{"enabled":true,"id":"b","label":"Module B","weight":20,"x":300,"y":60},{"enabled":false,"id":"c","label":"Module C","weight":10,"x":500,"y":80},{"enabled":true,"id":"d","label":"Module D","weight":25,"x":200,"y":220},{"enabled":true,"id":"e","label":"Module E","weight":18,"x":420,"y":220}]` */
   elements?: EntityRow[];
-  /** Default: `"#2563eb"` */
+  /** Default: `"series-2"` */
   enabledColor?: string;
-  /** Default: `"#1e3a8a"` */
+  /** Default: `"ink"` */
   enabledEdgeColor?: string;
   /** Default: `320` */
   height?: number;
@@ -75,6 +75,8 @@ export interface StdLearnSandboxConfig {
   outcomeLabel?: string;
   /** Default: `"Reset"` */
   resetLabel?: string;
+  /** Default: `""` */
+  summary?: string;
   /** Default: `60` */
   threshold?: number;
   /** Default: `"System Sandbox"` */

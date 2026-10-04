@@ -39,6 +39,16 @@
             "required": false
           },
           {
+            "name": "speed",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "elapsedMs",
+            "type": "number",
+            "required": false
+          },
+          {
             "name": "cellShapes",
             "type": "array",
             "required": false
@@ -94,6 +104,18 @@
             "tier": "domain"
           },
           {
+            "name": "TOGGLE_RUN",
+            "direction": "listen",
+            "description": "Learner pressed the Play/Pause toggle — starts or freezes the evolution.",
+            "tier": "domain"
+          },
+          {
+            "name": "SPEED_SET",
+            "direction": "listen",
+            "description": "The learner picked a playback speed; generations advance that many times faster.",
+            "tier": "presentation"
+          },
+          {
             "name": "RUN",
             "direction": "listen",
             "description": "Learner started the evolution; the grid advances one generation per tick until Pause.",
@@ -136,8 +158,9 @@
           {
             "key": "backgroundColor",
             "type": "string",
-            "default": "#f8fafc",
+            "default": "",
             "label": "Background Color",
+            "description": "Canvas ground override; empty uses the theme's drawing ground.",
             "tier": "presentation"
           },
           {
@@ -180,7 +203,7 @@
           {
             "key": "lowColor",
             "type": "string",
-            "default": "#bfdbfe",
+            "default": "muted",
             "label": "Low Color",
             "tier": "presentation"
           },
@@ -195,21 +218,21 @@
           {
             "key": "midColor",
             "type": "string",
-            "default": "#60a5fa",
+            "default": "series-3",
             "label": "Mid Color",
             "tier": "presentation"
           },
           {
             "key": "offColor",
             "type": "string",
-            "default": "#e2e8f0",
+            "default": "fill",
             "label": "Off Color",
             "tier": "presentation"
           },
           {
             "key": "onColor",
             "type": "string",
-            "default": "#1d4ed8",
+            "default": "series-2",
             "label": "On Color",
             "tier": "presentation"
           },
@@ -257,6 +280,14 @@
             "tier": "presentation"
           },
           {
+            "key": "summary",
+            "type": "string",
+            "default": "",
+            "label": "Concept",
+            "description": "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line.",
+            "tier": "presentation"
+          },
+          {
             "key": "taskText",
             "type": "string",
             "default": "Tap cells to seed the world, then Run — or Step one generation at a time to see the rule at work.",
@@ -269,7 +300,7 @@
             "type": "string",
             "default": "Grid World",
             "label": "Title",
-            "description": "Title shown above the grid.",
+            "description": "The instrument's name, the header's one hero.",
             "tier": "presentation"
           },
           {
@@ -288,8 +319,10 @@
           "PAUSE",
           "RESET",
           "RUN",
+          "SPEED_SET",
           "STEP",
-          "TAP_CELL"
+          "TAP_CELL",
+          "TOGGLE_RUN"
         ],
         "definerKnobs": [],
         "entityRebindable": true,
@@ -300,8 +333,10 @@
             "aliveCount",
             "cellShapes",
             "cells",
+            "elapsedMs",
             "generation",
             "running",
+            "speed",
             "title"
           ]
         },
@@ -359,6 +394,11 @@
           },
           {
             "kind": "set",
+            "resource": "@entity.elapsedMs",
+            "site": "tick"
+          },
+          {
+            "kind": "set",
             "resource": "@entity.generation"
           },
           {
@@ -369,6 +409,10 @@
           {
             "kind": "set",
             "resource": "@entity.running"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.speed"
           },
           {
             "kind": "set",

@@ -82,7 +82,7 @@ export interface StdLearnGoalSeekConfig {
   gridStep?: number;
   /** Default: `400` */
   height?: number;
-  /** Default: `"#3b82f6"` */
+  /** Default: `"series-2"` */
   learnerColor?: string;
   /** Default: `"Yours"` */
   learnerLabel?: string;
@@ -114,11 +114,13 @@ export interface StdLearnGoalSeekConfig {
   showGrid?: boolean;
   /** Default: `true` */
   showLiveDistance?: boolean;
+  /** Default: `""` */
+  summary?: string;
   /** Default: `2.5` */
   targetA?: number;
   /** Default: `1.5` */
   targetB?: number;
-  /** Default: `"#94a3b8"` */
+  /** Default: `"guide"` */
   targetColor?: string;
   /** Default: `"Target"` */
   targetLabel?: string;

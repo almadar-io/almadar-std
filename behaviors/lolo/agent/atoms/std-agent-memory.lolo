@@ -5,6 +5,11 @@ type AgentChatMessage = {
   role : "user" | "assistant"
   content : string!
 }
+type AgentMemoryRow = {
+  id : string!
+  content : string!
+  createdAt : number
+}
 
 orbital AgentMemoryOrbital {
   type AgentMemoriesLoaded = Event { data : [AgentMemory] } "Fired when the stored memories finish loading"
@@ -38,6 +43,19 @@ orbital AgentMemoryOrbital {
         (set @entity.pendingQuery "")
       MEMORY_STORED -> ready
         (set @entity.pendingContent "")
+      LIST -> ready
+        (fetch AgentMemory {
+          emit: { failure: MemoryListFailed, success: MemoriesForList }
+        })
+      MemoriesForList -> ready
+        (emit ASSISTANT_MEMORIES_LOADED { data: (array/map (array/sort ?data createdAt desc) (fn item { id: @item.id, content: @item.content, createdAt: @item.createdAt })) })
+      MemoryListFailed -> ready
+        (emit ASSISTANT_MEMORIES_LOADED { data: [] })
+        (render-ui toast {
+          message: ?error
+          type: alert
+          variant: error
+        })
       RECALL -> recalling
         (set @entity.pendingMessages ?messages)
         (set @entity.pendingQuery (object/get (array/last ?messages) content))
@@ -103,11 +121,26 @@ orbital AgentMemoryOrbital {
     emits {
       RECALLED -> external {
         messages : [AgentChatMessage]!
-        context : string!
+        context : string
       }
         @description "The conversation, with what the assistant remembers that is closest to its last turn."
         @synonyms "recalled, remembered, context ready"
         @tier "domain"
+      ASSISTANT_MEMORIES_LOADED -> external {
+        data : [AgentMemoryRow]!
+      }
+        @description "What the assistant remembers for this person, newest first (empty when nothing is, or the list could not load)."
+        @synonyms "memories, what I remember"
+        @tier "domain"
+      MemoriesForList -> internal {
+        data : [AgentMemory]
+      }
+        @tier "internal"
+      MemoryListFailed -> internal {
+        error : string
+        code : string
+      }
+        @tier "internal"
       MEMORY_STORED -> external
         @description "A new memory was stored — payload is the created AgentMemory row itself."
         @synonyms "remembered, stored, saved"
@@ -132,6 +165,10 @@ orbital AgentMemoryOrbital {
     }
 
     listens {
+      *.ASSISTANT_MEMORIES_REQUESTED -> LIST
+      LIST {
+      }
+        @description "List what the assistant remembers for this person."
       RECALL {
         messages : [AgentChatMessage]!
       }

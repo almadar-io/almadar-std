@@ -1,0 +1,435 @@
+{
+  "description": "std-page-open — opens a URL in a new, focused browser tab and reports the tab. Wire OPEN to something the person does (a button or a row action), so a page only ever opens because they asked for it. Needs a host with the `page` service (a browser extension).",
+  "ledger": {
+    "entries": {
+      "ent_01M431PN0KSD8MG45T02AFJ6GT": {
+        "bakedName": "PageOpenRecord",
+        "curName": "PageOpenRecord",
+        "id": "ent_01M431PN0KSD8MG45T02AFJ6GT",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01M431PN0K02VCAD6HHBX0X79K": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M431PN0K02VCAD6HHBX0X79K",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M431PN0K5GPYNKXH8FTP89HZ",
+        "renames": []
+      },
+      "evt_01M431PN0K1N201KGMB6JVT1A6": {
+        "bakedName": "TAB_OPENED",
+        "curName": "TAB_OPENED",
+        "id": "evt_01M431PN0K1N201KGMB6JVT1A6",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M431PN0K5GPYNKXH8FTP89HZ",
+        "renames": []
+      },
+      "evt_01M431PN0KAX5H95KBFRFZWWHH": {
+        "bakedName": "OPENED",
+        "curName": "OPENED",
+        "id": "evt_01M431PN0KAX5H95KBFRFZWWHH",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M431PN0K5GPYNKXH8FTP89HZ",
+        "renames": []
+      },
+      "evt_01M431PN0KCRTDR7X5PZQ2D7C7": {
+        "bakedName": "OPEN_CALL_FAILED",
+        "curName": "OPEN_CALL_FAILED",
+        "id": "evt_01M431PN0KCRTDR7X5PZQ2D7C7",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M431PN0K5GPYNKXH8FTP89HZ",
+        "renames": []
+      },
+      "evt_01M431PN0KK13NVCTES9Q99811": {
+        "bakedName": "OPEN_FAILED",
+        "curName": "OPEN_FAILED",
+        "id": "evt_01M431PN0KK13NVCTES9Q99811",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M431PN0K5GPYNKXH8FTP89HZ",
+        "renames": []
+      },
+      "evt_01M431PN0KR69363MDB3QE1GCE": {
+        "bakedName": "OPEN",
+        "curName": "OPEN",
+        "id": "evt_01M431PN0KR69363MDB3QE1GCE",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M431PN0K5GPYNKXH8FTP89HZ",
+        "renames": []
+      },
+      "orb_01M431PN0KHS31XGK3K5Q8BMW8": {
+        "bakedName": "PageOpenOrbital",
+        "curName": "PageOpenOrbital",
+        "id": "orb_01M431PN0KHS31XGK3K5Q8BMW8",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01M431PN0KDN01JMAZAXMW6BKG": {
+        "bakedName": "PageOpenPage",
+        "curName": "PageOpenPage",
+        "id": "pag_01M431PN0KDN01JMAZAXMW6BKG",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M431PN0K5GPYNKXH8FTP89HZ": {
+        "bakedName": "PageOpen",
+        "curName": "PageOpen",
+        "id": "trt_01M431PN0K5GPYNKXH8FTP89HZ",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "std-page-open",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "default": 0.0,
+            "description": "How many pages were opened",
+            "name": "opened",
+            "synonyms": "count",
+            "type": "number"
+          },
+          {
+            "default": "",
+            "description": "Why the last page could not be opened; blank = none",
+            "name": "errorMessage",
+            "synonyms": "error, failure reason",
+            "type": "string"
+          }
+        ],
+        "id": "ent_01M431PN0KSD8MG45T02AFJ6GT",
+        "name": "PageOpenRecord",
+        "persistence": "runtime"
+      },
+      "id": "orb_01M431PN0KHS31XGK3K5Q8BMW8",
+      "name": "PageOpenOrbital",
+      "pages": [
+        {
+          "id": "pag_01M431PN0KDN01JMAZAXMW6BKG",
+          "name": "PageOpenPage",
+          "path": "/page-open",
+          "traits": [
+            {
+              "ref": "PageOpen",
+              "refId": "trt_01M431PN0K5GPYNKXH8FTP89HZ"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "statusSlot": {
+              "default": "main",
+              "description": "Where the atom shows its one-line status; an organism running it in the background sends it to `system`",
+              "label": "Status slot",
+              "synonyms": "status area, slot",
+              "tier": "presentation",
+              "type": "slot"
+            }
+          },
+          "effectRow": [
+            {
+              "kind": "call-service",
+              "resource": "page.openTab"
+            },
+            {
+              "kind": "emit",
+              "resource": "OPENED"
+            },
+            {
+              "kind": "emit",
+              "resource": "OPEN_FAILED"
+            },
+            {
+              "kind": "render-ui",
+              "resolved": false,
+              "resource": "@config.statusSlot"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.errorMessage"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.opened"
+            }
+          ],
+          "emits": [
+            {
+              "description": "The page service opened the tab",
+              "event": "TAB_OPENED",
+              "eventId": "evt_01M431PN0K1N201KGMB6JVT1A6",
+              "payloadSchema": [
+                {
+                  "name": "tab",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "tier": "secondary"
+            },
+            {
+              "description": "The page service could not open the tab",
+              "event": "OPEN_CALL_FAILED",
+              "eventId": "evt_01M431PN0KCRTDR7X5PZQ2D7C7",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "tier": "secondary"
+            },
+            {
+              "description": "The page is open in a new, focused tab",
+              "event": "OPENED",
+              "eventId": "evt_01M431PN0KAX5H95KBFRFZWWHH",
+              "payloadSchema": [
+                {
+                  "name": "tab",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "opened, launched, visited",
+              "tier": "primary"
+            },
+            {
+              "description": "The page could not be opened",
+              "event": "OPEN_FAILED",
+              "eventId": "evt_01M431PN0KK13NVCTES9Q99811",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "primary"
+            }
+          ],
+          "entityRefIds": {
+            "PageOpenRecord": "ent_01M431PN0KSD8MG45T02AFJ6GT"
+          },
+          "id": "trt_01M431PN0K5GPYNKXH8FTP89HZ",
+          "linkedEntity": "PageOpenRecord",
+          "linkedEntityId": "ent_01M431PN0KSD8MG45T02AFJ6GT",
+          "name": "PageOpen",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M431PN0K02VCAD6HHBX0X79K",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Open `url` in a new, focused tab — wire it to something the person does",
+                "external": true,
+                "id": "evt_01M431PN0KR69363MDB3QE1GCE",
+                "key": "OPEN",
+                "name": "Open",
+                "payloadSchema": [
+                  {
+                    "name": "url",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "description": "The page service opened the tab",
+                "id": "evt_01M431PN0K1N201KGMB6JVT1A6",
+                "key": "TAB_OPENED",
+                "name": "Tab Opened",
+                "payloadSchema": [
+                  {
+                    "name": "tab",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "secondary"
+              },
+              {
+                "description": "The page service could not open the tab",
+                "id": "evt_01M431PN0KCRTDR7X5PZQ2D7C7",
+                "key": "OPEN_CALL_FAILED",
+                "name": "Open Call Failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "secondary"
+              },
+              {
+                "description": "The page is open in a new, focused tab",
+                "id": "evt_01M431PN0KAX5H95KBFRFZWWHH",
+                "key": "OPENED",
+                "name": "Opened",
+                "payloadSchema": [
+                  {
+                    "name": "tab",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "synonyms": "opened, launched, visited",
+                "tier": "primary"
+              },
+              {
+                "description": "The page could not be opened",
+                "id": "evt_01M431PN0KK13NVCTES9Q99811",
+                "key": "OPEN_FAILED",
+                "name": "Open Failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "primary"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "ready"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "@config.statusSlot",
+                    {
+                      "content": "Ready to open pages",
+                      "role": "status",
+                      "type": "typography",
+                      "variant": "body"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M431PN0K02VCAD6HHBX0X79K",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "call-service",
+                    "page",
+                    "openTab",
+                    {
+                      "active": true,
+                      "url": "@payload.url"
+                    },
+                    {
+                      "emit": {
+                        "failure": "OPEN_CALL_FAILED",
+                        "success": "TAB_OPENED"
+                      }
+                    }
+                  ]
+                ],
+                "event": "OPEN",
+                "eventId": "evt_01M431PN0KR69363MDB3QE1GCE",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.opened",
+                    [
+                      "+",
+                      "@entity.opened",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "emit",
+                    "OPENED",
+                    {
+                      "tab": "@payload.tab"
+                    }
+                  ]
+                ],
+                "event": "TAB_OPENED",
+                "eventId": "evt_01M431PN0K1N201KGMB6JVT1A6",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.errorMessage",
+                    "@payload.error"
+                  ],
+                  [
+                    "emit",
+                    "OPEN_FAILED",
+                    {
+                      "error": "@payload.error"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "dismissible": true,
+                      "message": [
+                        "str/concat",
+                        "Couldn't open the page — ",
+                        "@payload.error"
+                      ],
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ],
+                "event": "OPEN_CALL_FAILED",
+                "eventId": "evt_01M431PN0KCRTDR7X5PZQ2D7C7",
+                "from": "ready",
+                "to": "ready"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}

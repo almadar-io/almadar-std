@@ -30,7 +30,7 @@ const ALIAS = 'LearnLiveSim';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnLiveSimEventKey = 'INIT' | 'MODE_SELECTED' | 'PAUSE' | 'RESET' | 'RUN' | 'RUN_TOGGLED' | 'SET_DAMPING' | 'SET_GRAVITY' | 'SIM_RESET';
+export type StdLearnLiveSimEventKey = 'INIT' | 'MODE_SELECTED' | 'PAUSE' | 'RESET' | 'RUN' | 'RUN_TOGGLED' | 'SET_DAMPING' | 'SET_GRAVITY' | 'SIM_RESET' | 'TOGGLE_RUN';
 
 /**
  * Payload shape for the `RUN_TOGGLED` event.
@@ -53,9 +53,9 @@ export interface StdLearnLiveSimSimResetPayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnLiveSimConfig {
-  /** Default: `"#f8fafc"` */
+  /** Default: `""` */
   backgroundColor?: string;
-  /** Default: `[{"color":"#2563eb","id":"ball-a","radius":14,"vx":4,"vy":0,"x":100,"y":60},{"color":"#16a34a","id":"ball-b","radius":18,"vx":-3,"vy":2,"x":260,"y":90},{"color":"#f59e0b","id":"ball-c","radius":11,"vx":2,"vy":-1,"x":420,"y":40}]` */
+  /** Default: `[{"color":"series-1","id":"ball-a","radius":14,"vx":4,"vy":0,"x":100,"y":60},{"color":"series-2","id":"ball-b","radius":18,"vx":-3,"vy":2,"x":260,"y":90},{"color":"series-3","id":"ball-c","radius":11,"vx":2,"vy":-1,"x":420,"y":40}]` */
   bodies?: EntityRow[];
   /** Default: `0.995` */
   damping?: number;
@@ -71,6 +71,8 @@ export interface StdLearnLiveSimConfig {
   running?: boolean;
   /** Default: `true` */
   showVelocity?: boolean;
+  /** Default: `""` */
+  summary?: string;
   /** Default: `"Live Sim"` */
   title?: string;
   /** Default: `8` */

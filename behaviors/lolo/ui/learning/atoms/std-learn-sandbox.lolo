@@ -68,20 +68,27 @@ orbital LearnSandboxOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: "Toggle elements to see how the system's total responds." },
-                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate },
-                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.elements (fn e { type: button, action: TOGGLE, actionPayload: { elementId: (object/get @e id) }, label: (if (array/includes @entity.enabledIds (object/get @e id)) (object/get @e label) (str/concat (object/get @e label) " — off")), variant: (if (array/includes @entity.enabledIds (object/get @e id)) "primary" "ghost"), size: sm })) },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, variant: (if @entity.holds "primary" "warning"), label: (if @entity.holds "Holds" "Does not hold") }
                   ] },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: badge, variant: (if @entity.holds "success" "danger"), label: (if @entity.holds "Holds" "Does Not Hold") },
-                    { type: typography, variant: body, content: @entity.readout }
-                  ] }
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate, keyMap: { KeyR: RESET } },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @config.elements (fn e { type: button, action: TOGGLE, actionPayload: { elementId: (object/get @e id) }, label: (if (array/includes @entity.enabledIds (object/get @e id)) (object/get @e label) (str/concat (object/get @e label) " — off")), variant: (if (array/includes @entity.enabledIds (object/get @e id)) "secondary" "ghost"), aria-pressed: (if (array/includes @entity.enabledIds (object/get @e id)) "true" "false") })) },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Total " @entity.total " of " @config.threshold) }
+                  ] },
+                { type: typography, variant: body, content: @entity.readout }
               ] }
           ]
         })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (render-ui main null)
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (set @entity.active true)
@@ -108,17 +115,20 @@ orbital LearnSandboxOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: "Toggle elements to see how the system's total responds." },
-                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate },
-                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.elements (fn e { type: button, action: TOGGLE, actionPayload: { elementId: (object/get @e id) }, label: (if (array/includes @entity.enabledIds (object/get @e id)) (object/get @e label) (str/concat (object/get @e label) " — off")), variant: (if (array/includes @entity.enabledIds (object/get @e id)) "primary" "ghost"), size: sm })) },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, variant: (if @entity.holds "primary" "warning"), label: (if @entity.holds "Holds" "Does not hold") }
                   ] },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: badge, variant: (if @entity.holds "success" "danger"), label: (if @entity.holds "Holds" "Does Not Hold") },
-                    { type: typography, variant: body, content: @entity.readout }
-                  ] }
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate, keyMap: { KeyR: RESET } },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @config.elements (fn e { type: button, action: TOGGLE, actionPayload: { elementId: (object/get @e id) }, label: (if (array/includes @entity.enabledIds (object/get @e id)) (object/get @e label) (str/concat (object/get @e label) " — off")), variant: (if (array/includes @entity.enabledIds (object/get @e id)) "secondary" "ghost"), aria-pressed: (if (array/includes @entity.enabledIds (object/get @e id)) "true" "false") })) },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Total " @entity.total " of " @config.threshold) }
+                  ] },
+                { type: typography, variant: body, content: @entity.readout }
               ] }
           ]
         })
@@ -146,17 +156,20 @@ orbital LearnSandboxOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: "Toggle elements to see how the system's total responds." },
-                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate },
-                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.elements (fn e { type: button, action: TOGGLE, actionPayload: { elementId: (object/get @e id) }, label: (if (array/includes @entity.enabledIds (object/get @e id)) (object/get @e label) (str/concat (object/get @e label) " — off")), variant: (if (array/includes @entity.enabledIds (object/get @e id)) "primary" "ghost"), size: sm })) },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, variant: (if @entity.holds "primary" "warning"), label: (if @entity.holds "Holds" "Does not hold") }
                   ] },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: badge, variant: (if @entity.holds "success" "danger"), label: (if @entity.holds "Holds" "Does Not Hold") },
-                    { type: typography, variant: body, content: @entity.readout }
-                  ] }
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate, keyMap: { KeyR: RESET } },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @config.elements (fn e { type: button, action: TOGGLE, actionPayload: { elementId: (object/get @e id) }, label: (if (array/includes @entity.enabledIds (object/get @e id)) (object/get @e label) (str/concat (object/get @e label) " — off")), variant: (if (array/includes @entity.enabledIds (object/get @e id)) "secondary" "ghost"), aria-pressed: (if (array/includes @entity.enabledIds (object/get @e id)) "true" "false") })) },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Total " @entity.total " of " @config.threshold) }
+                  ] },
+                { type: typography, variant: body, content: @entity.readout }
               ] }
           ]
         })
@@ -185,17 +198,20 @@ orbital LearnSandboxOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: "Toggle elements to see how the system's total responds." },
-                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate },
-                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.elements (fn e { type: button, action: TOGGLE, actionPayload: { elementId: (object/get @e id) }, label: (if (array/includes @entity.enabledIds (object/get @e id)) (object/get @e label) (str/concat (object/get @e label) " — off")), variant: (if (array/includes @entity.enabledIds (object/get @e id)) "primary" "ghost"), size: sm })) },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, variant: (if @entity.holds "primary" "warning"), label: (if @entity.holds "Holds" "Does not hold") }
                   ] },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: badge, variant: (if @entity.holds "success" "danger"), label: (if @entity.holds "Holds" "Does Not Hold") },
-                    { type: typography, variant: body, content: @entity.readout }
-                  ] }
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate, keyMap: { KeyR: RESET } },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @config.elements (fn e { type: button, action: TOGGLE, actionPayload: { elementId: (object/get @e id) }, label: (if (array/includes @entity.enabledIds (object/get @e id)) (object/get @e label) (str/concat (object/get @e label) " — off")), variant: (if (array/includes @entity.enabledIds (object/get @e id)) "secondary" "ghost"), aria-pressed: (if (array/includes @entity.enabledIds (object/get @e id)) "true" "false") })) },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Total " @entity.total " of " @config.threshold) }
+                  ] },
+                { type: typography, variant: body, content: @entity.readout }
               ] }
           ]
         })
@@ -243,6 +259,10 @@ orbital LearnSandboxOrbital {
         @label "Title"
         @description "Title shown above the instrument."
         @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what the system models (keep it under ~65 characters). Empty shows no line."
+        @tier "presentation"
       width : number = 640
         @label "Width"
         @description "Canvas width in pixels."
@@ -251,7 +271,7 @@ orbital LearnSandboxOrbital {
         @label "Height"
         @description "Canvas height in pixels."
         @tier "presentation"
-      backgroundColor : string = "#f8fafc"
+      backgroundColor : string = ""
         @label "Background Color"
         @tier "presentation"
       interactive : boolean = false
@@ -295,16 +315,16 @@ orbital LearnSandboxOrbital {
       nodeRadius : number = 34
         @label "Node Radius"
         @tier "presentation"
-      enabledColor : string = "#2563eb"
+      enabledColor : string = "series-2"
         @label "Enabled Node Color"
         @tier "presentation"
-      disabledColor : string = "#cbd5e1"
+      disabledColor : string = "muted"
         @label "Disabled Node Color"
         @tier "presentation"
-      enabledEdgeColor : string = "#1e3a8a"
+      enabledEdgeColor : string = "ink"
         @label "Enabled Edge Color"
         @tier "presentation"
-      disabledEdgeColor : string = "#e2e8f0"
+      disabledEdgeColor : string = "guide"
         @label "Disabled Edge Color"
         @tier "presentation"
       resetLabel : string = "Reset"

@@ -178,6 +178,16 @@
                   "required": false,
                   "type": "string"
                 },
+                "fillStyle": {
+                  "name": "fillStyle",
+                  "required": false,
+                  "type": "string"
+                },
+                "fillTone": {
+                  "name": "fillTone",
+                  "required": false,
+                  "type": "string"
+                },
                 "fontSize": {
                   "name": "fontSize",
                   "required": false,
@@ -253,8 +263,23 @@
                   "required": false,
                   "type": "number"
                 },
+                "stroke": {
+                  "name": "stroke",
+                  "required": false,
+                  "type": "string"
+                },
                 "text": {
                   "name": "text",
+                  "required": false,
+                  "type": "string"
+                },
+                "textSize": {
+                  "name": "textSize",
+                  "required": false,
+                  "type": "string"
+                },
+                "tone": {
+                  "name": "tone",
                   "required": false,
                   "type": "string"
                 },
@@ -363,7 +388,7 @@
               "type": "number"
             },
             "color": {
-              "default": "#2563eb",
+              "default": "series-1",
               "label": "Bar Color",
               "tier": "presentation",
               "type": "string"
@@ -389,9 +414,16 @@
               "tier": "domain",
               "type": "string"
             },
+            "summary": {
+              "default": "",
+              "description": "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line.",
+              "label": "Concept",
+              "tier": "presentation",
+              "type": "string"
+            },
             "title": {
               "default": "Sample Accumulator",
-              "description": "Title shown above the canvas.",
+              "description": "The instrument's name, the header's one hero.",
               "label": "Title",
               "tier": "presentation",
               "type": "string"
@@ -646,46 +678,100 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    [
+                                      ">",
+                                      "@entity.sampleCount",
+                                      0.0
+                                    ],
+                                    [
+                                      "str/concat",
+                                      "@entity.sampleCount",
+                                      " samples"
+                                    ],
+                                    "No samples"
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      ">",
+                                      "@entity.sampleCount",
+                                      0.0
+                                    ],
+                                    "primary",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "DRAW",
+                                  "icon": "plus",
                                   "label": "Draw",
                                   "type": "button",
                                   "variant": "primary"
                                 },
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "Reset",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Batch of ",
+                                    "@entity.batchSize"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "Batch size: ",
-                                "@entity.batchSize"
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "action": "SET_BATCH_SIZE",
-                              "max": 200.0,
-                              "min": 1.0,
-                              "showTooltip": true,
-                              "step": 1.0,
-                              "type": "range-slider",
-                              "value": "@entity.batchSize"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": false,
@@ -693,6 +779,10 @@
                               "gridStep": 0.1,
                               "height": "@config.height",
                               "interactive": false,
+                              "keyMap": {
+                                "KeyR": "RESET",
+                                "Space": "DRAW"
+                              },
                               "points": [],
                               "shapes": "@entity.shapes",
                               "showAxes": false,
@@ -704,6 +794,32 @@
                               "xMin": 0.0,
                               "yMax": 1.0,
                               "yMin": 0.0
+                            },
+                            {
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Batch size: ",
+                                    "@entity.batchSize"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "action": "SET_BATCH_SIZE",
+                                  "max": 200.0,
+                                  "min": 1.0,
+                                  "showTooltip": true,
+                                  "step": 1.0,
+                                  "type": "range-slider",
+                                  "value": "@entity.batchSize"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
                             },
                             {
                               "content": [
@@ -772,6 +888,43 @@
                   [
                     "set",
                     "@entity.active",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01M055GQ4DXV0ZNCQCEQFZNF1D",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@config.matchMode",
+                      ""
+                    ]
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
                     true
                   ],
                   [
@@ -822,46 +975,100 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    [
+                                      ">",
+                                      "@entity.sampleCount",
+                                      0.0
+                                    ],
+                                    [
+                                      "str/concat",
+                                      "@entity.sampleCount",
+                                      " samples"
+                                    ],
+                                    "No samples"
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      ">",
+                                      "@entity.sampleCount",
+                                      0.0
+                                    ],
+                                    "primary",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "DRAW",
+                                  "icon": "plus",
                                   "label": "Draw",
                                   "type": "button",
                                   "variant": "primary"
                                 },
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "Reset",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Batch of ",
+                                    "@entity.batchSize"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "Batch size: ",
-                                "@entity.batchSize"
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "action": "SET_BATCH_SIZE",
-                              "max": 200.0,
-                              "min": 1.0,
-                              "showTooltip": true,
-                              "step": 1.0,
-                              "type": "range-slider",
-                              "value": "@entity.batchSize"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": false,
@@ -869,6 +1076,10 @@
                               "gridStep": 0.1,
                               "height": "@config.height",
                               "interactive": false,
+                              "keyMap": {
+                                "KeyR": "RESET",
+                                "Space": "DRAW"
+                              },
                               "points": [],
                               "shapes": "@entity.shapes",
                               "showAxes": false,
@@ -880,6 +1091,32 @@
                               "xMin": 0.0,
                               "yMax": 1.0,
                               "yMin": 0.0
+                            },
+                            {
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Batch size: ",
+                                    "@entity.batchSize"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "action": "SET_BATCH_SIZE",
+                                  "max": 200.0,
+                                  "min": 1.0,
+                                  "showTooltip": true,
+                                  "step": 1.0,
+                                  "type": "range-slider",
+                                  "value": "@entity.batchSize"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
                             },
                             {
                               "content": [
@@ -1222,9 +1459,10 @@
                                 ]
                               ],
                               {
-                                "fill": "@config.color",
+                                "fillStyle": "solid",
+                                "fillTone": "@config.color",
                                 "height": "@barH",
-                                "lineWidth": 0.0,
+                                "tone": "@config.color",
                                 "type": "rect",
                                 "width": [
                                   "*",
@@ -1300,46 +1538,100 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    [
+                                      ">",
+                                      "@entity.sampleCount",
+                                      0.0
+                                    ],
+                                    [
+                                      "str/concat",
+                                      "@entity.sampleCount",
+                                      " samples"
+                                    ],
+                                    "No samples"
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      ">",
+                                      "@entity.sampleCount",
+                                      0.0
+                                    ],
+                                    "primary",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "DRAW",
+                                  "icon": "plus",
                                   "label": "Draw",
                                   "type": "button",
                                   "variant": "primary"
                                 },
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "Reset",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Batch of ",
+                                    "@entity.batchSize"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "Batch size: ",
-                                "@entity.batchSize"
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "action": "SET_BATCH_SIZE",
-                              "max": 200.0,
-                              "min": 1.0,
-                              "showTooltip": true,
-                              "step": 1.0,
-                              "type": "range-slider",
-                              "value": "@entity.batchSize"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": false,
@@ -1347,6 +1639,10 @@
                               "gridStep": 0.1,
                               "height": "@config.height",
                               "interactive": false,
+                              "keyMap": {
+                                "KeyR": "RESET",
+                                "Space": "DRAW"
+                              },
                               "points": [],
                               "shapes": "@entity.shapes",
                               "showAxes": false,
@@ -1358,6 +1654,32 @@
                               "xMin": 0.0,
                               "yMax": 1.0,
                               "yMin": 0.0
+                            },
+                            {
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Batch size: ",
+                                    "@entity.batchSize"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "action": "SET_BATCH_SIZE",
+                                  "max": 200.0,
+                                  "min": 1.0,
+                                  "showTooltip": true,
+                                  "step": 1.0,
+                                  "type": "range-slider",
+                                  "value": "@entity.batchSize"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
                             },
                             {
                               "content": [
@@ -1447,46 +1769,100 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    [
+                                      ">",
+                                      "@entity.sampleCount",
+                                      0.0
+                                    ],
+                                    [
+                                      "str/concat",
+                                      "@entity.sampleCount",
+                                      " samples"
+                                    ],
+                                    "No samples"
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      ">",
+                                      "@entity.sampleCount",
+                                      0.0
+                                    ],
+                                    "primary",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "DRAW",
+                                  "icon": "plus",
                                   "label": "Draw",
                                   "type": "button",
                                   "variant": "primary"
                                 },
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "Reset",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Batch of ",
+                                    "@entity.batchSize"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "Batch size: ",
-                                "@entity.batchSize"
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "action": "SET_BATCH_SIZE",
-                              "max": 200.0,
-                              "min": 1.0,
-                              "showTooltip": true,
-                              "step": 1.0,
-                              "type": "range-slider",
-                              "value": "@entity.batchSize"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": false,
@@ -1494,6 +1870,10 @@
                               "gridStep": 0.1,
                               "height": "@config.height",
                               "interactive": false,
+                              "keyMap": {
+                                "KeyR": "RESET",
+                                "Space": "DRAW"
+                              },
                               "points": [],
                               "shapes": "@entity.shapes",
                               "showAxes": false,
@@ -1505,6 +1885,32 @@
                               "xMin": 0.0,
                               "yMax": 1.0,
                               "yMin": 0.0
+                            },
+                            {
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Batch size: ",
+                                    "@entity.batchSize"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "action": "SET_BATCH_SIZE",
+                                  "max": 200.0,
+                                  "min": 1.0,
+                                  "showTooltip": true,
+                                  "step": 1.0,
+                                  "type": "range-slider",
+                                  "value": "@entity.batchSize"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
                             },
                             {
                               "content": [
@@ -1603,46 +2009,100 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    [
+                                      ">",
+                                      "@entity.sampleCount",
+                                      0.0
+                                    ],
+                                    [
+                                      "str/concat",
+                                      "@entity.sampleCount",
+                                      " samples"
+                                    ],
+                                    "No samples"
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      ">",
+                                      "@entity.sampleCount",
+                                      0.0
+                                    ],
+                                    "primary",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "DRAW",
+                                  "icon": "plus",
                                   "label": "Draw",
                                   "type": "button",
                                   "variant": "primary"
                                 },
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "Reset",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Batch of ",
+                                    "@entity.batchSize"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "content": [
-                                "str/concat",
-                                "Batch size: ",
-                                "@entity.batchSize"
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "action": "SET_BATCH_SIZE",
-                              "max": 200.0,
-                              "min": 1.0,
-                              "showTooltip": true,
-                              "step": 1.0,
-                              "type": "range-slider",
-                              "value": "@entity.batchSize"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": false,
@@ -1650,6 +2110,10 @@
                               "gridStep": 0.1,
                               "height": "@config.height",
                               "interactive": false,
+                              "keyMap": {
+                                "KeyR": "RESET",
+                                "Space": "DRAW"
+                              },
                               "points": [],
                               "shapes": "@entity.shapes",
                               "showAxes": false,
@@ -1661,6 +2125,32 @@
                               "xMin": 0.0,
                               "yMax": 1.0,
                               "yMin": 0.0
+                            },
+                            {
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Batch size: ",
+                                    "@entity.batchSize"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "action": "SET_BATCH_SIZE",
+                                  "max": 200.0,
+                                  "min": 1.0,
+                                  "showTooltip": true,
+                                  "step": 1.0,
+                                  "type": "range-slider",
+                                  "value": "@entity.batchSize"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
                             },
                             {
                               "content": [
@@ -1847,6 +2337,26 @@
           {
             "name": "opacity",
             "type": "number"
+          },
+          {
+            "name": "tone",
+            "type": "string"
+          },
+          {
+            "name": "fillTone",
+            "type": "string"
+          },
+          {
+            "name": "stroke",
+            "type": "string"
+          },
+          {
+            "name": "textSize",
+            "type": "string"
+          },
+          {
+            "name": "fillStyle",
+            "type": "string"
           }
         ],
         "SampleAccShapePoint": [

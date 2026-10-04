@@ -92,8 +92,14 @@ orbital CompareOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: @config.compareText },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (str/concat "Δ " (math/round @entity.delta 3)), variant: neutral }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
                 { type: stack, direction: horizontal, gap: lg, children: [
                     { type: stack, direction: vertical, gap: xs, children: [
                         { type: typography, variant: caption, content: (str/concat @config.leftLabel " — " @config.paramALabel ": " (math/round @entity.leftA 2)) },
@@ -108,11 +114,15 @@ orbital CompareOrbital {
                         { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.rightB, showTooltip: true, action: "SET_PARAM", actionPayload: { side: "right", which: "B" } }
                       ] }
                   ] },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
-                { type: typography, variant: body, content: (str/concat "At x=" (math/round @entity.xMid 2) ": " @config.leftLabel " = " (math/round @entity.leftMid 3) ", " @config.rightLabel " = " (math/round @entity.rightMid 3) ", Δ = " (math/round @entity.delta 3)) }
+                { type: typography, variant: body, content: @config.compareText },
+                { type: typography, variant: caption, color: muted, content: (str/concat "At x=" (math/round @entity.xMid 2) ": " @config.leftLabel " = " (math/round @entity.leftMid 3) ", " @config.rightLabel " = " (math/round @entity.rightMid 3) ", Δ = " (math/round @entity.delta 3)) }
               ] }
           ]
         })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (render-ui main null)
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (let (
@@ -173,8 +183,14 @@ orbital CompareOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: @config.compareText },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (str/concat "Δ " (math/round @entity.delta 3)), variant: neutral }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
                 { type: stack, direction: horizontal, gap: lg, children: [
                     { type: stack, direction: vertical, gap: xs, children: [
                         { type: typography, variant: caption, content: (str/concat @config.leftLabel " — " @config.paramALabel ": " (math/round @entity.leftA 2)) },
@@ -189,8 +205,8 @@ orbital CompareOrbital {
                         { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.rightB, showTooltip: true, action: "SET_PARAM", actionPayload: { side: "right", which: "B" } }
                       ] }
                   ] },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
-                { type: typography, variant: body, content: (str/concat "At x=" (math/round @entity.xMid 2) ": " @config.leftLabel " = " (math/round @entity.leftMid 3) ", " @config.rightLabel " = " (math/round @entity.rightMid 3) ", Δ = " (math/round @entity.delta 3)) }
+                { type: typography, variant: body, content: @config.compareText },
+                { type: typography, variant: caption, color: muted, content: (str/concat "At x=" (math/round @entity.xMid 2) ": " @config.leftLabel " = " (math/round @entity.leftMid 3) ", " @config.rightLabel " = " (math/round @entity.rightMid 3) ", Δ = " (math/round @entity.delta 3)) }
               ] }
           ]
         })
@@ -249,8 +265,14 @@ orbital CompareOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: @config.compareText },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (str/concat "Δ " (math/round @entity.delta 3)), variant: neutral }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
                 { type: stack, direction: horizontal, gap: lg, children: [
                     { type: stack, direction: vertical, gap: xs, children: [
                         { type: typography, variant: caption, content: (str/concat @config.leftLabel " — " @config.paramALabel ": " (math/round @entity.leftA 2)) },
@@ -265,8 +287,8 @@ orbital CompareOrbital {
                         { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.rightB, showTooltip: true, action: "SET_PARAM", actionPayload: { side: "right", which: "B" } }
                       ] }
                   ] },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
-                { type: typography, variant: body, content: (str/concat "At x=" (math/round @entity.xMid 2) ": " @config.leftLabel " = " (math/round @entity.leftMid 3) ", " @config.rightLabel " = " (math/round @entity.rightMid 3) ", Δ = " (math/round @entity.delta 3)) }
+                { type: typography, variant: body, content: @config.compareText },
+                { type: typography, variant: caption, color: muted, content: (str/concat "At x=" (math/round @entity.xMid 2) ": " @config.leftLabel " = " (math/round @entity.leftMid 3) ", " @config.rightLabel " = " (math/round @entity.rightMid 3) ", Δ = " (math/round @entity.delta 3)) }
               ] }
           ]
         })
@@ -309,6 +331,10 @@ orbital CompareOrbital {
       title : string = "Compare Two Settings"
         @label "Title"
         @description "Title shown above the canvas."
+        @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line."
         @tier "presentation"
       compareText : string = "Tune each side's parameters and watch how the two curves diverge."
         @label "Compare Text"
@@ -363,10 +389,10 @@ orbital CompareOrbital {
       rightBDefault : number = 1.5
         @label "Right B Default"
         @tier "domain"
-      leftColor : string = "#3b82f6"
+      leftColor : string = "series-1"
         @label "Left Color"
         @tier "presentation"
-      rightColor : string = "#f59e0b"
+      rightColor : string = "series-2"
         @label "Right Color"
         @tier "presentation"
       xMin : number = 0

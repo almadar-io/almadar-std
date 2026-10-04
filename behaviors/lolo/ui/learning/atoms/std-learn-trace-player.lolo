@@ -19,6 +19,8 @@ orbital LearnTracePlayerOrbital {
     title : string
     frameIndex : number = 0
     running : boolean = false
+    speed : number = 1
+    elapsedMs : number = 0
     bars : [TraceBar]
     frameLabel : string
     frameCaption : string
@@ -44,21 +46,37 @@ orbital LearnTracePlayerOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: progress-bar, value: (+ @entity.frameIndex 1), max: (array/len @config.frames), showPercentage: false, label: (str/concat "Frame " (str/concat "" (+ @entity.frameIndex 1)) " of " (str/concat "" (array/len @config.frames))) },
-                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.bars },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: PLAY, label: "Play", variant: primary, disabled: (if @entity.running true false) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: RESTART, label: "Restart", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: @entity.statusNote, variant: (if (== @entity.statusNote "Finished") "success" (if @entity.running "primary" "neutral")) }
                   ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (== @entity.statusNote "Finished") }),
+                    { type: button, action: RESTART, label: "Restart", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Frame " (+ @entity.frameIndex 1) " of " (array/len @config.frames)) }
+                  ] },
+                { type: progress-bar, value: (+ @entity.frameIndex 1), max: (array/len @config.frames), showPercentage: false },
+                { type: algorithm-canvas, keyMap: { Space: TOGGLE_RUN, KeyR: RESTART }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.bars },
                 { type: card, variant: bordered, padding: md, title: @entity.frameLabel, children: [
                     { type: typography, variant: body, content: @entity.frameCaption }
-                  ] },
-                { type: typography, variant: caption, content: (str/concat @entity.statusNote " · " (str/concat "" @config.tickMs) " ms/frame" (if @config.loop " · loops" "")) }
+                  ] }
               ] }
           ]
         })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (set @entity.running false)
+        (render-ui main null)
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (set @entity.active true)
@@ -75,18 +93,98 @@ orbital LearnTracePlayerOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: progress-bar, value: (+ @entity.frameIndex 1), max: (array/len @config.frames), showPercentage: false, label: (str/concat "Frame " (str/concat "" (+ @entity.frameIndex 1)) " of " (str/concat "" (array/len @config.frames))) },
-                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.bars },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: PLAY, label: "Play", variant: primary, disabled: (if @entity.running true false) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: RESTART, label: "Restart", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: @entity.statusNote, variant: (if (== @entity.statusNote "Finished") "success" (if @entity.running "primary" "neutral")) }
                   ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (== @entity.statusNote "Finished") }),
+                    { type: button, action: RESTART, label: "Restart", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Frame " (+ @entity.frameIndex 1) " of " (array/len @config.frames)) }
+                  ] },
+                { type: progress-bar, value: (+ @entity.frameIndex 1), max: (array/len @config.frames), showPercentage: false },
+                { type: algorithm-canvas, keyMap: { Space: TOGGLE_RUN, KeyR: RESTART }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.bars },
                 { type: card, variant: bordered, padding: md, title: @entity.frameLabel, children: [
                     { type: typography, variant: body, content: @entity.frameCaption }
+                  ] }
+              ] }
+          ]
+        })
+
+      TOGGLE_RUN -> idle when (== @entity.active true)
+        (set @entity.running (not @entity.running))
+        (set @entity.statusNote (if @entity.running "Playing" "Paused"))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: @entity.statusNote, variant: (if (== @entity.statusNote "Finished") "success" (if @entity.running "primary" "neutral")) }
                   ] },
-                { type: typography, variant: caption, content: (str/concat @entity.statusNote " · " (str/concat "" @config.tickMs) " ms/frame" (if @config.loop " · loops" "")) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (== @entity.statusNote "Finished") }),
+                    { type: button, action: RESTART, label: "Restart", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Frame " (+ @entity.frameIndex 1) " of " (array/len @config.frames)) }
+                  ] },
+                { type: progress-bar, value: (+ @entity.frameIndex 1), max: (array/len @config.frames), showPercentage: false },
+                { type: algorithm-canvas, keyMap: { Space: TOGGLE_RUN, KeyR: RESTART }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.bars },
+                { type: card, variant: bordered, padding: md, title: @entity.frameLabel, children: [
+                    { type: typography, variant: body, content: @entity.frameCaption }
+                  ] }
+              ] }
+          ]
+        })
+
+      SPEED_SET -> idle when (== @entity.active true)
+        (set @entity.speed ?speed)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: @entity.statusNote, variant: (if (== @entity.statusNote "Finished") "success" (if @entity.running "primary" "neutral")) }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (== @entity.statusNote "Finished") }),
+                    { type: button, action: RESTART, label: "Restart", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Frame " (+ @entity.frameIndex 1) " of " (array/len @config.frames)) }
+                  ] },
+                { type: progress-bar, value: (+ @entity.frameIndex 1), max: (array/len @config.frames), showPercentage: false },
+                { type: algorithm-canvas, keyMap: { Space: TOGGLE_RUN, KeyR: RESTART }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.bars },
+                { type: card, variant: bordered, padding: md, title: @entity.frameLabel, children: [
+                    { type: typography, variant: body, content: @entity.frameCaption }
+                  ] }
               ] }
           ]
         })
@@ -99,18 +197,29 @@ orbital LearnTracePlayerOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: progress-bar, value: (+ @entity.frameIndex 1), max: (array/len @config.frames), showPercentage: false, label: (str/concat "Frame " (str/concat "" (+ @entity.frameIndex 1)) " of " (str/concat "" (array/len @config.frames))) },
-                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.bars },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: PLAY, label: "Play", variant: primary, disabled: (if @entity.running true false) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: RESTART, label: "Restart", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: @entity.statusNote, variant: (if (== @entity.statusNote "Finished") "success" (if @entity.running "primary" "neutral")) }
                   ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (== @entity.statusNote "Finished") }),
+                    { type: button, action: RESTART, label: "Restart", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Frame " (+ @entity.frameIndex 1) " of " (array/len @config.frames)) }
+                  ] },
+                { type: progress-bar, value: (+ @entity.frameIndex 1), max: (array/len @config.frames), showPercentage: false },
+                { type: algorithm-canvas, keyMap: { Space: TOGGLE_RUN, KeyR: RESTART }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.bars },
                 { type: card, variant: bordered, padding: md, title: @entity.frameLabel, children: [
                     { type: typography, variant: body, content: @entity.frameCaption }
-                  ] },
-                { type: typography, variant: caption, content: (str/concat @entity.statusNote " · " (str/concat "" @config.tickMs) " ms/frame" (if @config.loop " · loops" "")) }
+                  ] }
               ] }
           ]
         })
@@ -124,18 +233,29 @@ orbital LearnTracePlayerOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: progress-bar, value: (+ @entity.frameIndex 1), max: (array/len @config.frames), showPercentage: false, label: (str/concat "Frame " (str/concat "" (+ @entity.frameIndex 1)) " of " (str/concat "" (array/len @config.frames))) },
-                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.bars },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: PLAY, label: "Play", variant: primary, disabled: (if @entity.running true false) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: RESTART, label: "Restart", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: @entity.statusNote, variant: (if (== @entity.statusNote "Finished") "success" (if @entity.running "primary" "neutral")) }
                   ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (== @entity.statusNote "Finished") }),
+                    { type: button, action: RESTART, label: "Restart", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Frame " (+ @entity.frameIndex 1) " of " (array/len @config.frames)) }
+                  ] },
+                { type: progress-bar, value: (+ @entity.frameIndex 1), max: (array/len @config.frames), showPercentage: false },
+                { type: algorithm-canvas, keyMap: { Space: TOGGLE_RUN, KeyR: RESTART }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.bars },
                 { type: card, variant: bordered, padding: md, title: @entity.frameLabel, children: [
                     { type: typography, variant: body, content: @entity.frameCaption }
-                  ] },
-                { type: typography, variant: caption, content: (str/concat @entity.statusNote " · " (str/concat "" @config.tickMs) " ms/frame" (if @config.loop " · loops" "")) }
+                  ] }
               ] }
           ]
         })
@@ -154,18 +274,29 @@ orbital LearnTracePlayerOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: progress-bar, value: (+ @entity.frameIndex 1), max: (array/len @config.frames), showPercentage: false, label: (str/concat "Frame " (str/concat "" (+ @entity.frameIndex 1)) " of " (str/concat "" (array/len @config.frames))) },
-                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.bars },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: PLAY, label: "Play", variant: primary, disabled: (if @entity.running true false) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: RESTART, label: "Restart", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: @entity.statusNote, variant: (if (== @entity.statusNote "Finished") "success" (if @entity.running "primary" "neutral")) }
                   ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (== @entity.statusNote "Finished") }),
+                    { type: button, action: RESTART, label: "Restart", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Frame " (+ @entity.frameIndex 1) " of " (array/len @config.frames)) }
+                  ] },
+                { type: progress-bar, value: (+ @entity.frameIndex 1), max: (array/len @config.frames), showPercentage: false },
+                { type: algorithm-canvas, keyMap: { Space: TOGGLE_RUN, KeyR: RESTART }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.bars },
                 { type: card, variant: bordered, padding: md, title: @entity.frameLabel, children: [
                     { type: typography, variant: body, content: @entity.frameCaption }
-                  ] },
-                { type: typography, variant: caption, content: (str/concat @entity.statusNote " · " (str/concat "" @config.tickMs) " ms/frame" (if @config.loop " · loops" "")) }
+                  ] }
               ] }
           ]
         })
@@ -173,37 +304,53 @@ orbital LearnTracePlayerOrbital {
     }
 
     ticks {
-      framePlayerTick every 500ms
+      framePlayerTick every 50ms
         when @entity.running
-        (set @entity.running (if (and (>= @entity.frameIndex (- (array/len @config.frames) 1)) (not @config.loop)) false @entity.running))
-        (set @entity.frameIndex (if (>= @entity.frameIndex (- (array/len @config.frames) 1)) (if @config.loop 0 @entity.frameIndex) (+ @entity.frameIndex 1)))
-        (set @entity.frameLabel (object/get (array/nth @config.frames @entity.frameIndex) label))
-        (set @entity.frameCaption (object/get (array/nth @config.frames @entity.frameIndex) caption))
-        (set @entity.bars (array/map (object/get (array/nth @config.frames @entity.frameIndex) values)
-          { value: @item, color: (if (array/includes (object/get (array/nth @config.frames @entity.frameIndex) highlights) @index) @config.highlightColor @config.baseColor), label: (str/concat "" @item) }))
-        (set @entity.statusNote (if @entity.running "Playing" (if (>= (+ @entity.frameIndex 1) (array/len @config.frames)) "Finished" "Paused")))
-        (render-ui main {
-          type: box
-          padding: md
-          children: [
-            { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: progress-bar, value: (+ @entity.frameIndex 1), max: (array/len @config.frames), showPercentage: false, label: (str/concat "Frame " (str/concat "" (+ @entity.frameIndex 1)) " of " (str/concat "" (array/len @config.frames))) },
-                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.bars },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: PLAY, label: "Play", variant: primary, disabled: (if @entity.running true false) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: RESTART, label: "Restart", variant: ghost }
-                  ] },
-                { type: card, variant: bordered, padding: md, title: @entity.frameLabel, children: [
-                    { type: typography, variant: body, content: @entity.frameCaption }
-                  ] },
-                { type: typography, variant: caption, content: (str/concat @entity.statusNote " · " (str/concat "" @config.tickMs) " ms/frame" (if @config.loop " · loops" "")) }
-              ] }
-          ]
-        })
-        (emit FRAME_ADVANCED { frameIndex: @entity.frameIndex, frameLabel: @entity.frameLabel })
-        (if (and (not @config.loop) (not @entity.running) (>= (+ @entity.frameIndex 1) (array/len @config.frames))) (emit TRACE_DONE { totalFrames: (array/len @config.frames) }) null)
+        (set @entity.elapsedMs (+ @entity.elapsedMs 50))
+        (when (>= (* @entity.elapsedMs @entity.speed) @config.tickMs)
+          (do
+            (set @entity.elapsedMs 0)
+            (set @entity.running (if (and (>= @entity.frameIndex (- (array/len @config.frames) 1)) (not @config.loop)) false @entity.running))
+            (set @entity.frameIndex (if (>= @entity.frameIndex (- (array/len @config.frames) 1)) (if @config.loop 0 @entity.frameIndex) (+ @entity.frameIndex 1)))
+            (set @entity.frameLabel (object/get (array/nth @config.frames @entity.frameIndex) label))
+            (set @entity.frameCaption (object/get (array/nth @config.frames @entity.frameIndex) caption))
+            (set @entity.bars (array/map (object/get (array/nth @config.frames @entity.frameIndex) values)
+              { value: @item, color: (if (array/includes (object/get (array/nth @config.frames @entity.frameIndex) highlights) @index) @config.highlightColor @config.baseColor), label: (str/concat "" @item) }))
+            (set @entity.statusNote (if @entity.running "Playing" (if (>= (+ @entity.frameIndex 1) (array/len @config.frames)) "Finished" "Paused")))
+            (render-ui main {
+              type: box
+              padding: md
+              children: [
+                { type: stack, direction: vertical, gap: md, children: [
+                    { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                        { type: stack, direction: vertical, gap: xs, children: [
+                            { type: typography, variant: h4, content: @entity.title },
+                            (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                          ] },
+                        { type: badge, label: @entity.statusNote, variant: (if (== @entity.statusNote "Finished") "success" (if @entity.running "primary" "neutral")) }
+                      ] },
+                    { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                        (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (== @entity.statusNote "Finished") }),
+                        { type: button, action: RESTART, label: "Restart", icon: "rotate-ccw", variant: ghost },
+                        { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                            { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                            { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                            { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                            { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                          ] },
+                        { type: typography, variant: caption, color: muted, content: (str/concat "Frame " (+ @entity.frameIndex 1) " of " (array/len @config.frames)) }
+                      ] },
+                    { type: progress-bar, value: (+ @entity.frameIndex 1), max: (array/len @config.frames), showPercentage: false },
+                    { type: algorithm-canvas, keyMap: { Space: TOGGLE_RUN, KeyR: RESTART }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.bars },
+                    { type: card, variant: bordered, padding: md, title: @entity.frameLabel, children: [
+                        { type: typography, variant: body, content: @entity.frameCaption }
+                      ] }
+                  ] }
+              ]
+            })
+            (emit FRAME_ADVANCED { frameIndex: @entity.frameIndex, frameLabel: @entity.frameLabel })
+            (if (and (not @config.loop) (not @entity.running) (>= (+ @entity.frameIndex 1) (array/len @config.frames))) (emit TRACE_DONE { totalFrames: (array/len @config.frames) }) null)
+          ))
     }
 
     listens {
@@ -212,6 +359,15 @@ orbital LearnTracePlayerOrbital {
       }
         @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
         @tier "domain"
+      TOGGLE_RUN {
+      }
+        @description "Learner pressed the Play/Pause toggle — starts or freezes the frame cursor."
+        @tier "domain"
+      SPEED_SET {
+        speed : number
+      }
+        @description "The learner picked a playback speed; frames advance that many times faster."
+        @tier "presentation"
       PLAY {
       }
         @description "Learner pressed Play — the frame cursor begins advancing on the tick until the last frame is reached or Pause is pressed."
@@ -249,7 +405,11 @@ orbital LearnTracePlayerOrbital {
         @tier "presentation"
       title : string = "Trace Player"
         @label "Title"
-        @description "Title shown above the instrument."
+        @description "The instrument's name, the header's one hero."
+        @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line."
         @tier "presentation"
       width : number = 600
         @label "Width"
@@ -259,14 +419,15 @@ orbital LearnTracePlayerOrbital {
         @label "Height"
         @description "Canvas height in pixels."
         @tier "presentation"
-      backgroundColor : string = "#f8fafc"
+      backgroundColor : string = ""
         @label "Background Color"
+        @description "Canvas ground override; empty uses the theme's drawing ground."
         @tier "presentation"
-      baseColor : string = "#3b82f6"
+      baseColor : string = "series-1"
         @label "Base Bar Color"
         @description "Color of bars not highlighted in the current frame."
         @tier "presentation"
-      highlightColor : string = "#f59e0b"
+      highlightColor : string = "highlight"
         @label "Highlight Bar Color"
         @description "Color of bars whose index appears in the current frame's highlights."
         @tier "presentation"

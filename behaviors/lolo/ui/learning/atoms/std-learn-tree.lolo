@@ -74,20 +74,32 @@ orbital LearnTreeOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: INSERT_VALUE, label: "Insert", variant: primary },
-                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
-                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", variant: secondary },
-                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.traversing "Traversing" (if @entity.running "Auto-stepping" "Building")), variant: (if @entity.traversing "success" (if @entity.running "primary" "neutral")) }
                   ] },
-                { type: algo-graph-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: INSERT_VALUE, label: "Insert", icon: "plus", variant: primary },
+                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
+                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", icon: "step-forward", variant: secondary },
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Run", icon: "play", variant: secondary, aria-pressed: "false" }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat (str/concat "" @entity.count) " nodes") }
+                  ] },
+                { type: algo-graph-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: RUN_TRAVERSAL, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
                 { type: typography, variant: body, content: @entity.narration }
               ] }
           ]
         })
         (emit TREE_UPDATED { nodes: @entity.nodes, edges: @entity.edges, count: @entity.count, narration: @entity.narration })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (set @entity.running false)
+        (render-ui main null)
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (set @entity.active true)
@@ -112,15 +124,22 @@ orbital LearnTreeOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: INSERT_VALUE, label: "Insert", variant: primary },
-                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
-                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", variant: secondary },
-                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.traversing "Traversing" (if @entity.running "Auto-stepping" "Building")), variant: (if @entity.traversing "success" (if @entity.running "primary" "neutral")) }
                   ] },
-                { type: algo-graph-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: INSERT_VALUE, label: "Insert", icon: "plus", variant: primary },
+                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
+                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", icon: "step-forward", variant: secondary },
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Run", icon: "play", variant: secondary, aria-pressed: "false" }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat (str/concat "" @entity.count) " nodes") }
+                  ] },
+                { type: algo-graph-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: RUN_TRAVERSAL, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
                 { type: typography, variant: body, content: @entity.narration }
               ] }
           ]
@@ -198,15 +217,22 @@ orbital LearnTreeOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: INSERT_VALUE, label: "Insert", variant: primary },
-                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
-                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", variant: secondary },
-                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.traversing "Traversing" (if @entity.running "Auto-stepping" "Building")), variant: (if @entity.traversing "success" (if @entity.running "primary" "neutral")) }
                   ] },
-                { type: algo-graph-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: INSERT_VALUE, label: "Insert", icon: "plus", variant: primary },
+                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
+                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", icon: "step-forward", variant: secondary },
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Run", icon: "play", variant: secondary, aria-pressed: "false" }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat (str/concat "" @entity.count) " nodes") }
+                  ] },
+                { type: algo-graph-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: RUN_TRAVERSAL, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
                 { type: typography, variant: body, content: @entity.narration }
               ] }
           ]
@@ -238,15 +264,22 @@ orbital LearnTreeOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: INSERT_VALUE, label: "Insert", variant: primary },
-                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
-                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", variant: secondary },
-                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.traversing "Traversing" (if @entity.running "Auto-stepping" "Building")), variant: (if @entity.traversing "success" (if @entity.running "primary" "neutral")) }
                   ] },
-                { type: algo-graph-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: INSERT_VALUE, label: "Insert", icon: "plus", variant: primary },
+                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
+                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", icon: "step-forward", variant: secondary },
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Run", icon: "play", variant: secondary, aria-pressed: "false" }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat (str/concat "" @entity.count) " nodes") }
+                  ] },
+                { type: algo-graph-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: RUN_TRAVERSAL, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
                 { type: typography, variant: body, content: @entity.narration }
               ] }
           ]
@@ -292,15 +325,22 @@ orbital LearnTreeOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: INSERT_VALUE, label: "Insert", variant: primary },
-                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
-                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", variant: secondary },
-                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.traversing "Traversing" (if @entity.running "Auto-stepping" "Building")), variant: (if @entity.traversing "success" (if @entity.running "primary" "neutral")) }
                   ] },
-                { type: algo-graph-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: INSERT_VALUE, label: "Insert", icon: "plus", variant: primary },
+                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
+                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", icon: "step-forward", variant: secondary },
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Run", icon: "play", variant: secondary, aria-pressed: "false" }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat (str/concat "" @entity.count) " nodes") }
+                  ] },
+                { type: algo-graph-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: RUN_TRAVERSAL, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
                 { type: typography, variant: body, content: @entity.narration }
               ] }
           ]
@@ -315,15 +355,22 @@ orbital LearnTreeOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: INSERT_VALUE, label: "Insert", variant: primary },
-                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
-                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", variant: secondary },
-                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.traversing "Traversing" (if @entity.running "Auto-stepping" "Building")), variant: (if @entity.traversing "success" (if @entity.running "primary" "neutral")) }
                   ] },
-                { type: algo-graph-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: INSERT_VALUE, label: "Insert", icon: "plus", variant: primary },
+                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
+                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", icon: "step-forward", variant: secondary },
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Run", icon: "play", variant: secondary, aria-pressed: "false" }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat (str/concat "" @entity.count) " nodes") }
+                  ] },
+                { type: algo-graph-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: RUN_TRAVERSAL, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
                 { type: typography, variant: body, content: @entity.narration }
               ] }
           ]
@@ -351,15 +398,22 @@ orbital LearnTreeOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: INSERT_VALUE, label: "Insert", variant: primary },
-                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
-                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", variant: secondary },
-                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.traversing "Traversing" (if @entity.running "Auto-stepping" "Building")), variant: (if @entity.traversing "success" (if @entity.running "primary" "neutral")) }
                   ] },
-                { type: algo-graph-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: INSERT_VALUE, label: "Insert", icon: "plus", variant: primary },
+                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
+                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", icon: "step-forward", variant: secondary },
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Run", icon: "play", variant: secondary, aria-pressed: "false" }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat (str/concat "" @entity.count) " nodes") }
+                  ] },
+                { type: algo-graph-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: RUN_TRAVERSAL, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
                 { type: typography, variant: body, content: @entity.narration }
               ] }
           ]
@@ -408,15 +462,22 @@ orbital LearnTreeOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: INSERT_VALUE, label: "Insert", variant: primary },
-                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
-                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", variant: secondary },
-                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.traversing "Traversing" (if @entity.running "Auto-stepping" "Building")), variant: (if @entity.traversing "success" (if @entity.running "primary" "neutral")) }
                   ] },
-                { type: algo-graph-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: INSERT_VALUE, label: "Insert", icon: "plus", variant: primary },
+                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
+                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", icon: "step-forward", variant: secondary },
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Run", icon: "play", variant: secondary, aria-pressed: "false" }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat (str/concat "" @entity.count) " nodes") }
+                  ] },
+                { type: algo-graph-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: RUN_TRAVERSAL, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
                 { type: typography, variant: body, content: @entity.narration }
               ] }
           ]
@@ -503,6 +564,10 @@ orbital LearnTreeOrbital {
         @label "Title"
         @description "Title shown above the canvas."
         @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line."
+        @tier "presentation"
       width : number = 600
         @label "Width"
         @description "Canvas width in pixels."
@@ -511,9 +576,9 @@ orbital LearnTreeOrbital {
         @label "Height"
         @description "Canvas height in pixels."
         @tier "presentation"
-      backgroundColor : string = "#f8fafc"
+      backgroundColor : string = ""
         @label "Background Color"
-        @description "Canvas background color."
+        @description "Canvas ground. Empty uses the theme drawing ground."
         @tier "presentation"
     }
   }

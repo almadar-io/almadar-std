@@ -63,7 +63,7 @@ export interface StdLearnTour3dConfig {
   azimuth?: number;
   /** Default: `[]` */
   backdrop?: EntityRow[];
-  /** Default: `"#0f172a"` */
+  /** Default: `""` */
   backgroundColor?: string;
   /** Default: `[]` */
   edges?: EntityRow[];
@@ -79,11 +79,13 @@ export interface StdLearnTour3dConfig {
   post?: EntityRow;
   /** Default: `"Reset"` */
   resetLabel?: string;
-  /** Default: `[{"caption":"The first stop on the tour — the camera retargets here and the narration reads its caption.","color":"#2563eb","id":"alpha","name":"Station Alpha","opacity":1,"radius":1,"shape":"sphere","x":0,"y":0,"z":0},{"caption":"The second stop — press Tour again or click a shape to advance the selection.","color":"#7c3aed","id":"beta","name":"Station Beta","opacity":1,"radius":0.8,"shape":"sphere","x":3,"y":1,"z":-1},{"caption":"The final stop — once every station has been visited the tour marks itself complete.","color":"#0891b2","id":"gamma","name":"Station Gamma","opacity":1,"radius":0.8,"shape":"sphere","x":-3,"y":-1,"z":1}]` */
+  /** Default: `[{"caption":"The first stop on the tour — the camera retargets here and the narration reads its caption.","color":"series-1","id":"alpha","name":"Station Alpha","opacity":1,"radius":1,"shape":"sphere","x":0,"y":0,"z":0},{"caption":"The second stop — press Tour again or click a shape to advance the selection.","color":"series-2","id":"beta","name":"Station Beta","opacity":1,"radius":0.8,"shape":"sphere","x":3,"y":1,"z":-1},{"caption":"The final stop — once every station has been visited the tour marks itself complete.","color":"series-3","id":"gamma","name":"Station Gamma","opacity":1,"radius":0.8,"shape":"sphere","x":-3,"y":-1,"z":1}]` */
   stations?: EntityRow[];
+  /** Default: `""` */
+  summary?: string;
   /** Default: `"3D Guided Tour"` */
   title?: string;
-  /** Default: `"Tour"` */
+  /** Default: `"Next station"` */
   tourLabel?: string;
   /** Default: `600` */
   width?: number;

@@ -23,6 +23,7 @@ orbital MeasureOrbital {
     t : number = 0
     value : number = 0
     running : boolean = false
+    speed : number = 1
     traceSamples : [MeasureSample]
     traceCurves : [MeasureCurve]
     points : [MeasurePoint]
@@ -50,20 +51,38 @@ orbital MeasureOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: @config.taskText },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: PROBE, label: @config.probeLabel, variant: primary, disabled: (if (> @entity.t 0) false true) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (>= @entity.t @config.duration) "Done" (if @entity.running "Measuring…" "Paused")), variant: (if (>= @entity.t @config.duration) "success" (if @entity.running "primary" "neutral")) }
                   ] },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.traceCurves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false },
-                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) "s · " @config.valueLabel " = " (math/round @entity.value 3)) },
-                { type: typography, variant: caption, content: (str/concat "Samples recorded: " (str/concat "" @entity.sampleCount) " · mean " @config.valueLabel ": " (math/round @entity.meanValue 3)) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (>= @entity.t @config.duration) }),
+                    { type: button, action: PROBE, label: @config.probeLabel, icon: "plus", variant: secondary, disabled: (<= @entity.t 0) },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "t = " (math/round @entity.t 1) " of " @config.duration " s") }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.traceCurves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, Enter: PROBE, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: body, content: @config.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.valueLabel " = " (math/round @entity.value 3) " · " @entity.sampleCount " recorded · mean " (math/round @entity.meanValue 3)) }
+                  ] }
               ] }
           ]
         })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (set @entity.running false)
+        (render-ui main null)
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (set @entity.active true)
@@ -81,17 +100,101 @@ orbital MeasureOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: @config.taskText },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: PROBE, label: @config.probeLabel, variant: primary, disabled: (if (> @entity.t 0) false true) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (>= @entity.t @config.duration) "Done" (if @entity.running "Measuring…" "Paused")), variant: (if (>= @entity.t @config.duration) "success" (if @entity.running "primary" "neutral")) }
                   ] },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.traceCurves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false },
-                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) "s · " @config.valueLabel " = " (math/round @entity.value 3)) },
-                { type: typography, variant: caption, content: (str/concat "Samples recorded: " (str/concat "" @entity.sampleCount) " · mean " @config.valueLabel ": " (math/round @entity.meanValue 3)) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (>= @entity.t @config.duration) }),
+                    { type: button, action: PROBE, label: @config.probeLabel, icon: "plus", variant: secondary, disabled: (<= @entity.t 0) },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "t = " (math/round @entity.t 1) " of " @config.duration " s") }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.traceCurves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, Enter: PROBE, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: body, content: @config.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.valueLabel " = " (math/round @entity.value 3) " · " @entity.sampleCount " recorded · mean " (math/round @entity.meanValue 3)) }
+                  ] }
+              ] }
+          ]
+        })
+
+      TOGGLE_RUN -> idle when (and (== @entity.active true) (or (== @entity.running true) (< @entity.t @config.duration)))
+        (set @entity.running (not @entity.running))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (>= @entity.t @config.duration) "Done" (if @entity.running "Measuring…" "Paused")), variant: (if (>= @entity.t @config.duration) "success" (if @entity.running "primary" "neutral")) }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (>= @entity.t @config.duration) }),
+                    { type: button, action: PROBE, label: @config.probeLabel, icon: "plus", variant: secondary, disabled: (<= @entity.t 0) },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "t = " (math/round @entity.t 1) " of " @config.duration " s") }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.traceCurves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, Enter: PROBE, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: body, content: @config.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.valueLabel " = " (math/round @entity.value 3) " · " @entity.sampleCount " recorded · mean " (math/round @entity.meanValue 3)) }
+                  ] }
+              ] }
+          ]
+        })
+        (emit RUN_TOGGLED { running: @entity.running })
+
+      SPEED_SET -> idle when (== @entity.active true)
+        (set @entity.speed ?speed)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (>= @entity.t @config.duration) "Done" (if @entity.running "Measuring…" "Paused")), variant: (if (>= @entity.t @config.duration) "success" (if @entity.running "primary" "neutral")) }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (>= @entity.t @config.duration) }),
+                    { type: button, action: PROBE, label: @config.probeLabel, icon: "plus", variant: secondary, disabled: (<= @entity.t 0) },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "t = " (math/round @entity.t 1) " of " @config.duration " s") }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.traceCurves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, Enter: PROBE, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: body, content: @config.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.valueLabel " = " (math/round @entity.value 3) " · " @entity.sampleCount " recorded · mean " (math/round @entity.meanValue 3)) }
+                  ] }
               ] }
           ]
         })
@@ -103,17 +206,30 @@ orbital MeasureOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: @config.taskText },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: PROBE, label: @config.probeLabel, variant: primary, disabled: (if (> @entity.t 0) false true) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (>= @entity.t @config.duration) "Done" (if @entity.running "Measuring…" "Paused")), variant: (if (>= @entity.t @config.duration) "success" (if @entity.running "primary" "neutral")) }
                   ] },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.traceCurves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false },
-                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) "s · " @config.valueLabel " = " (math/round @entity.value 3)) },
-                { type: typography, variant: caption, content: (str/concat "Samples recorded: " (str/concat "" @entity.sampleCount) " · mean " @config.valueLabel ": " (math/round @entity.meanValue 3)) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (>= @entity.t @config.duration) }),
+                    { type: button, action: PROBE, label: @config.probeLabel, icon: "plus", variant: secondary, disabled: (<= @entity.t 0) },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "t = " (math/round @entity.t 1) " of " @config.duration " s") }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.traceCurves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, Enter: PROBE, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: body, content: @config.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.valueLabel " = " (math/round @entity.value 3) " · " @entity.sampleCount " recorded · mean " (math/round @entity.meanValue 3)) }
+                  ] }
               ] }
           ]
         })
@@ -126,17 +242,30 @@ orbital MeasureOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: @config.taskText },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: PROBE, label: @config.probeLabel, variant: primary, disabled: (if (> @entity.t 0) false true) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (>= @entity.t @config.duration) "Done" (if @entity.running "Measuring…" "Paused")), variant: (if (>= @entity.t @config.duration) "success" (if @entity.running "primary" "neutral")) }
                   ] },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.traceCurves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false },
-                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) "s · " @config.valueLabel " = " (math/round @entity.value 3)) },
-                { type: typography, variant: caption, content: (str/concat "Samples recorded: " (str/concat "" @entity.sampleCount) " · mean " @config.valueLabel ": " (math/round @entity.meanValue 3)) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (>= @entity.t @config.duration) }),
+                    { type: button, action: PROBE, label: @config.probeLabel, icon: "plus", variant: secondary, disabled: (<= @entity.t 0) },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "t = " (math/round @entity.t 1) " of " @config.duration " s") }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.traceCurves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, Enter: PROBE, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: body, content: @config.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.valueLabel " = " (math/round @entity.value 3) " · " @entity.sampleCount " recorded · mean " (math/round @entity.meanValue 3)) }
+                  ] }
               ] }
           ]
         })
@@ -151,17 +280,30 @@ orbital MeasureOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: @config.taskText },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: PROBE, label: @config.probeLabel, variant: primary, disabled: (if (> @entity.t 0) false true) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (>= @entity.t @config.duration) "Done" (if @entity.running "Measuring…" "Paused")), variant: (if (>= @entity.t @config.duration) "success" (if @entity.running "primary" "neutral")) }
                   ] },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.traceCurves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false },
-                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) "s · " @config.valueLabel " = " (math/round @entity.value 3)) },
-                { type: typography, variant: caption, content: (str/concat "Samples recorded: " (str/concat "" @entity.sampleCount) " · mean " @config.valueLabel ": " (math/round @entity.meanValue 3)) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (>= @entity.t @config.duration) }),
+                    { type: button, action: PROBE, label: @config.probeLabel, icon: "plus", variant: secondary, disabled: (<= @entity.t 0) },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "t = " (math/round @entity.t 1) " of " @config.duration " s") }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.traceCurves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, Enter: PROBE, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: body, content: @config.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.valueLabel " = " (math/round @entity.value 3) " · " @entity.sampleCount " recorded · mean " (math/round @entity.meanValue 3)) }
+                  ] }
               ] }
           ]
         })
@@ -181,17 +323,30 @@ orbital MeasureOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: @config.taskText },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: PROBE, label: @config.probeLabel, variant: primary, disabled: (if (> @entity.t 0) false true) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (>= @entity.t @config.duration) "Done" (if @entity.running "Measuring…" "Paused")), variant: (if (>= @entity.t @config.duration) "success" (if @entity.running "primary" "neutral")) }
                   ] },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.traceCurves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false },
-                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) "s · " @config.valueLabel " = " (math/round @entity.value 3)) },
-                { type: typography, variant: caption, content: (str/concat "Samples recorded: " (str/concat "" @entity.sampleCount) " · mean " @config.valueLabel ": " (math/round @entity.meanValue 3)) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (>= @entity.t @config.duration) }),
+                    { type: button, action: PROBE, label: @config.probeLabel, icon: "plus", variant: secondary, disabled: (<= @entity.t 0) },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "t = " (math/round @entity.t 1) " of " @config.duration " s") }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.traceCurves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, Enter: PROBE, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: body, content: @config.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.valueLabel " = " (math/round @entity.value 3) " · " @entity.sampleCount " recorded · mean " (math/round @entity.meanValue 3)) }
+                  ] }
               ] }
           ]
         })
@@ -201,7 +356,7 @@ orbital MeasureOrbital {
     ticks {
       measureTick every 100ms
         when (and (== @entity.active true) (== @entity.running true))
-        (set @entity.t (math/min @config.duration (+ @entity.t 0.1)))
+        (set @entity.t (math/min @config.duration (+ @entity.t (* 0.1 @entity.speed))))
         (set @entity.value (if (== @config.signalKind "sine")
           (* @config.amplitude (math/sin (* @config.rate @entity.t)))
           (if (== @config.signalKind "growth")
@@ -218,6 +373,15 @@ orbital MeasureOrbital {
       }
         @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
         @tier "domain"
+      TOGGLE_RUN {
+      }
+        @description "Learner pressed the Play/Pause toggle — starts or freezes the signal clock."
+        @tier "domain"
+      SPEED_SET {
+        speed : number
+      }
+        @description "The learner picked a playback speed; the signal clock advances that many times faster."
+        @tier "presentation"
       RUN {
       }
         @description "Learner started (or resumed) the signal's evolution; the trace draws live until Pause or the configured duration."
@@ -265,7 +429,11 @@ orbital MeasureOrbital {
         @tier "presentation"
       title : string = "Measurement Lab"
         @label "Title"
-        @description "Title shown above the experiment."
+        @description "The instrument's name, the header's one hero."
+        @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line."
         @tier "presentation"
       taskText : string = "Run the signal, then press Probe to record measurements. Watch the running mean settle."
         @label "Task Text"
@@ -306,10 +474,10 @@ orbital MeasureOrbital {
       probeLabel : string = "Probe"
         @label "Probe Label"
         @tier "presentation"
-      signalColor : string = "#94a3b8"
+      signalColor : string = "ink"
         @label "Signal Color"
         @tier "presentation"
-      probeColor : string = "#dc2626"
+      probeColor : string = "highlight"
         @label "Probe Color"
         @tier "presentation"
       width : number = 600

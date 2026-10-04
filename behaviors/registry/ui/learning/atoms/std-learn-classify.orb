@@ -253,6 +253,16 @@
                   "required": false,
                   "type": "string"
                 },
+                "fillStyle": {
+                  "name": "fillStyle",
+                  "required": false,
+                  "type": "string"
+                },
+                "fillTone": {
+                  "name": "fillTone",
+                  "required": false,
+                  "type": "string"
+                },
                 "fontSize": {
                   "name": "fontSize",
                   "required": false,
@@ -328,8 +338,23 @@
                   "required": false,
                   "type": "number"
                 },
+                "stroke": {
+                  "name": "stroke",
+                  "required": false,
+                  "type": "string"
+                },
                 "text": {
                   "name": "text",
+                  "required": false,
+                  "type": "string"
+                },
+                "textSize": {
+                  "name": "textSize",
+                  "required": false,
+                  "type": "string"
+                },
+                "tone": {
+                  "name": "tone",
                   "required": false,
                   "type": "string"
                 },
@@ -450,7 +475,8 @@
               "type": "boolean"
             },
             "backgroundColor": {
-              "default": "#f8fafc",
+              "default": "",
+              "description": "Canvas ground (tone name, token or colour); empty uses the theme's drawing ground.",
               "label": "Background Color",
               "tier": "presentation",
               "type": "string"
@@ -458,12 +484,12 @@
             "categories": {
               "default": [
                 {
-                  "color": "#94a3b8",
+                  "color": "series-1",
                   "label": "Category A",
                   "value": "a"
                 },
                 {
-                  "color": "#64748b",
+                  "color": "series-2",
                   "label": "Category B",
                   "value": "b"
                 }
@@ -495,7 +521,7 @@
               "type": "[LearnClassifyOption]"
             },
             "correctColor": {
-              "default": "#16a34a",
+              "default": "success",
               "description": "Fill color for the correct category once the learner has picked.",
               "label": "Correct Highlight Color",
               "tier": "presentation",
@@ -509,7 +535,7 @@
               "type": "number"
             },
             "incorrectColor": {
-              "default": "#dc2626",
+              "default": "error",
               "description": "Fill color for the learner's picked category when it does not match the correct category.",
               "label": "Incorrect Highlight Color",
               "tier": "presentation",
@@ -650,6 +676,20 @@
               "label": "Show Hint",
               "tier": "domain",
               "type": "boolean"
+            },
+            "summary": {
+              "default": "",
+              "description": "One line under the title saying what is being classified (keep it under ~65 characters). Empty shows no line.",
+              "label": "Concept",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "taper": {
+              "default": 0.0,
+              "description": "How far the category rungs narrow toward the top: 0 = equal-width rungs (no implied order), 1 = a full pyramid for hierarchies (needs, levels). Long category names need 0.",
+              "label": "Taper",
+              "tier": "presentation",
+              "type": "number"
             },
             "title": {
               "default": "Classify",
@@ -1195,9 +1235,21 @@
                       [
                         "minWidth",
                         [
-                          "*",
-                          "@plotWidth",
-                          0.3
+                          "-",
+                          "@maxWidth",
+                          [
+                            "*",
+                            "@config.taper",
+                            [
+                              "-",
+                              "@maxWidth",
+                              [
+                                "*",
+                                "@plotWidth",
+                                0.3
+                              ]
+                            ]
+                          ]
                         ]
                       ],
                       [
@@ -1210,9 +1262,13 @@
                             "@minWidth"
                           ],
                           [
-                            "-",
-                            "@categoryCount",
-                            1.0
+                            "math/max",
+                            1.0,
+                            [
+                              "-",
+                              "@categoryCount",
+                              1.0
+                            ]
                           ]
                         ]
                       ],
@@ -1349,14 +1405,15 @@
                                   [
                                     "baseRect",
                                     {
-                                      "color": "@fillColor",
-                                      "fill": "@fillColor",
+                                      "fillStyle": "tint",
+                                      "fillTone": "@fillColor",
                                       "height": "@tierHeight",
                                       "id": [
                                         "str/concat",
                                         "category-",
                                         "@i"
                                       ],
+                                      "tone": "@fillColor",
                                       "type": "rect",
                                       "width": "@w",
                                       "x": "@x",
@@ -1374,16 +1431,16 @@
                                   [
                                     "@baseRect",
                                     {
-                                      "color": "#0f172a",
-                                      "fill": "transparent",
+                                      "fillStyle": "outline",
                                       "height": "@tierHeight",
                                       "id": [
                                         "str/concat",
                                         "category-pick-ring-",
                                         "@i"
                                       ],
-                                      "lineWidth": 3.0,
                                       "opacity": 1.0,
+                                      "stroke": "bold",
+                                      "tone": "ink",
                                       "type": "rect",
                                       "width": "@w",
                                       "x": "@x",
@@ -1440,8 +1497,6 @@
                               ],
                               {
                                 "align": "center",
-                                "color": "#0f172a",
-                                "fontSize": 13.0,
                                 "id": [
                                   "str/concat",
                                   "category-label-",
@@ -1452,6 +1507,8 @@
                                   "@category",
                                   "label"
                                 ],
+                                "textSize": "sm",
+                                "tone": "label",
                                 "type": "text",
                                 "x": "@centerX",
                                 "y": [
@@ -1538,6 +1595,7 @@
                           },
                           {
                             "action": "RETRY",
+                            "icon": "rotate-ccw",
                             "label": "@config.retryLabel",
                             "type": "button",
                             "variant": "primary"
@@ -1589,6 +1647,11 @@
                             "edges": [],
                             "height": "@config.height",
                             "interactive": "@config.interactive",
+                            "keyMap": {
+                              "ArrowRight": "ADVANCE",
+                              "KeyR": "RETRY",
+                              "Space": "TOGGLE_RUN"
+                            },
                             "nodes": [],
                             "shapes": "@backdropShapes",
                             "type": "biology-canvas",
@@ -1609,6 +1672,14 @@
                                     ],
                                     "options",
                                     []
+                                  ]
+                                ],
+                                [
+                                  "locked",
+                                  [
+                                    "!=",
+                                    "@entity.selectedCategory",
+                                    ""
                                   ]
                                 ]
                               ],
@@ -1637,26 +1708,48 @@
                                           "category"
                                         ]
                                       },
+                                      "disabled": "@locked",
                                       "label": [
                                         "object/get",
                                         "@o",
                                         "label"
                                       ],
-                                      "size": "sm",
+                                      "size": "lg",
                                       "type": "button",
                                       "variant": [
                                         "if",
                                         [
-                                          "==",
-                                          "@entity.selectedCategory",
-                                          [
-                                            "object/get",
-                                            "@o",
-                                            "category"
-                                          ]
+                                          "not",
+                                          "@locked"
                                         ],
-                                        "primary",
-                                        "secondary"
+                                        "secondary",
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            [
+                                              "object/get",
+                                              "@o",
+                                              "category"
+                                            ],
+                                            "@entity.correctCategory"
+                                          ],
+                                          "success",
+                                          [
+                                            "if",
+                                            [
+                                              "==",
+                                              [
+                                                "object/get",
+                                                "@o",
+                                                "category"
+                                              ],
+                                              "@entity.selectedCategory"
+                                            ],
+                                            "danger",
+                                            "ghost"
+                                          ]
+                                        ]
                                       ]
                                     }
                                   ]
@@ -1679,184 +1772,161 @@
                                           "value"
                                         ]
                                       },
+                                      "disabled": "@locked",
                                       "label": [
                                         "object/get",
                                         "@c",
                                         "label"
                                       ],
-                                      "size": "sm",
+                                      "size": "lg",
                                       "type": "button",
                                       "variant": [
                                         "if",
                                         [
-                                          "==",
-                                          "@entity.selectedCategory",
-                                          [
-                                            "object/get",
-                                            "@c",
-                                            "value"
-                                          ]
+                                          "not",
+                                          "@locked"
                                         ],
-                                        "primary",
-                                        "secondary"
+                                        "secondary",
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            [
+                                              "object/get",
+                                              "@c",
+                                              "value"
+                                            ],
+                                            "@entity.correctCategory"
+                                          ],
+                                          "success",
+                                          [
+                                            "if",
+                                            [
+                                              "==",
+                                              [
+                                                "object/get",
+                                                "@c",
+                                                "value"
+                                              ],
+                                              "@entity.selectedCategory"
+                                            ],
+                                            "danger",
+                                            "ghost"
+                                          ]
+                                        ]
                                       ]
                                     }
                                   ]
                                 ]
                               ]
                             ],
-                            "direction": "horizontal",
-                            "gap": "xs",
+                            "direction": "vertical",
+                            "gap": "sm",
                             "type": "stack"
                           },
-                          {
-                            "children": [
-                              "array/concat",
-                              [
-                                "if",
-                                [
-                                  "!=",
-                                  "@entity.verdict",
-                                  ""
-                                ],
-                                [
-                                  {
-                                    "label": [
-                                      "if",
-                                      [
-                                        "==",
-                                        "@entity.verdict",
-                                        "correct"
-                                      ],
-                                      "Correct",
-                                      "Incorrect"
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@entity.verdict",
+                              ""
+                            ],
+                            null,
+                            {
+                              "children": [
+                                {
+                                  "label": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.verdict",
+                                      "correct"
                                     ],
-                                    "type": "badge",
-                                    "variant": [
-                                      "if",
-                                      [
-                                        "==",
-                                        "@entity.verdict",
-                                        "correct"
-                                      ],
-                                      "success",
-                                      "danger"
-                                    ]
-                                  }
-                                ],
-                                []
-                              ],
-                              [
+                                    "Correct",
+                                    "Incorrect"
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.verdict",
+                                      "correct"
+                                    ],
+                                    "success",
+                                    "error"
+                                  ]
+                                },
                                 {
                                   "content": "@entity.feedback",
                                   "type": "typography",
-                                  "variant": "caption"
+                                  "variant": "body"
                                 }
-                              ]
-                            ],
-                            "direction": "horizontal",
-                            "gap": "xs",
-                            "type": "stack"
-                          },
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            }
+                          ],
                           {
+                            "align": "center",
                             "children": [
                               {
                                 "action": "ADVANCE",
                                 "disabled": [
-                                  "if",
-                                  [
-                                    "==",
-                                    "@entity.selectedCategory",
-                                    ""
-                                  ],
-                                  true,
-                                  false
+                                  "==",
+                                  "@entity.selectedCategory",
+                                  ""
                                 ],
+                                "icon": "chevron-right",
                                 "label": "@config.advanceLabel",
                                 "type": "button",
                                 "variant": "primary"
                               },
-                              {
-                                "action": "TOGGLE_RUN",
-                                "label": [
-                                  "if",
-                                  "@entity.running",
-                                  "Pause",
-                                  "Auto"
-                                ],
-                                "type": "button",
-                                "variant": "ghost"
-                              }
-                            ],
-                            "direction": "horizontal",
-                            "gap": "sm",
-                            "type": "stack"
-                          },
-                          {
-                            "label": [
-                              "if",
                               [
-                                ">",
-                                "@config.passScore",
-                                0.0
-                              ],
-                              [
-                                "str/concat",
-                                "Score — pass at ",
-                                "@config.passScore"
-                              ],
-                              "Score"
-                            ],
-                            "max": [
-                              "if",
-                              [
-                                "or",
-                                [
-                                  "!=",
-                                  "@config.pointsPerCorrect",
-                                  1.0
-                                ],
-                                [
-                                  ">",
-                                  "@config.penaltyPerMiss",
-                                  0.0
-                                ]
+                                "if",
+                                "@entity.running",
+                                {
+                                  "action": "TOGGLE_RUN",
+                                  "aria-pressed": "true",
+                                  "icon": "pause",
+                                  "label": "Pause",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "action": "TOGGLE_RUN",
+                                  "aria-pressed": "false",
+                                  "icon": "play",
+                                  "label": "Auto",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
                               ],
                               [
                                 "if",
                                 [
                                   ">",
-                                  "@config.scoreCap",
+                                  "@config.passScore",
                                   0.0
                                 ],
-                                "@config.scoreCap",
-                                [
-                                  "*",
-                                  "@entity.totalItems",
-                                  "@config.pointsPerCorrect"
-                                ]
-                              ],
-                              "@entity.attemptedCount"
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Pass at ",
+                                    "@config.passScore"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                null
+                              ]
                             ],
-                            "type": "stat-display",
-                            "value": [
-                              "if",
-                              [
-                                "or",
-                                [
-                                  "!=",
-                                  "@config.pointsPerCorrect",
-                                  1.0
-                                ],
-                                [
-                                  ">",
-                                  "@config.penaltyPerMiss",
-                                  0.0
-                                ]
-                              ],
-                              "@entity.score",
-                              "@entity.correctCount"
-                            ]
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack",
+                            "wrap": true
                           }
                         ]
                       ]
@@ -1888,9 +1958,100 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.roundComplete",
+                                    "Round complete",
+                                    [
+                                      "if",
+                                      [
+                                        "or",
+                                        [
+                                          "!=",
+                                          "@config.pointsPerCorrect",
+                                          1.0
+                                        ],
+                                        [
+                                          ">",
+                                          "@config.penaltyPerMiss",
+                                          0.0
+                                        ]
+                                      ],
+                                      [
+                                        "str/concat",
+                                        "Score ",
+                                        "@entity.score"
+                                      ],
+                                      [
+                                        "str/concat",
+                                        "@entity.correctCount",
+                                        " / ",
+                                        "@entity.attemptedCount",
+                                        " correct"
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.roundComplete",
+                                    "primary",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.verdict",
+                                        "correct"
+                                      ],
+                                      "success",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.verdict",
+                                          "incorrect"
+                                        ],
+                                        "error",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "label": [
@@ -1945,6 +2106,48 @@
                   "==",
                   "@config.matchMode",
                   ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01KZEFWYXQWVDTDPHMGJ8KGQN8",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@config.matchMode",
+                      ""
+                    ]
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -2167,9 +2370,21 @@
                       [
                         "minWidth",
                         [
-                          "*",
-                          "@plotWidth",
-                          0.3
+                          "-",
+                          "@maxWidth",
+                          [
+                            "*",
+                            "@config.taper",
+                            [
+                              "-",
+                              "@maxWidth",
+                              [
+                                "*",
+                                "@plotWidth",
+                                0.3
+                              ]
+                            ]
+                          ]
                         ]
                       ],
                       [
@@ -2182,9 +2397,13 @@
                             "@minWidth"
                           ],
                           [
-                            "-",
-                            "@categoryCount",
-                            1.0
+                            "math/max",
+                            1.0,
+                            [
+                              "-",
+                              "@categoryCount",
+                              1.0
+                            ]
                           ]
                         ]
                       ],
@@ -2321,14 +2540,15 @@
                                   [
                                     "baseRect",
                                     {
-                                      "color": "@fillColor",
-                                      "fill": "@fillColor",
+                                      "fillStyle": "tint",
+                                      "fillTone": "@fillColor",
                                       "height": "@tierHeight",
                                       "id": [
                                         "str/concat",
                                         "category-",
                                         "@i"
                                       ],
+                                      "tone": "@fillColor",
                                       "type": "rect",
                                       "width": "@w",
                                       "x": "@x",
@@ -2346,16 +2566,16 @@
                                   [
                                     "@baseRect",
                                     {
-                                      "color": "#0f172a",
-                                      "fill": "transparent",
+                                      "fillStyle": "outline",
                                       "height": "@tierHeight",
                                       "id": [
                                         "str/concat",
                                         "category-pick-ring-",
                                         "@i"
                                       ],
-                                      "lineWidth": 3.0,
                                       "opacity": 1.0,
+                                      "stroke": "bold",
+                                      "tone": "ink",
                                       "type": "rect",
                                       "width": "@w",
                                       "x": "@x",
@@ -2412,8 +2632,6 @@
                               ],
                               {
                                 "align": "center",
-                                "color": "#0f172a",
-                                "fontSize": 13.0,
                                 "id": [
                                   "str/concat",
                                   "category-label-",
@@ -2424,6 +2642,8 @@
                                   "@category",
                                   "label"
                                 ],
+                                "textSize": "sm",
+                                "tone": "label",
                                 "type": "text",
                                 "x": "@centerX",
                                 "y": [
@@ -2510,6 +2730,7 @@
                           },
                           {
                             "action": "RETRY",
+                            "icon": "rotate-ccw",
                             "label": "@config.retryLabel",
                             "type": "button",
                             "variant": "primary"
@@ -2561,6 +2782,11 @@
                             "edges": [],
                             "height": "@config.height",
                             "interactive": "@config.interactive",
+                            "keyMap": {
+                              "ArrowRight": "ADVANCE",
+                              "KeyR": "RETRY",
+                              "Space": "TOGGLE_RUN"
+                            },
                             "nodes": [],
                             "shapes": "@backdropShapes",
                             "type": "biology-canvas",
@@ -2860,9 +3086,100 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.roundComplete",
+                                    "Round complete",
+                                    [
+                                      "if",
+                                      [
+                                        "or",
+                                        [
+                                          "!=",
+                                          "@config.pointsPerCorrect",
+                                          1.0
+                                        ],
+                                        [
+                                          ">",
+                                          "@config.penaltyPerMiss",
+                                          0.0
+                                        ]
+                                      ],
+                                      [
+                                        "str/concat",
+                                        "Score ",
+                                        "@entity.score"
+                                      ],
+                                      [
+                                        "str/concat",
+                                        "@entity.correctCount",
+                                        " / ",
+                                        "@entity.attemptedCount",
+                                        " correct"
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.roundComplete",
+                                    "primary",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.verdict",
+                                        "correct"
+                                      ],
+                                      "success",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.verdict",
+                                          "incorrect"
+                                        ],
+                                        "error",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "label": [
@@ -3215,9 +3532,21 @@
                       [
                         "minWidth",
                         [
-                          "*",
-                          "@plotWidth",
-                          0.3
+                          "-",
+                          "@maxWidth",
+                          [
+                            "*",
+                            "@config.taper",
+                            [
+                              "-",
+                              "@maxWidth",
+                              [
+                                "*",
+                                "@plotWidth",
+                                0.3
+                              ]
+                            ]
+                          ]
                         ]
                       ],
                       [
@@ -3230,9 +3559,13 @@
                             "@minWidth"
                           ],
                           [
-                            "-",
-                            "@categoryCount",
-                            1.0
+                            "math/max",
+                            1.0,
+                            [
+                              "-",
+                              "@categoryCount",
+                              1.0
+                            ]
                           ]
                         ]
                       ],
@@ -3369,14 +3702,15 @@
                                   [
                                     "baseRect",
                                     {
-                                      "color": "@fillColor",
-                                      "fill": "@fillColor",
+                                      "fillStyle": "tint",
+                                      "fillTone": "@fillColor",
                                       "height": "@tierHeight",
                                       "id": [
                                         "str/concat",
                                         "category-",
                                         "@i"
                                       ],
+                                      "tone": "@fillColor",
                                       "type": "rect",
                                       "width": "@w",
                                       "x": "@x",
@@ -3394,16 +3728,16 @@
                                   [
                                     "@baseRect",
                                     {
-                                      "color": "#0f172a",
-                                      "fill": "transparent",
+                                      "fillStyle": "outline",
                                       "height": "@tierHeight",
                                       "id": [
                                         "str/concat",
                                         "category-pick-ring-",
                                         "@i"
                                       ],
-                                      "lineWidth": 3.0,
                                       "opacity": 1.0,
+                                      "stroke": "bold",
+                                      "tone": "ink",
                                       "type": "rect",
                                       "width": "@w",
                                       "x": "@x",
@@ -3460,8 +3794,6 @@
                               ],
                               {
                                 "align": "center",
-                                "color": "#0f172a",
-                                "fontSize": 13.0,
                                 "id": [
                                   "str/concat",
                                   "category-label-",
@@ -3472,6 +3804,8 @@
                                   "@category",
                                   "label"
                                 ],
+                                "textSize": "sm",
+                                "tone": "label",
                                 "type": "text",
                                 "x": "@centerX",
                                 "y": [
@@ -3558,6 +3892,7 @@
                           },
                           {
                             "action": "RETRY",
+                            "icon": "rotate-ccw",
                             "label": "@config.retryLabel",
                             "type": "button",
                             "variant": "primary"
@@ -3609,6 +3944,11 @@
                             "edges": [],
                             "height": "@config.height",
                             "interactive": "@config.interactive",
+                            "keyMap": {
+                              "ArrowRight": "ADVANCE",
+                              "KeyR": "RETRY",
+                              "Space": "TOGGLE_RUN"
+                            },
                             "nodes": [],
                             "shapes": "@backdropShapes",
                             "type": "biology-canvas",
@@ -3908,9 +4248,100 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.roundComplete",
+                                    "Round complete",
+                                    [
+                                      "if",
+                                      [
+                                        "or",
+                                        [
+                                          "!=",
+                                          "@config.pointsPerCorrect",
+                                          1.0
+                                        ],
+                                        [
+                                          ">",
+                                          "@config.penaltyPerMiss",
+                                          0.0
+                                        ]
+                                      ],
+                                      [
+                                        "str/concat",
+                                        "Score ",
+                                        "@entity.score"
+                                      ],
+                                      [
+                                        "str/concat",
+                                        "@entity.correctCount",
+                                        " / ",
+                                        "@entity.attemptedCount",
+                                        " correct"
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.roundComplete",
+                                    "primary",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.verdict",
+                                        "correct"
+                                      ],
+                                      "success",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.verdict",
+                                          "incorrect"
+                                        ],
+                                        "error",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "label": [
@@ -4233,9 +4664,21 @@
                       [
                         "minWidth",
                         [
-                          "*",
-                          "@plotWidth",
-                          0.3
+                          "-",
+                          "@maxWidth",
+                          [
+                            "*",
+                            "@config.taper",
+                            [
+                              "-",
+                              "@maxWidth",
+                              [
+                                "*",
+                                "@plotWidth",
+                                0.3
+                              ]
+                            ]
+                          ]
                         ]
                       ],
                       [
@@ -4248,9 +4691,13 @@
                             "@minWidth"
                           ],
                           [
-                            "-",
-                            "@categoryCount",
-                            1.0
+                            "math/max",
+                            1.0,
+                            [
+                              "-",
+                              "@categoryCount",
+                              1.0
+                            ]
                           ]
                         ]
                       ],
@@ -4387,14 +4834,15 @@
                                   [
                                     "baseRect",
                                     {
-                                      "color": "@fillColor",
-                                      "fill": "@fillColor",
+                                      "fillStyle": "tint",
+                                      "fillTone": "@fillColor",
                                       "height": "@tierHeight",
                                       "id": [
                                         "str/concat",
                                         "category-",
                                         "@i"
                                       ],
+                                      "tone": "@fillColor",
                                       "type": "rect",
                                       "width": "@w",
                                       "x": "@x",
@@ -4412,16 +4860,16 @@
                                   [
                                     "@baseRect",
                                     {
-                                      "color": "#0f172a",
-                                      "fill": "transparent",
+                                      "fillStyle": "outline",
                                       "height": "@tierHeight",
                                       "id": [
                                         "str/concat",
                                         "category-pick-ring-",
                                         "@i"
                                       ],
-                                      "lineWidth": 3.0,
                                       "opacity": 1.0,
+                                      "stroke": "bold",
+                                      "tone": "ink",
                                       "type": "rect",
                                       "width": "@w",
                                       "x": "@x",
@@ -4478,8 +4926,6 @@
                               ],
                               {
                                 "align": "center",
-                                "color": "#0f172a",
-                                "fontSize": 13.0,
                                 "id": [
                                   "str/concat",
                                   "category-label-",
@@ -4490,6 +4936,8 @@
                                   "@category",
                                   "label"
                                 ],
+                                "textSize": "sm",
+                                "tone": "label",
                                 "type": "text",
                                 "x": "@centerX",
                                 "y": [
@@ -4576,6 +5024,7 @@
                           },
                           {
                             "action": "RETRY",
+                            "icon": "rotate-ccw",
                             "label": "@config.retryLabel",
                             "type": "button",
                             "variant": "primary"
@@ -4627,6 +5076,11 @@
                             "edges": [],
                             "height": "@config.height",
                             "interactive": "@config.interactive",
+                            "keyMap": {
+                              "ArrowRight": "ADVANCE",
+                              "KeyR": "RETRY",
+                              "Space": "TOGGLE_RUN"
+                            },
                             "nodes": [],
                             "shapes": "@backdropShapes",
                             "type": "biology-canvas",
@@ -4926,9 +5380,100 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.roundComplete",
+                                    "Round complete",
+                                    [
+                                      "if",
+                                      [
+                                        "or",
+                                        [
+                                          "!=",
+                                          "@config.pointsPerCorrect",
+                                          1.0
+                                        ],
+                                        [
+                                          ">",
+                                          "@config.penaltyPerMiss",
+                                          0.0
+                                        ]
+                                      ],
+                                      [
+                                        "str/concat",
+                                        "Score ",
+                                        "@entity.score"
+                                      ],
+                                      [
+                                        "str/concat",
+                                        "@entity.correctCount",
+                                        " / ",
+                                        "@entity.attemptedCount",
+                                        " correct"
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.roundComplete",
+                                    "primary",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.verdict",
+                                        "correct"
+                                      ],
+                                      "success",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.verdict",
+                                          "incorrect"
+                                        ],
+                                        "error",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "label": [
@@ -5212,9 +5757,21 @@
                       [
                         "minWidth",
                         [
-                          "*",
-                          "@plotWidth",
-                          0.3
+                          "-",
+                          "@maxWidth",
+                          [
+                            "*",
+                            "@config.taper",
+                            [
+                              "-",
+                              "@maxWidth",
+                              [
+                                "*",
+                                "@plotWidth",
+                                0.3
+                              ]
+                            ]
+                          ]
                         ]
                       ],
                       [
@@ -5227,9 +5784,13 @@
                             "@minWidth"
                           ],
                           [
-                            "-",
-                            "@categoryCount",
-                            1.0
+                            "math/max",
+                            1.0,
+                            [
+                              "-",
+                              "@categoryCount",
+                              1.0
+                            ]
                           ]
                         ]
                       ],
@@ -5366,14 +5927,15 @@
                                   [
                                     "baseRect",
                                     {
-                                      "color": "@fillColor",
-                                      "fill": "@fillColor",
+                                      "fillStyle": "tint",
+                                      "fillTone": "@fillColor",
                                       "height": "@tierHeight",
                                       "id": [
                                         "str/concat",
                                         "category-",
                                         "@i"
                                       ],
+                                      "tone": "@fillColor",
                                       "type": "rect",
                                       "width": "@w",
                                       "x": "@x",
@@ -5391,16 +5953,16 @@
                                   [
                                     "@baseRect",
                                     {
-                                      "color": "#0f172a",
-                                      "fill": "transparent",
+                                      "fillStyle": "outline",
                                       "height": "@tierHeight",
                                       "id": [
                                         "str/concat",
                                         "category-pick-ring-",
                                         "@i"
                                       ],
-                                      "lineWidth": 3.0,
                                       "opacity": 1.0,
+                                      "stroke": "bold",
+                                      "tone": "ink",
                                       "type": "rect",
                                       "width": "@w",
                                       "x": "@x",
@@ -5457,8 +6019,6 @@
                               ],
                               {
                                 "align": "center",
-                                "color": "#0f172a",
-                                "fontSize": 13.0,
                                 "id": [
                                   "str/concat",
                                   "category-label-",
@@ -5469,6 +6029,8 @@
                                   "@category",
                                   "label"
                                 ],
+                                "textSize": "sm",
+                                "tone": "label",
                                 "type": "text",
                                 "x": "@centerX",
                                 "y": [
@@ -5555,6 +6117,7 @@
                           },
                           {
                             "action": "RETRY",
+                            "icon": "rotate-ccw",
                             "label": "@config.retryLabel",
                             "type": "button",
                             "variant": "primary"
@@ -5606,6 +6169,11 @@
                             "edges": [],
                             "height": "@config.height",
                             "interactive": "@config.interactive",
+                            "keyMap": {
+                              "ArrowRight": "ADVANCE",
+                              "KeyR": "RETRY",
+                              "Space": "TOGGLE_RUN"
+                            },
                             "nodes": [],
                             "shapes": "@backdropShapes",
                             "type": "biology-canvas",
@@ -5905,9 +6473,100 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.roundComplete",
+                                    "Round complete",
+                                    [
+                                      "if",
+                                      [
+                                        "or",
+                                        [
+                                          "!=",
+                                          "@config.pointsPerCorrect",
+                                          1.0
+                                        ],
+                                        [
+                                          ">",
+                                          "@config.penaltyPerMiss",
+                                          0.0
+                                        ]
+                                      ],
+                                      [
+                                        "str/concat",
+                                        "Score ",
+                                        "@entity.score"
+                                      ],
+                                      [
+                                        "str/concat",
+                                        "@entity.correctCount",
+                                        " / ",
+                                        "@entity.attemptedCount",
+                                        " correct"
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.roundComplete",
+                                    "primary",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.verdict",
+                                        "correct"
+                                      ],
+                                      "success",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.verdict",
+                                          "incorrect"
+                                        ],
+                                        "error",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "label": [
@@ -6000,9 +6659,100 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.roundComplete",
+                                    "Round complete",
+                                    [
+                                      "if",
+                                      [
+                                        "or",
+                                        [
+                                          "!=",
+                                          "@config.pointsPerCorrect",
+                                          1.0
+                                        ],
+                                        [
+                                          ">",
+                                          "@config.penaltyPerMiss",
+                                          0.0
+                                        ]
+                                      ],
+                                      [
+                                        "str/concat",
+                                        "Score ",
+                                        "@entity.score"
+                                      ],
+                                      [
+                                        "str/concat",
+                                        "@entity.correctCount",
+                                        " / ",
+                                        "@entity.attemptedCount",
+                                        " correct"
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.roundComplete",
+                                    "primary",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.verdict",
+                                        "correct"
+                                      ],
+                                      "success",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.verdict",
+                                          "incorrect"
+                                        ],
+                                        "error",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "label": [
@@ -6332,6 +7082,26 @@
           {
             "name": "opacity",
             "type": "number"
+          },
+          {
+            "name": "tone",
+            "type": "string"
+          },
+          {
+            "name": "fillTone",
+            "type": "string"
+          },
+          {
+            "name": "stroke",
+            "type": "string"
+          },
+          {
+            "name": "textSize",
+            "type": "string"
+          },
+          {
+            "name": "fillStyle",
+            "type": "string"
           }
         ],
         "LearnClassifyShapePoint": [

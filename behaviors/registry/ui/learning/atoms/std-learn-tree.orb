@@ -358,8 +358,8 @@
               "type": "boolean"
             },
             "backgroundColor": {
-              "default": "#f8fafc",
-              "description": "Canvas background color.",
+              "default": "",
+              "description": "Canvas ground. Empty uses the theme drawing ground.",
               "label": "Background Color",
               "tier": "presentation",
               "type": "string"
@@ -393,6 +393,13 @@
               "synonyms": "comparisons, narration detail",
               "tier": "presentation",
               "type": "boolean"
+            },
+            "summary": {
+              "default": "",
+              "description": "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line.",
+              "label": "Concept",
+              "tier": "presentation",
+              "type": "string"
             },
             "title": {
               "default": "Ordered Tree",
@@ -918,14 +925,72 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.traversing",
+                                    "Traversing",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "Auto-stepping",
+                                      "Building"
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.traversing",
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "primary",
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "INSERT_VALUE",
+                                  "icon": "plus",
                                   "label": "Insert",
                                   "type": "button",
                                   "variant": "primary"
@@ -938,36 +1003,67 @@
                                 },
                                 {
                                   "action": "RUN_TRAVERSAL",
+                                  "icon": "step-forward",
                                   "label": "Traverse",
                                   "type": "button",
                                   "variant": "secondary"
                                 },
-                                {
-                                  "action": "TOGGLE_RUN",
-                                  "label": [
-                                    "if",
-                                    "@entity.running",
-                                    "Pause",
-                                    "Run"
-                                  ],
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "icon": "play",
+                                    "label": "Run",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  }
+                                ],
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "Reset",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      "@entity.count"
+                                    ],
+                                    " nodes"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "backgroundColor": "@config.backgroundColor",
                               "edges": "@entity.edges",
                               "height": "@config.height",
+                              "keyMap": {
+                                "ArrowRight": "RUN_TRAVERSAL",
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "layout": "tree",
                               "nodes": "@entity.nodes",
                               "root": "n0",
@@ -1007,6 +1103,48 @@
                   "==",
                   "@config.matchMode",
                   ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01M0CG89EJ61ZX62ZHT1AD0XJC",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@config.matchMode",
+                      ""
+                    ]
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1105,14 +1243,72 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.traversing",
+                                    "Traversing",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "Auto-stepping",
+                                      "Building"
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.traversing",
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "primary",
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "INSERT_VALUE",
+                                  "icon": "plus",
                                   "label": "Insert",
                                   "type": "button",
                                   "variant": "primary"
@@ -1125,36 +1321,67 @@
                                 },
                                 {
                                   "action": "RUN_TRAVERSAL",
+                                  "icon": "step-forward",
                                   "label": "Traverse",
                                   "type": "button",
                                   "variant": "secondary"
                                 },
-                                {
-                                  "action": "TOGGLE_RUN",
-                                  "label": [
-                                    "if",
-                                    "@entity.running",
-                                    "Pause",
-                                    "Run"
-                                  ],
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "icon": "play",
+                                    "label": "Run",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  }
+                                ],
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "Reset",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      "@entity.count"
+                                    ],
+                                    " nodes"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "backgroundColor": "@config.backgroundColor",
                               "edges": "@entity.edges",
                               "height": "@config.height",
+                              "keyMap": {
+                                "ArrowRight": "RUN_TRAVERSAL",
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "layout": "tree",
                               "nodes": "@entity.nodes",
                               "root": "n0",
@@ -1931,14 +2158,72 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.traversing",
+                                    "Traversing",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "Auto-stepping",
+                                      "Building"
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.traversing",
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "primary",
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "INSERT_VALUE",
+                                  "icon": "plus",
                                   "label": "Insert",
                                   "type": "button",
                                   "variant": "primary"
@@ -1951,36 +2236,67 @@
                                 },
                                 {
                                   "action": "RUN_TRAVERSAL",
+                                  "icon": "step-forward",
                                   "label": "Traverse",
                                   "type": "button",
                                   "variant": "secondary"
                                 },
-                                {
-                                  "action": "TOGGLE_RUN",
-                                  "label": [
-                                    "if",
-                                    "@entity.running",
-                                    "Pause",
-                                    "Run"
-                                  ],
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "icon": "play",
+                                    "label": "Run",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  }
+                                ],
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "Reset",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      "@entity.count"
+                                    ],
+                                    " nodes"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "backgroundColor": "@config.backgroundColor",
                               "edges": "@entity.edges",
                               "height": "@config.height",
+                              "keyMap": {
+                                "ArrowRight": "RUN_TRAVERSAL",
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "layout": "tree",
                               "nodes": "@entity.nodes",
                               "root": "n0",
@@ -2257,14 +2573,72 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.traversing",
+                                    "Traversing",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "Auto-stepping",
+                                      "Building"
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.traversing",
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "primary",
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "INSERT_VALUE",
+                                  "icon": "plus",
                                   "label": "Insert",
                                   "type": "button",
                                   "variant": "primary"
@@ -2277,36 +2651,67 @@
                                 },
                                 {
                                   "action": "RUN_TRAVERSAL",
+                                  "icon": "step-forward",
                                   "label": "Traverse",
                                   "type": "button",
                                   "variant": "secondary"
                                 },
-                                {
-                                  "action": "TOGGLE_RUN",
-                                  "label": [
-                                    "if",
-                                    "@entity.running",
-                                    "Pause",
-                                    "Run"
-                                  ],
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "icon": "play",
+                                    "label": "Run",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  }
+                                ],
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "Reset",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      "@entity.count"
+                                    ],
+                                    " nodes"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "backgroundColor": "@config.backgroundColor",
                               "edges": "@entity.edges",
                               "height": "@config.height",
+                              "keyMap": {
+                                "ArrowRight": "RUN_TRAVERSAL",
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "layout": "tree",
                               "nodes": "@entity.nodes",
                               "root": "n0",
@@ -2700,14 +3105,72 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.traversing",
+                                    "Traversing",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "Auto-stepping",
+                                      "Building"
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.traversing",
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "primary",
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "INSERT_VALUE",
+                                  "icon": "plus",
                                   "label": "Insert",
                                   "type": "button",
                                   "variant": "primary"
@@ -2720,36 +3183,67 @@
                                 },
                                 {
                                   "action": "RUN_TRAVERSAL",
+                                  "icon": "step-forward",
                                   "label": "Traverse",
                                   "type": "button",
                                   "variant": "secondary"
                                 },
-                                {
-                                  "action": "TOGGLE_RUN",
-                                  "label": [
-                                    "if",
-                                    "@entity.running",
-                                    "Pause",
-                                    "Run"
-                                  ],
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "icon": "play",
+                                    "label": "Run",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  }
+                                ],
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "Reset",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      "@entity.count"
+                                    ],
+                                    " nodes"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "backgroundColor": "@config.backgroundColor",
                               "edges": "@entity.edges",
                               "height": "@config.height",
+                              "keyMap": {
+                                "ArrowRight": "RUN_TRAVERSAL",
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "layout": "tree",
                               "nodes": "@entity.nodes",
                               "root": "n0",
@@ -2828,14 +3322,72 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.traversing",
+                                    "Traversing",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "Auto-stepping",
+                                      "Building"
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.traversing",
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "primary",
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "INSERT_VALUE",
+                                  "icon": "plus",
                                   "label": "Insert",
                                   "type": "button",
                                   "variant": "primary"
@@ -2848,36 +3400,67 @@
                                 },
                                 {
                                   "action": "RUN_TRAVERSAL",
+                                  "icon": "step-forward",
                                   "label": "Traverse",
                                   "type": "button",
                                   "variant": "secondary"
                                 },
-                                {
-                                  "action": "TOGGLE_RUN",
-                                  "label": [
-                                    "if",
-                                    "@entity.running",
-                                    "Pause",
-                                    "Run"
-                                  ],
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "icon": "play",
+                                    "label": "Run",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  }
+                                ],
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "Reset",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      "@entity.count"
+                                    ],
+                                    " nodes"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "backgroundColor": "@config.backgroundColor",
                               "edges": "@entity.edges",
                               "height": "@config.height",
+                              "keyMap": {
+                                "ArrowRight": "RUN_TRAVERSAL",
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "layout": "tree",
                               "nodes": "@entity.nodes",
                               "root": "n0",
@@ -3005,14 +3588,72 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.traversing",
+                                    "Traversing",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "Auto-stepping",
+                                      "Building"
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.traversing",
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "primary",
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "INSERT_VALUE",
+                                  "icon": "plus",
                                   "label": "Insert",
                                   "type": "button",
                                   "variant": "primary"
@@ -3025,36 +3666,67 @@
                                 },
                                 {
                                   "action": "RUN_TRAVERSAL",
+                                  "icon": "step-forward",
                                   "label": "Traverse",
                                   "type": "button",
                                   "variant": "secondary"
                                 },
-                                {
-                                  "action": "TOGGLE_RUN",
-                                  "label": [
-                                    "if",
-                                    "@entity.running",
-                                    "Pause",
-                                    "Run"
-                                  ],
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "icon": "play",
+                                    "label": "Run",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  }
+                                ],
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "Reset",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      "@entity.count"
+                                    ],
+                                    " nodes"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "backgroundColor": "@config.backgroundColor",
                               "edges": "@entity.edges",
                               "height": "@config.height",
+                              "keyMap": {
+                                "ArrowRight": "RUN_TRAVERSAL",
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "layout": "tree",
                               "nodes": "@entity.nodes",
                               "root": "n0",
@@ -3443,14 +4115,72 @@
                       {
                         "children": [
                           {
-                            "content": "@entity.title",
-                            "type": "typography",
-                            "variant": "h4"
+                            "align": "start",
+                            "children": [
+                              {
+                                "children": [
+                                  {
+                                    "content": "@entity.title",
+                                    "type": "typography",
+                                    "variant": "h4"
+                                  },
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@config.summary",
+                                      ""
+                                    ],
+                                    null,
+                                    {
+                                      "color": "muted",
+                                      "content": "@config.summary",
+                                      "type": "typography",
+                                      "variant": "body2"
+                                    }
+                                  ]
+                                ],
+                                "direction": "vertical",
+                                "gap": "xs",
+                                "type": "stack"
+                              },
+                              {
+                                "label": [
+                                  "if",
+                                  "@entity.traversing",
+                                  "Traversing",
+                                  [
+                                    "if",
+                                    "@entity.running",
+                                    "Auto-stepping",
+                                    "Building"
+                                  ]
+                                ],
+                                "type": "badge",
+                                "variant": [
+                                  "if",
+                                  "@entity.traversing",
+                                  "success",
+                                  [
+                                    "if",
+                                    "@entity.running",
+                                    "primary",
+                                    "neutral"
+                                  ]
+                                ]
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "md",
+                            "justify": "between",
+                            "type": "stack"
                           },
                           {
+                            "align": "center",
                             "children": [
                               {
                                 "action": "INSERT_VALUE",
+                                "icon": "plus",
                                 "label": "Insert",
                                 "type": "button",
                                 "variant": "primary"
@@ -3463,36 +4193,67 @@
                               },
                               {
                                 "action": "RUN_TRAVERSAL",
+                                "icon": "step-forward",
                                 "label": "Traverse",
                                 "type": "button",
                                 "variant": "secondary"
                               },
-                              {
-                                "action": "TOGGLE_RUN",
-                                "label": [
-                                  "if",
-                                  "@entity.running",
-                                  "Pause",
-                                  "Run"
-                                ],
-                                "type": "button",
-                                "variant": "secondary"
-                              },
+                              [
+                                "if",
+                                "@entity.running",
+                                {
+                                  "action": "TOGGLE_RUN",
+                                  "aria-pressed": "true",
+                                  "icon": "pause",
+                                  "label": "Pause",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "TOGGLE_RUN",
+                                  "aria-pressed": "false",
+                                  "icon": "play",
+                                  "label": "Run",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                }
+                              ],
                               {
                                 "action": "RESET",
+                                "icon": "rotate-ccw",
                                 "label": "Reset",
                                 "type": "button",
                                 "variant": "ghost"
+                              },
+                              {
+                                "color": "muted",
+                                "content": [
+                                  "str/concat",
+                                  [
+                                    "str/concat",
+                                    "",
+                                    "@entity.count"
+                                  ],
+                                  " nodes"
+                                ],
+                                "type": "typography",
+                                "variant": "caption"
                               }
                             ],
                             "direction": "horizontal",
                             "gap": "sm",
-                            "type": "stack"
+                            "type": "stack",
+                            "wrap": true
                           },
                           {
                             "backgroundColor": "@config.backgroundColor",
                             "edges": "@entity.edges",
                             "height": "@config.height",
+                            "keyMap": {
+                              "ArrowRight": "RUN_TRAVERSAL",
+                              "KeyR": "RESET",
+                              "Space": "TOGGLE_RUN"
+                            },
                             "layout": "tree",
                             "nodes": "@entity.nodes",
                             "root": "n0",

@@ -99,6 +99,8 @@ export interface StdLearnEstimateConfig {
   sliderMin?: number;
   /** Default: `0.1` */
   sliderStep?: number;
+  /** Default: `""` */
+  summary?: string;
   /** Default: `"Estimate It"` */
   title?: string;
 }

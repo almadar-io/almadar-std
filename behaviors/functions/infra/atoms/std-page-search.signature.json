@@ -1,0 +1,264 @@
+[
+  {
+    "organism": "std-page-search",
+    "orbital": "PageSearchOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/infra/atoms/std-page-search.ts",
+    "entities": [
+      {
+        "name": "PageSearchRecord",
+        "fields": [
+          {
+            "name": "query",
+            "type": "string",
+            "required": false,
+            "description": "The search being run",
+            "synonyms": "search term, terms, topic"
+          },
+          {
+            "name": "tab",
+            "type": "number",
+            "required": false,
+            "description": "The background tab running the search; 0 = none",
+            "synonyms": "tab id"
+          },
+          {
+            "name": "errorMessage",
+            "type": "string",
+            "required": false,
+            "description": "Why the last search failed; blank = none",
+            "synonyms": "error, failure reason"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false,
+            "description": "Whether a search is running",
+            "synonyms": "state, busy"
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "PageSearch",
+        "emittedEvents": [
+          "TAB_OPENED",
+          "RESULTS_READ",
+          "SEARCH_CALL_FAILED",
+          "RESULTS",
+          "SEARCH_FAILED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "TAB_OPENED",
+            "direction": "emit",
+            "description": "The background tab for the search is open",
+            "tier": "secondary"
+          },
+          {
+            "name": "RESULTS_READ",
+            "direction": "emit",
+            "description": "The results were read from the search page",
+            "tier": "secondary"
+          },
+          {
+            "name": "SEARCH_CALL_FAILED",
+            "direction": "emit",
+            "description": "Opening the search page or reading it failed",
+            "tier": "secondary"
+          },
+          {
+            "name": "RESULTS",
+            "direction": "emit",
+            "description": "What one search found: each result's element id and the fields read from it",
+            "synonyms": "search results, found, hits",
+            "tier": "primary"
+          },
+          {
+            "name": "SEARCH_FAILED",
+            "direction": "emit",
+            "description": "The search could not be run or read",
+            "tier": "primary"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "SEARCH",
+            "direction": "listen",
+            "description": "Search the site for `query`"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "fields",
+            "type": "Map<string,PageField>",
+            "default": {},
+            "label": "Fields",
+            "description": "Field name to how to read it from each result: `selector` (a descendant; absent reads the result itself), `attr` (an attribute; absent reads the text) and `resolve` (the attribute is a URL: return it absolute)",
+            "synonyms": "columns, properties, extract",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "attr": {
+                  "name": "attr",
+                  "required": false,
+                  "type": "string"
+                },
+                "resolve": {
+                  "name": "resolve",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "selector": {
+                  "name": "selector",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "maxResults",
+            "type": "number",
+            "default": 10,
+            "label": "Results per search",
+            "description": "Most results read from one search",
+            "synonyms": "limit, count, how many",
+            "tier": "policy"
+          },
+          {
+            "key": "queryParam",
+            "type": "string",
+            "default": "q",
+            "label": "Query parameter",
+            "description": "Name of the URL parameter that carries the search terms",
+            "synonyms": "query key, search parameter",
+            "tier": "domain"
+          },
+          {
+            "key": "resultSelector",
+            "type": "string",
+            "default": ".result",
+            "label": "Result selector",
+            "description": "CSS selector of one result on the results page",
+            "synonyms": "result, item, card, tile",
+            "tier": "domain"
+          },
+          {
+            "key": "resultsMatch",
+            "type": "string",
+            "default": "https://example.com/search*",
+            "label": "Results pages",
+            "description": "URL match pattern the results page lies in (Chrome match-pattern syntax); the search page must match it, and the extension asks for access to exactly these pages",
+            "synonyms": "site, url pattern, results url",
+            "tier": "domain"
+          },
+          {
+            "key": "searchUrl",
+            "type": "string",
+            "default": "https://example.com/search",
+            "label": "Search page",
+            "description": "URL of the site's search results page, without the query",
+            "synonyms": "search url, results page, endpoint",
+            "tier": "domain"
+          },
+          {
+            "key": "statusSlot",
+            "type": "slot",
+            "default": "main",
+            "label": "Status slot",
+            "description": "Where the atom shows its one-line status; an organism running it in the background sends it to `system`",
+            "synonyms": "status area, slot",
+            "tier": "presentation"
+          },
+          {
+            "key": "waitMs",
+            "type": "number",
+            "default": 8000,
+            "label": "Wait for results (ms)",
+            "description": "How long to wait for the results page to load and its first result to appear",
+            "synonyms": "timeout, wait, patience",
+            "tier": "infra"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "PageSearchRecord",
+        "transitionEvents": [
+          "INIT",
+          "RESULTS_READ",
+          "SEARCH",
+          "SEARCH_CALL_FAILED",
+          "TAB_OPENED"
+        ],
+        "definerKnobs": [],
+        "effectRow": [
+          {
+            "kind": "call-service",
+            "resource": "page.closeTab"
+          },
+          {
+            "kind": "call-service",
+            "resource": "page.openTab"
+          },
+          {
+            "kind": "call-service",
+            "resource": "page.query"
+          },
+          {
+            "kind": "emit",
+            "resource": "RESULTS"
+          },
+          {
+            "kind": "emit",
+            "resource": "SEARCH_FAILED"
+          },
+          {
+            "kind": "render-ui",
+            "resolved": false,
+            "resource": "@config.statusSlot"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.errorMessage"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.query"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.status"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.tab"
+          }
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "PageSearchPage",
+        "defaultPath": "/page-search",
+        "primaryEntity": "PageSearchRecord"
+      }
+    ],
+    "emittedEvents": [
+      "RESULTS",
+      "RESULTS_READ",
+      "SEARCH_CALL_FAILED",
+      "SEARCH_FAILED",
+      "TAB_OPENED"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

@@ -31,6 +31,11 @@ orbital LearnClassifyOrbital {
     fill : string
     lineWidth : number
     opacity : number
+    tone : string
+    fillTone : string
+    stroke : string
+    textSize : string
+    fillStyle : string
   }
   type LearnClassifyItemOption = {
     category : string!
@@ -117,8 +122,8 @@ orbital LearnClassifyOrbital {
             (plotBottom (- @config.height @marginY))
             (tierHeight (/ @plotHeight @categoryCount))
             (maxWidth (* @plotWidth 0.95))
-            (minWidth (* @plotWidth 0.3))
-            (widthStep (/ (- @maxWidth @minWidth) (- @categoryCount 1)))
+            (minWidth (- @maxWidth (* @config.taper (- @maxWidth (* @plotWidth 0.3)))))
+            (widthStep (/ (- @maxWidth @minWidth) (math/max 1 (- @categoryCount 1))))
             (centerX (/ @config.width 2))
             (revealed (!= @entity.selectedCategory ""))
             (rects (array/flatten (array/map (array/range @categoryCount) (fn i (let (
@@ -130,10 +135,10 @@ orbital LearnClassifyOrbital {
                   (isCorrectCategory (== @categoryValue @entity.correctCategory))
                   (isSelectedCategory (== @categoryValue @entity.selectedCategory))
                   (fillColor (if (and @revealed @isCorrectCategory) @config.correctColor (if (and @revealed @isSelectedCategory) @config.incorrectColor (object/get @category color))))
-                  (baseRect { type: rect, id: (str/concat "category-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, color: @fillColor, fill: @fillColor })
+                  (baseRect { type: rect, id: (str/concat "category-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, tone: @fillColor, fillTone: @fillColor, fillStyle: "tint" })
                 )
                 (if (and @revealed @isSelectedCategory)
-                  [ @baseRect, { type: rect, id: (str/concat "category-pick-ring-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, color: "#0f172a", fill: "transparent", lineWidth: 3, opacity: 1 } ]
+                  [ @baseRect, { type: rect, id: (str/concat "category-pick-ring-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, tone: "ink", fillStyle: "outline", stroke: "bold", opacity: 1 } ]
                   [ @baseRect ]
                 )
               )))))
@@ -141,30 +146,34 @@ orbital LearnClassifyOrbital {
                   (category (array/nth @config.categories @i))
                   (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
                 )
-                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (object/get @category label), fontSize: 13, align: "center", color: "#0f172a" }))))
+                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (object/get @category label), textSize: "sm", align: "center", tone: "label" }))))
             (backdropShapes (array/concat @rects @labels))
             (summaryView [
               { type: typography, variant: h4, content: "Round Complete" },
               { type: stat-display, label: "Final Score", value: @entity.correctCount, max: @entity.attemptedCount },
               { type: stack, direction: vertical, gap: xs, children: (array/map @entity.categoryStats (fn s { type: typography, variant: body, content: (str/concat (object/get @s label) ": " (str/concat "" (object/get @s correct)) "/" (str/concat "" (object/get @s attempted))) })) },
-              { type: button, action: RETRY, label: @config.retryLabel, variant: primary }
+              { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: primary }
             ])
             (itemView [
               { type: card, variant: bordered, padding: md, children: (array/concat [
                   { type: typography, variant: body, content: @entity.itemText }
                 ] (if (and @config.showHint (!= @entity.itemHint "")) [ { type: typography, variant: caption, color: muted, content: @entity.itemHint } ] [])) },
-              { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @backdropShapes, interactive: @config.interactive, animate: @config.animate },
-              { type: stack, direction: horizontal, gap: xs, children: (let (
+              { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @backdropShapes, interactive: @config.interactive, animate: @config.animate, keyMap: { Space: TOGGLE_RUN, ArrowRight: ADVANCE, KeyR: RETRY } },
+              { type: stack, direction: vertical, gap: sm, children: (let (
                     (itemOptions (object/get (array/nth @config.items @entity.itemIndex) options []))
+                    (locked (!= @entity.selectedCategory ""))
                   ) (if (> (array/len @itemOptions) 0)
-                    (array/map @itemOptions (fn o { type: button, action: PICK, actionPayload: { category: (object/get @o category) }, label: (object/get @o label), variant: (if (== @entity.selectedCategory (object/get @o category)) "primary" "secondary"), size: sm }))
-                    (array/map (array/reverse @config.categories) (fn c { type: button, action: PICK, actionPayload: { category: (object/get @c value) }, label: (object/get @c label), variant: (if (== @entity.selectedCategory (object/get @c value)) "primary" "secondary"), size: sm })))) },
-              { type: stack, direction: horizontal, gap: xs, children: (array/concat (if (!= @entity.verdict "") [ { type: badge, variant: (if (== @entity.verdict "correct") "success" "danger"), label: (if (== @entity.verdict "correct") "Correct" "Incorrect") } ] []) [ { type: typography, variant: caption, content: @entity.feedback } ]) },
-              { type: stack, direction: horizontal, gap: sm, children: [
-                  { type: button, action: ADVANCE, label: @config.advanceLabel, variant: primary, disabled: (if (== @entity.selectedCategory "") true false) },
-                  { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Auto"), variant: ghost }
-                ] },
-              { type: stat-display, label: (if (> @config.passScore 0) (str/concat "Score — pass at " @config.passScore) "Score"), value: (if (or (!= @config.pointsPerCorrect 1) (> @config.penaltyPerMiss 0)) @entity.score @entity.correctCount), max: (if (or (!= @config.pointsPerCorrect 1) (> @config.penaltyPerMiss 0)) (if (> @config.scoreCap 0) @config.scoreCap (* @entity.totalItems @config.pointsPerCorrect)) @entity.attemptedCount) }
+                    (array/map @itemOptions (fn o { type: button, action: PICK, actionPayload: { category: (object/get @o category) }, label: (object/get @o label), size: lg, disabled: @locked, variant: (if (not @locked) "secondary" (if (== (object/get @o category) @entity.correctCategory) "success" (if (== (object/get @o category) @entity.selectedCategory) "danger" "ghost"))) }))
+                    (array/map (array/reverse @config.categories) (fn c { type: button, action: PICK, actionPayload: { category: (object/get @c value) }, label: (object/get @c label), size: lg, disabled: @locked, variant: (if (not @locked) "secondary" (if (== (object/get @c value) @entity.correctCategory) "success" (if (== (object/get @c value) @entity.selectedCategory) "danger" "ghost"))) })))) },
+              (if (== @entity.verdict "") null { type: stack, direction: vertical, gap: xs, children: [
+                  { type: badge, variant: (if (== @entity.verdict "correct") "success" "error"), label: (if (== @entity.verdict "correct") "Correct" "Incorrect") },
+                  { type: typography, variant: body, content: @entity.feedback }
+                ] }),
+              { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                  { type: button, action: ADVANCE, label: @config.advanceLabel, icon: "chevron-right", variant: primary, disabled: (== @entity.selectedCategory "") },
+                  (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: ghost, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Auto", icon: "play", variant: ghost, aria-pressed: "false" }),
+                  (if (> @config.passScore 0) { type: typography, variant: caption, color: muted, content: (str/concat "Pass at " @config.passScore) } null)
+                ] }
             ])
           )
           (do
@@ -177,12 +186,23 @@ orbital LearnClassifyOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.roundComplete "Round complete" (if (or (!= @config.pointsPerCorrect 1) (> @config.penaltyPerMiss 0)) (str/concat "Score " @entity.score) (str/concat @entity.correctCount " / " @entity.attemptedCount " correct"))), variant: (if @entity.roundComplete "primary" (if (== @entity.verdict "correct") "success" (if (== @entity.verdict "incorrect") "error" "neutral"))) }
+                  ] },
                 { type: progress-bar, value: (+ @entity.itemIndex 1), max: @entity.totalItems, showPercentage: false, label: (str/concat "Item " (str/concat "" (+ @entity.itemIndex 1)) " of " (str/concat "" @entity.totalItems)) },
                 { type: stack, direction: vertical, gap: md, children: @entity.roundView }
               ] }
           ]
         })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (set @entity.running false)
+        (render-ui main null)
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (set @entity.active true)
@@ -218,8 +238,8 @@ orbital LearnClassifyOrbital {
             (plotBottom (- @config.height @marginY))
             (tierHeight (/ @plotHeight @categoryCount))
             (maxWidth (* @plotWidth 0.95))
-            (minWidth (* @plotWidth 0.3))
-            (widthStep (/ (- @maxWidth @minWidth) (- @categoryCount 1)))
+            (minWidth (- @maxWidth (* @config.taper (- @maxWidth (* @plotWidth 0.3)))))
+            (widthStep (/ (- @maxWidth @minWidth) (math/max 1 (- @categoryCount 1))))
             (centerX (/ @config.width 2))
             (revealed (!= @entity.selectedCategory ""))
             (rects (array/flatten (array/map (array/range @categoryCount) (fn i (let (
@@ -231,10 +251,10 @@ orbital LearnClassifyOrbital {
                   (isCorrectCategory (== @categoryValue @entity.correctCategory))
                   (isSelectedCategory (== @categoryValue @entity.selectedCategory))
                   (fillColor (if (and @revealed @isCorrectCategory) @config.correctColor (if (and @revealed @isSelectedCategory) @config.incorrectColor (object/get @category color))))
-                  (baseRect { type: rect, id: (str/concat "category-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, color: @fillColor, fill: @fillColor })
+                  (baseRect { type: rect, id: (str/concat "category-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, tone: @fillColor, fillTone: @fillColor, fillStyle: "tint" })
                 )
                 (if (and @revealed @isSelectedCategory)
-                  [ @baseRect, { type: rect, id: (str/concat "category-pick-ring-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, color: "#0f172a", fill: "transparent", lineWidth: 3, opacity: 1 } ]
+                  [ @baseRect, { type: rect, id: (str/concat "category-pick-ring-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, tone: "ink", fillStyle: "outline", stroke: "bold", opacity: 1 } ]
                   [ @baseRect ]
                 )
               )))))
@@ -242,19 +262,19 @@ orbital LearnClassifyOrbital {
                   (category (array/nth @config.categories @i))
                   (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
                 )
-                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (object/get @category label), fontSize: 13, align: "center", color: "#0f172a" }))))
+                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (object/get @category label), textSize: "sm", align: "center", tone: "label" }))))
             (backdropShapes (array/concat @rects @labels))
             (summaryView [
               { type: typography, variant: h4, content: "Round Complete" },
               { type: stat-display, label: "Final Score", value: @entity.correctCount, max: @entity.attemptedCount },
               { type: stack, direction: vertical, gap: xs, children: (array/map @entity.categoryStats (fn s { type: typography, variant: body, content: (str/concat (object/get @s label) ": " (str/concat "" (object/get @s correct)) "/" (str/concat "" (object/get @s attempted))) })) },
-              { type: button, action: RETRY, label: @config.retryLabel, variant: primary }
+              { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: primary }
             ])
             (itemView [
               { type: card, variant: bordered, padding: md, children: (array/concat [
                   { type: typography, variant: body, content: @entity.itemText }
                 ] (if (and @config.showHint (!= @entity.itemHint "")) [ { type: typography, variant: caption, color: muted, content: @entity.itemHint } ] [])) },
-              { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @backdropShapes, interactive: @config.interactive, animate: @config.animate },
+              { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @backdropShapes, interactive: @config.interactive, animate: @config.animate, keyMap: { Space: TOGGLE_RUN, ArrowRight: ADVANCE, KeyR: RETRY } },
               { type: stack, direction: horizontal, gap: xs, children: (let (
                     (itemOptions (object/get (array/nth @config.items @entity.itemIndex) options []))
                   ) (if (> (array/len @itemOptions) 0)
@@ -278,7 +298,13 @@ orbital LearnClassifyOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.roundComplete "Round complete" (if (or (!= @config.pointsPerCorrect 1) (> @config.penaltyPerMiss 0)) (str/concat "Score " @entity.score) (str/concat @entity.correctCount " / " @entity.attemptedCount " correct"))), variant: (if @entity.roundComplete "primary" (if (== @entity.verdict "correct") "success" (if (== @entity.verdict "incorrect") "error" "neutral"))) }
+                  ] },
                 { type: progress-bar, value: (+ @entity.itemIndex 1), max: @entity.totalItems, showPercentage: false, label: (str/concat "Item " (str/concat "" (+ @entity.itemIndex 1)) " of " (str/concat "" @entity.totalItems)) },
                 { type: stack, direction: vertical, gap: md, children: @entity.roundView }
               ] }
@@ -313,8 +339,8 @@ orbital LearnClassifyOrbital {
             (plotBottom (- @config.height @marginY))
             (tierHeight (/ @plotHeight @categoryCount))
             (maxWidth (* @plotWidth 0.95))
-            (minWidth (* @plotWidth 0.3))
-            (widthStep (/ (- @maxWidth @minWidth) (- @categoryCount 1)))
+            (minWidth (- @maxWidth (* @config.taper (- @maxWidth (* @plotWidth 0.3)))))
+            (widthStep (/ (- @maxWidth @minWidth) (math/max 1 (- @categoryCount 1))))
             (centerX (/ @config.width 2))
             (revealed (!= @entity.selectedCategory ""))
             (rects (array/flatten (array/map (array/range @categoryCount) (fn i (let (
@@ -326,10 +352,10 @@ orbital LearnClassifyOrbital {
                   (isCorrectCategory (== @categoryValue @entity.correctCategory))
                   (isSelectedCategory (== @categoryValue @entity.selectedCategory))
                   (fillColor (if (and @revealed @isCorrectCategory) @config.correctColor (if (and @revealed @isSelectedCategory) @config.incorrectColor (object/get @category color))))
-                  (baseRect { type: rect, id: (str/concat "category-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, color: @fillColor, fill: @fillColor })
+                  (baseRect { type: rect, id: (str/concat "category-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, tone: @fillColor, fillTone: @fillColor, fillStyle: "tint" })
                 )
                 (if (and @revealed @isSelectedCategory)
-                  [ @baseRect, { type: rect, id: (str/concat "category-pick-ring-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, color: "#0f172a", fill: "transparent", lineWidth: 3, opacity: 1 } ]
+                  [ @baseRect, { type: rect, id: (str/concat "category-pick-ring-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, tone: "ink", fillStyle: "outline", stroke: "bold", opacity: 1 } ]
                   [ @baseRect ]
                 )
               )))))
@@ -337,19 +363,19 @@ orbital LearnClassifyOrbital {
                   (category (array/nth @config.categories @i))
                   (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
                 )
-                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (object/get @category label), fontSize: 13, align: "center", color: "#0f172a" }))))
+                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (object/get @category label), textSize: "sm", align: "center", tone: "label" }))))
             (backdropShapes (array/concat @rects @labels))
             (summaryView [
               { type: typography, variant: h4, content: "Round Complete" },
               { type: stat-display, label: "Final Score", value: @entity.correctCount, max: @entity.attemptedCount },
               { type: stack, direction: vertical, gap: xs, children: (array/map @entity.categoryStats (fn s { type: typography, variant: body, content: (str/concat (object/get @s label) ": " (str/concat "" (object/get @s correct)) "/" (str/concat "" (object/get @s attempted))) })) },
-              { type: button, action: RETRY, label: @config.retryLabel, variant: primary }
+              { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: primary }
             ])
             (itemView [
               { type: card, variant: bordered, padding: md, children: (array/concat [
                   { type: typography, variant: body, content: @entity.itemText }
                 ] (if (and @config.showHint (!= @entity.itemHint "")) [ { type: typography, variant: caption, color: muted, content: @entity.itemHint } ] [])) },
-              { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @backdropShapes, interactive: @config.interactive, animate: @config.animate },
+              { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @backdropShapes, interactive: @config.interactive, animate: @config.animate, keyMap: { Space: TOGGLE_RUN, ArrowRight: ADVANCE, KeyR: RETRY } },
               { type: stack, direction: horizontal, gap: xs, children: (let (
                     (itemOptions (object/get (array/nth @config.items @entity.itemIndex) options []))
                   ) (if (> (array/len @itemOptions) 0)
@@ -373,7 +399,13 @@ orbital LearnClassifyOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.roundComplete "Round complete" (if (or (!= @config.pointsPerCorrect 1) (> @config.penaltyPerMiss 0)) (str/concat "Score " @entity.score) (str/concat @entity.correctCount " / " @entity.attemptedCount " correct"))), variant: (if @entity.roundComplete "primary" (if (== @entity.verdict "correct") "success" (if (== @entity.verdict "incorrect") "error" "neutral"))) }
+                  ] },
                 { type: progress-bar, value: (+ @entity.itemIndex 1), max: @entity.totalItems, showPercentage: false, label: (str/concat "Item " (str/concat "" (+ @entity.itemIndex 1)) " of " (str/concat "" @entity.totalItems)) },
                 { type: stack, direction: vertical, gap: md, children: @entity.roundView }
               ] }
@@ -419,8 +451,8 @@ orbital LearnClassifyOrbital {
             (plotBottom (- @config.height @marginY))
             (tierHeight (/ @plotHeight @categoryCount))
             (maxWidth (* @plotWidth 0.95))
-            (minWidth (* @plotWidth 0.3))
-            (widthStep (/ (- @maxWidth @minWidth) (- @categoryCount 1)))
+            (minWidth (- @maxWidth (* @config.taper (- @maxWidth (* @plotWidth 0.3)))))
+            (widthStep (/ (- @maxWidth @minWidth) (math/max 1 (- @categoryCount 1))))
             (centerX (/ @config.width 2))
             (revealed (!= @entity.selectedCategory ""))
             (rects (array/flatten (array/map (array/range @categoryCount) (fn i (let (
@@ -432,10 +464,10 @@ orbital LearnClassifyOrbital {
                   (isCorrectCategory (== @categoryValue @entity.correctCategory))
                   (isSelectedCategory (== @categoryValue @entity.selectedCategory))
                   (fillColor (if (and @revealed @isCorrectCategory) @config.correctColor (if (and @revealed @isSelectedCategory) @config.incorrectColor (object/get @category color))))
-                  (baseRect { type: rect, id: (str/concat "category-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, color: @fillColor, fill: @fillColor })
+                  (baseRect { type: rect, id: (str/concat "category-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, tone: @fillColor, fillTone: @fillColor, fillStyle: "tint" })
                 )
                 (if (and @revealed @isSelectedCategory)
-                  [ @baseRect, { type: rect, id: (str/concat "category-pick-ring-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, color: "#0f172a", fill: "transparent", lineWidth: 3, opacity: 1 } ]
+                  [ @baseRect, { type: rect, id: (str/concat "category-pick-ring-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, tone: "ink", fillStyle: "outline", stroke: "bold", opacity: 1 } ]
                   [ @baseRect ]
                 )
               )))))
@@ -443,19 +475,19 @@ orbital LearnClassifyOrbital {
                   (category (array/nth @config.categories @i))
                   (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
                 )
-                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (object/get @category label), fontSize: 13, align: "center", color: "#0f172a" }))))
+                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (object/get @category label), textSize: "sm", align: "center", tone: "label" }))))
             (backdropShapes (array/concat @rects @labels))
             (summaryView [
               { type: typography, variant: h4, content: "Round Complete" },
               { type: stat-display, label: "Final Score", value: @entity.correctCount, max: @entity.attemptedCount },
               { type: stack, direction: vertical, gap: xs, children: (array/map @entity.categoryStats (fn s { type: typography, variant: body, content: (str/concat (object/get @s label) ": " (str/concat "" (object/get @s correct)) "/" (str/concat "" (object/get @s attempted))) })) },
-              { type: button, action: RETRY, label: @config.retryLabel, variant: primary }
+              { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: primary }
             ])
             (itemView [
               { type: card, variant: bordered, padding: md, children: (array/concat [
                   { type: typography, variant: body, content: @entity.itemText }
                 ] (if (and @config.showHint (!= @entity.itemHint "")) [ { type: typography, variant: caption, color: muted, content: @entity.itemHint } ] [])) },
-              { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @backdropShapes, interactive: @config.interactive, animate: @config.animate },
+              { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @backdropShapes, interactive: @config.interactive, animate: @config.animate, keyMap: { Space: TOGGLE_RUN, ArrowRight: ADVANCE, KeyR: RETRY } },
               { type: stack, direction: horizontal, gap: xs, children: (let (
                     (itemOptions (object/get (array/nth @config.items @entity.itemIndex) options []))
                   ) (if (> (array/len @itemOptions) 0)
@@ -479,7 +511,13 @@ orbital LearnClassifyOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.roundComplete "Round complete" (if (or (!= @config.pointsPerCorrect 1) (> @config.penaltyPerMiss 0)) (str/concat "Score " @entity.score) (str/concat @entity.correctCount " / " @entity.attemptedCount " correct"))), variant: (if @entity.roundComplete "primary" (if (== @entity.verdict "correct") "success" (if (== @entity.verdict "incorrect") "error" "neutral"))) }
+                  ] },
                 { type: progress-bar, value: (+ @entity.itemIndex 1), max: @entity.totalItems, showPercentage: false, label: (str/concat "Item " (str/concat "" (+ @entity.itemIndex 1)) " of " (str/concat "" @entity.totalItems)) },
                 { type: stack, direction: vertical, gap: md, children: @entity.roundView }
               ] }
@@ -519,8 +557,8 @@ orbital LearnClassifyOrbital {
             (plotBottom (- @config.height @marginY))
             (tierHeight (/ @plotHeight @categoryCount))
             (maxWidth (* @plotWidth 0.95))
-            (minWidth (* @plotWidth 0.3))
-            (widthStep (/ (- @maxWidth @minWidth) (- @categoryCount 1)))
+            (minWidth (- @maxWidth (* @config.taper (- @maxWidth (* @plotWidth 0.3)))))
+            (widthStep (/ (- @maxWidth @minWidth) (math/max 1 (- @categoryCount 1))))
             (centerX (/ @config.width 2))
             (revealed (!= @entity.selectedCategory ""))
             (rects (array/flatten (array/map (array/range @categoryCount) (fn i (let (
@@ -532,10 +570,10 @@ orbital LearnClassifyOrbital {
                   (isCorrectCategory (== @categoryValue @entity.correctCategory))
                   (isSelectedCategory (== @categoryValue @entity.selectedCategory))
                   (fillColor (if (and @revealed @isCorrectCategory) @config.correctColor (if (and @revealed @isSelectedCategory) @config.incorrectColor (object/get @category color))))
-                  (baseRect { type: rect, id: (str/concat "category-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, color: @fillColor, fill: @fillColor })
+                  (baseRect { type: rect, id: (str/concat "category-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, tone: @fillColor, fillTone: @fillColor, fillStyle: "tint" })
                 )
                 (if (and @revealed @isSelectedCategory)
-                  [ @baseRect, { type: rect, id: (str/concat "category-pick-ring-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, color: "#0f172a", fill: "transparent", lineWidth: 3, opacity: 1 } ]
+                  [ @baseRect, { type: rect, id: (str/concat "category-pick-ring-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, tone: "ink", fillStyle: "outline", stroke: "bold", opacity: 1 } ]
                   [ @baseRect ]
                 )
               )))))
@@ -543,19 +581,19 @@ orbital LearnClassifyOrbital {
                   (category (array/nth @config.categories @i))
                   (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
                 )
-                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (object/get @category label), fontSize: 13, align: "center", color: "#0f172a" }))))
+                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (object/get @category label), textSize: "sm", align: "center", tone: "label" }))))
             (backdropShapes (array/concat @rects @labels))
             (summaryView [
               { type: typography, variant: h4, content: "Round Complete" },
               { type: stat-display, label: "Final Score", value: @entity.correctCount, max: @entity.attemptedCount },
               { type: stack, direction: vertical, gap: xs, children: (array/map @entity.categoryStats (fn s { type: typography, variant: body, content: (str/concat (object/get @s label) ": " (str/concat "" (object/get @s correct)) "/" (str/concat "" (object/get @s attempted))) })) },
-              { type: button, action: RETRY, label: @config.retryLabel, variant: primary }
+              { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: primary }
             ])
             (itemView [
               { type: card, variant: bordered, padding: md, children: (array/concat [
                   { type: typography, variant: body, content: @entity.itemText }
                 ] (if (and @config.showHint (!= @entity.itemHint "")) [ { type: typography, variant: caption, color: muted, content: @entity.itemHint } ] [])) },
-              { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @backdropShapes, interactive: @config.interactive, animate: @config.animate },
+              { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @backdropShapes, interactive: @config.interactive, animate: @config.animate, keyMap: { Space: TOGGLE_RUN, ArrowRight: ADVANCE, KeyR: RETRY } },
               { type: stack, direction: horizontal, gap: xs, children: (let (
                     (itemOptions (object/get (array/nth @config.items @entity.itemIndex) options []))
                   ) (if (> (array/len @itemOptions) 0)
@@ -579,7 +617,13 @@ orbital LearnClassifyOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.roundComplete "Round complete" (if (or (!= @config.pointsPerCorrect 1) (> @config.penaltyPerMiss 0)) (str/concat "Score " @entity.score) (str/concat @entity.correctCount " / " @entity.attemptedCount " correct"))), variant: (if @entity.roundComplete "primary" (if (== @entity.verdict "correct") "success" (if (== @entity.verdict "incorrect") "error" "neutral"))) }
+                  ] },
                 { type: progress-bar, value: (+ @entity.itemIndex 1), max: @entity.totalItems, showPercentage: false, label: (str/concat "Item " (str/concat "" (+ @entity.itemIndex 1)) " of " (str/concat "" @entity.totalItems)) },
                 { type: stack, direction: vertical, gap: md, children: @entity.roundView }
               ] }
@@ -595,7 +639,13 @@ orbital LearnClassifyOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.roundComplete "Round complete" (if (or (!= @config.pointsPerCorrect 1) (> @config.penaltyPerMiss 0)) (str/concat "Score " @entity.score) (str/concat @entity.correctCount " / " @entity.attemptedCount " correct"))), variant: (if @entity.roundComplete "primary" (if (== @entity.verdict "correct") "success" (if (== @entity.verdict "incorrect") "error" "neutral"))) }
+                  ] },
                 { type: progress-bar, value: (+ @entity.itemIndex 1), max: @entity.totalItems, showPercentage: false, label: (str/concat "Item " (str/concat "" (+ @entity.itemIndex 1)) " of " (str/concat "" @entity.totalItems)) },
                 { type: stack, direction: vertical, gap: md, children: @entity.roundView }
               ] }
@@ -669,6 +719,10 @@ orbital LearnClassifyOrbital {
         @label "Title"
         @description "Title shown above the instrument."
         @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what is being classified (keep it under ~65 characters). Empty shows no line."
+        @tier "presentation"
       width : number = 640
         @label "Width"
         @description "Canvas width in pixels."
@@ -677,8 +731,13 @@ orbital LearnClassifyOrbital {
         @label "Height"
         @description "Canvas height in pixels."
         @tier "presentation"
-      backgroundColor : string = "#f8fafc"
+      taper : number = 0
+        @label "Taper"
+        @description "How far the category rungs narrow toward the top: 0 = equal-width rungs (no implied order), 1 = a full pyramid for hierarchies (needs, levels). Long category names need 0."
+        @tier "presentation"
+      backgroundColor : string = ""
         @label "Background Color"
+        @description "Canvas ground (tone name, token or colour); empty uses the theme's drawing ground."
         @tier "presentation"
       interactive : boolean = false
         @label "Interactive"
@@ -697,18 +756,18 @@ orbital LearnClassifyOrbital {
         @synonyms "item, prompt, scenario, situation, case, example, question"
         @tier "domain"
       categories : [LearnClassifyOption] = [
-        { value: "a", label: "Category A", color: "#94a3b8" },
-        { value: "b", label: "Category B", color: "#64748b" }
+        { value: "a", label: "Category A", color: "series-1" },
+        { value: "b", label: "Category B", color: "series-2" }
       ]
         @label "Categories"
         @description "Ordered bottom-to-top roster of category buckets (value/label/color) used to render the stacked backdrop and the pick buttons; order determines the backdrop's stacking, widest at the bottom to narrowest at the top."
         @synonyms "category, bucket, class, tier, level, classification, roster"
         @tier "domain"
-      correctColor : string = "#16a34a"
+      correctColor : string = "success"
         @label "Correct Highlight Color"
         @description "Fill color for the correct category once the learner has picked."
         @tier "presentation"
-      incorrectColor : string = "#dc2626"
+      incorrectColor : string = "error"
         @label "Incorrect Highlight Color"
         @description "Fill color for the learner's picked category when it does not match the correct category."
         @tier "presentation"

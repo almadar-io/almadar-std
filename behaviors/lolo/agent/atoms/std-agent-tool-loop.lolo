@@ -1,9 +1,10 @@
 app std-agent-tool-loop "2.0.0"
-"std-agent-tool-loop — answers a conversation by operating the running app as the caller, through `call-service llm call-tools`. The `tools` allowlist names declared external inputs (addressed like a listens source: `Trait.EVENT`, `Orbital.Trait.EVENT`) and entities to read; each input fires as the signed-in user through the ordinary dispatch (guards and entity policies apply) and each read returns only the rows the caller may read. Headless: the conversation UI (std-agent-session) shows the reply; a failure shows as a toast. CONVERSE carries the conversation (and optionally what std-agent-memory recalled); STEP carries each step live while it works (a model call, a tool it used, what the app answered) to the asking tab; REPLIED carries the reply, every step and the token usage; REPLY_FAILED carries the error. Compose with std-agent-session (the conversation) and std-agent-trace (the step record)."
+"std-agent-tool-loop — answers a conversation by operating the running app as the caller, through `call-service llm call-tools`. Its `tools` are `{ scope: declared }` (every declared external input plus a read over every persisted entity), or named declared inputs (addressed like a listens source: `Trait.EVENT`, `Orbital.Trait.EVENT`) and entities to read; each input fires as the signed-in user through the ordinary dispatch (guards and entity policies apply) and each read returns only the rows the caller may read. Headless: the conversation UI (std-agent-session) shows the reply; a failure shows as a toast. CONVERSE carries the conversation (and optionally what std-agent-memory recalled); ASSISTANT_STEP carries each step live while it works (a model call, a tool it used, what the app answered) to the asking tab; ASSISTANT_REPLIED carries the reply, every step and the token usage; ASSISTANT_REPLY_FAILED carries the error. These names are the assistant contract std-agent-session's conversation hears from any orbital. Compose with std-agent-session (the conversation) and std-agent-trace (the step record)."
 
 type AgentTool = {
   event : event
   read : string
+  scope : "declared"
 }
 type AgentChatMessage = {
   role : "user" | "assistant"
@@ -94,7 +95,7 @@ orbital AgentToolLoopOrbital {
           instructions: (if ["=", (str/default ?context ""), ""] @config.instructions (str/concat @config.instructions "\n\nWhat you remember that may be relevant:\n" ?context))
           maxSteps: @config.maxSteps
         } {
-          emit: { failure: ASK_FAILED, success: ANSWERED, onMessage: STEP }
+          emit: { failure: ASK_FAILED, success: ANSWERED, onMessage: ASSISTANT_STEP }
         })
     }
 
@@ -102,11 +103,11 @@ orbital AgentToolLoopOrbital {
       ANSWERED -> idle
         (set @entity.status answered)
         (set @entity.reply ?reply)
-        (emit REPLIED { reply: ?reply, steps: ?steps, usage: ?usage })
+        (emit ASSISTANT_REPLIED { reply: ?reply, steps: ?steps, usage: ?usage })
       ASK_FAILED -> idle
         (set @entity.status failed)
         (set @entity.error ?error)
-        (emit REPLY_FAILED { error: ?error })
+        (emit ASSISTANT_REPLY_FAILED { error: ?error })
         (render-ui toast {
           message: ?error
           type: alert
@@ -115,13 +116,13 @@ orbital AgentToolLoopOrbital {
     }
 
     emits {
-      STEP -> external {
+      ASSISTANT_STEP -> external {
         activity : AgentActivity!
       }
         @description "One thing the assistant just did, live while it works: a model call, a tool it used, or what the app answered. Delivered to the asking tab only."
         @synonyms "progress, activity, trace step, working"
         @tier "domain"
-      REPLIED -> external {
+      ASSISTANT_REPLIED -> external {
         reply : string!
         steps : [AgentActivity]!
         usage : AgentUsage!
@@ -129,7 +130,7 @@ orbital AgentToolLoopOrbital {
         @description "The assistant answered; carries every tool step it took and the tokens it used."
         @synonyms "answered, responded, done"
         @tier "domain"
-      REPLY_FAILED -> external {
+      ASSISTANT_REPLY_FAILED -> external {
         error : string!
       }
         @description "The assistant could not answer (model unavailable, or out of steps)."

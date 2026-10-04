@@ -17,8 +17,16 @@ orbital BookReaderOrbital {
     initial: cover
 
     state cover {
-      INIT -> cover
+      INIT -> cover when (== @config.opensAt "cover")
         (render-ui main @config.coverContent)
+      INIT -> reading when (== @config.opensAt "reading")
+        (set @entity.chapterIndex 0)
+        (set @entity.chapterTitle (object/get (array/nth @config.chapters 0) title ""))
+        (set @entity.chapterContent (object/get (array/nth @config.chapters 0) content ""))
+        (set @entity.isFirst true)
+        (set @entity.isLast (<= (array/len @config.chapters) 1))
+        (set @entity.progressLabel (str/concat "1 / " (array/len @config.chapters)))
+        (render-ui main @config.readingContent)
       START_READING -> reading
         (set @entity.chapterIndex 0)
         (set @entity.chapterTitle (object/get (array/nth @config.chapters 0) title ""))
@@ -92,6 +100,10 @@ orbital BookReaderOrbital {
     }
 
     config {
+      opensAt : "cover" | "reading" = "cover"
+        @label "Opens at"
+        @description "Where the reader opens: the cover, or straight into the first chapter (an article read in place)"
+        @tier "presentation"
       title : string = "Untitled book"
         @label "Title"
         @tier "presentation"
@@ -236,6 +248,18 @@ orbital BookReaderOrbital {
               align: start
               className: "lg:sticky lg:top-6 self-start"
               children: [{
+                type: typography
+                content: @config.title
+                variant: h5
+                weight: semibold
+                className: "text-balance"
+              }, {
+                type: typography
+                content: @config.author
+                variant: caption
+                color: muted
+                className: (if (== @config.author "") hidden "pb-2")
+              }, {
                 type: button
                 variant: link
                 label: @config.coverLabel

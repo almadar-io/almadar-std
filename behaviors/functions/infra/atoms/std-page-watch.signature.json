@@ -1,0 +1,207 @@
+[
+  {
+    "organism": "std-page-watch",
+    "orbital": "PageWatchOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/infra/atoms/std-page-watch.ts",
+    "entities": [
+      {
+        "name": "PageWatchRecord",
+        "fields": [
+          {
+            "name": "watchId",
+            "type": "string",
+            "required": false,
+            "description": "Id of the attached watch",
+            "synonyms": "watch id, subscription"
+          },
+          {
+            "name": "found",
+            "type": "number",
+            "required": false,
+            "description": "How many elements have been reported",
+            "synonyms": "count, items seen, reported"
+          },
+          {
+            "name": "errorMessage",
+            "type": "string",
+            "required": false,
+            "description": "Why the watch could not be attached; blank = none",
+            "synonyms": "error, failure reason"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false,
+            "description": "Whether the watch is attached",
+            "synonyms": "state, watching, connected"
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "PageWatch",
+        "emittedEvents": [
+          "WATCHING",
+          "WATCH_FAILED",
+          "ITEM"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "WATCHING",
+            "direction": "emit",
+            "description": "The watch is attached",
+            "tier": "secondary"
+          },
+          {
+            "name": "WATCH_FAILED",
+            "direction": "emit",
+            "description": "The watch could not be attached (no page service, or no access to the pages)",
+            "tier": "primary"
+          },
+          {
+            "name": "ITEM",
+            "direction": "emit",
+            "description": "One matching element, reported once, with the fields read from it",
+            "synonyms": "element found, item seen, new item",
+            "tier": "primary"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "ITEM_FOUND",
+            "direction": "listen",
+            "description": "One matching element, delivered by the page service"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "fields",
+            "type": "Map<string,PageField>",
+            "default": {},
+            "label": "Fields",
+            "description": "Field name to how to read it from each element: `selector` (a descendant; absent reads the element itself), `attr` (an attribute; absent reads the text) and `resolve` (the attribute is a URL: return it absolute)",
+            "synonyms": "columns, properties, extract, read",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "attr": {
+                  "name": "attr",
+                  "required": false,
+                  "type": "string"
+                },
+                "resolve": {
+                  "name": "resolve",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "selector": {
+                  "name": "selector",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "itemEvent",
+            "type": "event",
+            "default": "PageWatch.ITEM_FOUND",
+            "label": "Item input",
+            "description": "The declared input each element arrives as; it follows the trait when a composer renames it",
+            "tier": "internal"
+          },
+          {
+            "key": "itemSelector",
+            "type": "string",
+            "default": ".item",
+            "label": "Item selector",
+            "description": "CSS selector of the elements to report",
+            "synonyms": "selector, element, card, tile, row",
+            "tier": "domain"
+          },
+          {
+            "key": "match",
+            "type": "string",
+            "default": "https://example.com/*",
+            "label": "Pages",
+            "description": "URL match pattern of the tabs to watch, in Chrome match-pattern syntax (`<scheme>://<host>/<path>` with `*` wildcards)",
+            "synonyms": "site, url pattern, pages, domain",
+            "tier": "domain"
+          },
+          {
+            "key": "statusSlot",
+            "type": "slot",
+            "default": "main",
+            "label": "Status slot",
+            "description": "Where the atom shows its one-line status; an organism running it in the background sends it to `system`",
+            "synonyms": "status area, slot",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "PageWatchRecord",
+        "transitionEvents": [
+          "INIT",
+          "ITEM_FOUND",
+          "WATCHING",
+          "WATCH_FAILED"
+        ],
+        "definerKnobs": [],
+        "effectRow": [
+          {
+            "kind": "call-service",
+            "resource": "page.watch"
+          },
+          {
+            "kind": "emit",
+            "resource": "ITEM"
+          },
+          {
+            "kind": "render-ui",
+            "resolved": false,
+            "resource": "@config.statusSlot"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.errorMessage"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.found"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.status"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.watchId"
+          }
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "PageWatchPage",
+        "defaultPath": "/page-watch",
+        "primaryEntity": "PageWatchRecord"
+      }
+    ],
+    "emittedEvents": [
+      "ITEM",
+      "WATCHING",
+      "WATCH_FAILED"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

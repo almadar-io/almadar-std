@@ -338,6 +338,30 @@
               "tier": "presentation",
               "type": "boolean"
             },
+            "keyMap": {
+              "default": {
+                "item": "INIT"
+              },
+              "description": "Maps a keydown `e.code` (optionally `Mod+`/`Shift+`/`Alt+` prefixed) to a SEMANTIC event emitted as `UI:{event}` — e.g. `{ Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }`; keystrokes inside inputs never route.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Key Map",
+              "tier": "presentation",
+              "type": "Map<string,string>"
+            },
+            "keyUpMap": {
+              "default": {
+                "item": "INIT"
+              },
+              "description": "Maps a keyup `e.code` to a semantic event emitted as `UI:{event}`.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Key Up Map",
+              "tier": "presentation",
+              "type": "Map<string,string>"
+            },
             "lang": {
               "description": "Language of this element's content (BCP 47, e.g. ar, sl, en).",
               "label": "Lang",
@@ -538,6 +562,16 @@
               "tier": "presentation",
               "type": "string"
             },
+            "series": {
+              "default": [],
+              "description": "Overrides the theme's categorical palette (`series-1…N`) for this canvas — real-world conventions like CPK atom colors or resistor bands. Unset, the theme's `--color-series-*` apply.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Series",
+              "tier": "presentation",
+              "type": "[string]"
+            },
             "shapes": {
               "default": [],
               "description": "Extra declarative shapes in canvas pixel coordinates.",
@@ -586,6 +620,56 @@
                     "name": "fill",
                     "required": false,
                     "type": "string"
+                  },
+                  "fillStyle": {
+                    "name": "fillStyle",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "solid",
+                      "tint",
+                      "outline",
+                      "hatch"
+                    ]
+                  },
+                  "fillTone": {
+                    "name": "fillTone",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "ink",
+                      "label",
+                      "guide",
+                      "axis",
+                      "grid",
+                      "highlight",
+                      "fill",
+                      "series-1",
+                      "series-2",
+                      "series-3",
+                      "series-4",
+                      "series-5",
+                      "series-6",
+                      "series-7",
+                      "series-8",
+                      "primary",
+                      "accent",
+                      "success",
+                      "warning",
+                      "error",
+                      "info",
+                      "muted"
+                    ]
+                  },
+                  "font": {
+                    "name": "font",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "body",
+                      "display",
+                      "mono"
+                    ]
                   },
                   "fontFamily": {
                     "name": "fontFamily",
@@ -688,10 +772,71 @@
                     "required": false,
                     "type": "number"
                   },
+                  "stroke": {
+                    "name": "stroke",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "thin",
+                      "normal",
+                      "bold"
+                    ]
+                  },
                   "text": {
                     "name": "text",
                     "required": false,
                     "type": "string"
+                  },
+                  "textCase": {
+                    "name": "textCase",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "theme",
+                      "verbatim"
+                    ]
+                  },
+                  "textSize": {
+                    "name": "textSize",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "xs",
+                      "sm",
+                      "base",
+                      "lg",
+                      "xl",
+                      "2xl"
+                    ]
+                  },
+                  "tone": {
+                    "name": "tone",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "ink",
+                      "label",
+                      "guide",
+                      "axis",
+                      "grid",
+                      "highlight",
+                      "fill",
+                      "series-1",
+                      "series-2",
+                      "series-3",
+                      "series-4",
+                      "series-5",
+                      "series-6",
+                      "series-7",
+                      "series-8",
+                      "primary",
+                      "accent",
+                      "success",
+                      "warning",
+                      "error",
+                      "info",
+                      "muted"
+                    ]
                   },
                   "type": {
                     "name": "type",
@@ -970,6 +1115,8 @@
                       "height": "@config.height",
                       "interactive": "@config.interactive",
                       "isLoading": "@config.isLoading",
+                      "keyMap": "@config.keyMap",
+                      "keyUpMap": "@config.keyUpMap",
                       "lang": "@config.lang",
                       "layout": "@config.layout",
                       "nodes": "@config.nodes",
@@ -977,6 +1124,7 @@
                       "onShapeClick": "@config.onShapeClick",
                       "role": "@config.role",
                       "root": "@config.root",
+                      "series": "@config.series",
                       "shapes": "@config.shapes",
                       "skeleton": "@config.skeleton",
                       "tabIndex": "@config.tabIndex",
@@ -1136,6 +1284,34 @@
           }
         ],
         "AlgoGraphCanvasShapesItem": [
+          {
+            "name": "tone",
+            "type": "string"
+          },
+          {
+            "name": "fillTone",
+            "type": "string"
+          },
+          {
+            "name": "stroke",
+            "type": "string"
+          },
+          {
+            "name": "textSize",
+            "type": "string"
+          },
+          {
+            "name": "font",
+            "type": "string"
+          },
+          {
+            "name": "textCase",
+            "type": "string"
+          },
+          {
+            "name": "fillStyle",
+            "type": "string"
+          },
           {
             "name": "type",
             "required": true,

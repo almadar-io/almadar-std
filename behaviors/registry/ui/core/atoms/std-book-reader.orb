@@ -409,6 +409,17 @@
               "tier": "presentation",
               "type": "string"
             },
+            "opensAt": {
+              "default": "cover",
+              "description": "Where the reader opens: the cover, or straight into the first chapter (an article read in place)",
+              "label": "Opens at",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "cover",
+                "reading"
+              ]
+            },
             "previousLabel": {
               "default": "Previous",
               "label": "Previous button label",
@@ -425,6 +436,29 @@
                           {
                             "align": "start",
                             "children": [
+                              {
+                                "className": "text-balance",
+                                "content": "@config.title",
+                                "type": "typography",
+                                "variant": "h5",
+                                "weight": "semibold"
+                              },
+                              {
+                                "className": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@config.author",
+                                    ""
+                                  ],
+                                  "hidden",
+                                  "pb-2"
+                                ],
+                                "color": "muted",
+                                "content": "@config.author",
+                                "type": "typography",
+                                "variant": "caption"
+                              },
                               {
                                 "action": "BACK_TO_COVER",
                                 "label": "@config.coverLabel",
@@ -767,7 +801,92 @@
                 "event": "INIT",
                 "eventId": "evt_01M3B9EHG2JYGWZ0NEKDDJ06CR",
                 "from": "cover",
+                "guard": [
+                  "==",
+                  "@config.opensAt",
+                  "cover"
+                ],
                 "to": "cover"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.chapterIndex",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.chapterTitle",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        "@config.chapters",
+                        0.0
+                      ],
+                      "title",
+                      ""
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.chapterContent",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        "@config.chapters",
+                        0.0
+                      ],
+                      "content",
+                      ""
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.isFirst",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.isLast",
+                    [
+                      "<=",
+                      [
+                        "array/len",
+                        "@config.chapters"
+                      ],
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.progressLabel",
+                    [
+                      "str/concat",
+                      "1 / ",
+                      [
+                        "array/len",
+                        "@config.chapters"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    "@config.readingContent"
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M3B9EHG2JYGWZ0NEKDDJ06CR",
+                "from": "cover",
+                "guard": [
+                  "==",
+                  "@config.opensAt",
+                  "reading"
+                ],
+                "to": "reading"
               },
               {
                 "effects": [

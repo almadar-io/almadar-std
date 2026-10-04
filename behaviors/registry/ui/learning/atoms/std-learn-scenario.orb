@@ -398,6 +398,13 @@
               "tier": "domain",
               "type": "string"
             },
+            "summary": {
+              "default": "",
+              "description": "One line under the title saying what the scenario explores (keep it under ~65 characters). Empty shows no line.",
+              "label": "Concept",
+              "tier": "presentation",
+              "type": "string"
+            },
             "title": {
               "default": "Decision Scenario",
               "description": "Title shown above the scenario.",
@@ -742,37 +749,90 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.done",
+                                    "Ended",
+                                    [
+                                      "str/concat",
+                                      "Decision ",
+                                      [
+                                        "+",
+                                        "@entity.stepCount",
+                                        1.0
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.done",
+                                    "primary",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
-                              "content": [
-                                "str/concat",
-                                "@config.metricALabel",
-                                ": ",
-                                [
-                                  "math/round",
-                                  "@entity.metricA",
-                                  0.0
-                                ],
-                                " · ",
-                                "@config.metricBLabel",
-                                ": ",
-                                [
-                                  "math/round",
-                                  "@entity.metricB",
-                                  0.0
-                                ],
-                                " · decisions: ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  "@entity.stepCount"
-                                ]
+                              "align": "center",
+                              "children": [
+                                {
+                                  "label": "@config.metricALabel",
+                                  "type": "stat-display",
+                                  "value": [
+                                    "math/round",
+                                    "@entity.metricA",
+                                    0.0
+                                  ]
+                                },
+                                {
+                                  "label": "@config.metricBLabel",
+                                  "type": "stat-display",
+                                  "value": [
+                                    "math/round",
+                                    "@entity.metricB",
+                                    0.0
+                                  ]
+                                }
                               ],
-                              "type": "typography",
-                              "variant": "body"
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "children": "@entity.view",
@@ -816,20 +876,20 @@
                                       ],
                                       "label"
                                     ],
-                                    "size": "sm",
+                                    "size": "lg",
                                     "type": "button",
                                     "variant": "secondary"
                                   }
                                 ]
                               ],
                               "direction": "vertical",
-                              "gap": "xs",
+                              "gap": "sm",
                               "type": "stack"
                             },
                             {
                               "content": "@entity.feedback",
                               "type": "typography",
-                              "variant": "caption"
+                              "variant": "body"
                             },
                             {
                               "children": [
@@ -853,6 +913,7 @@
                               "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "RESTART",
@@ -862,14 +923,26 @@
                                     false,
                                     true
                                   ],
+                                  "icon": "rotate-ccw",
                                   "label": "@config.restartLabel",
                                   "type": "button",
                                   "variant": "primary"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Decisions ",
+                                    "@entity.stepCount"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             }
                           ],
                           "direction": "vertical",
@@ -889,6 +962,43 @@
                   "==",
                   "@config.matchMode",
                   ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01M07581GASKSPTBR0AKY9KB4B",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@config.matchMode",
+                      ""
+                    ]
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1012,37 +1122,90 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.done",
+                                    "Ended",
+                                    [
+                                      "str/concat",
+                                      "Decision ",
+                                      [
+                                        "+",
+                                        "@entity.stepCount",
+                                        1.0
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.done",
+                                    "primary",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
-                              "content": [
-                                "str/concat",
-                                "@config.metricALabel",
-                                ": ",
-                                [
-                                  "math/round",
-                                  "@entity.metricA",
-                                  0.0
-                                ],
-                                " · ",
-                                "@config.metricBLabel",
-                                ": ",
-                                [
-                                  "math/round",
-                                  "@entity.metricB",
-                                  0.0
-                                ],
-                                " · decisions: ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  "@entity.stepCount"
-                                ]
+                              "align": "center",
+                              "children": [
+                                {
+                                  "label": "@config.metricALabel",
+                                  "type": "stat-display",
+                                  "value": [
+                                    "math/round",
+                                    "@entity.metricA",
+                                    0.0
+                                  ]
+                                },
+                                {
+                                  "label": "@config.metricBLabel",
+                                  "type": "stat-display",
+                                  "value": [
+                                    "math/round",
+                                    "@entity.metricB",
+                                    0.0
+                                  ]
+                                }
                               ],
-                              "type": "typography",
-                              "variant": "body"
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "children": "@entity.view",
@@ -1086,20 +1249,20 @@
                                       ],
                                       "label"
                                     ],
-                                    "size": "sm",
+                                    "size": "lg",
                                     "type": "button",
                                     "variant": "secondary"
                                   }
                                 ]
                               ],
                               "direction": "vertical",
-                              "gap": "xs",
+                              "gap": "sm",
                               "type": "stack"
                             },
                             {
                               "content": "@entity.feedback",
                               "type": "typography",
-                              "variant": "caption"
+                              "variant": "body"
                             },
                             {
                               "children": [
@@ -1123,6 +1286,7 @@
                               "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "RESTART",
@@ -1132,14 +1296,26 @@
                                     false,
                                     true
                                   ],
+                                  "icon": "rotate-ccw",
                                   "label": "@config.restartLabel",
                                   "type": "button",
                                   "variant": "primary"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Decisions ",
+                                    "@entity.stepCount"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             }
                           ],
                           "direction": "vertical",
@@ -1440,37 +1616,90 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.done",
+                                    "Ended",
+                                    [
+                                      "str/concat",
+                                      "Decision ",
+                                      [
+                                        "+",
+                                        "@entity.stepCount",
+                                        1.0
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.done",
+                                    "primary",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
-                              "content": [
-                                "str/concat",
-                                "@config.metricALabel",
-                                ": ",
-                                [
-                                  "math/round",
-                                  "@entity.metricA",
-                                  0.0
-                                ],
-                                " · ",
-                                "@config.metricBLabel",
-                                ": ",
-                                [
-                                  "math/round",
-                                  "@entity.metricB",
-                                  0.0
-                                ],
-                                " · decisions: ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  "@entity.stepCount"
-                                ]
+                              "align": "center",
+                              "children": [
+                                {
+                                  "label": "@config.metricALabel",
+                                  "type": "stat-display",
+                                  "value": [
+                                    "math/round",
+                                    "@entity.metricA",
+                                    0.0
+                                  ]
+                                },
+                                {
+                                  "label": "@config.metricBLabel",
+                                  "type": "stat-display",
+                                  "value": [
+                                    "math/round",
+                                    "@entity.metricB",
+                                    0.0
+                                  ]
+                                }
                               ],
-                              "type": "typography",
-                              "variant": "body"
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "children": "@entity.view",
@@ -1514,20 +1743,20 @@
                                       ],
                                       "label"
                                     ],
-                                    "size": "sm",
+                                    "size": "lg",
                                     "type": "button",
                                     "variant": "secondary"
                                   }
                                 ]
                               ],
                               "direction": "vertical",
-                              "gap": "xs",
+                              "gap": "sm",
                               "type": "stack"
                             },
                             {
                               "content": "@entity.feedback",
                               "type": "typography",
-                              "variant": "caption"
+                              "variant": "body"
                             },
                             {
                               "children": [
@@ -1551,6 +1780,7 @@
                               "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "RESTART",
@@ -1560,14 +1790,26 @@
                                     false,
                                     true
                                   ],
+                                  "icon": "rotate-ccw",
                                   "label": "@config.restartLabel",
                                   "type": "button",
                                   "variant": "primary"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Decisions ",
+                                    "@entity.stepCount"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             }
                           ],
                           "direction": "vertical",
@@ -1728,37 +1970,90 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.done",
+                                    "Ended",
+                                    [
+                                      "str/concat",
+                                      "Decision ",
+                                      [
+                                        "+",
+                                        "@entity.stepCount",
+                                        1.0
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.done",
+                                    "primary",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
-                              "content": [
-                                "str/concat",
-                                "@config.metricALabel",
-                                ": ",
-                                [
-                                  "math/round",
-                                  "@entity.metricA",
-                                  0.0
-                                ],
-                                " · ",
-                                "@config.metricBLabel",
-                                ": ",
-                                [
-                                  "math/round",
-                                  "@entity.metricB",
-                                  0.0
-                                ],
-                                " · decisions: ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  "@entity.stepCount"
-                                ]
+                              "align": "center",
+                              "children": [
+                                {
+                                  "label": "@config.metricALabel",
+                                  "type": "stat-display",
+                                  "value": [
+                                    "math/round",
+                                    "@entity.metricA",
+                                    0.0
+                                  ]
+                                },
+                                {
+                                  "label": "@config.metricBLabel",
+                                  "type": "stat-display",
+                                  "value": [
+                                    "math/round",
+                                    "@entity.metricB",
+                                    0.0
+                                  ]
+                                }
                               ],
-                              "type": "typography",
-                              "variant": "body"
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "children": "@entity.view",
@@ -1802,20 +2097,20 @@
                                       ],
                                       "label"
                                     ],
-                                    "size": "sm",
+                                    "size": "lg",
                                     "type": "button",
                                     "variant": "secondary"
                                   }
                                 ]
                               ],
                               "direction": "vertical",
-                              "gap": "xs",
+                              "gap": "sm",
                               "type": "stack"
                             },
                             {
                               "content": "@entity.feedback",
                               "type": "typography",
-                              "variant": "caption"
+                              "variant": "body"
                             },
                             {
                               "children": [
@@ -1839,6 +2134,7 @@
                               "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "RESTART",
@@ -1848,14 +2144,26 @@
                                     false,
                                     true
                                   ],
+                                  "icon": "rotate-ccw",
                                   "label": "@config.restartLabel",
                                   "type": "button",
                                   "variant": "primary"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Decisions ",
+                                    "@entity.stepCount"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             }
                           ],
                           "direction": "vertical",

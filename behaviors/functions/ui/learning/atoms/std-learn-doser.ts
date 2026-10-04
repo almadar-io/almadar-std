@@ -69,9 +69,9 @@ export interface StdLearnDoserLearnRoundCompletePayload {
 export interface StdLearnDoserConfig {
   /** Default: `false` */
   autoDrip?: boolean;
-  /** Default: `"#fafafa"` */
+  /** Default: `""` */
   backgroundColor?: string;
-  /** Default: `[{"color":"#94a3b8","label":"Low","terminal":false,"upperBound":50},{"color":"#16a34a","label":"High","terminal":true,"upperBound":999999999}]` */
+  /** Default: `[{"color":"muted","label":"Low","terminal":false,"upperBound":50},{"color":"success","label":"High","terminal":true,"upperBound":999999999}]` */
   bands?: EntityRow[];
   /** Default: `100` */
   capacity?: number;
@@ -87,9 +87,11 @@ export interface StdLearnDoserConfig {
   quantityLabel?: string;
   /** Default: `"Reservoir"` */
   reservoirLabel?: string;
+  /** Default: `[]` */
+  series?: string[];
   /** Default: `true` */
   showCanvas?: boolean;
-  /** Default: `"#60a5fa"` */
+  /** Default: `"series-1"` */
   sourceColor?: string;
   /** Default: `"Source"` */
   sourceLabel?: string;
@@ -97,6 +99,8 @@ export interface StdLearnDoserConfig {
   stepLarge?: number;
   /** Default: `1` */
   stepSmall?: number;
+  /** Default: `""` */
+  summary?: string;
   /** Default: `"Doser"` */
   title?: string;
   /** Default: `""` */

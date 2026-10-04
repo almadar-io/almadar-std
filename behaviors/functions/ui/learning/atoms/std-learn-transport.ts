@@ -30,7 +30,7 @@ const ALIAS = 'LearnTransport';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnTransportEventKey = 'INIT' | 'LEARN_RESET' | 'LEARN_STEP' | 'LEARN_UPDATED' | 'MODE_SELECTED' | 'RESET' | 'STEP' | 'TOGGLE_RUN';
+export type StdLearnTransportEventKey = 'INIT' | 'LEARN_RESET' | 'LEARN_STEP' | 'LEARN_UPDATED' | 'MODE_SELECTED' | 'RESET' | 'SPEED_SET' | 'STEP' | 'TOGGLE_RUN';
 
 /**
  * Payload shape for the `LEARN_STEP` event.
@@ -60,8 +60,12 @@ export interface StdLearnTransportConfig {
   matchMode?: string;
   /** Default: `500` */
   stepIntervalMs?: number;
+  /** Default: `""` */
+  summary?: string;
   /** Default: `"Learning Instrument"` */
   title?: string;
+  /** Default: `0` */
+  totalSteps?: number;
 }
 
 /**

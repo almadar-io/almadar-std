@@ -85,6 +85,8 @@ export interface StdLearnSpeedDrillConfig {
   retryLabel?: string;
   /** Default: `10` */
   speedBonus?: number;
+  /** Default: `""` */
+  summary?: string;
   /** Default: `6` */
   timeLimit?: number;
   /** Default: `"Speed Drill"` */

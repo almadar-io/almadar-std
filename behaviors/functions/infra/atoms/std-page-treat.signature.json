@@ -1,0 +1,142 @@
+[
+  {
+    "organism": "std-page-treat",
+    "orbital": "PageTreatOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/infra/atoms/std-page-treat.ts",
+    "entities": [
+      {
+        "name": "PageTreatRecord",
+        "fields": [
+          {
+            "name": "treated",
+            "type": "number",
+            "required": false,
+            "description": "How many treatments were applied",
+            "synonyms": "count, applied"
+          },
+          {
+            "name": "errorMessage",
+            "type": "string",
+            "required": false,
+            "description": "Why the last treatment failed; blank = none",
+            "synonyms": "error, failure reason"
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "PageTreat",
+        "emittedEvents": [
+          "APPLIED",
+          "APPLY_FAILED",
+          "TREATED",
+          "TREAT_FAILED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "APPLIED",
+            "direction": "emit",
+            "description": "The page service applied the treatment",
+            "tier": "secondary"
+          },
+          {
+            "name": "APPLY_FAILED",
+            "direction": "emit",
+            "description": "The page service could not apply the treatment",
+            "tier": "secondary"
+          },
+          {
+            "name": "TREATED",
+            "direction": "emit",
+            "description": "The element now shows the treatment (or, for restore, is back as it was)",
+            "synonyms": "hidden, blurred, highlighted, labelled, restored",
+            "tier": "primary"
+          },
+          {
+            "name": "TREAT_FAILED",
+            "direction": "emit",
+            "description": "The treatment could not be applied (the element is gone, or the tab closed)",
+            "tier": "primary"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "TREAT",
+            "direction": "listen",
+            "description": "Treat one page element; `label` is the text shown with it (for example why it was hidden)"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "statusSlot",
+            "type": "slot",
+            "default": "main",
+            "label": "Status slot",
+            "description": "Where the atom shows its one-line status; an organism running it in the background sends it to `system`",
+            "synonyms": "status area, slot",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "PageTreatRecord",
+        "transitionEvents": [
+          "APPLIED",
+          "APPLY_FAILED",
+          "INIT",
+          "TREAT"
+        ],
+        "definerKnobs": [],
+        "effectRow": [
+          {
+            "kind": "call-service",
+            "resource": "page.apply"
+          },
+          {
+            "kind": "emit",
+            "resource": "TREATED"
+          },
+          {
+            "kind": "emit",
+            "resource": "TREAT_FAILED"
+          },
+          {
+            "kind": "render-ui",
+            "resolved": false,
+            "resource": "@config.statusSlot"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.errorMessage"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.treated"
+          }
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "PageTreatPage",
+        "defaultPath": "/page-treat",
+        "primaryEntity": "PageTreatRecord"
+      }
+    ],
+    "emittedEvents": [
+      "APPLIED",
+      "APPLY_FAILED",
+      "TREATED",
+      "TREAT_FAILED"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

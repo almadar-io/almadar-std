@@ -1,5 +1,5 @@
 {
-  "description": "std-agent-tool-loop — answers a conversation by operating the running app as the caller, through `call-service llm call-tools`. The `tools` allowlist names declared external inputs (addressed like a listens source: `Trait.EVENT`, `Orbital.Trait.EVENT`) and entities to read; each input fires as the signed-in user through the ordinary dispatch (guards and entity policies apply) and each read returns only the rows the caller may read. Headless: the conversation UI (std-agent-session) shows the reply; a failure shows as a toast. CONVERSE carries the conversation (and optionally what std-agent-memory recalled); STEP carries each step live while it works (a model call, a tool it used, what the app answered) to the asking tab; REPLIED carries the reply, every step and the token usage; REPLY_FAILED carries the error. Compose with std-agent-session (the conversation) and std-agent-trace (the step record).",
+  "description": "std-agent-tool-loop — answers a conversation by operating the running app as the caller, through `call-service llm call-tools`. Its `tools` are `{ scope: declared }` (every declared external input plus a read over every persisted entity), or named declared inputs (addressed like a listens source: `Trait.EVENT`, `Orbital.Trait.EVENT`) and entities to read; each input fires as the signed-in user through the ordinary dispatch (guards and entity policies apply) and each read returns only the rows the caller may read. Headless: the conversation UI (std-agent-session) shows the reply; a failure shows as a toast. CONVERSE carries the conversation (and optionally what std-agent-memory recalled); ASSISTANT_STEP carries each step live while it works (a model call, a tool it used, what the app answered) to the asking tab; ASSISTANT_REPLIED carries the reply, every step and the token usage; ASSISTANT_REPLY_FAILED carries the error. These names are the assistant contract std-agent-session's conversation hears from any orbital. Compose with std-agent-session (the conversation) and std-agent-trace (the step record).",
   "ledger": {
     "entries": {
       "ent_01M3TYMQFVS7RJC2HPKXYEF2VR": {
@@ -8,15 +8,6 @@
         "id": "ent_01M3TYMQFVS7RJC2HPKXYEF2VR",
         "kind": "entity",
         "owner": "workspace",
-        "renames": []
-      },
-      "evt_01M3TYMQFV2QMJB3DDDPEZGXMD": {
-        "bakedName": "REPLIED",
-        "curName": "REPLIED",
-        "id": "evt_01M3TYMQFV2QMJB3DDDPEZGXMD",
-        "kind": "event",
-        "owner": "workspace",
-        "parent": "trt_01M3TYMQFVRCVPTPEX7MQ97HQP",
         "renames": []
       },
       "evt_01M3TYMQFVAN072R0C2Z5X5NPQ": {
@@ -46,15 +37,6 @@
         "parent": "trt_01M3TYMQFVRCVPTPEX7MQ97HQP",
         "renames": []
       },
-      "evt_01M3TYMQFVSHRQ13G34DK0MC45": {
-        "bakedName": "REPLY_FAILED",
-        "curName": "REPLY_FAILED",
-        "id": "evt_01M3TYMQFVSHRQ13G34DK0MC45",
-        "kind": "event",
-        "owner": "workspace",
-        "parent": "trt_01M3TYMQFVRCVPTPEX7MQ97HQP",
-        "renames": []
-      },
       "evt_01M3TYMQFVZA5GN37VNWYNEAZ3": {
         "bakedName": "INIT",
         "curName": "INIT",
@@ -64,10 +46,28 @@
         "parent": "trt_01M3TYMQFVRCVPTPEX7MQ97HQP",
         "renames": []
       },
-      "evt_01M3WC4PHR1BMBKEGXAB5KXXA9": {
-        "bakedName": "STEP",
-        "curName": "STEP",
-        "id": "evt_01M3WC4PHR1BMBKEGXAB5KXXA9",
+      "evt_01M41HQTKHH12EZ3SPKY3ZWJC6": {
+        "bakedName": "ASSISTANT_REPLIED",
+        "curName": "ASSISTANT_REPLIED",
+        "id": "evt_01M41HQTKHH12EZ3SPKY3ZWJC6",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3TYMQFVRCVPTPEX7MQ97HQP",
+        "renames": []
+      },
+      "evt_01M41HQTKHY7NH7DGXJJB1MW8Q": {
+        "bakedName": "ASSISTANT_STEP",
+        "curName": "ASSISTANT_STEP",
+        "id": "evt_01M41HQTKHY7NH7DGXJJB1MW8Q",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3TYMQFVRCVPTPEX7MQ97HQP",
+        "renames": []
+      },
+      "evt_01M41HQTKHZWNXEYS7RAWWJE6S": {
+        "bakedName": "ASSISTANT_REPLY_FAILED",
+        "curName": "ASSISTANT_REPLY_FAILED",
+        "id": "evt_01M41HQTKHZWNXEYS7RAWWJE6S",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01M3TYMQFVRCVPTPEX7MQ97HQP",
@@ -187,6 +187,14 @@
                     "name": "read",
                     "required": false,
                     "type": "string"
+                  },
+                  "scope": {
+                    "name": "scope",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "declared"
+                    ]
                   }
                 },
                 "type": "object"
@@ -204,11 +212,11 @@
             },
             {
               "kind": "emit",
-              "resource": "REPLIED"
+              "resource": "ASSISTANT_REPLIED"
             },
             {
               "kind": "emit",
-              "resource": "REPLY_FAILED"
+              "resource": "ASSISTANT_REPLY_FAILED"
             },
             {
               "kind": "render-ui",
@@ -230,8 +238,8 @@
           "emits": [
             {
               "description": "One thing the assistant just did, live while it works: a model call, a tool it used, or what the app answered. Delivered to the asking tab only.",
-              "event": "STEP",
-              "eventId": "evt_01M3WC4PHR1BMBKEGXAB5KXXA9",
+              "event": "ASSISTANT_STEP",
+              "eventId": "evt_01M41HQTKHY7NH7DGXJJB1MW8Q",
               "payloadSchema": [
                 {
                   "name": "activity",
@@ -405,8 +413,8 @@
             },
             {
               "description": "The assistant answered; carries every tool step it took and the tokens it used.",
-              "event": "REPLIED",
-              "eventId": "evt_01M3TYMQFV2QMJB3DDDPEZGXMD",
+              "event": "ASSISTANT_REPLIED",
+              "eventId": "evt_01M41HQTKHH12EZ3SPKY3ZWJC6",
               "payloadSchema": [
                 {
                   "name": "reply",
@@ -452,8 +460,8 @@
             },
             {
               "description": "The assistant could not answer (model unavailable, or out of steps).",
-              "event": "REPLY_FAILED",
-              "eventId": "evt_01M3TYMQFVSHRQ13G34DK0MC45",
+              "event": "ASSISTANT_REPLY_FAILED",
+              "eventId": "evt_01M41HQTKHZWNXEYS7RAWWJE6S",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -628,9 +636,9 @@
               },
               {
                 "description": "One thing the assistant just did, live while it works: a model call, a tool it used, or what the app answered. Delivered to the asking tab only.",
-                "id": "evt_01M3WC4PHR1BMBKEGXAB5KXXA9",
-                "key": "STEP",
-                "name": "Step",
+                "id": "evt_01M41HQTKHY7NH7DGXJJB1MW8Q",
+                "key": "ASSISTANT_STEP",
+                "name": "Assistant Step",
                 "payloadSchema": [
                   {
                     "name": "activity",
@@ -803,9 +811,9 @@
               },
               {
                 "description": "The assistant answered; carries every tool step it took and the tokens it used.",
-                "id": "evt_01M3TYMQFV2QMJB3DDDPEZGXMD",
-                "key": "REPLIED",
-                "name": "Replied",
+                "id": "evt_01M41HQTKHH12EZ3SPKY3ZWJC6",
+                "key": "ASSISTANT_REPLIED",
+                "name": "Assistant Replied",
                 "payloadSchema": [
                   {
                     "name": "reply",
@@ -850,9 +858,9 @@
               },
               {
                 "description": "The assistant could not answer (model unavailable, or out of steps).",
-                "id": "evt_01M3TYMQFVSHRQ13G34DK0MC45",
-                "key": "REPLY_FAILED",
-                "name": "Reply Failed",
+                "id": "evt_01M41HQTKHZWNXEYS7RAWWJE6S",
+                "key": "ASSISTANT_REPLY_FAILED",
+                "name": "Assistant Reply Failed",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -925,7 +933,7 @@
                     {
                       "emit": {
                         "failure": "ASK_FAILED",
-                        "onMessage": "STEP",
+                        "onMessage": "ASSISTANT_STEP",
                         "success": "ANSWERED"
                       }
                     }
@@ -950,7 +958,7 @@
                   ],
                   [
                     "emit",
-                    "REPLIED",
+                    "ASSISTANT_REPLIED",
                     {
                       "reply": "@payload.reply",
                       "steps": "@payload.steps",
@@ -977,7 +985,7 @@
                   ],
                   [
                     "emit",
-                    "REPLY_FAILED",
+                    "ASSISTANT_REPLY_FAILED",
                     {
                       "error": "@payload.error"
                     }
@@ -1153,6 +1161,10 @@
           },
           {
             "name": "read",
+            "type": "string"
+          },
+          {
+            "name": "scope",
             "type": "string"
           }
         ],

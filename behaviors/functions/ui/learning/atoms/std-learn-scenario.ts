@@ -72,6 +72,8 @@ export interface StdLearnScenarioConfig {
   restartLabel?: string;
   /** Default: `"start"` */
   startId?: string;
+  /** Default: `""` */
+  summary?: string;
   /** Default: `"Decision Scenario"` */
   title?: string;
 }

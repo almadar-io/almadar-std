@@ -30,7 +30,7 @@ const ALIAS = 'LearnCoupledSim';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnCoupledSimEventKey = 'COEFS_CHANGED' | 'INIT' | 'MODE_SELECTED' | 'PAUSE' | 'RESET' | 'RUN' | 'RUN_TOGGLED' | 'SET_A' | 'SET_B' | 'SHOCK' | 'SHOCK_APPLIED' | 'SIM_RESET';
+export type StdLearnCoupledSimEventKey = 'COEFS_CHANGED' | 'INIT' | 'MODE_SELECTED' | 'PAUSE' | 'RESET' | 'RUN' | 'RUN_TOGGLED' | 'SET_A' | 'SET_B' | 'SHOCK' | 'SHOCK_APPLIED' | 'SIM_RESET' | 'SPEED_SET' | 'TOGGLE_RUN';
 
 /**
  * Payload shape for the `RUN_TOGGLED` event.
@@ -107,13 +107,13 @@ export interface StdLearnCoupledSimConfig {
   kind?: string;
   /** Default: `""` */
   matchMode?: string;
-  /** Default: `"#16a34a"` */
+  /** Default: `"series-1"` */
   pColor?: string;
   /** Default: `"Prey"` */
   pLabel?: string;
   /** Default: `120` */
   pStart?: number;
-  /** Default: `"#dc2626"` */
+  /** Default: `"series-2"` */
   qColor?: string;
   /** Default: `"Predators"` */
   qLabel?: string;
@@ -125,6 +125,8 @@ export interface StdLearnCoupledSimConfig {
   shockSize?: number;
   /** Default: `"+ Prey burst"` */
   shockUpLabel?: string;
+  /** Default: `""` */
+  summary?: string;
   /** Default: `"Run the system, retune the rates, and shock it — watch how the two quantities push and pull each other."` */
   taskText?: string;
   /** Default: `1` */

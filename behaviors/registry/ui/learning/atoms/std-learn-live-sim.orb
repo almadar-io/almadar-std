@@ -91,6 +91,15 @@
         "parent": "trt_01M055GQ2YKEPWZ35KVYNSCRGC",
         "renames": []
       },
+      "evt_01M41KVGQQZA8MVJB3B34CH9FH": {
+        "bakedName": "TOGGLE_RUN",
+        "curName": "TOGGLE_RUN",
+        "id": "evt_01M41KVGQQZA8MVJB3B34CH9FH",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M055GQ2YKEPWZ35KVYNSCRGC",
+        "renames": []
+      },
       "orb_01M055GQ2Y935GEHYW54KNWCS4": {
         "bakedName": "LearnLiveSimOrbital",
         "curName": "LearnLiveSimOrbital",
@@ -231,7 +240,8 @@
           "category": "interaction",
           "config": {
             "backgroundColor": {
-              "default": "#f8fafc",
+              "default": "",
+              "description": "Canvas ground override; empty uses the theme's drawing ground.",
               "label": "Background Color",
               "tier": "presentation",
               "type": "string"
@@ -239,7 +249,7 @@
             "bodies": {
               "default": [
                 {
-                  "color": "#2563eb",
+                  "color": "series-1",
                   "id": "ball-a",
                   "radius": 14.0,
                   "vx": 4.0,
@@ -248,7 +258,7 @@
                   "y": 60.0
                 },
                 {
-                  "color": "#16a34a",
+                  "color": "series-2",
                   "id": "ball-b",
                   "radius": 18.0,
                   "vx": -3.0,
@@ -257,7 +267,7 @@
                   "y": 90.0
                 },
                 {
-                  "color": "#f59e0b",
+                  "color": "series-3",
                   "id": "ball-c",
                   "radius": 11.0,
                   "vx": 2.0,
@@ -360,9 +370,16 @@
               "tier": "presentation",
               "type": "boolean"
             },
+            "summary": {
+              "default": "",
+              "description": "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line.",
+              "label": "Concept",
+              "tier": "presentation",
+              "type": "string"
+            },
             "title": {
               "default": "Live Sim",
-              "description": "Title shown above the instrument.",
+              "description": "The instrument's name, the header's one hero.",
               "label": "Title",
               "tier": "presentation",
               "type": "string"
@@ -525,6 +542,13 @@
                 "tier": "domain"
               },
               {
+                "description": "Learner pressed the Play/Pause toggle — flips the running flag.",
+                "id": "evt_01M41KVGQQZA8MVJB3B34CH9FH",
+                "key": "TOGGLE_RUN",
+                "name": "Toggle Run",
+                "tier": "domain"
+              },
+              {
                 "description": "Learner pressed Run — the tick begins integrating gravity, damping, and wall bounce for every body.",
                 "id": "evt_01M055GQ31V99AD3X5BSGZ50SQ",
                 "key": "RUN",
@@ -657,109 +681,110 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
+                              "align": "start",
                               "children": [
                                 {
-                                  "action": "RUN",
-                                  "disabled": [
-                                    "if",
-                                    "@entity.running",
-                                    true,
-                                    false
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
                                   ],
-                                  "label": "Run",
-                                  "type": "button",
-                                  "variant": "primary"
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
                                 },
                                 {
-                                  "action": "PAUSE",
-                                  "disabled": [
+                                  "label": [
                                     "if",
                                     "@entity.running",
-                                    false,
-                                    true
+                                    "Running",
+                                    "Paused"
                                   ],
-                                  "label": "Pause",
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.running",
+                                    "primary",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "icon": "play",
+                                    "label": "Play",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  }
+                                ],
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "Reset",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Tick ",
+                                    "@entity.tickCount"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "content": [
-                                    "str/concat",
-                                    "Gravity: ",
-                                    [
-                                      "math/round",
-                                      "@entity.gravity",
-                                      2.0
-                                    ]
-                                  ],
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_GRAVITY",
-                                  "max": 1.5,
-                                  "min": -1.0,
-                                  "showTooltip": true,
-                                  "step": 0.05,
-                                  "type": "range-slider",
-                                  "value": "@entity.gravity"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "content": [
-                                    "str/concat",
-                                    "Damping: ",
-                                    [
-                                      "math/round",
-                                      "@entity.damping",
-                                      3.0
-                                    ]
-                                  ],
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_DAMPING",
-                                  "max": 1.0,
-                                  "min": 0.9,
-                                  "showTooltip": true,
-                                  "step": 0.005,
-                                  "type": "range-slider",
-                                  "value": "@entity.damping"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "backgroundColor": "@config.backgroundColor",
                               "bodies": "@entity.bodies",
                               "height": "@config.height",
+                              "keyMap": {
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "showForces": false,
                               "showVelocity": "@config.showVelocity",
                               "type": "physics-canvas",
@@ -767,15 +792,76 @@
                               "width": "@config.width"
                             },
                             {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "content": [
+                                        "str/concat",
+                                        "Gravity: ",
+                                        [
+                                          "math/round",
+                                          "@entity.gravity",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_GRAVITY",
+                                      "max": 1.5,
+                                      "min": -1.0,
+                                      "showTooltip": true,
+                                      "step": 0.05,
+                                      "type": "range-slider",
+                                      "value": "@entity.gravity"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "content": [
+                                        "str/concat",
+                                        "Damping: ",
+                                        [
+                                          "math/round",
+                                          "@entity.damping",
+                                          3.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_DAMPING",
+                                      "max": 1.0,
+                                      "min": 0.9,
+                                      "showTooltip": true,
+                                      "step": 0.005,
+                                      "type": "range-slider",
+                                      "value": "@entity.damping"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
                               "content": [
                                 "str/concat",
-                                "Tick ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  "@entity.tickCount"
-                                ],
-                                " · sample speed ",
+                                "Sample body speed ",
                                 [
                                   "math/round",
                                   "@entity.sampleSpeed",
@@ -803,6 +889,48 @@
                   "==",
                   "@config.matchMode",
                   ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01M055GQ31CXPPY57H8M8MZEZ1",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@config.matchMode",
+                      ""
+                    ]
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -856,109 +984,110 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
+                              "align": "start",
                               "children": [
                                 {
-                                  "action": "RUN",
-                                  "disabled": [
-                                    "if",
-                                    "@entity.running",
-                                    true,
-                                    false
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
                                   ],
-                                  "label": "Run",
-                                  "type": "button",
-                                  "variant": "primary"
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
                                 },
                                 {
-                                  "action": "PAUSE",
-                                  "disabled": [
+                                  "label": [
                                     "if",
                                     "@entity.running",
-                                    false,
-                                    true
+                                    "Running",
+                                    "Paused"
                                   ],
-                                  "label": "Pause",
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.running",
+                                    "primary",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "icon": "play",
+                                    "label": "Play",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  }
+                                ],
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "Reset",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Tick ",
+                                    "@entity.tickCount"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "content": [
-                                    "str/concat",
-                                    "Gravity: ",
-                                    [
-                                      "math/round",
-                                      "@entity.gravity",
-                                      2.0
-                                    ]
-                                  ],
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_GRAVITY",
-                                  "max": 1.5,
-                                  "min": -1.0,
-                                  "showTooltip": true,
-                                  "step": 0.05,
-                                  "type": "range-slider",
-                                  "value": "@entity.gravity"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "content": [
-                                    "str/concat",
-                                    "Damping: ",
-                                    [
-                                      "math/round",
-                                      "@entity.damping",
-                                      3.0
-                                    ]
-                                  ],
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_DAMPING",
-                                  "max": 1.0,
-                                  "min": 0.9,
-                                  "showTooltip": true,
-                                  "step": 0.005,
-                                  "type": "range-slider",
-                                  "value": "@entity.damping"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "backgroundColor": "@config.backgroundColor",
                               "bodies": "@entity.bodies",
                               "height": "@config.height",
+                              "keyMap": {
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "showForces": false,
                               "showVelocity": "@config.showVelocity",
                               "type": "physics-canvas",
@@ -966,15 +1095,76 @@
                               "width": "@config.width"
                             },
                             {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "content": [
+                                        "str/concat",
+                                        "Gravity: ",
+                                        [
+                                          "math/round",
+                                          "@entity.gravity",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_GRAVITY",
+                                      "max": 1.5,
+                                      "min": -1.0,
+                                      "showTooltip": true,
+                                      "step": 0.05,
+                                      "type": "range-slider",
+                                      "value": "@entity.gravity"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "content": [
+                                        "str/concat",
+                                        "Damping: ",
+                                        [
+                                          "math/round",
+                                          "@entity.damping",
+                                          3.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_DAMPING",
+                                      "max": 1.0,
+                                      "min": 0.9,
+                                      "showTooltip": true,
+                                      "step": 0.005,
+                                      "type": "range-slider",
+                                      "value": "@entity.damping"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
                               "content": [
                                 "str/concat",
-                                "Tick ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  "@entity.tickCount"
-                                ],
-                                " · sample speed ",
+                                "Sample body speed ",
                                 [
                                   "math/round",
                                   "@entity.sampleSpeed",
@@ -1010,6 +1200,242 @@
                   [
                     "set",
                     "@entity.running",
+                    [
+                      "not",
+                      "@entity.running"
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.running",
+                                    "Running",
+                                    "Paused"
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.running",
+                                    "primary",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "icon": "play",
+                                    "label": "Play",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  }
+                                ],
+                                {
+                                  "action": "RESET",
+                                  "icon": "rotate-ccw",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Tick ",
+                                    "@entity.tickCount"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
+                              "backgroundColor": "@config.backgroundColor",
+                              "bodies": "@entity.bodies",
+                              "height": "@config.height",
+                              "keyMap": {
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
+                              "showForces": false,
+                              "showVelocity": "@config.showVelocity",
+                              "type": "physics-canvas",
+                              "velocityScale": "@config.velocityScale",
+                              "width": "@config.width"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "content": [
+                                        "str/concat",
+                                        "Gravity: ",
+                                        [
+                                          "math/round",
+                                          "@entity.gravity",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_GRAVITY",
+                                      "max": 1.5,
+                                      "min": -1.0,
+                                      "showTooltip": true,
+                                      "step": 0.05,
+                                      "type": "range-slider",
+                                      "value": "@entity.gravity"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "content": [
+                                        "str/concat",
+                                        "Damping: ",
+                                        [
+                                          "math/round",
+                                          "@entity.damping",
+                                          3.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_DAMPING",
+                                      "max": 1.0,
+                                      "min": 0.9,
+                                      "showTooltip": true,
+                                      "step": 0.005,
+                                      "type": "range-slider",
+                                      "value": "@entity.damping"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Sample body speed ",
+                                [
+                                  "math/round",
+                                  "@entity.sampleSpeed",
+                                  2.0
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "RUN_TOGGLED",
+                    {
+                      "running": "@entity.running"
+                    }
+                  ]
+                ],
+                "event": "TOGGLE_RUN",
+                "eventId": "evt_01M41KVGQQZA8MVJB3B34CH9FH",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.running",
                     true
                   ],
                   [
@@ -1020,109 +1446,110 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
+                              "align": "start",
                               "children": [
                                 {
-                                  "action": "RUN",
-                                  "disabled": [
-                                    "if",
-                                    "@entity.running",
-                                    true,
-                                    false
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
                                   ],
-                                  "label": "Run",
-                                  "type": "button",
-                                  "variant": "primary"
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
                                 },
                                 {
-                                  "action": "PAUSE",
-                                  "disabled": [
+                                  "label": [
                                     "if",
                                     "@entity.running",
-                                    false,
-                                    true
+                                    "Running",
+                                    "Paused"
                                   ],
-                                  "label": "Pause",
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.running",
+                                    "primary",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "icon": "play",
+                                    "label": "Play",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  }
+                                ],
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "Reset",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Tick ",
+                                    "@entity.tickCount"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "content": [
-                                    "str/concat",
-                                    "Gravity: ",
-                                    [
-                                      "math/round",
-                                      "@entity.gravity",
-                                      2.0
-                                    ]
-                                  ],
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_GRAVITY",
-                                  "max": 1.5,
-                                  "min": -1.0,
-                                  "showTooltip": true,
-                                  "step": 0.05,
-                                  "type": "range-slider",
-                                  "value": "@entity.gravity"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "content": [
-                                    "str/concat",
-                                    "Damping: ",
-                                    [
-                                      "math/round",
-                                      "@entity.damping",
-                                      3.0
-                                    ]
-                                  ],
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_DAMPING",
-                                  "max": 1.0,
-                                  "min": 0.9,
-                                  "showTooltip": true,
-                                  "step": 0.005,
-                                  "type": "range-slider",
-                                  "value": "@entity.damping"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "backgroundColor": "@config.backgroundColor",
                               "bodies": "@entity.bodies",
                               "height": "@config.height",
+                              "keyMap": {
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "showForces": false,
                               "showVelocity": "@config.showVelocity",
                               "type": "physics-canvas",
@@ -1130,15 +1557,76 @@
                               "width": "@config.width"
                             },
                             {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "content": [
+                                        "str/concat",
+                                        "Gravity: ",
+                                        [
+                                          "math/round",
+                                          "@entity.gravity",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_GRAVITY",
+                                      "max": 1.5,
+                                      "min": -1.0,
+                                      "showTooltip": true,
+                                      "step": 0.05,
+                                      "type": "range-slider",
+                                      "value": "@entity.gravity"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "content": [
+                                        "str/concat",
+                                        "Damping: ",
+                                        [
+                                          "math/round",
+                                          "@entity.damping",
+                                          3.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_DAMPING",
+                                      "max": 1.0,
+                                      "min": 0.9,
+                                      "showTooltip": true,
+                                      "step": 0.005,
+                                      "type": "range-slider",
+                                      "value": "@entity.damping"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
                               "content": [
                                 "str/concat",
-                                "Tick ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  "@entity.tickCount"
-                                ],
-                                " · sample speed ",
+                                "Sample body speed ",
                                 [
                                   "math/round",
                                   "@entity.sampleSpeed",
@@ -1191,109 +1679,110 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
+                              "align": "start",
                               "children": [
                                 {
-                                  "action": "RUN",
-                                  "disabled": [
-                                    "if",
-                                    "@entity.running",
-                                    true,
-                                    false
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
                                   ],
-                                  "label": "Run",
-                                  "type": "button",
-                                  "variant": "primary"
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
                                 },
                                 {
-                                  "action": "PAUSE",
-                                  "disabled": [
+                                  "label": [
                                     "if",
                                     "@entity.running",
-                                    false,
-                                    true
+                                    "Running",
+                                    "Paused"
                                   ],
-                                  "label": "Pause",
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.running",
+                                    "primary",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "icon": "play",
+                                    "label": "Play",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  }
+                                ],
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "Reset",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Tick ",
+                                    "@entity.tickCount"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "content": [
-                                    "str/concat",
-                                    "Gravity: ",
-                                    [
-                                      "math/round",
-                                      "@entity.gravity",
-                                      2.0
-                                    ]
-                                  ],
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_GRAVITY",
-                                  "max": 1.5,
-                                  "min": -1.0,
-                                  "showTooltip": true,
-                                  "step": 0.05,
-                                  "type": "range-slider",
-                                  "value": "@entity.gravity"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "content": [
-                                    "str/concat",
-                                    "Damping: ",
-                                    [
-                                      "math/round",
-                                      "@entity.damping",
-                                      3.0
-                                    ]
-                                  ],
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_DAMPING",
-                                  "max": 1.0,
-                                  "min": 0.9,
-                                  "showTooltip": true,
-                                  "step": 0.005,
-                                  "type": "range-slider",
-                                  "value": "@entity.damping"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "backgroundColor": "@config.backgroundColor",
                               "bodies": "@entity.bodies",
                               "height": "@config.height",
+                              "keyMap": {
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "showForces": false,
                               "showVelocity": "@config.showVelocity",
                               "type": "physics-canvas",
@@ -1301,15 +1790,76 @@
                               "width": "@config.width"
                             },
                             {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "content": [
+                                        "str/concat",
+                                        "Gravity: ",
+                                        [
+                                          "math/round",
+                                          "@entity.gravity",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_GRAVITY",
+                                      "max": 1.5,
+                                      "min": -1.0,
+                                      "showTooltip": true,
+                                      "step": 0.05,
+                                      "type": "range-slider",
+                                      "value": "@entity.gravity"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "content": [
+                                        "str/concat",
+                                        "Damping: ",
+                                        [
+                                          "math/round",
+                                          "@entity.damping",
+                                          3.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_DAMPING",
+                                      "max": 1.0,
+                                      "min": 0.9,
+                                      "showTooltip": true,
+                                      "step": 0.005,
+                                      "type": "range-slider",
+                                      "value": "@entity.damping"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
                               "content": [
                                 "str/concat",
-                                "Tick ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  "@entity.tickCount"
-                                ],
-                                " · sample speed ",
+                                "Sample body speed ",
                                 [
                                   "math/round",
                                   "@entity.sampleSpeed",
@@ -1387,109 +1937,110 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
+                              "align": "start",
                               "children": [
                                 {
-                                  "action": "RUN",
-                                  "disabled": [
-                                    "if",
-                                    "@entity.running",
-                                    true,
-                                    false
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
                                   ],
-                                  "label": "Run",
-                                  "type": "button",
-                                  "variant": "primary"
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
                                 },
                                 {
-                                  "action": "PAUSE",
-                                  "disabled": [
+                                  "label": [
                                     "if",
                                     "@entity.running",
-                                    false,
-                                    true
+                                    "Running",
+                                    "Paused"
                                   ],
-                                  "label": "Pause",
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.running",
+                                    "primary",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "icon": "play",
+                                    "label": "Play",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  }
+                                ],
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "Reset",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Tick ",
+                                    "@entity.tickCount"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "content": [
-                                    "str/concat",
-                                    "Gravity: ",
-                                    [
-                                      "math/round",
-                                      "@entity.gravity",
-                                      2.0
-                                    ]
-                                  ],
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_GRAVITY",
-                                  "max": 1.5,
-                                  "min": -1.0,
-                                  "showTooltip": true,
-                                  "step": 0.05,
-                                  "type": "range-slider",
-                                  "value": "@entity.gravity"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "content": [
-                                    "str/concat",
-                                    "Damping: ",
-                                    [
-                                      "math/round",
-                                      "@entity.damping",
-                                      3.0
-                                    ]
-                                  ],
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_DAMPING",
-                                  "max": 1.0,
-                                  "min": 0.9,
-                                  "showTooltip": true,
-                                  "step": 0.005,
-                                  "type": "range-slider",
-                                  "value": "@entity.damping"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "backgroundColor": "@config.backgroundColor",
                               "bodies": "@entity.bodies",
                               "height": "@config.height",
+                              "keyMap": {
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "showForces": false,
                               "showVelocity": "@config.showVelocity",
                               "type": "physics-canvas",
@@ -1497,15 +2048,76 @@
                               "width": "@config.width"
                             },
                             {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "content": [
+                                        "str/concat",
+                                        "Gravity: ",
+                                        [
+                                          "math/round",
+                                          "@entity.gravity",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_GRAVITY",
+                                      "max": 1.5,
+                                      "min": -1.0,
+                                      "showTooltip": true,
+                                      "step": 0.05,
+                                      "type": "range-slider",
+                                      "value": "@entity.gravity"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "content": [
+                                        "str/concat",
+                                        "Damping: ",
+                                        [
+                                          "math/round",
+                                          "@entity.damping",
+                                          3.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_DAMPING",
+                                      "max": 1.0,
+                                      "min": 0.9,
+                                      "showTooltip": true,
+                                      "step": 0.005,
+                                      "type": "range-slider",
+                                      "value": "@entity.damping"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
                               "content": [
                                 "str/concat",
-                                "Tick ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  "@entity.tickCount"
-                                ],
-                                " · sample speed ",
+                                "Sample body speed ",
                                 [
                                   "math/round",
                                   "@entity.sampleSpeed",
@@ -1566,109 +2178,110 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
+                              "align": "start",
                               "children": [
                                 {
-                                  "action": "RUN",
-                                  "disabled": [
-                                    "if",
-                                    "@entity.running",
-                                    true,
-                                    false
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
                                   ],
-                                  "label": "Run",
-                                  "type": "button",
-                                  "variant": "primary"
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
                                 },
                                 {
-                                  "action": "PAUSE",
-                                  "disabled": [
+                                  "label": [
                                     "if",
                                     "@entity.running",
-                                    false,
-                                    true
+                                    "Running",
+                                    "Paused"
                                   ],
-                                  "label": "Pause",
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.running",
+                                    "primary",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "icon": "play",
+                                    "label": "Play",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  }
+                                ],
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "Reset",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Tick ",
+                                    "@entity.tickCount"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "content": [
-                                    "str/concat",
-                                    "Gravity: ",
-                                    [
-                                      "math/round",
-                                      "@entity.gravity",
-                                      2.0
-                                    ]
-                                  ],
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_GRAVITY",
-                                  "max": 1.5,
-                                  "min": -1.0,
-                                  "showTooltip": true,
-                                  "step": 0.05,
-                                  "type": "range-slider",
-                                  "value": "@entity.gravity"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "content": [
-                                    "str/concat",
-                                    "Damping: ",
-                                    [
-                                      "math/round",
-                                      "@entity.damping",
-                                      3.0
-                                    ]
-                                  ],
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_DAMPING",
-                                  "max": 1.0,
-                                  "min": 0.9,
-                                  "showTooltip": true,
-                                  "step": 0.005,
-                                  "type": "range-slider",
-                                  "value": "@entity.damping"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "backgroundColor": "@config.backgroundColor",
                               "bodies": "@entity.bodies",
                               "height": "@config.height",
+                              "keyMap": {
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "showForces": false,
                               "showVelocity": "@config.showVelocity",
                               "type": "physics-canvas",
@@ -1676,15 +2289,76 @@
                               "width": "@config.width"
                             },
                             {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "content": [
+                                        "str/concat",
+                                        "Gravity: ",
+                                        [
+                                          "math/round",
+                                          "@entity.gravity",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_GRAVITY",
+                                      "max": 1.5,
+                                      "min": -1.0,
+                                      "showTooltip": true,
+                                      "step": 0.05,
+                                      "type": "range-slider",
+                                      "value": "@entity.gravity"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "content": [
+                                        "str/concat",
+                                        "Damping: ",
+                                        [
+                                          "math/round",
+                                          "@entity.damping",
+                                          3.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_DAMPING",
+                                      "max": 1.0,
+                                      "min": 0.9,
+                                      "showTooltip": true,
+                                      "step": 0.005,
+                                      "type": "range-slider",
+                                      "value": "@entity.damping"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
                               "content": [
                                 "str/concat",
-                                "Tick ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  "@entity.tickCount"
-                                ],
-                                " · sample speed ",
+                                "Sample body speed ",
                                 [
                                   "math/round",
                                   "@entity.sampleSpeed",
@@ -1735,109 +2409,110 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
+                              "align": "start",
                               "children": [
                                 {
-                                  "action": "RUN",
-                                  "disabled": [
-                                    "if",
-                                    "@entity.running",
-                                    true,
-                                    false
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
                                   ],
-                                  "label": "Run",
-                                  "type": "button",
-                                  "variant": "primary"
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
                                 },
                                 {
-                                  "action": "PAUSE",
-                                  "disabled": [
+                                  "label": [
                                     "if",
                                     "@entity.running",
-                                    false,
-                                    true
+                                    "Running",
+                                    "Paused"
                                   ],
-                                  "label": "Pause",
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.running",
+                                    "primary",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "icon": "play",
+                                    "label": "Play",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  }
+                                ],
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "Reset",
                                   "type": "button",
                                   "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Tick ",
+                                    "@entity.tickCount"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "content": [
-                                    "str/concat",
-                                    "Gravity: ",
-                                    [
-                                      "math/round",
-                                      "@entity.gravity",
-                                      2.0
-                                    ]
-                                  ],
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_GRAVITY",
-                                  "max": 1.5,
-                                  "min": -1.0,
-                                  "showTooltip": true,
-                                  "step": 0.05,
-                                  "type": "range-slider",
-                                  "value": "@entity.gravity"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "content": [
-                                    "str/concat",
-                                    "Damping: ",
-                                    [
-                                      "math/round",
-                                      "@entity.damping",
-                                      3.0
-                                    ]
-                                  ],
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_DAMPING",
-                                  "max": 1.0,
-                                  "min": 0.9,
-                                  "showTooltip": true,
-                                  "step": 0.005,
-                                  "type": "range-slider",
-                                  "value": "@entity.damping"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "backgroundColor": "@config.backgroundColor",
                               "bodies": "@entity.bodies",
                               "height": "@config.height",
+                              "keyMap": {
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
                               "showForces": false,
                               "showVelocity": "@config.showVelocity",
                               "type": "physics-canvas",
@@ -1845,15 +2520,76 @@
                               "width": "@config.width"
                             },
                             {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "content": [
+                                        "str/concat",
+                                        "Gravity: ",
+                                        [
+                                          "math/round",
+                                          "@entity.gravity",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_GRAVITY",
+                                      "max": 1.5,
+                                      "min": -1.0,
+                                      "showTooltip": true,
+                                      "step": 0.05,
+                                      "type": "range-slider",
+                                      "value": "@entity.gravity"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "content": [
+                                        "str/concat",
+                                        "Damping: ",
+                                        [
+                                          "math/round",
+                                          "@entity.damping",
+                                          3.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_DAMPING",
+                                      "max": 1.0,
+                                      "min": 0.9,
+                                      "showTooltip": true,
+                                      "step": 0.005,
+                                      "type": "range-slider",
+                                      "value": "@entity.damping"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
                               "content": [
                                 "str/concat",
-                                "Tick ",
-                                [
-                                  "str/concat",
-                                  "",
-                                  "@entity.tickCount"
-                                ],
-                                " · sample speed ",
+                                "Sample body speed ",
                                 [
                                   "math/round",
                                   "@entity.sampleSpeed",
@@ -2135,109 +2871,110 @@
                       {
                         "children": [
                           {
-                            "content": "@entity.title",
-                            "type": "typography",
-                            "variant": "h4"
-                          },
-                          {
+                            "align": "start",
                             "children": [
                               {
-                                "action": "RUN",
-                                "disabled": [
-                                  "if",
-                                  "@entity.running",
-                                  true,
-                                  false
+                                "children": [
+                                  {
+                                    "content": "@entity.title",
+                                    "type": "typography",
+                                    "variant": "h4"
+                                  },
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@config.summary",
+                                      ""
+                                    ],
+                                    null,
+                                    {
+                                      "color": "muted",
+                                      "content": "@config.summary",
+                                      "type": "typography",
+                                      "variant": "body2"
+                                    }
+                                  ]
                                 ],
-                                "label": "Run",
-                                "type": "button",
-                                "variant": "primary"
+                                "direction": "vertical",
+                                "gap": "xs",
+                                "type": "stack"
                               },
                               {
-                                "action": "PAUSE",
-                                "disabled": [
+                                "label": [
                                   "if",
                                   "@entity.running",
-                                  false,
-                                  true
+                                  "Running",
+                                  "Paused"
                                 ],
-                                "label": "Pause",
-                                "type": "button",
-                                "variant": "secondary"
-                              },
+                                "type": "badge",
+                                "variant": [
+                                  "if",
+                                  "@entity.running",
+                                  "primary",
+                                  "neutral"
+                                ]
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "md",
+                            "justify": "between",
+                            "type": "stack"
+                          },
+                          {
+                            "align": "center",
+                            "children": [
+                              [
+                                "if",
+                                "@entity.running",
+                                {
+                                  "action": "TOGGLE_RUN",
+                                  "aria-pressed": "true",
+                                  "icon": "pause",
+                                  "label": "Pause",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "TOGGLE_RUN",
+                                  "aria-pressed": "false",
+                                  "icon": "play",
+                                  "label": "Play",
+                                  "type": "button",
+                                  "variant": "primary"
+                                }
+                              ],
                               {
                                 "action": "RESET",
+                                "icon": "rotate-ccw",
                                 "label": "Reset",
                                 "type": "button",
                                 "variant": "ghost"
+                              },
+                              {
+                                "color": "muted",
+                                "content": [
+                                  "str/concat",
+                                  "Tick ",
+                                  "@entity.tickCount"
+                                ],
+                                "type": "typography",
+                                "variant": "caption"
                               }
                             ],
                             "direction": "horizontal",
                             "gap": "sm",
-                            "type": "stack"
-                          },
-                          {
-                            "children": [
-                              {
-                                "content": [
-                                  "str/concat",
-                                  "Gravity: ",
-                                  [
-                                    "math/round",
-                                    "@entity.gravity",
-                                    2.0
-                                  ]
-                                ],
-                                "type": "typography",
-                                "variant": "caption"
-                              },
-                              {
-                                "action": "SET_GRAVITY",
-                                "max": 1.5,
-                                "min": -1.0,
-                                "showTooltip": true,
-                                "step": 0.05,
-                                "type": "range-slider",
-                                "value": "@entity.gravity"
-                              }
-                            ],
-                            "direction": "vertical",
-                            "gap": "xs",
-                            "type": "stack"
-                          },
-                          {
-                            "children": [
-                              {
-                                "content": [
-                                  "str/concat",
-                                  "Damping: ",
-                                  [
-                                    "math/round",
-                                    "@entity.damping",
-                                    3.0
-                                  ]
-                                ],
-                                "type": "typography",
-                                "variant": "caption"
-                              },
-                              {
-                                "action": "SET_DAMPING",
-                                "max": 1.0,
-                                "min": 0.9,
-                                "showTooltip": true,
-                                "step": 0.005,
-                                "type": "range-slider",
-                                "value": "@entity.damping"
-                              }
-                            ],
-                            "direction": "vertical",
-                            "gap": "xs",
-                            "type": "stack"
+                            "type": "stack",
+                            "wrap": true
                           },
                           {
                             "backgroundColor": "@config.backgroundColor",
                             "bodies": "@entity.bodies",
                             "height": "@config.height",
+                            "keyMap": {
+                              "KeyR": "RESET",
+                              "Space": "TOGGLE_RUN"
+                            },
                             "showForces": false,
                             "showVelocity": "@config.showVelocity",
                             "type": "physics-canvas",
@@ -2245,15 +2982,76 @@
                             "width": "@config.width"
                           },
                           {
+                            "children": [
+                              {
+                                "children": [
+                                  {
+                                    "color": "muted",
+                                    "content": [
+                                      "str/concat",
+                                      "Gravity: ",
+                                      [
+                                        "math/round",
+                                        "@entity.gravity",
+                                        2.0
+                                      ]
+                                    ],
+                                    "type": "typography",
+                                    "variant": "caption"
+                                  },
+                                  {
+                                    "action": "SET_GRAVITY",
+                                    "max": 1.5,
+                                    "min": -1.0,
+                                    "showTooltip": true,
+                                    "step": 0.05,
+                                    "type": "range-slider",
+                                    "value": "@entity.gravity"
+                                  }
+                                ],
+                                "direction": "vertical",
+                                "gap": "xs",
+                                "type": "stack"
+                              },
+                              {
+                                "children": [
+                                  {
+                                    "color": "muted",
+                                    "content": [
+                                      "str/concat",
+                                      "Damping: ",
+                                      [
+                                        "math/round",
+                                        "@entity.damping",
+                                        3.0
+                                      ]
+                                    ],
+                                    "type": "typography",
+                                    "variant": "caption"
+                                  },
+                                  {
+                                    "action": "SET_DAMPING",
+                                    "max": 1.0,
+                                    "min": 0.9,
+                                    "showTooltip": true,
+                                    "step": 0.005,
+                                    "type": "range-slider",
+                                    "value": "@entity.damping"
+                                  }
+                                ],
+                                "direction": "vertical",
+                                "gap": "xs",
+                                "type": "stack"
+                              }
+                            ],
+                            "direction": "vertical",
+                            "gap": "sm",
+                            "type": "stack"
+                          },
+                          {
                             "content": [
                               "str/concat",
-                              "Tick ",
-                              [
-                                "str/concat",
-                                "",
-                                "@entity.tickCount"
-                              ],
-                              " · sample speed ",
+                              "Sample body speed ",
                               [
                                 "math/round",
                                 "@entity.sampleSpeed",

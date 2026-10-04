@@ -1,0 +1,59 @@
+app std-page-open "1.0.0"
+"std-page-open — opens a URL in a new, focused browser tab and reports the tab. Wire OPEN to something the person does (a button or a row action), so a page only ever opens because they asked for it. Needs a host with the `page` service (a browser extension)."
+
+orbital PageOpenOrbital {
+  entity PageOpenRecord [runtime] {
+    opened : number @description "How many pages were opened" @synonyms "count" = 0
+    errorMessage : string @description "Why the last page could not be opened; blank = none" @synonyms "error, failure reason" = ""
+  }
+
+  trait PageOpen -> PageOpenRecord [interaction, instance] {
+    initial: ready
+
+    config {
+      statusSlot : slot = main
+        @label "Status slot"
+        @description "Where the atom shows its one-line status; an organism running it in the background sends it to `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+    }
+
+    state ready {
+      INIT -> ready
+        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: "Ready to open pages" })
+      OPEN -> ready
+        (call-service "page" "openTab" { url: ?url, active: true }
+          { emit: { success: TAB_OPENED, failure: OPEN_CALL_FAILED } })
+      TAB_OPENED -> ready
+        (set @entity.opened (+ @entity.opened 1))
+        (emit OPENED { tab: ?tab })
+      OPEN_CALL_FAILED -> ready
+        (set @entity.errorMessage ?error)
+        (emit OPEN_FAILED { error: ?error })
+        (notify error (str/concat "Couldn't open the page — " ?error))
+    }
+
+    emits {
+      TAB_OPENED { tab : number! }
+        @description "The page service opened the tab"
+        @tier "secondary"
+      OPEN_CALL_FAILED { error : string! }
+        @description "The page service could not open the tab"
+        @tier "secondary"
+      OPENED -> external { tab : number! }
+        @description "The page is open in a new, focused tab"
+        @synonyms "opened, launched, visited"
+        @tier "primary"
+      OPEN_FAILED -> external { error : string! }
+        @description "The page could not be opened"
+        @tier "primary"
+    }
+
+    listens {
+      OPEN -> external { url : string! }
+        @description "Open `url` in a new, focused tab — wire it to something the person does"
+    }
+  }
+
+  page "/page-open" as PageOpenPage -> PageOpen
+}

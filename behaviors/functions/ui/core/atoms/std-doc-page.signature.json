@@ -1,0 +1,258 @@
+[
+  {
+    "organism": "std-doc-page",
+    "orbital": "DocPageOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-doc-page.ts",
+    "entities": [
+      {
+        "name": "DocPageView",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "DocPageRender",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "content",
+            "type": "render-ui",
+            "default": {
+              "children": [],
+              "direction": "vertical",
+              "gap": "lg",
+              "type": "stack"
+            },
+            "label": "Content",
+            "description": "The page body: markdown, code and live behaviors (trait references) in reading order",
+            "tier": "presentation"
+          },
+          {
+            "key": "crumbs",
+            "type": "[DocCrumb]",
+            "default": [],
+            "label": "Breadcrumb",
+            "description": "Ancestors first, the current page last without a link; empty hides it",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "href": {
+                  "name": "href",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "direction",
+            "type": "string",
+            "default": "ltr",
+            "label": "Direction",
+            "tier": "presentation",
+            "enumValues": [
+              "ltr",
+              "rtl"
+            ]
+          },
+          {
+            "key": "lede",
+            "type": "string",
+            "default": "",
+            "label": "Lede",
+            "description": "One or two sentences under the title; empty hides it",
+            "tier": "presentation"
+          },
+          {
+            "key": "navItems",
+            "type": "[DocNavItem]",
+            "default": [],
+            "label": "Sidebar",
+            "description": "The documentation tree; mark the current page active",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "active": {
+                  "name": "active",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "href": {
+                  "name": "href",
+                  "required": false,
+                  "type": "string"
+                },
+                "items": {
+                  "name": "items",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "union",
+                    "values": [
+                      "DocNavItem"
+                    ]
+                  }
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "next",
+            "type": "DocLink",
+            "default": {
+              "href": "",
+              "label": ""
+            },
+            "label": "Next page",
+            "description": "Empty href hides it",
+            "tier": "presentation",
+            "properties": {
+              "category": {
+                "name": "category",
+                "required": false,
+                "type": "string"
+              },
+              "href": {
+                "name": "href",
+                "required": true,
+                "type": "string"
+              },
+              "label": {
+                "name": "label",
+                "required": true,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "prev",
+            "type": "DocLink",
+            "default": {
+              "href": "",
+              "label": ""
+            },
+            "label": "Previous page",
+            "description": "Empty href hides it",
+            "tier": "presentation",
+            "properties": {
+              "category": {
+                "name": "category",
+                "required": false,
+                "type": "string"
+              },
+              "href": {
+                "name": "href",
+                "required": true,
+                "type": "string"
+              },
+              "label": {
+                "name": "label",
+                "required": true,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "sidebarLabel",
+            "type": "string",
+            "default": "Documentation",
+            "label": "Sidebar label",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Untitled page",
+            "label": "Title",
+            "tier": "presentation"
+          },
+          {
+            "key": "toc",
+            "type": "[DocTocEntry]",
+            "default": [],
+            "label": "On this page",
+            "description": "Anchors of the page's sections (each section declares the same id); empty hides it",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "level": {
+                  "name": "level",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "tocLabel",
+            "type": "string",
+            "default": "On this page",
+            "label": "Contents label",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "DocPageView",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        },
+        "effectRow": [
+          {
+            "kind": "render-ui",
+            "resource": "main"
+          }
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "DocPage",
+        "defaultPath": "/doc",
+        "primaryEntity": "DocPageView"
+      }
+    ],
+    "emittedEvents": [],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

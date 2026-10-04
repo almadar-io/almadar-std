@@ -1,5 +1,5 @@
 {
-  "description": "std-agent-assistant — an in-app assistant that operates the running app for the signed-in user. A floating button opens it in a side panel docked beside the page (std-panel-launcher; a side sheet on small screens), where the conversation shows every step the assistant takes live as it works. List AssistantDock with the assistant's traits on each page that should carry the button. One request flows down a chain of std agent atoms on the bus: the conversation (std-agent-session) SENDs → CONVERSE → std-agent-context bounds it → std-agent-memory adds what it recalls → std-agent-tool-loop answers it through `call-service llm call-tools`, firing only the inputs and reading only the entities the `tools` allowlist names, as the signed-in user → REPLIED goes back to the conversation, to memory (remembered) and to std-agent-trace (the run record). Import the orbital and supply the allowlist: `orbital Assistant = Agent.orbitals.AgentAssistantOrbital { config { tools: [{ event: TaskOrbital.TaskPersistor.DO_CREATE }, { read: Task }], instructions: \"…\" } }`. The conversation, memory and run records live in AgentRecordsOrbital; retarget them onto your own owner-scoped entities (`ownerId` a relation to your [identity] roster, with @read/@create) with `entities { AgentMessage: …, AgentMemory: …, AgentRun: … }`.",
+  "description": "std-agent-assistant — an in-app assistant that operates the running app for the signed-in user. Each section's floating button opens it in a side panel docked beside the page (std-panel-launcher; a side sheet on small screens), where the conversation shows every step the assistant takes live as it works; /assistant is the same conversation as a full page, in the app's own shell (pass `appName` and `navItems`); past conversations and what the assistant remembers open in place from its toolbar (Back returns to the chat), on either surface. One request flows down a chain of std agent atoms on the bus: the conversation (std-agent-session) SENDs → CONVERSE → std-agent-context bounds it → std-agent-memory adds what it recalls → std-agent-tool-loop answers it through `call-service llm call-tools`, firing only the inputs and reading only the entities its `tools` allow, as the signed-in user → ASSISTANT_REPLIED goes back to the conversation, to memory (remembered) and to std-agent-trace (the run record). By default the tools are the program's own declarations: every `-> external` input (its @description is the tool text) and a read over every persisted entity, so composing building blocks composes the assistant's abilities. Any section's page gets the assistant with two traits, `XAssistant = AgentSession.traits.AgentConversation` and a std-panel-launcher dock: the conversation speaks the ASSISTANT_* contract from any orbital, so the assistant needs no per-section wiring. Import the orbital once per app: `orbital Assistant = Agent.orbitals.AgentAssistantOrbital { config { instructions: \"…\" } }`. The conversation, memory and run records live in AgentRecordsOrbital; retarget them onto your own owner-scoped entities (`ownerId` a relation to your [identity] roster, with @read/@create) with `entities { AgentMessage: …, AgentMemory: …, AgentRun: …, AgentChat: … }`. The conversation is kept across pages and reloads (each person's most recently used conversation is the current one);",
   "ledger": {
     "entries": {
       "ent_01M3TZ0DZDY909P5HZH4V2D7MY": {
@@ -34,6 +34,14 @@
         "owner": "workspace",
         "renames": []
       },
+      "ent_01M42AFPPPHTXB167C0TSN3YMG": {
+        "bakedName": "AgentChat",
+        "curName": "AgentChat",
+        "id": "ent_01M42AFPPPHTXB167C0TSN3YMG",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
       "orb_01M3TZ0DZDJS90708ZRDH25S9C": {
         "bakedName": "AgentAssistantOrbital",
         "curName": "AgentAssistantOrbital",
@@ -62,14 +70,6 @@
         "bakedName": "AssistantRunsPage",
         "curName": "AssistantRunsPage",
         "id": "pag_01M3V71WRKCGD8WA8HHGFNM00H",
-        "kind": "page",
-        "owner": "workspace",
-        "renames": []
-      },
-      "pag_01M3V71WRKMMBWKNQ7768PP579": {
-        "bakedName": "AssistantMemoryPage",
-        "curName": "AssistantMemoryPage",
-        "id": "pag_01M3V71WRKMMBWKNQ7768PP579",
         "kind": "page",
         "owner": "workspace",
         "renames": []
@@ -114,26 +114,10 @@
         "owner": "workspace",
         "renames": []
       },
-      "trt_01M3V71WRKAPCPAVW5XM7T3BW5": {
-        "bakedName": "AgentMemoryList",
-        "curName": "AgentMemoryList",
-        "id": "trt_01M3V71WRKAPCPAVW5XM7T3BW5",
-        "kind": "trait",
-        "owner": "workspace",
-        "renames": []
-      },
       "trt_01M3V71WRKRBWAZMCGX5EQD8X6": {
         "bakedName": "AgentRunHistory",
         "curName": "AgentRunHistory",
         "id": "trt_01M3V71WRKRBWAZMCGX5EQD8X6",
-        "kind": "trait",
-        "owner": "workspace",
-        "renames": []
-      },
-      "trt_01M3WD0HMAAMMG2VCZ9KXKYC0V": {
-        "bakedName": "AssistantDock",
-        "curName": "AssistantDock",
-        "id": "trt_01M3WD0HMAAMMG2VCZ9KXKYC0V",
         "kind": "trait",
         "owner": "workspace",
         "renames": []
@@ -145,6 +129,22 @@
         "kind": "trait",
         "owner": "workspace",
         "renames": []
+      },
+      "trt_01M42AFPPP9XF9WNB1Q2DJVYEX": {
+        "bakedName": "AssistantLayout",
+        "curName": "AssistantLayout",
+        "id": "trt_01M42AFPPP9XF9WNB1Q2DJVYEX",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M42B9X7M5BB02V920EWW4HYD": {
+        "bakedName": "AssistantChatKeeper",
+        "curName": "AssistantChatKeeper",
+        "id": "trt_01M42B9X7M5BB02V920EWW4HYD",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
       }
     },
     "schemaVersion": 1
@@ -153,10 +153,10 @@
   "orbitals": [
     {
       "config": {
-        "buttonLabel": {
-          "default": "Open the assistant",
-          "description": "What the floating button does, read to screen readers and shown as its tooltip.",
-          "label": "Button label",
+        "appName": {
+          "default": "Assistant",
+          "description": "Pass the app's own name so the assistant page matches the rest of the app.",
+          "label": "App name in the assistant page's header",
           "tier": "presentation",
           "type": "string"
         },
@@ -179,13 +179,9 @@
             {
               "href": "/assistant/runs",
               "label": "Run history"
-            },
-            {
-              "href": "/assistant/memory",
-              "label": "What I remember"
             }
           ],
-          "description": "The pages showing the assistant's run history and memory.",
+          "description": "Related pages, e.g. the assistant's run history.",
           "items": {
             "properties": {
               "href": {
@@ -211,21 +207,70 @@
           "tier": "policy",
           "type": "number"
         },
+        "navItems": {
+          "default": [],
+          "description": "Pass the app's own navItems so the assistant page keeps the app's sidebar.",
+          "items": {
+            "properties": {
+              "badge": {
+                "name": "badge",
+                "required": false,
+                "type": "string"
+              },
+              "children": {
+                "items": {
+                  "type": "union",
+                  "values": [
+                    "NavItem"
+                  ]
+                },
+                "name": "children",
+                "required": false,
+                "type": "array"
+              },
+              "href": {
+                "name": "href",
+                "required": true,
+                "type": "string"
+              },
+              "icon": {
+                "name": "icon",
+                "required": false,
+                "type": "string"
+              },
+              "label": {
+                "name": "label",
+                "required": true,
+                "type": "string"
+              },
+              "roles": {
+                "items": {
+                  "type": "string"
+                },
+                "name": "roles",
+                "required": false,
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "label": "Sidebar navigation on the assistant page",
+          "tier": "presentation",
+          "type": "[NavItem]"
+        },
         "recallLimit": {
           "default": 3.0,
           "label": "Memories recalled per request",
           "tier": "policy",
           "type": "number"
         },
-        "title": {
-          "default": "Assistant",
-          "label": "Panel title",
-          "tier": "presentation",
-          "type": "string"
-        },
         "tools": {
-          "default": [],
-          "description": "The declared inputs it may fire (`{ event: Trait.EVENT }` / `{ event: Orbital.Trait.EVENT }`) and the entities it may read (`{ read: Entity }`), as the signed-in user.",
+          "default": [
+            {
+              "scope": "declared"
+            }
+          ],
+          "description": "As the signed-in user: `{ scope: declared }` (the default) gives it every external input the program declares and a read over every persisted entity, so each building block's declared inputs become its abilities; or list them — `{ event: Orbital.Trait.EVENT }` for one input, `{ read: Entity }` for one entity.",
           "items": {
             "properties": {
               "event": {
@@ -237,6 +282,14 @@
                 "name": "read",
                 "required": false,
                 "type": "string"
+              },
+              "scope": {
+                "name": "scope",
+                "required": false,
+                "type": "string",
+                "values": [
+                  "declared"
+                ]
               }
             },
             "type": "object"
@@ -245,6 +298,13 @@
           "synonyms": "allowlist, abilities, actions, permissions",
           "tier": "domain",
           "type": "[AgentTool]"
+        },
+        "viewerRole": {
+          "default": "",
+          "description": "The role the assistant page's sidebar items and their `roles` are checked against. Bind `@user.role` in an app whose identity carries a role; left empty, only items with no `roles` show.",
+          "label": "Viewer role on the assistant page",
+          "tier": "policy",
+          "type": "string"
         }
       },
       "entity": {
@@ -268,12 +328,16 @@
           "path": "/assistant",
           "traits": [
             {
-              "ref": "AssistantDock",
-              "refId": "trt_01M3WD0HMAAMMG2VCZ9KXKYC0V"
+              "ref": "AssistantLayout",
+              "refId": "trt_01M42AFPPP9XF9WNB1Q2DJVYEX"
             },
             {
               "ref": "AssistantThread",
               "refId": "trt_01M3TZ0DZDK3ZYFHBSBZMWW4V7"
+            },
+            {
+              "ref": "AssistantChatKeeper",
+              "refId": "trt_01M42B9X7M5BB02V920EWW4HYD"
             },
             {
               "ref": "AssistantContext",
@@ -303,15 +367,74 @@
           "linkedEntity": "AgentMessage",
           "listens": [
             {
-              "event": "SEND",
+              "event": "ASSISTANT_CHAT_OPENED",
               "source": {
                 "kind": "trait",
-                "trait": "AssistantConversation"
+                "trait": "AssistantChatKeeper"
+              },
+              "triggers": "OPEN_CHAT"
+            },
+            {
+              "event": "ASSISTANT_SEND_IN_CHAT",
+              "source": {
+                "kind": "trait",
+                "trait": "AssistantChatKeeper"
+              },
+              "triggers": "SEND_IN_CHAT"
+            },
+            {
+              "event": "ASSISTANT_REPLY_IN_CHAT",
+              "source": {
+                "kind": "trait",
+                "trait": "AssistantChatKeeper"
+              },
+              "triggers": "REPLY_IN_CHAT"
+            }
+          ],
+          "name": "AssistantThread",
+          "ref": "Session.traits.AgentThread"
+        },
+        {
+          "id": "trt_01M42B9X7M5BB02V920EWW4HYD",
+          "linkedEntity": "AgentChat",
+          "listens": [
+            {
+              "event": "ASSISTANT_SEND",
+              "source": {
+                "kind": "any"
               },
               "triggers": "SEND"
             },
             {
-              "event": "REPLIED",
+              "event": "ASSISTANT_HISTORY_REQUESTED",
+              "source": {
+                "kind": "any"
+              },
+              "triggers": "LOAD_HISTORY"
+            },
+            {
+              "event": "ASSISTANT_NEW_CHAT",
+              "source": {
+                "kind": "any"
+              },
+              "triggers": "NEW_CHAT"
+            },
+            {
+              "event": "ASSISTANT_CHAT_SELECTED",
+              "source": {
+                "kind": "any"
+              },
+              "triggers": "SELECT_CHAT"
+            },
+            {
+              "event": "ASSISTANT_CHATS_REQUESTED",
+              "source": {
+                "kind": "any"
+              },
+              "triggers": "LIST_CHATS"
+            },
+            {
+              "event": "ASSISTANT_REPLIED",
               "source": {
                 "kind": "trait",
                 "trait": "AssistantLoop"
@@ -319,8 +442,8 @@
               "triggers": "REPLIED"
             }
           ],
-          "name": "AssistantThread",
-          "ref": "Session.traits.AgentThread"
+          "name": "AssistantChatKeeper",
+          "ref": "Session.traits.AgentChatKeeper"
         },
         {
           "config": {
@@ -330,73 +453,43 @@
             }
           },
           "id": "trt_01M3WD0HMAF5RY9APZS2H3AJ46",
-          "listens": [
-            {
-              "event": "AgentMessagesLoaded",
-              "source": {
-                "kind": "trait",
-                "trait": "AssistantThread"
-              },
-              "triggers": "THREAD_LOADED"
-            },
-            {
-              "event": "THREAD_FAILED",
-              "source": {
-                "kind": "trait",
-                "trait": "AssistantThread"
-              },
-              "triggers": "REPLY_FAILED"
-            },
-            {
-              "event": "STEP",
-              "source": {
-                "kind": "trait",
-                "trait": "AssistantLoop"
-              },
-              "triggers": "STEP"
-            },
-            {
-              "event": "REPLIED",
-              "source": {
-                "kind": "trait",
-                "trait": "AssistantLoop"
-              },
-              "triggers": "REPLIED"
-            },
-            {
-              "event": "REPLY_FAILED",
-              "source": {
-                "kind": "trait",
-                "trait": "AssistantLoop"
-              },
-              "triggers": "REPLY_FAILED"
-            }
-          ],
           "name": "AssistantConversation",
           "ref": "Session.traits.AgentConversation"
         },
         {
           "config": {
+            "appName": {
+              "default": "@config.appName",
+              "type": "unknown"
+            },
+            "contentClassName": {
+              "default": "mx-auto flex w-full max-w-3xl flex-col h-[calc(100vh-9rem)] min-h-0",
+              "type": "unknown"
+            },
             "contentTrait": {
               "default": "@trait.AssistantConversation",
               "type": "unknown"
             },
-            "icon": {
-              "default": "message-circle",
+            "navItems": {
+              "default": "@config.navItems",
               "type": "unknown"
             },
-            "label": {
-              "default": "@config.buttonLabel",
+            "viewerEmail": {
+              "default": "@user.email",
               "type": "unknown"
             },
-            "title": {
-              "default": "@config.title",
+            "viewerName": {
+              "default": "@user.name",
+              "type": "unknown"
+            },
+            "viewerRole": {
+              "default": "@config.viewerRole",
               "type": "unknown"
             }
           },
-          "id": "trt_01M3WD0HMAAMMG2VCZ9KXKYC0V",
-          "name": "AssistantDock",
-          "ref": "Launcher.traits.PanelLauncher"
+          "id": "trt_01M42AFPPP9XF9WNB1Q2DJVYEX",
+          "name": "AssistantLayout",
+          "ref": "Shell.traits.AppLayout"
         },
         {
           "config": {
@@ -438,12 +531,19 @@
               "triggers": "RECALL"
             },
             {
-              "event": "REPLIED",
+              "event": "ASSISTANT_REPLIED",
               "source": {
                 "kind": "trait",
                 "trait": "AssistantLoop"
               },
               "triggers": "REMEMBER"
+            },
+            {
+              "event": "ASSISTANT_MEMORIES_REQUESTED",
+              "source": {
+                "kind": "any"
+              },
+              "triggers": "LIST"
             }
           ],
           "name": "AssistantMemory",
@@ -483,7 +583,7 @@
           "linkedEntity": "AgentRun",
           "listens": [
             {
-              "event": "REPLIED",
+              "event": "ASSISTANT_REPLIED",
               "source": {
                 "kind": "trait",
                 "trait": "AssistantLoop"
@@ -491,7 +591,7 @@
               "triggers": "REPLIED"
             },
             {
-              "event": "REPLY_FAILED",
+              "event": "ASSISTANT_REPLY_FAILED",
               "source": {
                 "kind": "trait",
                 "trait": "AssistantLoop"
@@ -524,6 +624,67 @@
           {
             "name": "read",
             "type": "string"
+          },
+          {
+            "name": "scope",
+            "type": "string"
+          }
+        ],
+        "NavItem": [
+          {
+            "name": "label",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "href",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "icon",
+            "type": "string"
+          },
+          {
+            "name": "badge",
+            "type": "string"
+          },
+          {
+            "name": "children",
+            "properties": [
+              {
+                "name": "label",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "name": "href",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "name": "icon",
+                "type": "string"
+              },
+              {
+                "name": "badge",
+                "type": "string"
+              },
+              {
+                "name": "children",
+                "properties": [],
+                "type": "[NavItem]"
+              },
+              {
+                "name": "roles",
+                "type": "[string]"
+              }
+            ],
+            "type": "[object]"
+          },
+          {
+            "name": "roles",
+            "type": "[string]"
           }
         ]
       },
@@ -549,8 +710,8 @@
           "from": "std/behaviors/std-agent-trace"
         },
         {
-          "as": "Launcher",
-          "from": "std/behaviors/std-panel-launcher"
+          "as": "Shell",
+          "from": "std/behaviors/std-app-layout"
         }
       ]
     },
@@ -581,6 +742,51 @@
           "id": "ent_01M3V71WRK9FF6XANDFRRXF24C",
           "name": "AgentMemory",
           "persistence": "persistent"
+        },
+        {
+          "collection": "agentChats",
+          "fields": [
+            {
+              "name": "id",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "name": "ownerId",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "default": "",
+              "name": "title",
+              "type": "string"
+            },
+            {
+              "default": 0.0,
+              "name": "startedAt",
+              "type": "number"
+            },
+            {
+              "default": 0.0,
+              "name": "lastActiveAt",
+              "type": "number"
+            },
+            {
+              "default": "",
+              "intrinsic": true,
+              "name": "pendingMessage",
+              "type": "string"
+            },
+            {
+              "default": "",
+              "intrinsic": true,
+              "name": "pendingReply",
+              "type": "string"
+            }
+          ],
+          "id": "ent_01M42AFPPPHTXB167C0TSN3YMG",
+          "name": "AgentChat",
+          "persistence": "persistent"
         }
       ],
       "entity": {
@@ -609,17 +815,6 @@
               "refId": "trt_01M3V71WRKRBWAZMCGX5EQD8X6"
             }
           ]
-        },
-        {
-          "id": "pag_01M3V71WRKMMBWKNQ7768PP579",
-          "name": "AssistantMemoryPage",
-          "path": "/assistant/memory",
-          "traits": [
-            {
-              "ref": "AgentMemoryList",
-              "refId": "trt_01M3V71WRKAPCPAVW5XM7T3BW5"
-            }
-          ]
         }
       ],
       "traits": [
@@ -640,24 +835,6 @@
           ],
           "name": "AgentRunHistory",
           "ref": "Trace.traits.AgentRunBrowse"
-        },
-        {
-          "id": "trt_01M3V71WRKAPCPAVW5XM7T3BW5",
-          "linkedEntity": "AgentMemory",
-          "linkedEntityId": "ent_01M3V71WRK9FF6XANDFRRXF24C",
-          "listens": [
-            {
-              "event": "MEMORY_STORED",
-              "source": {
-                "kind": "orbital",
-                "orbital": "AgentAssistantOrbital",
-                "trait": "AssistantMemory"
-              },
-              "triggers": "MEMORY_STORED"
-            }
-          ],
-          "name": "AgentMemoryList",
-          "ref": "Memory.traits.AgentMemoryBrowse"
         }
       ],
       "types": {
@@ -681,14 +858,71 @@
           {
             "name": "read",
             "type": "string"
+          },
+          {
+            "name": "scope",
+            "type": "string"
+          }
+        ],
+        "NavItem": [
+          {
+            "name": "label",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "href",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "icon",
+            "type": "string"
+          },
+          {
+            "name": "badge",
+            "type": "string"
+          },
+          {
+            "name": "children",
+            "properties": [
+              {
+                "name": "label",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "name": "href",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "name": "icon",
+                "type": "string"
+              },
+              {
+                "name": "badge",
+                "type": "string"
+              },
+              {
+                "name": "children",
+                "properties": [],
+                "type": "[NavItem]"
+              },
+              {
+                "name": "roles",
+                "type": "[string]"
+              }
+            ],
+            "type": "[object]"
+          },
+          {
+            "name": "roles",
+            "type": "[string]"
           }
         ]
       },
       "uses": [
-        {
-          "as": "Memory",
-          "from": "std/behaviors/std-agent-memory"
-        },
         {
           "as": "Trace",
           "from": "std/behaviors/std-agent-trace"

@@ -226,19 +226,19 @@
               "type": "boolean"
             },
             "backgroundColor": {
-              "default": "#f8fafc",
+              "default": "",
               "label": "Background Color",
               "tier": "presentation",
               "type": "string"
             },
             "disabledColor": {
-              "default": "#cbd5e1",
+              "default": "muted",
               "label": "Disabled Node Color",
               "tier": "presentation",
               "type": "string"
             },
             "disabledEdgeColor": {
-              "default": "#e2e8f0",
+              "default": "guide",
               "label": "Disabled Edge Color",
               "tier": "presentation",
               "type": "string"
@@ -328,13 +328,13 @@
               "type": "[LearnSandboxElement]"
             },
             "enabledColor": {
-              "default": "#2563eb",
+              "default": "series-2",
               "label": "Enabled Node Color",
               "tier": "presentation",
               "type": "string"
             },
             "enabledEdgeColor": {
-              "default": "#1e3a8a",
+              "default": "ink",
               "label": "Enabled Edge Color",
               "tier": "presentation",
               "type": "string"
@@ -416,6 +416,13 @@
             "resetLabel": {
               "default": "Reset",
               "label": "Reset Button Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "summary": {
+              "default": "",
+              "description": "One line under the title saying what the system models (keep it under ~65 characters). Empty shows no line.",
+              "label": "Concept",
               "tier": "presentation",
               "type": "string"
             },
@@ -861,14 +868,55 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
-                              "content": "Toggle elements to see how the system's total responds.",
-                              "type": "typography",
-                              "variant": "body"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.holds",
+                                    "Holds",
+                                    "Does not hold"
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.holds",
+                                    "primary",
+                                    "warning"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "animate": "@config.animate",
@@ -876,12 +924,16 @@
                               "edges": "@entity.edges",
                               "height": "@config.height",
                               "interactive": "@config.interactive",
+                              "keyMap": {
+                                "KeyR": "RESET"
+                              },
                               "nodes": "@entity.nodes",
                               "shapes": [],
                               "type": "biology-canvas",
                               "width": "@config.width"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 "array/map",
                                 "@config.elements",
@@ -897,6 +949,20 @@
                                         "id"
                                       ]
                                     },
+                                    "aria-pressed": [
+                                      "if",
+                                      [
+                                        "array/includes",
+                                        "@entity.enabledIds",
+                                        [
+                                          "object/get",
+                                          "@e",
+                                          "id"
+                                        ]
+                                      ],
+                                      "true",
+                                      "false"
+                                    ],
                                     "label": [
                                       "if",
                                       [
@@ -923,7 +989,6 @@
                                         " — off"
                                       ]
                                     ],
-                                    "size": "sm",
                                     "type": "button",
                                     "variant": [
                                       "if",
@@ -936,55 +1001,49 @@
                                           "id"
                                         ]
                                       ],
-                                      "primary",
+                                      "secondary",
                                       "ghost"
                                     ]
                                   }
                                 ]
                               ],
                               "direction": "horizontal",
-                              "gap": "xs",
-                              "type": "stack"
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "@config.resetLabel",
                                   "type": "button",
                                   "variant": "ghost"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "label": [
-                                    "if",
-                                    "@entity.holds",
-                                    "Holds",
-                                    "Does Not Hold"
-                                  ],
-                                  "type": "badge",
-                                  "variant": [
-                                    "if",
-                                    "@entity.holds",
-                                    "success",
-                                    "danger"
-                                  ]
                                 },
                                 {
-                                  "content": "@entity.readout",
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Total ",
+                                    "@entity.total",
+                                    " of ",
+                                    "@config.threshold"
+                                  ],
                                   "type": "typography",
-                                  "variant": "body"
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
+                              "content": "@entity.readout",
+                              "type": "typography",
+                              "variant": "body"
                             }
                           ],
                           "direction": "vertical",
@@ -1004,6 +1063,43 @@
                   "==",
                   "@config.matchMode",
                   ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01M055GQ5616ZKF3AC9G2WQX88",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@config.matchMode",
+                      ""
+                    ]
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1256,14 +1352,55 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
-                              "content": "Toggle elements to see how the system's total responds.",
-                              "type": "typography",
-                              "variant": "body"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.holds",
+                                    "Holds",
+                                    "Does not hold"
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.holds",
+                                    "primary",
+                                    "warning"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "animate": "@config.animate",
@@ -1271,12 +1408,16 @@
                               "edges": "@entity.edges",
                               "height": "@config.height",
                               "interactive": "@config.interactive",
+                              "keyMap": {
+                                "KeyR": "RESET"
+                              },
                               "nodes": "@entity.nodes",
                               "shapes": [],
                               "type": "biology-canvas",
                               "width": "@config.width"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 "array/map",
                                 "@config.elements",
@@ -1292,6 +1433,20 @@
                                         "id"
                                       ]
                                     },
+                                    "aria-pressed": [
+                                      "if",
+                                      [
+                                        "array/includes",
+                                        "@entity.enabledIds",
+                                        [
+                                          "object/get",
+                                          "@e",
+                                          "id"
+                                        ]
+                                      ],
+                                      "true",
+                                      "false"
+                                    ],
                                     "label": [
                                       "if",
                                       [
@@ -1318,7 +1473,6 @@
                                         " — off"
                                       ]
                                     ],
-                                    "size": "sm",
                                     "type": "button",
                                     "variant": [
                                       "if",
@@ -1331,55 +1485,49 @@
                                           "id"
                                         ]
                                       ],
-                                      "primary",
+                                      "secondary",
                                       "ghost"
                                     ]
                                   }
                                 ]
                               ],
                               "direction": "horizontal",
-                              "gap": "xs",
-                              "type": "stack"
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "@config.resetLabel",
                                   "type": "button",
                                   "variant": "ghost"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "label": [
-                                    "if",
-                                    "@entity.holds",
-                                    "Holds",
-                                    "Does Not Hold"
-                                  ],
-                                  "type": "badge",
-                                  "variant": [
-                                    "if",
-                                    "@entity.holds",
-                                    "success",
-                                    "danger"
-                                  ]
                                 },
                                 {
-                                  "content": "@entity.readout",
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Total ",
+                                    "@entity.total",
+                                    " of ",
+                                    "@config.threshold"
+                                  ],
                                   "type": "typography",
-                                  "variant": "body"
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
+                              "content": "@entity.readout",
+                              "type": "typography",
+                              "variant": "body"
                             }
                           ],
                           "direction": "vertical",
@@ -1639,14 +1787,55 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
-                              "content": "Toggle elements to see how the system's total responds.",
-                              "type": "typography",
-                              "variant": "body"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.holds",
+                                    "Holds",
+                                    "Does not hold"
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.holds",
+                                    "primary",
+                                    "warning"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "animate": "@config.animate",
@@ -1654,12 +1843,16 @@
                               "edges": "@entity.edges",
                               "height": "@config.height",
                               "interactive": "@config.interactive",
+                              "keyMap": {
+                                "KeyR": "RESET"
+                              },
                               "nodes": "@entity.nodes",
                               "shapes": [],
                               "type": "biology-canvas",
                               "width": "@config.width"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 "array/map",
                                 "@config.elements",
@@ -1675,6 +1868,20 @@
                                         "id"
                                       ]
                                     },
+                                    "aria-pressed": [
+                                      "if",
+                                      [
+                                        "array/includes",
+                                        "@entity.enabledIds",
+                                        [
+                                          "object/get",
+                                          "@e",
+                                          "id"
+                                        ]
+                                      ],
+                                      "true",
+                                      "false"
+                                    ],
                                     "label": [
                                       "if",
                                       [
@@ -1701,7 +1908,6 @@
                                         " — off"
                                       ]
                                     ],
-                                    "size": "sm",
                                     "type": "button",
                                     "variant": [
                                       "if",
@@ -1714,55 +1920,49 @@
                                           "id"
                                         ]
                                       ],
-                                      "primary",
+                                      "secondary",
                                       "ghost"
                                     ]
                                   }
                                 ]
                               ],
                               "direction": "horizontal",
-                              "gap": "xs",
-                              "type": "stack"
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "@config.resetLabel",
                                   "type": "button",
                                   "variant": "ghost"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "label": [
-                                    "if",
-                                    "@entity.holds",
-                                    "Holds",
-                                    "Does Not Hold"
-                                  ],
-                                  "type": "badge",
-                                  "variant": [
-                                    "if",
-                                    "@entity.holds",
-                                    "success",
-                                    "danger"
-                                  ]
                                 },
                                 {
-                                  "content": "@entity.readout",
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Total ",
+                                    "@entity.total",
+                                    " of ",
+                                    "@config.threshold"
+                                  ],
                                   "type": "typography",
-                                  "variant": "body"
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
+                              "content": "@entity.readout",
+                              "type": "typography",
+                              "variant": "body"
                             }
                           ],
                           "direction": "vertical",
@@ -2032,14 +2232,55 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
-                              "content": "Toggle elements to see how the system's total responds.",
-                              "type": "typography",
-                              "variant": "body"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.holds",
+                                    "Holds",
+                                    "Does not hold"
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.holds",
+                                    "primary",
+                                    "warning"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "animate": "@config.animate",
@@ -2047,12 +2288,16 @@
                               "edges": "@entity.edges",
                               "height": "@config.height",
                               "interactive": "@config.interactive",
+                              "keyMap": {
+                                "KeyR": "RESET"
+                              },
                               "nodes": "@entity.nodes",
                               "shapes": [],
                               "type": "biology-canvas",
                               "width": "@config.width"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 "array/map",
                                 "@config.elements",
@@ -2068,6 +2313,20 @@
                                         "id"
                                       ]
                                     },
+                                    "aria-pressed": [
+                                      "if",
+                                      [
+                                        "array/includes",
+                                        "@entity.enabledIds",
+                                        [
+                                          "object/get",
+                                          "@e",
+                                          "id"
+                                        ]
+                                      ],
+                                      "true",
+                                      "false"
+                                    ],
                                     "label": [
                                       "if",
                                       [
@@ -2094,7 +2353,6 @@
                                         " — off"
                                       ]
                                     ],
-                                    "size": "sm",
                                     "type": "button",
                                     "variant": [
                                       "if",
@@ -2107,55 +2365,49 @@
                                           "id"
                                         ]
                                       ],
-                                      "primary",
+                                      "secondary",
                                       "ghost"
                                     ]
                                   }
                                 ]
                               ],
                               "direction": "horizontal",
-                              "gap": "xs",
-                              "type": "stack"
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "RESET",
+                                  "icon": "rotate-ccw",
                                   "label": "@config.resetLabel",
                                   "type": "button",
                                   "variant": "ghost"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "label": [
-                                    "if",
-                                    "@entity.holds",
-                                    "Holds",
-                                    "Does Not Hold"
-                                  ],
-                                  "type": "badge",
-                                  "variant": [
-                                    "if",
-                                    "@entity.holds",
-                                    "success",
-                                    "danger"
-                                  ]
                                 },
                                 {
-                                  "content": "@entity.readout",
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Total ",
+                                    "@entity.total",
+                                    " of ",
+                                    "@config.threshold"
+                                  ],
                                   "type": "typography",
-                                  "variant": "body"
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
+                              "content": "@entity.readout",
+                              "type": "typography",
+                              "variant": "body"
                             }
                           ],
                           "direction": "vertical",

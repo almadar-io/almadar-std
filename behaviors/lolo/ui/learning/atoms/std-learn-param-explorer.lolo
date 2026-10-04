@@ -75,20 +75,32 @@ orbital ParamExplorerOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
-                    { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
-                  ] },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
-                    { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (str/concat "y = " (if (== @entity.curveKind "power") "A·xᴮ" (if (== @entity.curveKind "linear") "A + B·x" "A·sin(B·x)"))), variant: neutral }
                   ] },
                 { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: sm, children: [
+                { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
+                        { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
+                        { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                      ] }
+                  ] },
                 { type: typography, variant: body, content: (str/concat @entity.paramALabel "=" (math/round @entity.paramA 2) ", " @entity.paramBLabel "=" (math/round @entity.paramB 2) " — at x=" (math/round @entity.xMid 2) ", y=" (math/round @entity.yMid 3)) }
               ] }
           ]
         })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (render-ui main null)
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (let (
@@ -134,16 +146,24 @@ orbital ParamExplorerOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
-                    { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
-                  ] },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
-                    { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (str/concat "y = " (if (== @entity.curveKind "power") "A·xᴮ" (if (== @entity.curveKind "linear") "A + B·x" "A·sin(B·x)"))), variant: neutral }
                   ] },
                 { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: sm, children: [
+                { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
+                        { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
+                        { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                      ] }
+                  ] },
                 { type: typography, variant: body, content: (str/concat @entity.paramALabel "=" (math/round @entity.paramA 2) ", " @entity.paramBLabel "=" (math/round @entity.paramB 2) " — at x=" (math/round @entity.xMid 2) ", y=" (math/round @entity.yMid 3)) }
               ] }
           ]
@@ -185,16 +205,24 @@ orbital ParamExplorerOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
-                    { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
-                  ] },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
-                    { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (str/concat "y = " (if (== @entity.curveKind "power") "A·xᴮ" (if (== @entity.curveKind "linear") "A + B·x" "A·sin(B·x)"))), variant: neutral }
                   ] },
                 { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: sm, children: [
+                { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
+                        { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
+                        { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                      ] }
+                  ] },
                 { type: typography, variant: body, content: (str/concat @entity.paramALabel "=" (math/round @entity.paramA 2) ", " @entity.paramBLabel "=" (math/round @entity.paramB 2) " — at x=" (math/round @entity.xMid 2) ", y=" (math/round @entity.yMid 3)) }
               ] }
           ]
@@ -237,16 +265,24 @@ orbital ParamExplorerOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
-                    { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
-                  ] },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
-                    { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (str/concat "y = " (if (== @entity.curveKind "power") "A·xᴮ" (if (== @entity.curveKind "linear") "A + B·x" "A·sin(B·x)"))), variant: neutral }
                   ] },
                 { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: sm, children: [
+                { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
+                        { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
+                        { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                      ] }
+                  ] },
                 { type: typography, variant: body, content: (str/concat @entity.paramALabel "=" (math/round @entity.paramA 2) ", " @entity.paramBLabel "=" (math/round @entity.paramB 2) " — at x=" (math/round @entity.xMid 2) ", y=" (math/round @entity.yMid 3)) }
               ] }
           ]
@@ -290,6 +326,10 @@ orbital ParamExplorerOrbital {
       title : string = "Parameter Explorer"
         @label "Title"
         @description "Title shown above the canvas."
+        @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line."
         @tier "presentation"
       curveKind : string = "power"
         @label "Curve Kind"
@@ -344,7 +384,7 @@ orbital ParamExplorerOrbital {
         @label "X Max"
         @description "Right edge of the sampled x range."
         @tier "presentation"
-      color : string = "#3b82f6"
+      color : string = "series-2"
         @label "Curve Color"
         @tier "presentation"
       width : number = 600

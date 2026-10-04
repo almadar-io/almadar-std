@@ -247,7 +247,7 @@
               "type": "number"
             },
             "leftColor": {
-              "default": "#3b82f6",
+              "default": "series-1",
               "label": "Left Color",
               "tier": "presentation",
               "type": "string"
@@ -327,7 +327,7 @@
               "type": "number"
             },
             "rightColor": {
-              "default": "#f59e0b",
+              "default": "series-2",
               "label": "Right Color",
               "tier": "presentation",
               "type": "string"
@@ -350,6 +350,13 @@
               "label": "Show Grid",
               "tier": "presentation",
               "type": "boolean"
+            },
+            "summary": {
+              "default": "",
+              "description": "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line.",
+              "label": "Concept",
+              "tier": "presentation",
+              "type": "string"
             },
             "title": {
               "default": "Compare Two Settings",
@@ -1101,14 +1108,72 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "str/concat",
+                                    "Δ ",
+                                    [
+                                      "math/round",
+                                      "@entity.delta",
+                                      3.0
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": "neutral"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
-                              "content": "@config.compareText",
-                              "type": "typography",
-                              "variant": "body"
+                              "animate": false,
+                              "curves": "@entity.curves",
+                              "gridStep": "@config.gridStep",
+                              "height": "@config.height",
+                              "interactive": false,
+                              "points": [],
+                              "shapes": [],
+                              "showAxes": "@config.showAxes",
+                              "showGrid": "@config.showGrid",
+                              "title": "",
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.xMax",
+                              "xMin": "@config.xMin",
+                              "yMax": "@entity.yMax",
+                              "yMin": "@entity.yMin"
                             },
                             {
                               "children": [
@@ -1248,25 +1313,12 @@
                               "type": "stack"
                             },
                             {
-                              "animate": false,
-                              "curves": "@entity.curves",
-                              "gridStep": "@config.gridStep",
-                              "height": "@config.height",
-                              "interactive": false,
-                              "points": [],
-                              "shapes": [],
-                              "showAxes": "@config.showAxes",
-                              "showGrid": "@config.showGrid",
-                              "title": "",
-                              "type": "math-canvas",
-                              "vectors": [],
-                              "width": "@config.width",
-                              "xMax": "@config.xMax",
-                              "xMin": "@config.xMin",
-                              "yMax": "@entity.yMax",
-                              "yMin": "@entity.yMin"
+                              "content": "@config.compareText",
+                              "type": "typography",
+                              "variant": "body"
                             },
                             {
+                              "color": "muted",
                               "content": [
                                 "str/concat",
                                 "At x=",
@@ -1299,7 +1351,7 @@
                                 ]
                               ],
                               "type": "typography",
-                              "variant": "body"
+                              "variant": "caption"
                             }
                           ],
                           "direction": "vertical",
@@ -1319,6 +1371,43 @@
                   "==",
                   "@config.matchMode",
                   ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01M07580H5Q89M2Z3CM4P6NA63",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@config.matchMode",
+                      ""
+                    ]
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1841,14 +1930,72 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "str/concat",
+                                    "Δ ",
+                                    [
+                                      "math/round",
+                                      "@entity.delta",
+                                      3.0
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": "neutral"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
-                              "content": "@config.compareText",
-                              "type": "typography",
-                              "variant": "body"
+                              "animate": false,
+                              "curves": "@entity.curves",
+                              "gridStep": "@config.gridStep",
+                              "height": "@config.height",
+                              "interactive": false,
+                              "points": [],
+                              "shapes": [],
+                              "showAxes": "@config.showAxes",
+                              "showGrid": "@config.showGrid",
+                              "title": "",
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.xMax",
+                              "xMin": "@config.xMin",
+                              "yMax": "@entity.yMax",
+                              "yMin": "@entity.yMin"
                             },
                             {
                               "children": [
@@ -1988,25 +2135,12 @@
                               "type": "stack"
                             },
                             {
-                              "animate": false,
-                              "curves": "@entity.curves",
-                              "gridStep": "@config.gridStep",
-                              "height": "@config.height",
-                              "interactive": false,
-                              "points": [],
-                              "shapes": [],
-                              "showAxes": "@config.showAxes",
-                              "showGrid": "@config.showGrid",
-                              "title": "",
-                              "type": "math-canvas",
-                              "vectors": [],
-                              "width": "@config.width",
-                              "xMax": "@config.xMax",
-                              "xMin": "@config.xMin",
-                              "yMax": "@entity.yMax",
-                              "yMin": "@entity.yMin"
+                              "content": "@config.compareText",
+                              "type": "typography",
+                              "variant": "body"
                             },
                             {
+                              "color": "muted",
                               "content": [
                                 "str/concat",
                                 "At x=",
@@ -2039,7 +2173,7 @@
                                 ]
                               ],
                               "type": "typography",
-                              "variant": "body"
+                              "variant": "caption"
                             }
                           ],
                           "direction": "vertical",
@@ -2637,14 +2771,72 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "str/concat",
+                                    "Δ ",
+                                    [
+                                      "math/round",
+                                      "@entity.delta",
+                                      3.0
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": "neutral"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
-                              "content": "@config.compareText",
-                              "type": "typography",
-                              "variant": "body"
+                              "animate": false,
+                              "curves": "@entity.curves",
+                              "gridStep": "@config.gridStep",
+                              "height": "@config.height",
+                              "interactive": false,
+                              "points": [],
+                              "shapes": [],
+                              "showAxes": "@config.showAxes",
+                              "showGrid": "@config.showGrid",
+                              "title": "",
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.xMax",
+                              "xMin": "@config.xMin",
+                              "yMax": "@entity.yMax",
+                              "yMin": "@entity.yMin"
                             },
                             {
                               "children": [
@@ -2784,25 +2976,12 @@
                               "type": "stack"
                             },
                             {
-                              "animate": false,
-                              "curves": "@entity.curves",
-                              "gridStep": "@config.gridStep",
-                              "height": "@config.height",
-                              "interactive": false,
-                              "points": [],
-                              "shapes": [],
-                              "showAxes": "@config.showAxes",
-                              "showGrid": "@config.showGrid",
-                              "title": "",
-                              "type": "math-canvas",
-                              "vectors": [],
-                              "width": "@config.width",
-                              "xMax": "@config.xMax",
-                              "xMin": "@config.xMin",
-                              "yMax": "@entity.yMax",
-                              "yMin": "@entity.yMin"
+                              "content": "@config.compareText",
+                              "type": "typography",
+                              "variant": "body"
                             },
                             {
+                              "color": "muted",
                               "content": [
                                 "str/concat",
                                 "At x=",
@@ -2835,7 +3014,7 @@
                                 ]
                               ],
                               "type": "typography",
-                              "variant": "body"
+                              "variant": "caption"
                             }
                           ],
                           "direction": "vertical",

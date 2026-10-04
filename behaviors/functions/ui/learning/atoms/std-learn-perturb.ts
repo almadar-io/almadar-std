@@ -30,7 +30,7 @@ const ALIAS = 'LearnPerturb';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnPerturbEventKey = 'INIT' | 'MODE_SELECTED' | 'PAUSE' | 'RATE_CHANGED' | 'RESET' | 'RUN' | 'RUN_TOGGLED' | 'SETPOINT_CHANGED' | 'SET_POINT' | 'SET_RATE' | 'SHOCK' | 'SHOCK_APPLIED' | 'SIM_RESET';
+export type StdLearnPerturbEventKey = 'INIT' | 'MODE_SELECTED' | 'PAUSE' | 'RATE_CHANGED' | 'RESET' | 'RUN' | 'RUN_TOGGLED' | 'SETPOINT_CHANGED' | 'SET_POINT' | 'SET_RATE' | 'SHOCK' | 'SHOCK_APPLIED' | 'SIM_RESET' | 'SPEED_SET' | 'TOGGLE_RUN';
 
 /**
  * Payload shape for the `RUN_TOGGLED` event.
@@ -96,7 +96,7 @@ export interface StdLearnPerturbConfig {
   rateMin?: number;
   /** Default: `0.05` */
   rateStep?: number;
-  /** Default: `"#94a3b8"` */
+  /** Default: `"guide"` */
   setpointColor?: string;
   /** Default: `37` */
   setpointDefault?: number;
@@ -114,11 +114,13 @@ export interface StdLearnPerturbConfig {
   shockSize?: number;
   /** Default: `"+ Shock up"` */
   shockUpLabel?: string;
+  /** Default: `""` */
+  summary?: string;
   /** Default: `"Run the system, shock it off its setpoint, and watch it recover — then move the setpoint mid-run."` */
   taskText?: string;
   /** Default: `"Equilibrium & Shock"` */
   title?: string;
-  /** Default: `"#dc2626"` */
+  /** Default: `"highlight"` */
   valueColor?: string;
   /** Default: `"Temperature"` */
   valueLabel?: string;

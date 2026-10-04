@@ -44,6 +44,11 @@
             "required": false
           },
           {
+            "name": "speed",
+            "type": "number",
+            "required": false
+          },
+          {
             "name": "traceSamples",
             "type": "array",
             "required": false
@@ -109,6 +114,18 @@
             "direction": "listen",
             "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
             "tier": "domain"
+          },
+          {
+            "name": "TOGGLE_RUN",
+            "direction": "listen",
+            "description": "Learner pressed the Play/Pause toggle — starts or freezes the regulation loop.",
+            "tier": "domain"
+          },
+          {
+            "name": "SPEED_SET",
+            "direction": "listen",
+            "description": "The learner picked a playback speed; the loop relaxes that many times faster.",
+            "tier": "presentation"
           },
           {
             "name": "RUN",
@@ -225,7 +242,7 @@
           {
             "key": "setpointColor",
             "type": "string",
-            "default": "#94a3b8",
+            "default": "guide",
             "label": "Setpoint Color",
             "tier": "presentation"
           },
@@ -288,6 +305,14 @@
             "tier": "presentation"
           },
           {
+            "key": "summary",
+            "type": "string",
+            "default": "",
+            "label": "Concept",
+            "description": "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line.",
+            "tier": "presentation"
+          },
+          {
             "key": "taskText",
             "type": "string",
             "default": "Run the system, shock it off its setpoint, and watch it recover — then move the setpoint mid-run.",
@@ -300,13 +325,13 @@
             "type": "string",
             "default": "Equilibrium & Shock",
             "label": "Title",
-            "description": "Title shown above the simulation.",
+            "description": "The instrument's name, the header's one hero.",
             "tier": "presentation"
           },
           {
             "key": "valueColor",
             "type": "string",
-            "default": "#dc2626",
+            "default": "highlight",
             "label": "Value Color",
             "tier": "presentation"
           },
@@ -359,7 +384,9 @@
           "RUN",
           "SET_POINT",
           "SET_RATE",
-          "SHOCK"
+          "SHOCK",
+          "SPEED_SET",
+          "TOGGLE_RUN"
         ],
         "definerKnobs": [],
         "entityRebindable": true,
@@ -371,6 +398,7 @@
             "rate",
             "running",
             "setpoint",
+            "speed",
             "t",
             "title",
             "traceSamples",
@@ -431,6 +459,10 @@
           {
             "kind": "set",
             "resource": "@entity.setpoint"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.speed"
           },
           {
             "kind": "set",

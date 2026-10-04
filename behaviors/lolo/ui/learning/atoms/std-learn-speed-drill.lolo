@@ -24,6 +24,7 @@ orbital SpeedDrillOrbital {
     options : [string]
     correctIndex : number = 0
     feedback : string
+    pickedIndex : number = -1
     view : [node]
   }
 
@@ -43,6 +44,7 @@ orbital SpeedDrillOrbital {
             (set @entity.remaining (* @config.timeLimit 10))
             (set @entity.running true)
             (set @entity.verdict "")
+            (set @entity.pickedIndex -1)
             (set @entity.score 0)
             (set @entity.streak 0)
             (set @entity.bestStreak 0)
@@ -61,22 +63,36 @@ orbital SpeedDrillOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: progress-bar, value: (+ @entity.itemIndex 1), max: @entity.totalItems, showPercentage: false, label: (str/concat "Item " (str/concat "" (+ @entity.itemIndex 1)) " of " (str/concat "" @entity.totalItems)) },
-                { type: progress-bar, value: @entity.remaining, max: (* @config.timeLimit 10), showPercentage: false, label: (str/concat "Time left: " (math/round (/ @entity.remaining 10) 1) "s") },
-                { type: stack, direction: vertical, gap: md, children: @entity.view },
-                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
-                    { type: button, action: ANSWER, actionPayload: { index: @i }, label: (array/nth @entity.options @i), variant: secondary, size: sm, disabled: (if @entity.running false true) })) },
-                { type: typography, variant: caption, content: @entity.feedback },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: (if (and (== @entity.running false) (and (!= @entity.verdict "") (== @entity.done false))) false true) },
-                    { type: button, action: RETRY, label: @config.retryLabel, variant: ghost, disabled: (if @entity.done false true) }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Round complete" (str/concat @entity.score " pts · streak " @entity.streak)), variant: (if @entity.done "primary" (if (== @entity.verdict "correct") "success" (if (== @entity.verdict "") "neutral" "error"))) }
                   ] },
-                { type: stat-display, label: "Score", value: @entity.score, max: 0 },
-                { type: typography, variant: caption, content: (str/concat "Streak: " (str/concat "" @entity.streak) " · best: " (str/concat "" @entity.bestStreak)) }
+                { type: progress-bar, value: (+ @entity.itemIndex 1), max: @entity.totalItems, showPercentage: false, label: (str/concat "Item " (str/concat "" (+ @entity.itemIndex 1)) " of " (str/concat "" @entity.totalItems)) },
+                { type: progress-bar, value: @entity.remaining, max: (* @config.timeLimit 10), variant: (if (< @entity.remaining (* @config.timeLimit 3)) "warning" "primary"), showPercentage: false, label: (str/concat "Time left: " (math/round (/ @entity.remaining 10) 1) "s") },
+                { type: stack, direction: vertical, gap: md, children: @entity.view },
+                { type: stack, direction: vertical, gap: sm, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
+                    { type: button, action: ANSWER, actionPayload: { index: @i }, label: (array/nth @entity.options @i), size: lg, disabled: (not @entity.running), variant: (if @entity.running "secondary" (if (== @i @entity.correctIndex) "success" (if (== @i @entity.pickedIndex) "danger" "ghost"))) })) },
+                (if (or (== @entity.feedback "") @entity.done) null { type: stack, direction: vertical, gap: xs, children: [
+                    { type: badge, variant: (if (== @entity.verdict "correct") "success" "error"), label: (if (== @entity.verdict "correct") "Correct" (if (== @entity.verdict "timeout") "Time's up" "Incorrect")) },
+                    { type: typography, variant: body, content: @entity.feedback }
+                  ] }),
+                (if @entity.done { type: typography, variant: body, content: @entity.feedback } null),
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: NEXT, label: @config.nextLabel, icon: "chevron-right", variant: primary, disabled: (if (and (== @entity.running false) (and (!= @entity.verdict "") (== @entity.done false))) false true) },
+                    { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: ghost, disabled: (if @entity.done false true) },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Best streak " @entity.bestStreak) }
+                  ] }
               ] }
           ]
         })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (set @entity.running false)
+        (render-ui main null)
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (let (
@@ -90,6 +106,7 @@ orbital SpeedDrillOrbital {
             (set @entity.remaining (* @config.timeLimit 10))
             (set @entity.running true)
             (set @entity.verdict "")
+            (set @entity.pickedIndex -1)
             (set @entity.score 0)
             (set @entity.streak 0)
             (set @entity.bestStreak 0)
@@ -108,19 +125,28 @@ orbital SpeedDrillOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: progress-bar, value: (+ @entity.itemIndex 1), max: @entity.totalItems, showPercentage: false, label: (str/concat "Item " (str/concat "" (+ @entity.itemIndex 1)) " of " (str/concat "" @entity.totalItems)) },
-                { type: progress-bar, value: @entity.remaining, max: (* @config.timeLimit 10), showPercentage: false, label: (str/concat "Time left: " (math/round (/ @entity.remaining 10) 1) "s") },
-                { type: stack, direction: vertical, gap: md, children: @entity.view },
-                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
-                    { type: button, action: ANSWER, actionPayload: { index: @i }, label: (array/nth @entity.options @i), variant: secondary, size: sm, disabled: (if @entity.running false true) })) },
-                { type: typography, variant: caption, content: @entity.feedback },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: (if (and (== @entity.running false) (and (!= @entity.verdict "") (== @entity.done false))) false true) },
-                    { type: button, action: RETRY, label: @config.retryLabel, variant: ghost, disabled: (if @entity.done false true) }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Round complete" (str/concat @entity.score " pts · streak " @entity.streak)), variant: (if @entity.done "primary" (if (== @entity.verdict "correct") "success" (if (== @entity.verdict "") "neutral" "error"))) }
                   ] },
-                { type: stat-display, label: "Score", value: @entity.score, max: 0 },
-                { type: typography, variant: caption, content: (str/concat "Streak: " (str/concat "" @entity.streak) " · best: " (str/concat "" @entity.bestStreak)) }
+                { type: progress-bar, value: (+ @entity.itemIndex 1), max: @entity.totalItems, showPercentage: false, label: (str/concat "Item " (str/concat "" (+ @entity.itemIndex 1)) " of " (str/concat "" @entity.totalItems)) },
+                { type: progress-bar, value: @entity.remaining, max: (* @config.timeLimit 10), variant: (if (< @entity.remaining (* @config.timeLimit 3)) "warning" "primary"), showPercentage: false, label: (str/concat "Time left: " (math/round (/ @entity.remaining 10) 1) "s") },
+                { type: stack, direction: vertical, gap: md, children: @entity.view },
+                { type: stack, direction: vertical, gap: sm, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
+                    { type: button, action: ANSWER, actionPayload: { index: @i }, label: (array/nth @entity.options @i), size: lg, disabled: (not @entity.running), variant: (if @entity.running "secondary" (if (== @i @entity.correctIndex) "success" (if (== @i @entity.pickedIndex) "danger" "ghost"))) })) },
+                (if (or (== @entity.feedback "") @entity.done) null { type: stack, direction: vertical, gap: xs, children: [
+                    { type: badge, variant: (if (== @entity.verdict "correct") "success" "error"), label: (if (== @entity.verdict "correct") "Correct" (if (== @entity.verdict "timeout") "Time's up" "Incorrect")) },
+                    { type: typography, variant: body, content: @entity.feedback }
+                  ] }),
+                (if @entity.done { type: typography, variant: body, content: @entity.feedback } null),
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: NEXT, label: @config.nextLabel, icon: "chevron-right", variant: primary, disabled: (if (and (== @entity.running false) (and (!= @entity.verdict "") (== @entity.done false))) false true) },
+                    { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: ghost, disabled: (if @entity.done false true) },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Best streak " @entity.bestStreak) }
+                  ] }
               ] }
           ]
         })
@@ -134,6 +160,7 @@ orbital SpeedDrillOrbital {
           )
           (do
             (set @entity.running false)
+            (set @entity.pickedIndex ?index)
             (set @entity.verdict (if @correct "correct" "wrong"))
             (set @entity.score (+ @entity.score @points))
             (set @entity.streak @newStreak)
@@ -156,6 +183,7 @@ orbital SpeedDrillOrbital {
             (set @entity.remaining (if @finished 0 (* @config.timeLimit 10)))
             (set @entity.running (if @finished false true))
             (set @entity.verdict "")
+            (set @entity.pickedIndex -1)
             (set @entity.promptText (if @finished @entity.promptText (object/get @next prompt)))
             (set @entity.options (if @finished [] (object/get @next options)))
             (set @entity.correctIndex (if @finished @entity.correctIndex (object/get @next correctIndex)))
@@ -176,19 +204,28 @@ orbital SpeedDrillOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: progress-bar, value: (+ @entity.itemIndex 1), max: @entity.totalItems, showPercentage: false, label: (str/concat "Item " (str/concat "" (+ @entity.itemIndex 1)) " of " (str/concat "" @entity.totalItems)) },
-                { type: progress-bar, value: @entity.remaining, max: (* @config.timeLimit 10), showPercentage: false, label: (str/concat "Time left: " (math/round (/ @entity.remaining 10) 1) "s") },
-                { type: stack, direction: vertical, gap: md, children: @entity.view },
-                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
-                    { type: button, action: ANSWER, actionPayload: { index: @i }, label: (array/nth @entity.options @i), variant: secondary, size: sm, disabled: (if @entity.running false true) })) },
-                { type: typography, variant: caption, content: @entity.feedback },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: (if (and (== @entity.running false) (and (!= @entity.verdict "") (== @entity.done false))) false true) },
-                    { type: button, action: RETRY, label: @config.retryLabel, variant: ghost, disabled: (if @entity.done false true) }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Round complete" (str/concat @entity.score " pts · streak " @entity.streak)), variant: (if @entity.done "primary" (if (== @entity.verdict "correct") "success" (if (== @entity.verdict "") "neutral" "error"))) }
                   ] },
-                { type: stat-display, label: "Score", value: @entity.score, max: 0 },
-                { type: typography, variant: caption, content: (str/concat "Streak: " (str/concat "" @entity.streak) " · best: " (str/concat "" @entity.bestStreak)) }
+                { type: progress-bar, value: (+ @entity.itemIndex 1), max: @entity.totalItems, showPercentage: false, label: (str/concat "Item " (str/concat "" (+ @entity.itemIndex 1)) " of " (str/concat "" @entity.totalItems)) },
+                { type: progress-bar, value: @entity.remaining, max: (* @config.timeLimit 10), variant: (if (< @entity.remaining (* @config.timeLimit 3)) "warning" "primary"), showPercentage: false, label: (str/concat "Time left: " (math/round (/ @entity.remaining 10) 1) "s") },
+                { type: stack, direction: vertical, gap: md, children: @entity.view },
+                { type: stack, direction: vertical, gap: sm, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
+                    { type: button, action: ANSWER, actionPayload: { index: @i }, label: (array/nth @entity.options @i), size: lg, disabled: (not @entity.running), variant: (if @entity.running "secondary" (if (== @i @entity.correctIndex) "success" (if (== @i @entity.pickedIndex) "danger" "ghost"))) })) },
+                (if (or (== @entity.feedback "") @entity.done) null { type: stack, direction: vertical, gap: xs, children: [
+                    { type: badge, variant: (if (== @entity.verdict "correct") "success" "error"), label: (if (== @entity.verdict "correct") "Correct" (if (== @entity.verdict "timeout") "Time's up" "Incorrect")) },
+                    { type: typography, variant: body, content: @entity.feedback }
+                  ] }),
+                (if @entity.done { type: typography, variant: body, content: @entity.feedback } null),
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: NEXT, label: @config.nextLabel, icon: "chevron-right", variant: primary, disabled: (if (and (== @entity.running false) (and (!= @entity.verdict "") (== @entity.done false))) false true) },
+                    { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: ghost, disabled: (if @entity.done false true) },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Best streak " @entity.bestStreak) }
+                  ] }
               ] }
           ]
         })
@@ -203,6 +240,7 @@ orbital SpeedDrillOrbital {
             (set @entity.remaining (* @config.timeLimit 10))
             (set @entity.running true)
             (set @entity.verdict "")
+            (set @entity.pickedIndex -1)
             (set @entity.score 0)
             (set @entity.streak 0)
             (set @entity.bestStreak 0)
@@ -221,19 +259,28 @@ orbital SpeedDrillOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: progress-bar, value: (+ @entity.itemIndex 1), max: @entity.totalItems, showPercentage: false, label: (str/concat "Item " (str/concat "" (+ @entity.itemIndex 1)) " of " (str/concat "" @entity.totalItems)) },
-                { type: progress-bar, value: @entity.remaining, max: (* @config.timeLimit 10), showPercentage: false, label: (str/concat "Time left: " (math/round (/ @entity.remaining 10) 1) "s") },
-                { type: stack, direction: vertical, gap: md, children: @entity.view },
-                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
-                    { type: button, action: ANSWER, actionPayload: { index: @i }, label: (array/nth @entity.options @i), variant: secondary, size: sm, disabled: (if @entity.running false true) })) },
-                { type: typography, variant: caption, content: @entity.feedback },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: (if (and (== @entity.running false) (and (!= @entity.verdict "") (== @entity.done false))) false true) },
-                    { type: button, action: RETRY, label: @config.retryLabel, variant: ghost, disabled: (if @entity.done false true) }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Round complete" (str/concat @entity.score " pts · streak " @entity.streak)), variant: (if @entity.done "primary" (if (== @entity.verdict "correct") "success" (if (== @entity.verdict "") "neutral" "error"))) }
                   ] },
-                { type: stat-display, label: "Score", value: @entity.score, max: 0 },
-                { type: typography, variant: caption, content: (str/concat "Streak: " (str/concat "" @entity.streak) " · best: " (str/concat "" @entity.bestStreak)) }
+                { type: progress-bar, value: (+ @entity.itemIndex 1), max: @entity.totalItems, showPercentage: false, label: (str/concat "Item " (str/concat "" (+ @entity.itemIndex 1)) " of " (str/concat "" @entity.totalItems)) },
+                { type: progress-bar, value: @entity.remaining, max: (* @config.timeLimit 10), variant: (if (< @entity.remaining (* @config.timeLimit 3)) "warning" "primary"), showPercentage: false, label: (str/concat "Time left: " (math/round (/ @entity.remaining 10) 1) "s") },
+                { type: stack, direction: vertical, gap: md, children: @entity.view },
+                { type: stack, direction: vertical, gap: sm, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
+                    { type: button, action: ANSWER, actionPayload: { index: @i }, label: (array/nth @entity.options @i), size: lg, disabled: (not @entity.running), variant: (if @entity.running "secondary" (if (== @i @entity.correctIndex) "success" (if (== @i @entity.pickedIndex) "danger" "ghost"))) })) },
+                (if (or (== @entity.feedback "") @entity.done) null { type: stack, direction: vertical, gap: xs, children: [
+                    { type: badge, variant: (if (== @entity.verdict "correct") "success" "error"), label: (if (== @entity.verdict "correct") "Correct" (if (== @entity.verdict "timeout") "Time's up" "Incorrect")) },
+                    { type: typography, variant: body, content: @entity.feedback }
+                  ] }),
+                (if @entity.done { type: typography, variant: body, content: @entity.feedback } null),
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: NEXT, label: @config.nextLabel, icon: "chevron-right", variant: primary, disabled: (if (and (== @entity.running false) (and (!= @entity.verdict "") (== @entity.done false))) false true) },
+                    { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: ghost, disabled: (if @entity.done false true) },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Best streak " @entity.bestStreak) }
+                  ] }
               ] }
           ]
         })
@@ -310,6 +357,10 @@ orbital SpeedDrillOrbital {
       title : string = "Speed Drill"
         @label "Title"
         @description "Title shown above the drill."
+        @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what is being drilled (keep it under ~65 characters). Empty shows no line."
         @tier "presentation"
       items : [SpeedDrillItem] = [
         { prompt: "7 × 8", options: ["54", "56", "63", "48"], correctIndex: 1 },

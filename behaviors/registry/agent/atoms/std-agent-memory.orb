@@ -127,6 +127,42 @@
         "parent": "trt_01M3TYMQKZ74ZHT3AFPH8EZNNX",
         "renames": []
       },
+      "evt_01M42F8KCG9CMVRK0292G2ZCWV": {
+        "bakedName": "MemoriesForList",
+        "curName": "MemoriesForList",
+        "id": "evt_01M42F8KCG9CMVRK0292G2ZCWV",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3TYMQKZ74ZHT3AFPH8EZNNX",
+        "renames": []
+      },
+      "evt_01M42F8KCGF8KX280SVYVKSRG6": {
+        "bakedName": "LIST",
+        "curName": "LIST",
+        "id": "evt_01M42F8KCGF8KX280SVYVKSRG6",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3TYMQKZ74ZHT3AFPH8EZNNX",
+        "renames": []
+      },
+      "evt_01M42F8KCGT6JVRZPA43V95HGH": {
+        "bakedName": "ASSISTANT_MEMORIES_LOADED",
+        "curName": "ASSISTANT_MEMORIES_LOADED",
+        "id": "evt_01M42F8KCGT6JVRZPA43V95HGH",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3TYMQKZ74ZHT3AFPH8EZNNX",
+        "renames": []
+      },
+      "evt_01M42F8KCGTMHVJDK91H3GJWBE": {
+        "bakedName": "MemoryListFailed",
+        "curName": "MemoryListFailed",
+        "id": "evt_01M42F8KCGTMHVJDK91H3GJWBE",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3TYMQKZ74ZHT3AFPH8EZNNX",
+        "renames": []
+      },
       "orb_01KXG04EK04KQ6GTRHGM260CQS": {
         "bakedName": "AgentMemoryOrbital",
         "curName": "AgentMemoryOrbital",
@@ -296,6 +332,10 @@
             },
             {
               "kind": "emit",
+              "resource": "ASSISTANT_MEMORIES_LOADED"
+            },
+            {
+              "kind": "emit",
               "resource": "RECALLED"
             },
             {
@@ -352,13 +392,125 @@
                 },
                 {
                   "name": "context",
-                  "required": true,
                   "type": "string"
                 }
               ],
               "scope": "external",
               "synonyms": "recalled, remembered, context ready",
               "tier": "domain"
+            },
+            {
+              "description": "What the assistant remembers for this person, newest first (empty when nothing is, or the list could not load).",
+              "event": "ASSISTANT_MEMORIES_LOADED",
+              "eventId": "evt_01M42F8KCGT6JVRZPA43V95HGH",
+              "payloadSchema": [
+                {
+                  "entity": "AgentMemoryRow",
+                  "name": "data",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "content",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "number"
+                    }
+                  ],
+                  "required": true,
+                  "type": "[object]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "memories, what I remember",
+              "tier": "domain"
+            },
+            {
+              "event": "MemoriesForList",
+              "eventId": "evt_01M42F8KCG9CMVRK0292G2ZCWV",
+              "payloadSchema": [
+                {
+                  "entity": "AgentMemory",
+                  "name": "data",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "ownerId",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "content",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "embedding",
+                      "type": "[number]"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "pendingMessages",
+                      "properties": [
+                        {
+                          "name": "role",
+                          "type": "string"
+                        },
+                        {
+                          "name": "content",
+                          "required": true,
+                          "type": "string"
+                        }
+                      ],
+                      "type": "[object]"
+                    },
+                    {
+                      "name": "pendingQuery",
+                      "type": "string"
+                    },
+                    {
+                      "name": "pendingContent",
+                      "type": "string"
+                    },
+                    {
+                      "name": "queryVector",
+                      "type": "[number]"
+                    }
+                  ],
+                  "type": "[object]"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            },
+            {
+              "event": "MemoryListFailed",
+              "eventId": "evt_01M42F8KCGTMHVJDK91H3GJWBE",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
             },
             {
               "description": "A new memory was stored — payload is the created AgentMemory row itself.",
@@ -489,6 +641,16 @@
           "id": "trt_01M3TYMQKZ74ZHT3AFPH8EZNNX",
           "linkedEntity": "AgentMemory",
           "linkedEntityId": "ent_01KXG04EK05QG9T8V7MTF554J2",
+          "listens": [
+            {
+              "event": "ASSISTANT_MEMORIES_REQUESTED",
+              "source": {
+                "kind": "any"
+              },
+              "triggers": "LIST",
+              "triggersId": "evt_01M42F8KCGF8KX280SVYVKSRG6"
+            }
+          ],
           "name": "AgentMemoryRecall",
           "scope": "instance",
           "stateMachine": {
@@ -505,6 +667,93 @@
                 "name": "Memory Stored",
                 "synonyms": "remembered, stored, saved",
                 "tier": "domain"
+              },
+              {
+                "description": "List what the assistant remembers for this person.",
+                "id": "evt_01M42F8KCGF8KX280SVYVKSRG6",
+                "key": "LIST",
+                "name": "List"
+              },
+              {
+                "id": "evt_01M42F8KCG9CMVRK0292G2ZCWV",
+                "key": "MemoriesForList",
+                "name": "Memories for list",
+                "payloadSchema": [
+                  {
+                    "entity": "AgentMemory",
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "content",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "embedding",
+                        "type": "[number]"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "pendingMessages",
+                        "properties": [
+                          {
+                            "name": "role",
+                            "type": "string"
+                          },
+                          {
+                            "name": "content",
+                            "required": true,
+                            "type": "string"
+                          }
+                        ],
+                        "type": "[object]"
+                      },
+                      {
+                        "name": "pendingQuery",
+                        "type": "string"
+                      },
+                      {
+                        "name": "pendingContent",
+                        "type": "string"
+                      },
+                      {
+                        "name": "queryVector",
+                        "type": "[number]"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "id": "evt_01M42F8KCGTMHVJDK91H3GJWBE",
+                "key": "MemoryListFailed",
+                "name": "Memory list failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "tier": "internal"
               },
               {
                 "description": "Recall what is relevant to this conversation's last turn.",
@@ -673,11 +922,42 @@
                   },
                   {
                     "name": "context",
-                    "required": true,
                     "type": "string"
                   }
                 ],
                 "synonyms": "recalled, remembered, context ready",
+                "tier": "domain"
+              },
+              {
+                "description": "What the assistant remembers for this person, newest first (empty when nothing is, or the list could not load).",
+                "id": "evt_01M42F8KCGT6JVRZPA43V95HGH",
+                "key": "ASSISTANT_MEMORIES_LOADED",
+                "name": "Assistant Memories Loaded",
+                "payloadSchema": [
+                  {
+                    "entity": "AgentMemoryRow",
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "content",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "number"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
+                  }
+                ],
+                "synonyms": "memories, what I remember",
                 "tier": "domain"
               }
             ],
@@ -717,6 +997,80 @@
                 ],
                 "event": "MEMORY_STORED",
                 "eventId": "evt_01M3V04F9JVZKDNTN015MZJEKW",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentMemory",
+                    {
+                      "emit": {
+                        "failure": "MemoryListFailed",
+                        "success": "MemoriesForList"
+                      }
+                    }
+                  ]
+                ],
+                "event": "LIST",
+                "eventId": "evt_01M42F8KCGF8KX280SVYVKSRG6",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "ASSISTANT_MEMORIES_LOADED",
+                    {
+                      "data": [
+                        "array/map",
+                        [
+                          "array/sort",
+                          "@payload.data",
+                          "createdAt",
+                          "desc"
+                        ],
+                        [
+                          "fn",
+                          "item",
+                          {
+                            "content": "@item.content",
+                            "createdAt": "@item.createdAt",
+                            "id": "@item.id"
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                ],
+                "event": "MemoriesForList",
+                "eventId": "evt_01M42F8KCG9CMVRK0292G2ZCWV",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "ASSISTANT_MEMORIES_LOADED",
+                    {
+                      "data": []
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ],
+                "event": "MemoryListFailed",
+                "eventId": "evt_01M42F8KCGTMHVJDK91H3GJWBE",
                 "from": "ready",
                 "to": "ready"
               },
@@ -1345,6 +1699,22 @@
             "name": "content",
             "required": true,
             "type": "string"
+          }
+        ],
+        "AgentMemoryRow": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "content",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "createdAt",
+            "type": "number"
           }
         ]
       }

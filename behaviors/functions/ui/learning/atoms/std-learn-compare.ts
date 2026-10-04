@@ -62,7 +62,7 @@ export interface StdLearnCompareConfig {
   leftADefault?: number;
   /** Default: `2` */
   leftBDefault?: number;
-  /** Default: `"#3b82f6"` */
+  /** Default: `"series-1"` */
   leftColor?: string;
   /** Default: `"Left"` */
   leftLabel?: string;
@@ -88,7 +88,7 @@ export interface StdLearnCompareConfig {
   rightADefault?: number;
   /** Default: `1.5` */
   rightBDefault?: number;
-  /** Default: `"#f59e0b"` */
+  /** Default: `"series-2"` */
   rightColor?: string;
   /** Default: `"Right"` */
   rightLabel?: string;
@@ -96,6 +96,8 @@ export interface StdLearnCompareConfig {
   showAxes?: boolean;
   /** Default: `true` */
   showGrid?: boolean;
+  /** Default: `""` */
+  summary?: string;
   /** Default: `"Compare Two Settings"` */
   title?: string;
   /** Default: `600` */

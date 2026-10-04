@@ -1,0 +1,554 @@
+{
+  "description": "std-page-watch — watches every browser tab whose URL matches `match` for elements matching `itemSelector`, and reports each element once as ITEM with the `fields` read from it, now and as the page changes. Needs a host with the `page` service (a browser extension, which asks for access to exactly the `match` pages). Each item carries its tab and element id; compose std-page-treat to hide, blur, highlight or label it.",
+  "ledger": {
+    "entries": {
+      "ent_01M431PMTEWWMZ1XCC8FHVHBW8": {
+        "bakedName": "PageWatchRecord",
+        "curName": "PageWatchRecord",
+        "id": "ent_01M431PMTEWWMZ1XCC8FHVHBW8",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01M431PMTE6W3CZ5QJMYS1459V": {
+        "bakedName": "ITEM_FOUND",
+        "curName": "ITEM_FOUND",
+        "id": "evt_01M431PMTE6W3CZ5QJMYS1459V",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M431PMTE475YASHGMJKN6EFX",
+        "renames": []
+      },
+      "evt_01M431PMTEA16WSSMZX11M16MZ": {
+        "bakedName": "WATCH_FAILED",
+        "curName": "WATCH_FAILED",
+        "id": "evt_01M431PMTEA16WSSMZX11M16MZ",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M431PMTE475YASHGMJKN6EFX",
+        "renames": []
+      },
+      "evt_01M431PMTEB6NGWMFGA2RJ75BX": {
+        "bakedName": "ITEM",
+        "curName": "ITEM",
+        "id": "evt_01M431PMTEB6NGWMFGA2RJ75BX",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M431PMTE475YASHGMJKN6EFX",
+        "renames": []
+      },
+      "evt_01M431PMTEE1C4HT952B1BTJKF": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M431PMTEE1C4HT952B1BTJKF",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M431PMTE475YASHGMJKN6EFX",
+        "renames": []
+      },
+      "evt_01M431PMTEWJ5ZVF1VQHTS11F7": {
+        "bakedName": "WATCHING",
+        "curName": "WATCHING",
+        "id": "evt_01M431PMTEWJ5ZVF1VQHTS11F7",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M431PMTE475YASHGMJKN6EFX",
+        "renames": []
+      },
+      "orb_01M431PMTEVDD69TFRG6MFPBXP": {
+        "bakedName": "PageWatchOrbital",
+        "curName": "PageWatchOrbital",
+        "id": "orb_01M431PMTEVDD69TFRG6MFPBXP",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01M431PMTEZ080BE625P6D0CKX": {
+        "bakedName": "PageWatchPage",
+        "curName": "PageWatchPage",
+        "id": "pag_01M431PMTEZ080BE625P6D0CKX",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M431PMTE475YASHGMJKN6EFX": {
+        "bakedName": "PageWatch",
+        "curName": "PageWatch",
+        "id": "trt_01M431PMTE475YASHGMJKN6EFX",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "std-page-watch",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "default": "",
+            "description": "Id of the attached watch",
+            "name": "watchId",
+            "synonyms": "watch id, subscription",
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "description": "How many elements have been reported",
+            "name": "found",
+            "synonyms": "count, items seen, reported",
+            "type": "number"
+          },
+          {
+            "default": "",
+            "description": "Why the watch could not be attached; blank = none",
+            "name": "errorMessage",
+            "synonyms": "error, failure reason",
+            "type": "string"
+          },
+          {
+            "default": "starting",
+            "description": "Whether the watch is attached",
+            "name": "status",
+            "synonyms": "state, watching, connected",
+            "type": "string",
+            "values": [
+              "starting",
+              "watching",
+              "failed"
+            ]
+          }
+        ],
+        "id": "ent_01M431PMTEWWMZ1XCC8FHVHBW8",
+        "name": "PageWatchRecord",
+        "persistence": "runtime"
+      },
+      "id": "orb_01M431PMTEVDD69TFRG6MFPBXP",
+      "name": "PageWatchOrbital",
+      "pages": [
+        {
+          "id": "pag_01M431PMTEZ080BE625P6D0CKX",
+          "name": "PageWatchPage",
+          "path": "/page-watch",
+          "traits": [
+            {
+              "ref": "PageWatch",
+              "refId": "trt_01M431PMTE475YASHGMJKN6EFX"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "config": {
+            "fields": {
+              "default": {},
+              "description": "Field name to how to read it from each element: `selector` (a descendant; absent reads the element itself), `attr` (an attribute; absent reads the text) and `resolve` (the attribute is a URL: return it absolute)",
+              "items": {
+                "properties": {
+                  "attr": {
+                    "name": "attr",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "resolve": {
+                    "name": "resolve",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "selector": {
+                    "name": "selector",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Fields",
+              "synonyms": "columns, properties, extract, read",
+              "tier": "domain",
+              "type": "Map<string,PageField>"
+            },
+            "itemEvent": {
+              "default": "PageWatch.ITEM_FOUND",
+              "description": "The declared input each element arrives as; it follows the trait when a composer renames it",
+              "label": "Item input",
+              "tier": "internal",
+              "type": "event"
+            },
+            "itemSelector": {
+              "default": ".item",
+              "description": "CSS selector of the elements to report",
+              "label": "Item selector",
+              "synonyms": "selector, element, card, tile, row",
+              "tier": "domain",
+              "type": "string"
+            },
+            "match": {
+              "default": "https://example.com/*",
+              "description": "URL match pattern of the tabs to watch, in Chrome match-pattern syntax (`<scheme>://<host>/<path>` with `*` wildcards)",
+              "label": "Pages",
+              "synonyms": "site, url pattern, pages, domain",
+              "tier": "domain",
+              "type": "string"
+            },
+            "statusSlot": {
+              "default": "main",
+              "description": "Where the atom shows its one-line status; an organism running it in the background sends it to `system`",
+              "label": "Status slot",
+              "synonyms": "status area, slot",
+              "tier": "presentation",
+              "type": "slot"
+            }
+          },
+          "effectRow": [
+            {
+              "kind": "call-service",
+              "resource": "page.watch"
+            },
+            {
+              "kind": "emit",
+              "resource": "ITEM"
+            },
+            {
+              "kind": "render-ui",
+              "resolved": false,
+              "resource": "@config.statusSlot"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.errorMessage"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.found"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.status"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.watchId"
+            }
+          ],
+          "emits": [
+            {
+              "description": "The watch is attached",
+              "event": "WATCHING",
+              "eventId": "evt_01M431PMTEWJ5ZVF1VQHTS11F7",
+              "payloadSchema": [
+                {
+                  "name": "watchId",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "tier": "secondary"
+            },
+            {
+              "description": "The watch could not be attached (no page service, or no access to the pages)",
+              "event": "WATCH_FAILED",
+              "eventId": "evt_01M431PMTEA16WSSMZX11M16MZ",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "primary"
+            },
+            {
+              "description": "One matching element, reported once, with the fields read from it",
+              "event": "ITEM",
+              "eventId": "evt_01M431PMTEB6NGWMFGA2RJ75BX",
+              "payloadSchema": [
+                {
+                  "name": "tab",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "elementId",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "url",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "fields",
+                  "type": "Map<string,string>"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "element found, item seen, new item",
+              "tier": "primary"
+            }
+          ],
+          "entityRefIds": {
+            "PageWatchRecord": "ent_01M431PMTEWWMZ1XCC8FHVHBW8"
+          },
+          "id": "trt_01M431PMTE475YASHGMJKN6EFX",
+          "linkedEntity": "PageWatchRecord",
+          "linkedEntityId": "ent_01M431PMTEWWMZ1XCC8FHVHBW8",
+          "name": "PageWatch",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M431PMTEE1C4HT952B1BTJKF",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The watch is attached",
+                "id": "evt_01M431PMTEWJ5ZVF1VQHTS11F7",
+                "key": "WATCHING",
+                "name": "Watching",
+                "payloadSchema": [
+                  {
+                    "name": "watchId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "secondary"
+              },
+              {
+                "description": "The watch could not be attached (no page service, or no access to the pages)",
+                "id": "evt_01M431PMTEA16WSSMZX11M16MZ",
+                "key": "WATCH_FAILED",
+                "name": "Watch Failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "primary"
+              },
+              {
+                "description": "One matching element, delivered by the page service",
+                "external": true,
+                "id": "evt_01M431PMTE6W3CZ5QJMYS1459V",
+                "key": "ITEM_FOUND",
+                "name": "Item Found",
+                "payloadSchema": [
+                  {
+                    "name": "tab",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "elementId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "url",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "fields",
+                    "type": "Map<string,string>"
+                  }
+                ]
+              },
+              {
+                "description": "One matching element, reported once, with the fields read from it",
+                "id": "evt_01M431PMTEB6NGWMFGA2RJ75BX",
+                "key": "ITEM",
+                "name": "Item",
+                "payloadSchema": [
+                  {
+                    "name": "tab",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "elementId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "url",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "fields",
+                    "type": "Map<string,string>"
+                  }
+                ],
+                "synonyms": "element found, item seen, new item",
+                "tier": "primary"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "active"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "call-service",
+                    "page",
+                    "watch",
+                    {
+                      "event": "@config.itemEvent",
+                      "fields": "@config.fields",
+                      "match": "@config.match",
+                      "selector": "@config.itemSelector"
+                    },
+                    {
+                      "emit": {
+                        "failure": "WATCH_FAILED",
+                        "success": "WATCHING"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "@config.statusSlot",
+                    {
+                      "content": "Connecting to the pages…",
+                      "role": "status",
+                      "type": "typography",
+                      "variant": "body"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M431PMTEE1C4HT952B1BTJKF",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.watchId",
+                    "@payload.watchId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "watching"
+                  ],
+                  [
+                    "render-ui",
+                    "@config.statusSlot",
+                    {
+                      "content": [
+                        "str/concat",
+                        "Watching ",
+                        "@config.match"
+                      ],
+                      "role": "status",
+                      "type": "typography",
+                      "variant": "body"
+                    }
+                  ]
+                ],
+                "event": "WATCHING",
+                "eventId": "evt_01M431PMTEWJ5ZVF1VQHTS11F7",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.errorMessage",
+                    "@payload.error"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "failed"
+                  ],
+                  [
+                    "render-ui",
+                    "@config.statusSlot",
+                    {
+                      "content": [
+                        "str/concat",
+                        "Can't watch these pages: ",
+                        "@payload.error"
+                      ],
+                      "role": "status",
+                      "type": "typography",
+                      "variant": "body"
+                    }
+                  ]
+                ],
+                "event": "WATCH_FAILED",
+                "eventId": "evt_01M431PMTEA16WSSMZX11M16MZ",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.found",
+                    [
+                      "+",
+                      "@entity.found",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "emit",
+                    "ITEM",
+                    {
+                      "elementId": "@payload.elementId",
+                      "fields": "@payload.fields",
+                      "tab": "@payload.tab",
+                      "url": "@payload.url"
+                    }
+                  ]
+                ],
+                "event": "ITEM_FOUND",
+                "eventId": "evt_01M431PMTE6W3CZ5QJMYS1459V",
+                "from": "active",
+                "to": "active"
+              }
+            ]
+          }
+        }
+      ],
+      "types": {
+        "PageField": [
+          {
+            "name": "selector",
+            "type": "string"
+          },
+          {
+            "name": "attr",
+            "type": "string"
+          },
+          {
+            "name": "resolve",
+            "type": "boolean"
+          }
+        ]
+      }
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}

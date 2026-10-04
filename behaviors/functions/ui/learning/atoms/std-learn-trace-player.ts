@@ -30,7 +30,7 @@ const ALIAS = 'LearnTracePlayer';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnTracePlayerEventKey = 'FRAME_ADVANCED' | 'INIT' | 'MODE_SELECTED' | 'PAUSE' | 'PLAY' | 'RESTART' | 'TRACE_DONE';
+export type StdLearnTracePlayerEventKey = 'FRAME_ADVANCED' | 'INIT' | 'MODE_SELECTED' | 'PAUSE' | 'PLAY' | 'RESTART' | 'SPEED_SET' | 'TOGGLE_RUN' | 'TRACE_DONE';
 
 /**
  * Payload shape for the `FRAME_ADVANCED` event.
@@ -54,20 +54,22 @@ export interface StdLearnTracePlayerTraceDonePayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnTracePlayerConfig {
-  /** Default: `"#f8fafc"` */
+  /** Default: `""` */
   backgroundColor?: string;
-  /** Default: `"#3b82f6"` */
+  /** Default: `"series-1"` */
   baseColor?: string;
   /** Default: `[{"caption":"Unsorted array.","highlights":[],"label":"Start","values":[5,3,8,1,9,2]},{"caption":"Compare the first two elements; 5 > 3 so swap them.","highlights":[0,1],"label":"Compare 5, 3","values":[3,5,8,1,9,2]},{"caption":"Compare the next pair; already in order.","highlights":[1,2],"label":"Compare 5, 8","values":[3,5,8,1,9,2]},{"caption":"8 > 1 so swap them.","highlights":[2,3],"label":"Compare 8, 1","values":[3,5,1,8,9,2]},{"caption":"Already in order.","highlights":[3,4],"label":"Compare 8, 9","values":[3,5,1,8,9,2]},{"caption":"9 > 2 so swap them; one pass complete.","highlights":[4,5],"label":"Compare 9, 2","values":[3,5,1,8,2,9]}]` */
   frames?: EntityRow[];
   /** Default: `400` */
   height?: number;
-  /** Default: `"#f59e0b"` */
+  /** Default: `"highlight"` */
   highlightColor?: string;
   /** Default: `false` */
   loop?: boolean;
   /** Default: `""` */
   matchMode?: string;
+  /** Default: `""` */
+  summary?: string;
   /** Default: `500` */
   tickMs?: number;
   /** Default: `"Trace Player"` */

@@ -361,6 +361,13 @@
               "tier": "presentation",
               "type": "number"
             },
+            "summary": {
+              "default": "",
+              "description": "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line.",
+              "label": "Concept",
+              "tier": "presentation",
+              "type": "string"
+            },
             "title": {
               "default": "Estimate It",
               "description": "Title shown above the drill.",
@@ -861,6 +868,7 @@
                             "type": "stack"
                           },
                           {
+                            "align": "center",
                             "children": [
                               {
                                 "action": "LOCK_IN",
@@ -870,6 +878,7 @@
                                   true,
                                   false
                                 ],
+                                "icon": "check",
                                 "label": "@config.lockLabel",
                                 "type": "button",
                                 "variant": "primary"
@@ -882,6 +891,7 @@
                                   false,
                                   true
                                 ],
+                                "icon": "chevron-right",
                                 "label": "@config.nextLabel",
                                 "type": "button",
                                 "variant": "secondary"
@@ -889,14 +899,15 @@
                             ],
                             "direction": "horizontal",
                             "gap": "sm",
-                            "type": "stack"
+                            "type": "stack",
+                            "wrap": true
                           },
                           {
                             "children": [
                               {
                                 "content": "@entity.feedback",
                                 "type": "typography",
-                                "variant": "caption"
+                                "variant": "body"
                               }
                             ],
                             "direction": "horizontal",
@@ -925,9 +936,109 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.done",
+                                    "Complete",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.band",
+                                        "exact"
+                                      ],
+                                      "Spot on",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.band",
+                                          "close"
+                                        ],
+                                        "Close",
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.band",
+                                            "off"
+                                          ],
+                                          "Off",
+                                          "Estimating"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.done",
+                                    "success",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.band",
+                                        "exact"
+                                      ],
+                                      "success",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.band",
+                                          "close"
+                                        ],
+                                        "warning",
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.band",
+                                            "off"
+                                          ],
+                                          "danger",
+                                          "neutral"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "label": [
@@ -982,6 +1093,43 @@
                   "==",
                   "@config.matchMode",
                   ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01M07580S12EWNDQQZKD0R318W",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@config.matchMode",
+                      ""
+                    ]
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1146,6 +1294,7 @@
                             "type": "stack"
                           },
                           {
+                            "align": "center",
                             "children": [
                               {
                                 "action": "LOCK_IN",
@@ -1155,6 +1304,7 @@
                                   true,
                                   false
                                 ],
+                                "icon": "check",
                                 "label": "@config.lockLabel",
                                 "type": "button",
                                 "variant": "primary"
@@ -1167,6 +1317,7 @@
                                   false,
                                   true
                                 ],
+                                "icon": "chevron-right",
                                 "label": "@config.nextLabel",
                                 "type": "button",
                                 "variant": "secondary"
@@ -1174,14 +1325,15 @@
                             ],
                             "direction": "horizontal",
                             "gap": "sm",
-                            "type": "stack"
+                            "type": "stack",
+                            "wrap": true
                           },
                           {
                             "children": [
                               {
                                 "content": "@entity.feedback",
                                 "type": "typography",
-                                "variant": "caption"
+                                "variant": "body"
                               }
                             ],
                             "direction": "horizontal",
@@ -1210,9 +1362,109 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.done",
+                                    "Complete",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.band",
+                                        "exact"
+                                      ],
+                                      "Spot on",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.band",
+                                          "close"
+                                        ],
+                                        "Close",
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.band",
+                                            "off"
+                                          ],
+                                          "Off",
+                                          "Estimating"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.done",
+                                    "success",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.band",
+                                        "exact"
+                                      ],
+                                      "success",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.band",
+                                          "close"
+                                        ],
+                                        "warning",
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.band",
+                                            "off"
+                                          ],
+                                          "danger",
+                                          "neutral"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "label": [
@@ -1336,6 +1588,7 @@
                         "type": "stack"
                       },
                       {
+                        "align": "center",
                         "children": [
                           {
                             "action": "LOCK_IN",
@@ -1345,6 +1598,7 @@
                               true,
                               false
                             ],
+                            "icon": "check",
                             "label": "@config.lockLabel",
                             "type": "button",
                             "variant": "primary"
@@ -1357,6 +1611,7 @@
                               false,
                               true
                             ],
+                            "icon": "chevron-right",
                             "label": "@config.nextLabel",
                             "type": "button",
                             "variant": "secondary"
@@ -1364,14 +1619,15 @@
                         ],
                         "direction": "horizontal",
                         "gap": "sm",
-                        "type": "stack"
+                        "type": "stack",
+                        "wrap": true
                       },
                       {
                         "children": [
                           {
                             "content": "@entity.feedback",
                             "type": "typography",
-                            "variant": "caption"
+                            "variant": "body"
                           }
                         ],
                         "direction": "horizontal",
@@ -1398,9 +1654,109 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.done",
+                                    "Complete",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.band",
+                                        "exact"
+                                      ],
+                                      "Spot on",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.band",
+                                          "close"
+                                        ],
+                                        "Close",
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.band",
+                                            "off"
+                                          ],
+                                          "Off",
+                                          "Estimating"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.done",
+                                    "success",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.band",
+                                        "exact"
+                                      ],
+                                      "success",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.band",
+                                          "close"
+                                        ],
+                                        "warning",
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.band",
+                                            "off"
+                                          ],
+                                          "danger",
+                                          "neutral"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "label": [
@@ -1663,6 +2019,7 @@
                             "type": "stack"
                           },
                           {
+                            "align": "center",
                             "children": [
                               {
                                 "action": "LOCK_IN",
@@ -1672,6 +2029,7 @@
                                   true,
                                   false
                                 ],
+                                "icon": "check",
                                 "label": "@config.lockLabel",
                                 "type": "button",
                                 "variant": "primary"
@@ -1684,6 +2042,7 @@
                                   false,
                                   true
                                 ],
+                                "icon": "chevron-right",
                                 "label": "@config.nextLabel",
                                 "type": "button",
                                 "variant": "secondary"
@@ -1691,55 +2050,15 @@
                             ],
                             "direction": "horizontal",
                             "gap": "sm",
-                            "type": "stack"
+                            "type": "stack",
+                            "wrap": true
                           },
                           {
                             "children": [
                               {
-                                "label": [
-                                  "if",
-                                  [
-                                    "==",
-                                    "@entity.band",
-                                    "exact"
-                                  ],
-                                  "Spot on",
-                                  [
-                                    "if",
-                                    [
-                                      "==",
-                                      "@entity.band",
-                                      "close"
-                                    ],
-                                    "Close",
-                                    "Off"
-                                  ]
-                                ],
-                                "type": "badge",
-                                "variant": [
-                                  "if",
-                                  [
-                                    "==",
-                                    "@entity.band",
-                                    "exact"
-                                  ],
-                                  "success",
-                                  [
-                                    "if",
-                                    [
-                                      "==",
-                                      "@entity.band",
-                                      "close"
-                                    ],
-                                    "warning",
-                                    "danger"
-                                  ]
-                                ]
-                              },
-                              {
                                 "content": "@entity.feedback",
                                 "type": "typography",
-                                "variant": "caption"
+                                "variant": "body"
                               }
                             ],
                             "direction": "horizontal",
@@ -1768,9 +2087,109 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.done",
+                                    "Complete",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.band",
+                                        "exact"
+                                      ],
+                                      "Spot on",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.band",
+                                          "close"
+                                        ],
+                                        "Close",
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.band",
+                                            "off"
+                                          ],
+                                          "Off",
+                                          "Estimating"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.done",
+                                    "success",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.band",
+                                        "exact"
+                                      ],
+                                      "success",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.band",
+                                          "close"
+                                        ],
+                                        "warning",
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.band",
+                                            "off"
+                                          ],
+                                          "danger",
+                                          "neutral"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "label": [
@@ -2049,6 +2468,7 @@
                             },
                             {
                               "action": "RETRY",
+                              "icon": "rotate-ccw",
                               "label": "@config.retryLabel",
                               "type": "button",
                               "variant": "primary"
@@ -2105,6 +2525,7 @@
                               "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "LOCK_IN",
@@ -2114,6 +2535,7 @@
                                     true,
                                     false
                                   ],
+                                  "icon": "check",
                                   "label": "@config.lockLabel",
                                   "type": "button",
                                   "variant": "primary"
@@ -2126,6 +2548,7 @@
                                     false,
                                     true
                                   ],
+                                  "icon": "chevron-right",
                                   "label": "@config.nextLabel",
                                   "type": "button",
                                   "variant": "secondary"
@@ -2133,14 +2556,15 @@
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "children": [
                                 {
                                   "content": "@entity.feedback",
                                   "type": "typography",
-                                  "variant": "caption"
+                                  "variant": "body"
                                 }
                               ],
                               "direction": "horizontal",
@@ -2170,9 +2594,109 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.done",
+                                    "Complete",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.band",
+                                        "exact"
+                                      ],
+                                      "Spot on",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.band",
+                                          "close"
+                                        ],
+                                        "Close",
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.band",
+                                            "off"
+                                          ],
+                                          "Off",
+                                          "Estimating"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.done",
+                                    "success",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.band",
+                                        "exact"
+                                      ],
+                                      "success",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.band",
+                                          "close"
+                                        ],
+                                        "warning",
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.band",
+                                            "off"
+                                          ],
+                                          "danger",
+                                          "neutral"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "label": [
@@ -2398,6 +2922,7 @@
                             "type": "stack"
                           },
                           {
+                            "align": "center",
                             "children": [
                               {
                                 "action": "LOCK_IN",
@@ -2407,6 +2932,7 @@
                                   true,
                                   false
                                 ],
+                                "icon": "check",
                                 "label": "@config.lockLabel",
                                 "type": "button",
                                 "variant": "primary"
@@ -2419,6 +2945,7 @@
                                   false,
                                   true
                                 ],
+                                "icon": "chevron-right",
                                 "label": "@config.nextLabel",
                                 "type": "button",
                                 "variant": "secondary"
@@ -2426,14 +2953,15 @@
                             ],
                             "direction": "horizontal",
                             "gap": "sm",
-                            "type": "stack"
+                            "type": "stack",
+                            "wrap": true
                           },
                           {
                             "children": [
                               {
                                 "content": "@entity.feedback",
                                 "type": "typography",
-                                "variant": "caption"
+                                "variant": "body"
                               }
                             ],
                             "direction": "horizontal",
@@ -2462,9 +2990,109 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.done",
+                                    "Complete",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.band",
+                                        "exact"
+                                      ],
+                                      "Spot on",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.band",
+                                          "close"
+                                        ],
+                                        "Close",
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.band",
+                                            "off"
+                                          ],
+                                          "Off",
+                                          "Estimating"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.done",
+                                    "success",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.band",
+                                        "exact"
+                                      ],
+                                      "success",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.band",
+                                          "close"
+                                        ],
+                                        "warning",
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.band",
+                                            "off"
+                                          ],
+                                          "danger",
+                                          "neutral"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "label": [

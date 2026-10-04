@@ -20,6 +20,8 @@ orbital GridSimOrbital {
     generation : number = 0
     aliveCount : number = 0
     running : boolean = false
+    speed : number = 1
+    elapsedMs : number = 0
     cellShapes : [GridCellShape]
   }
 
@@ -47,19 +49,35 @@ orbital GridSimOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: @config.taskText },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if @entity.running true false) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: STEP, label: @config.stepLabel, variant: secondary, disabled: (if @entity.running true false) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
-                { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
-                { type: typography, variant: body, content: (str/concat "Generation " (str/concat "" @entity.generation) " · active cells: " (str/concat "" @entity.aliveCount)) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    { type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: @entity.running },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
+                  ] },
+                { type: learning-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
+                { type: typography, variant: body, content: @config.taskText }
               ] }
           ]
         })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (set @entity.running false)
+        (render-ui main null)
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (set @entity.active true)
@@ -81,16 +99,92 @@ orbital GridSimOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: @config.taskText },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if @entity.running true false) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: STEP, label: @config.stepLabel, variant: secondary, disabled: (if @entity.running true false) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
-                { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
-                { type: typography, variant: body, content: (str/concat "Generation " (str/concat "" @entity.generation) " · active cells: " (str/concat "" @entity.aliveCount)) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    { type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: @entity.running },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
+                  ] },
+                { type: learning-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
+                { type: typography, variant: body, content: @config.taskText }
+              ] }
+          ]
+        })
+
+      TOGGLE_RUN -> idle when (== @entity.active true)
+        (set @entity.running (not @entity.running))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    { type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: @entity.running },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
+                  ] },
+                { type: learning-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
+                { type: typography, variant: body, content: @config.taskText }
+              ] }
+          ]
+        })
+        (emit RUN_TOGGLED { running: @entity.running })
+
+      SPEED_SET -> idle when (== @entity.active true)
+        (set @entity.speed ?speed)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    { type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: @entity.running },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
+                  ] },
+                { type: learning-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
+                { type: typography, variant: body, content: @config.taskText }
               ] }
           ]
         })
@@ -102,16 +196,27 @@ orbital GridSimOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: @config.taskText },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if @entity.running true false) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: STEP, label: @config.stepLabel, variant: secondary, disabled: (if @entity.running true false) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
-                { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
-                { type: typography, variant: body, content: (str/concat "Generation " (str/concat "" @entity.generation) " · active cells: " (str/concat "" @entity.aliveCount)) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    { type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: @entity.running },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
+                  ] },
+                { type: learning-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
+                { type: typography, variant: body, content: @config.taskText }
               ] }
           ]
         })
@@ -124,16 +229,27 @@ orbital GridSimOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: @config.taskText },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if @entity.running true false) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: STEP, label: @config.stepLabel, variant: secondary, disabled: (if @entity.running true false) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
-                { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
-                { type: typography, variant: body, content: (str/concat "Generation " (str/concat "" @entity.generation) " · active cells: " (str/concat "" @entity.aliveCount)) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    { type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: @entity.running },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
+                  ] },
+                { type: learning-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
+                { type: typography, variant: body, content: @config.taskText }
               ] }
           ]
         })
@@ -178,16 +294,27 @@ orbital GridSimOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: @config.taskText },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if @entity.running true false) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: STEP, label: @config.stepLabel, variant: secondary, disabled: (if @entity.running true false) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
-                { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
-                { type: typography, variant: body, content: (str/concat "Generation " (str/concat "" @entity.generation) " · active cells: " (str/concat "" @entity.aliveCount)) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    { type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: @entity.running },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
+                  ] },
+                { type: learning-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
+                { type: typography, variant: body, content: @config.taskText }
               ] }
           ]
         })
@@ -209,16 +336,27 @@ orbital GridSimOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: @config.taskText },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if @entity.running true false) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: STEP, label: @config.stepLabel, variant: secondary, disabled: (if @entity.running true false) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
-                { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
-                { type: typography, variant: body, content: (str/concat "Generation " (str/concat "" @entity.generation) " · active cells: " (str/concat "" @entity.aliveCount)) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    { type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: @entity.running },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
+                  ] },
+                { type: learning-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
+                { type: typography, variant: body, content: @config.taskText }
               ] }
           ]
         })
@@ -242,16 +380,27 @@ orbital GridSimOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: typography, variant: body, content: @config.taskText },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if @entity.running true false) },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
-                    { type: button, action: STEP, label: @config.stepLabel, variant: secondary, disabled: (if @entity.running true false) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
-                { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
-                { type: typography, variant: body, content: (str/concat "Generation " (str/concat "" @entity.generation) " · active cells: " (str/concat "" @entity.aliveCount)) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    { type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: @entity.running },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
+                  ] },
+                { type: learning-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
+                { type: typography, variant: body, content: @config.taskText }
               ] }
           ]
         })
@@ -259,41 +408,46 @@ orbital GridSimOrbital {
     }
 
     ticks {
-      gridTick every 300ms
+      gridTick every 75ms
         when (and (== @entity.active true) (== @entity.running true))
-        (set @entity.cells (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i)
+        (set @entity.elapsedMs (+ @entity.elapsedMs 75))
+        (when (>= (* @entity.elapsedMs @entity.speed) 300)
+          (do
+            (set @entity.elapsedMs 0)
+            (set @entity.cells (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i)
+                  (let (
+                      (r (math/floor (/ @i @config.cols)))
+                      (c (math/mod @i @config.cols))
+                      (v (array/nth @entity.cells @i))
+                      (up (if (> @r 0) (array/nth @entity.cells (- @i @config.cols)) 0))
+                      (down (if (< @r (- @config.rows 1)) (array/nth @entity.cells (+ @i @config.cols)) 0))
+                      (left (if (> @c 0) (array/nth @entity.cells (- @i 1)) 0))
+                      (right (if (< @c (- @config.cols 1)) (array/nth @entity.cells (+ @i 1)) 0))
+                      (ul (if (and (> @r 0) (> @c 0)) (array/nth @entity.cells (- (- @i @config.cols) 1)) 0))
+                      (ur (if (and (> @r 0) (< @c (- @config.cols 1))) (array/nth @entity.cells (+ (- @i @config.cols) 1)) 0))
+                      (dl (if (and (< @r (- @config.rows 1)) (> @c 0)) (array/nth @entity.cells (- (+ @i @config.cols) 1)) 0))
+                      (dr (if (and (< @r (- @config.rows 1)) (< @c (- @config.cols 1))) (array/nth @entity.cells (+ @i @config.cols 1)) 0))
+                      (n4 (+ @up @down @left @right))
+                      (n8 (+ @n4 @ul @ur @dl @dr))
+                    )
+                    (if (== @config.rule "life")
+                      (if (if (> @v 0.5)
+                            (if (== (math/round @n8 0) 2) true (== (math/round @n8 0) 3))
+                            (== (math/round @n8 0) 3)) 1 0)
+                      (if (== @config.rule "spread")
+                        (if (if (> @v 0.5) true (> @n4 0.5)) 1 0)
+                        (math/max 0 (* @config.decay (+ @v (* @config.diffuseRate (- (/ @n4 4) @v)))))))))))
+            (set @entity.generation (+ @entity.generation 1))
+            (set @entity.aliveCount (array/len (array/filter @entity.cells (fn v (> @v 0.05)))))
+            (set @entity.cellShapes (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i)
               (let (
                   (r (math/floor (/ @i @config.cols)))
                   (c (math/mod @i @config.cols))
                   (v (array/nth @entity.cells @i))
-                  (up (if (> @r 0) (array/nth @entity.cells (- @i @config.cols)) 0))
-                  (down (if (< @r (- @config.rows 1)) (array/nth @entity.cells (+ @i @config.cols)) 0))
-                  (left (if (> @c 0) (array/nth @entity.cells (- @i 1)) 0))
-                  (right (if (< @c (- @config.cols 1)) (array/nth @entity.cells (+ @i 1)) 0))
-                  (ul (if (and (> @r 0) (> @c 0)) (array/nth @entity.cells (- (- @i @config.cols) 1)) 0))
-                  (ur (if (and (> @r 0) (< @c (- @config.cols 1))) (array/nth @entity.cells (+ (- @i @config.cols) 1)) 0))
-                  (dl (if (and (< @r (- @config.rows 1)) (> @c 0)) (array/nth @entity.cells (- (+ @i @config.cols) 1)) 0))
-                  (dr (if (and (< @r (- @config.rows 1)) (< @c (- @config.cols 1))) (array/nth @entity.cells (+ @i @config.cols 1)) 0))
-                  (n4 (+ @up @down @left @right))
-                  (n8 (+ @n4 @ul @ur @dl @dr))
+                  (cellColor (if (> @v 0.66) @config.onColor (if (> @v 0.33) @config.midColor (if (> @v 0.05) @config.lowColor @config.offColor))))
                 )
-                (if (== @config.rule "life")
-                  (if (if (> @v 0.5)
-                        (if (== (math/round @n8 0) 2) true (== (math/round @n8 0) 3))
-                        (== (math/round @n8 0) 3)) 1 0)
-                  (if (== @config.rule "spread")
-                    (if (if (> @v 0.5) true (> @n4 0.5)) 1 0)
-                    (math/max 0 (* @config.decay (+ @v (* @config.diffuseRate (- (/ @n4 4) @v)))))))))))
-        (set @entity.generation (+ @entity.generation 1))
-        (set @entity.aliveCount (array/len (array/filter @entity.cells (fn v (> @v 0.05)))))
-        (set @entity.cellShapes (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i)
-          (let (
-              (r (math/floor (/ @i @config.cols)))
-              (c (math/mod @i @config.cols))
-              (v (array/nth @entity.cells @i))
-              (cellColor (if (> @v 0.66) @config.onColor (if (> @v 0.33) @config.midColor (if (> @v 0.05) @config.lowColor @config.offColor))))
-            )
-            { type: rect, id: (str/concat "cell-" @i), x: (+ 10 (* @c @config.cellSize)), y: (+ 10 (* @r @config.cellSize)), width: (- @config.cellSize 2), height: (- @config.cellSize 2), color: @cellColor, fill: @cellColor }))))
+                { type: rect, id: (str/concat "cell-" @i), x: (+ 10 (* @c @config.cellSize)), y: (+ 10 (* @r @config.cellSize)), width: (- @config.cellSize 2), height: (- @config.cellSize 2), color: @cellColor, fill: @cellColor }))))
+          ))
     }
 
     listens {
@@ -302,6 +456,15 @@ orbital GridSimOrbital {
       }
         @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
         @tier "domain"
+      TOGGLE_RUN {
+      }
+        @description "Learner pressed the Play/Pause toggle — starts or freezes the evolution."
+        @tier "domain"
+      SPEED_SET {
+        speed : number
+      }
+        @description "The learner picked a playback speed; generations advance that many times faster."
+        @tier "presentation"
       RUN {
       }
         @description "Learner started the evolution; the grid advances one generation per tick until Pause."
@@ -358,7 +521,11 @@ orbital GridSimOrbital {
         @tier "presentation"
       title : string = "Grid World"
         @label "Title"
-        @description "Title shown above the grid."
+        @description "The instrument's name, the header's one hero."
+        @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line."
         @tier "presentation"
       taskText : string = "Tap cells to seed the world, then Run — or Step one generation at a time to see the rule at work."
         @label "Task Text"
@@ -390,20 +557,21 @@ orbital GridSimOrbital {
       cellSize : number = 26
         @label "Cell Size"
         @tier "presentation"
-      onColor : string = "#1d4ed8"
+      onColor : string = "series-2"
         @label "On Color"
         @tier "presentation"
-      midColor : string = "#60a5fa"
+      midColor : string = "series-3"
         @label "Mid Color"
         @tier "presentation"
-      lowColor : string = "#bfdbfe"
+      lowColor : string = "muted"
         @label "Low Color"
         @tier "presentation"
-      offColor : string = "#e2e8f0"
+      offColor : string = "fill"
         @label "Off Color"
         @tier "presentation"
-      backgroundColor : string = "#f8fafc"
+      backgroundColor : string = ""
         @label "Background Color"
+        @description "Canvas ground override; empty uses the theme's drawing ground."
         @tier "presentation"
       stepLabel : string = "Step"
         @label "Step Label"

@@ -75,6 +75,13 @@ orbital MathCanvasOrbital {
     label : string
   }
   type MathCanvasShapesItem = {
+    tone : "ink" | "label" | "guide" | "axis" | "grid" | "highlight" | "fill" | "series-1" | "series-2" | "series-3" | "series-4" | "series-5" | "series-6" | "series-7" | "series-8" | "primary" | "accent" | "success" | "warning" | "error" | "info" | "muted"
+    fillTone : "ink" | "label" | "guide" | "axis" | "grid" | "highlight" | "fill" | "series-1" | "series-2" | "series-3" | "series-4" | "series-5" | "series-6" | "series-7" | "series-8" | "primary" | "accent" | "success" | "warning" | "error" | "info" | "muted"
+    stroke : "thin" | "normal" | "bold"
+    textSize : "xs" | "sm" | "base" | "lg" | "xl" | "2xl"
+    font : "body" | "display" | "mono"
+    textCase : "theme" | "verbatim"
+    fillStyle : "solid" | "tint" | "outline" | "hatch"
     type : "line" | "arrow" | "circle" | "ellipse" | "rect" | "polygon" | "path" | "text" | "axis" | "grid" | "venn-region"!
     id : string
     x : number
@@ -171,8 +178,10 @@ orbital MathCanvasOrbital {
           showGrid: @config.showGrid
           gridStep: @config.gridStep
           backgroundColor: @config.backgroundColor
+          series: @config.series
           gridColor: @config.gridColor
           axisColor: @config.axisColor
+          aspect: @config.aspect
           showTickLabels: @config.showTickLabels
           tickLabelFontSize: @config.tickLabelFontSize
           labelFontSize: @config.labelFontSize
@@ -230,8 +239,10 @@ orbital MathCanvasOrbital {
           showGrid: @config.showGrid
           gridStep: @config.gridStep
           backgroundColor: @config.backgroundColor
+          series: @payload.series
           gridColor: @config.gridColor
           axisColor: @config.axisColor
+          aspect: @config.aspect
           showTickLabels: @config.showTickLabels
           tickLabelFontSize: @config.tickLabelFontSize
           labelFontSize: @config.labelFontSize
@@ -287,6 +298,7 @@ orbital MathCanvasOrbital {
 
     listens {
       UPDATE {
+        series : [string]
         curves : [MathCanvasCurvesItem]
         points : [MathCanvasPointsItem]
         vectors : [MathCanvasVectorsItem]
@@ -352,27 +364,35 @@ orbital MathCanvasOrbital {
         @tier "presentation"
       backgroundColor : string
         @label "Background Color"
-        @description "Canvas fill color; `var(--token, fallback)` strings resolve against the active theme. Default transparent."
+        @description "Canvas ground: a tone name, `var()` token or literal. Default the theme's `--surface-diagram`."
         @tier "presentation"
-      gridColor : string = "var(--color-border, #9ca3af)"
+      series : [string] = []
+        @label "Series"
+        @description "Overrides the theme's categorical palette (`series-1…N`) for this canvas — real-world conventions like CPK atom colors or resistor bands. Unset, the theme's `--color-series-*` apply."
+        @tier "presentation"
+      gridColor : string = grid
         @label "Grid Color"
-        @description "Grid line color; resolves theme tokens (default `var(--color-border, #9ca3af)`)."
+        @description "Grid line color: a tone name, token or literal (default the `grid` tone)."
         @tier "presentation"
-      axisColor : string = "var(--color-muted-foreground, #374151)"
+      axisColor : string = axis
         @label "Axis Color"
-        @description "Axis line color; resolves theme tokens (default `var(--color-muted-foreground, #374151)`)."
+        @description "Axis line color: a tone name, token or literal (default the `axis` tone)."
+        @tier "presentation"
+      aspect : "fit" | "equal" = fit
+        @label "Aspect"
+        @description "How the x and y ranges map to the canvas. `fit` stretches each range to fill the plot (function plots); `equal` uses one scale for both axes so circles stay round (geometry). Default `fit`."
         @tier "presentation"
       showTickLabels : boolean = false
         @label "Show Tick Labels"
         @description "Draw numeric labels on grid lines (default false)."
         @tier "presentation"
-      tickLabelFontSize : number = 10
+      tickLabelFontSize : number
         @label "Tick Label Font Size"
-        @description "Font size in px for axis tick labels (default 10)."
+        @description "Font size in px for axis tick labels (default the theme's `xs` step)."
         @tier "presentation"
-      labelFontSize : number = 12
+      labelFontSize : number
         @label "Label Font Size"
-        @description "Base font size in px for all other canvas annotations (points, vectors, guides, curves, regions, angles, hops; default 12)."
+        @description "Font size in px for all other canvas annotations (default the theme's diagram label size)."
         @tier "presentation"
       fontFamily : string
         @label "Font Family"

@@ -316,7 +316,7 @@
               "type": "number"
             },
             "learnerColor": {
-              "default": "#3b82f6",
+              "default": "series-2",
               "label": "Learner Color",
               "tier": "presentation",
               "type": "string"
@@ -417,6 +417,13 @@
               "tier": "domain",
               "type": "boolean"
             },
+            "summary": {
+              "default": "",
+              "description": "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line.",
+              "label": "Concept",
+              "tier": "presentation",
+              "type": "string"
+            },
             "targetA": {
               "default": 2.5,
               "description": "Hidden first parameter of the target curve the learner must recover.",
@@ -432,7 +439,7 @@
               "type": "number"
             },
             "targetColor": {
-              "default": "#94a3b8",
+              "default": "guide",
               "label": "Target Color",
               "tier": "presentation",
               "type": "string"
@@ -1307,74 +1314,135 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
-                              "content": "@config.goalText",
-                              "type": "typography",
-                              "variant": "body"
-                            },
-                            {
+                              "align": "start",
                               "children": [
                                 {
-                                  "content": [
-                                    "str/concat",
-                                    "@entity.paramALabel",
-                                    ": ",
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
                                     [
-                                      "math/round",
-                                      "@entity.paramA",
-                                      2.0
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.solved",
+                                    "Solved",
+                                    [
+                                      "if",
+                                      [
+                                        ">",
+                                        "@entity.attempts",
+                                        0.0
+                                      ],
+                                      "Try again",
+                                      "Tuning"
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.solved",
+                                    "success",
+                                    [
+                                      "if",
+                                      [
+                                        ">",
+                                        "@entity.attempts",
+                                        0.0
+                                      ],
+                                      "warning",
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "CHECK",
+                                  "disabled": [
+                                    "if",
+                                    "@entity.solved",
+                                    true,
+                                    false
+                                  ],
+                                  "icon": "check",
+                                  "label": "@config.checkLabel",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "icon": "rotate-ccw",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "if",
+                                    "@config.showLiveDistance",
+                                    [
+                                      "str/concat",
+                                      "Distance from target: ",
+                                      [
+                                        "math/round",
+                                        "@entity.distance",
+                                        3.0
+                                      ],
+                                      " · attempts: ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        "@entity.attempts"
+                                      ]
+                                    ],
+                                    [
+                                      "str/concat",
+                                      "Attempts: ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        "@entity.attempts"
+                                      ]
                                     ]
                                   ],
                                   "type": "typography",
                                   "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_PARAM_A",
-                                  "max": "@config.paramAMax",
-                                  "min": "@config.paramAMin",
-                                  "showTooltip": true,
-                                  "step": "@config.paramAStep",
-                                  "type": "range-slider",
-                                  "value": "@entity.paramA"
                                 }
                               ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "content": [
-                                    "str/concat",
-                                    "@entity.paramBLabel",
-                                    ": ",
-                                    [
-                                      "math/round",
-                                      "@entity.paramB",
-                                      2.0
-                                    ]
-                                  ],
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_PARAM_B",
-                                  "max": "@config.paramBMax",
-                                  "min": "@config.paramBMin",
-                                  "showTooltip": true,
-                                  "step": "@config.paramBStep",
-                                  "type": "range-slider",
-                                  "value": "@entity.paramB"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": false,
@@ -1382,6 +1450,10 @@
                               "gridStep": "@config.gridStep",
                               "height": "@config.height",
                               "interactive": false,
+                              "keyMap": {
+                                "KeyR": "RESET",
+                                "Space": "CHECK"
+                              },
                               "points": [],
                               "shapes": [],
                               "showAxes": "@config.showAxes",
@@ -1396,67 +1468,82 @@
                               "yMin": "@entity.yMin"
                             },
                             {
-                              "content": [
-                                "if",
-                                "@config.showLiveDistance",
-                                [
-                                  "str/concat",
-                                  "Distance from target: ",
-                                  [
-                                    "math/round",
-                                    "@entity.distance",
-                                    3.0
-                                  ],
-                                  " · attempts: ",
-                                  [
-                                    "str/concat",
-                                    "",
-                                    "@entity.attempts"
-                                  ]
-                                ],
-                                [
-                                  "str/concat",
-                                  "Attempts: ",
-                                  [
-                                    "str/concat",
-                                    "",
-                                    "@entity.attempts"
-                                  ]
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "body"
-                            },
-                            {
                               "children": [
                                 {
-                                  "action": "CHECK",
-                                  "disabled": [
-                                    "if",
-                                    "@entity.solved",
-                                    true,
-                                    false
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@entity.paramALabel",
+                                        ": ",
+                                        [
+                                          "math/round",
+                                          "@entity.paramA",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_PARAM_A",
+                                      "max": "@config.paramAMax",
+                                      "min": "@config.paramAMin",
+                                      "showTooltip": true,
+                                      "step": "@config.paramAStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.paramA"
+                                    }
                                   ],
-                                  "label": "@config.checkLabel",
-                                  "type": "button",
-                                  "variant": "primary"
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
                                 },
                                 {
-                                  "action": "RESET",
-                                  "label": "Reset",
-                                  "type": "button",
-                                  "variant": "ghost"
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@entity.paramBLabel",
+                                        ": ",
+                                        [
+                                          "math/round",
+                                          "@entity.paramB",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_PARAM_B",
+                                      "max": "@config.paramBMax",
+                                      "min": "@config.paramBMin",
+                                      "showTooltip": true,
+                                      "step": "@config.paramBStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.paramB"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
                                 }
                               ],
-                              "direction": "horizontal",
+                              "direction": "vertical",
                               "gap": "sm",
                               "type": "stack"
                             },
                             {
-                              "children": "@entity.resultRow",
-                              "direction": "horizontal",
-                              "gap": "xs",
-                              "type": "stack"
+                              "content": "@config.goalText",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "color": "muted",
+                              "content": "@entity.feedback",
+                              "type": "typography",
+                              "variant": "caption"
                             }
                           ],
                           "direction": "vertical",
@@ -1476,6 +1563,43 @@
                   "==",
                   "@config.matchMode",
                   ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01M07580W5HD3M1WG88XEPW7CQ",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@config.matchMode",
+                      ""
+                    ]
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1976,74 +2100,135 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
-                              "content": "@config.goalText",
-                              "type": "typography",
-                              "variant": "body"
-                            },
-                            {
+                              "align": "start",
                               "children": [
                                 {
-                                  "content": [
-                                    "str/concat",
-                                    "@entity.paramALabel",
-                                    ": ",
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
                                     [
-                                      "math/round",
-                                      "@entity.paramA",
-                                      2.0
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.solved",
+                                    "Solved",
+                                    [
+                                      "if",
+                                      [
+                                        ">",
+                                        "@entity.attempts",
+                                        0.0
+                                      ],
+                                      "Try again",
+                                      "Tuning"
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.solved",
+                                    "success",
+                                    [
+                                      "if",
+                                      [
+                                        ">",
+                                        "@entity.attempts",
+                                        0.0
+                                      ],
+                                      "warning",
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "CHECK",
+                                  "disabled": [
+                                    "if",
+                                    "@entity.solved",
+                                    true,
+                                    false
+                                  ],
+                                  "icon": "check",
+                                  "label": "@config.checkLabel",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "icon": "rotate-ccw",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "if",
+                                    "@config.showLiveDistance",
+                                    [
+                                      "str/concat",
+                                      "Distance from target: ",
+                                      [
+                                        "math/round",
+                                        "@entity.distance",
+                                        3.0
+                                      ],
+                                      " · attempts: ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        "@entity.attempts"
+                                      ]
+                                    ],
+                                    [
+                                      "str/concat",
+                                      "Attempts: ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        "@entity.attempts"
+                                      ]
                                     ]
                                   ],
                                   "type": "typography",
                                   "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_PARAM_A",
-                                  "max": "@config.paramAMax",
-                                  "min": "@config.paramAMin",
-                                  "showTooltip": true,
-                                  "step": "@config.paramAStep",
-                                  "type": "range-slider",
-                                  "value": "@entity.paramA"
                                 }
                               ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "content": [
-                                    "str/concat",
-                                    "@entity.paramBLabel",
-                                    ": ",
-                                    [
-                                      "math/round",
-                                      "@entity.paramB",
-                                      2.0
-                                    ]
-                                  ],
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_PARAM_B",
-                                  "max": "@config.paramBMax",
-                                  "min": "@config.paramBMin",
-                                  "showTooltip": true,
-                                  "step": "@config.paramBStep",
-                                  "type": "range-slider",
-                                  "value": "@entity.paramB"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": false,
@@ -2051,6 +2236,10 @@
                               "gridStep": "@config.gridStep",
                               "height": "@config.height",
                               "interactive": false,
+                              "keyMap": {
+                                "KeyR": "RESET",
+                                "Space": "CHECK"
+                              },
                               "points": [],
                               "shapes": [],
                               "showAxes": "@config.showAxes",
@@ -2065,67 +2254,82 @@
                               "yMin": "@entity.yMin"
                             },
                             {
-                              "content": [
-                                "if",
-                                "@config.showLiveDistance",
-                                [
-                                  "str/concat",
-                                  "Distance from target: ",
-                                  [
-                                    "math/round",
-                                    "@entity.distance",
-                                    3.0
-                                  ],
-                                  " · attempts: ",
-                                  [
-                                    "str/concat",
-                                    "",
-                                    "@entity.attempts"
-                                  ]
-                                ],
-                                [
-                                  "str/concat",
-                                  "Attempts: ",
-                                  [
-                                    "str/concat",
-                                    "",
-                                    "@entity.attempts"
-                                  ]
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "body"
-                            },
-                            {
                               "children": [
                                 {
-                                  "action": "CHECK",
-                                  "disabled": [
-                                    "if",
-                                    "@entity.solved",
-                                    true,
-                                    false
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@entity.paramALabel",
+                                        ": ",
+                                        [
+                                          "math/round",
+                                          "@entity.paramA",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_PARAM_A",
+                                      "max": "@config.paramAMax",
+                                      "min": "@config.paramAMin",
+                                      "showTooltip": true,
+                                      "step": "@config.paramAStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.paramA"
+                                    }
                                   ],
-                                  "label": "@config.checkLabel",
-                                  "type": "button",
-                                  "variant": "primary"
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
                                 },
                                 {
-                                  "action": "RESET",
-                                  "label": "Reset",
-                                  "type": "button",
-                                  "variant": "ghost"
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@entity.paramBLabel",
+                                        ": ",
+                                        [
+                                          "math/round",
+                                          "@entity.paramB",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_PARAM_B",
+                                      "max": "@config.paramBMax",
+                                      "min": "@config.paramBMin",
+                                      "showTooltip": true,
+                                      "step": "@config.paramBStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.paramB"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
                                 }
                               ],
-                              "direction": "horizontal",
+                              "direction": "vertical",
                               "gap": "sm",
                               "type": "stack"
                             },
                             {
-                              "children": "@entity.resultRow",
-                              "direction": "horizontal",
-                              "gap": "xs",
-                              "type": "stack"
+                              "content": "@config.goalText",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "color": "muted",
+                              "content": "@entity.feedback",
+                              "type": "typography",
+                              "variant": "caption"
                             }
                           ],
                           "direction": "vertical",
@@ -2501,74 +2705,135 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
-                              "content": "@config.goalText",
-                              "type": "typography",
-                              "variant": "body"
-                            },
-                            {
+                              "align": "start",
                               "children": [
                                 {
-                                  "content": [
-                                    "str/concat",
-                                    "@entity.paramALabel",
-                                    ": ",
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
                                     [
-                                      "math/round",
-                                      "@entity.paramA",
-                                      2.0
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.solved",
+                                    "Solved",
+                                    [
+                                      "if",
+                                      [
+                                        ">",
+                                        "@entity.attempts",
+                                        0.0
+                                      ],
+                                      "Try again",
+                                      "Tuning"
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.solved",
+                                    "success",
+                                    [
+                                      "if",
+                                      [
+                                        ">",
+                                        "@entity.attempts",
+                                        0.0
+                                      ],
+                                      "warning",
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "CHECK",
+                                  "disabled": [
+                                    "if",
+                                    "@entity.solved",
+                                    true,
+                                    false
+                                  ],
+                                  "icon": "check",
+                                  "label": "@config.checkLabel",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "icon": "rotate-ccw",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "if",
+                                    "@config.showLiveDistance",
+                                    [
+                                      "str/concat",
+                                      "Distance from target: ",
+                                      [
+                                        "math/round",
+                                        "@entity.distance",
+                                        3.0
+                                      ],
+                                      " · attempts: ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        "@entity.attempts"
+                                      ]
+                                    ],
+                                    [
+                                      "str/concat",
+                                      "Attempts: ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        "@entity.attempts"
+                                      ]
                                     ]
                                   ],
                                   "type": "typography",
                                   "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_PARAM_A",
-                                  "max": "@config.paramAMax",
-                                  "min": "@config.paramAMin",
-                                  "showTooltip": true,
-                                  "step": "@config.paramAStep",
-                                  "type": "range-slider",
-                                  "value": "@entity.paramA"
                                 }
                               ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "content": [
-                                    "str/concat",
-                                    "@entity.paramBLabel",
-                                    ": ",
-                                    [
-                                      "math/round",
-                                      "@entity.paramB",
-                                      2.0
-                                    ]
-                                  ],
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_PARAM_B",
-                                  "max": "@config.paramBMax",
-                                  "min": "@config.paramBMin",
-                                  "showTooltip": true,
-                                  "step": "@config.paramBStep",
-                                  "type": "range-slider",
-                                  "value": "@entity.paramB"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": false,
@@ -2576,6 +2841,10 @@
                               "gridStep": "@config.gridStep",
                               "height": "@config.height",
                               "interactive": false,
+                              "keyMap": {
+                                "KeyR": "RESET",
+                                "Space": "CHECK"
+                              },
                               "points": [],
                               "shapes": [],
                               "showAxes": "@config.showAxes",
@@ -2590,67 +2859,82 @@
                               "yMin": "@entity.yMin"
                             },
                             {
-                              "content": [
-                                "if",
-                                "@config.showLiveDistance",
-                                [
-                                  "str/concat",
-                                  "Distance from target: ",
-                                  [
-                                    "math/round",
-                                    "@entity.distance",
-                                    3.0
-                                  ],
-                                  " · attempts: ",
-                                  [
-                                    "str/concat",
-                                    "",
-                                    "@entity.attempts"
-                                  ]
-                                ],
-                                [
-                                  "str/concat",
-                                  "Attempts: ",
-                                  [
-                                    "str/concat",
-                                    "",
-                                    "@entity.attempts"
-                                  ]
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "body"
-                            },
-                            {
                               "children": [
                                 {
-                                  "action": "CHECK",
-                                  "disabled": [
-                                    "if",
-                                    "@entity.solved",
-                                    true,
-                                    false
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@entity.paramALabel",
+                                        ": ",
+                                        [
+                                          "math/round",
+                                          "@entity.paramA",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_PARAM_A",
+                                      "max": "@config.paramAMax",
+                                      "min": "@config.paramAMin",
+                                      "showTooltip": true,
+                                      "step": "@config.paramAStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.paramA"
+                                    }
                                   ],
-                                  "label": "@config.checkLabel",
-                                  "type": "button",
-                                  "variant": "primary"
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
                                 },
                                 {
-                                  "action": "RESET",
-                                  "label": "Reset",
-                                  "type": "button",
-                                  "variant": "ghost"
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@entity.paramBLabel",
+                                        ": ",
+                                        [
+                                          "math/round",
+                                          "@entity.paramB",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_PARAM_B",
+                                      "max": "@config.paramBMax",
+                                      "min": "@config.paramBMin",
+                                      "showTooltip": true,
+                                      "step": "@config.paramBStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.paramB"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
                                 }
                               ],
-                              "direction": "horizontal",
+                              "direction": "vertical",
                               "gap": "sm",
                               "type": "stack"
                             },
                             {
-                              "children": "@entity.resultRow",
-                              "direction": "horizontal",
-                              "gap": "xs",
-                              "type": "stack"
+                              "content": "@config.goalText",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "color": "muted",
+                              "content": "@entity.feedback",
+                              "type": "typography",
+                              "variant": "caption"
                             }
                           ],
                           "direction": "vertical",
@@ -3043,74 +3327,135 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
-                              "content": "@config.goalText",
-                              "type": "typography",
-                              "variant": "body"
-                            },
-                            {
+                              "align": "start",
                               "children": [
                                 {
-                                  "content": [
-                                    "str/concat",
-                                    "@entity.paramALabel",
-                                    ": ",
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
                                     [
-                                      "math/round",
-                                      "@entity.paramA",
-                                      2.0
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.solved",
+                                    "Solved",
+                                    [
+                                      "if",
+                                      [
+                                        ">",
+                                        "@entity.attempts",
+                                        0.0
+                                      ],
+                                      "Try again",
+                                      "Tuning"
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.solved",
+                                    "success",
+                                    [
+                                      "if",
+                                      [
+                                        ">",
+                                        "@entity.attempts",
+                                        0.0
+                                      ],
+                                      "warning",
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "CHECK",
+                                  "disabled": [
+                                    "if",
+                                    "@entity.solved",
+                                    true,
+                                    false
+                                  ],
+                                  "icon": "check",
+                                  "label": "@config.checkLabel",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "icon": "rotate-ccw",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "if",
+                                    "@config.showLiveDistance",
+                                    [
+                                      "str/concat",
+                                      "Distance from target: ",
+                                      [
+                                        "math/round",
+                                        "@entity.distance",
+                                        3.0
+                                      ],
+                                      " · attempts: ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        "@entity.attempts"
+                                      ]
+                                    ],
+                                    [
+                                      "str/concat",
+                                      "Attempts: ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        "@entity.attempts"
+                                      ]
                                     ]
                                   ],
                                   "type": "typography",
                                   "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_PARAM_A",
-                                  "max": "@config.paramAMax",
-                                  "min": "@config.paramAMin",
-                                  "showTooltip": true,
-                                  "step": "@config.paramAStep",
-                                  "type": "range-slider",
-                                  "value": "@entity.paramA"
                                 }
                               ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "content": [
-                                    "str/concat",
-                                    "@entity.paramBLabel",
-                                    ": ",
-                                    [
-                                      "math/round",
-                                      "@entity.paramB",
-                                      2.0
-                                    ]
-                                  ],
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_PARAM_B",
-                                  "max": "@config.paramBMax",
-                                  "min": "@config.paramBMin",
-                                  "showTooltip": true,
-                                  "step": "@config.paramBStep",
-                                  "type": "range-slider",
-                                  "value": "@entity.paramB"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": false,
@@ -3118,6 +3463,10 @@
                               "gridStep": "@config.gridStep",
                               "height": "@config.height",
                               "interactive": false,
+                              "keyMap": {
+                                "KeyR": "RESET",
+                                "Space": "CHECK"
+                              },
                               "points": [],
                               "shapes": [],
                               "showAxes": "@config.showAxes",
@@ -3132,67 +3481,82 @@
                               "yMin": "@entity.yMin"
                             },
                             {
-                              "content": [
-                                "if",
-                                "@config.showLiveDistance",
-                                [
-                                  "str/concat",
-                                  "Distance from target: ",
-                                  [
-                                    "math/round",
-                                    "@entity.distance",
-                                    3.0
-                                  ],
-                                  " · attempts: ",
-                                  [
-                                    "str/concat",
-                                    "",
-                                    "@entity.attempts"
-                                  ]
-                                ],
-                                [
-                                  "str/concat",
-                                  "Attempts: ",
-                                  [
-                                    "str/concat",
-                                    "",
-                                    "@entity.attempts"
-                                  ]
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "body"
-                            },
-                            {
                               "children": [
                                 {
-                                  "action": "CHECK",
-                                  "disabled": [
-                                    "if",
-                                    "@entity.solved",
-                                    true,
-                                    false
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@entity.paramALabel",
+                                        ": ",
+                                        [
+                                          "math/round",
+                                          "@entity.paramA",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_PARAM_A",
+                                      "max": "@config.paramAMax",
+                                      "min": "@config.paramAMin",
+                                      "showTooltip": true,
+                                      "step": "@config.paramAStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.paramA"
+                                    }
                                   ],
-                                  "label": "@config.checkLabel",
-                                  "type": "button",
-                                  "variant": "primary"
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
                                 },
                                 {
-                                  "action": "RESET",
-                                  "label": "Reset",
-                                  "type": "button",
-                                  "variant": "ghost"
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@entity.paramBLabel",
+                                        ": ",
+                                        [
+                                          "math/round",
+                                          "@entity.paramB",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_PARAM_B",
+                                      "max": "@config.paramBMax",
+                                      "min": "@config.paramBMin",
+                                      "showTooltip": true,
+                                      "step": "@config.paramBStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.paramB"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
                                 }
                               ],
-                              "direction": "horizontal",
+                              "direction": "vertical",
                               "gap": "sm",
                               "type": "stack"
                             },
                             {
-                              "children": "@entity.resultRow",
-                              "direction": "horizontal",
-                              "gap": "xs",
-                              "type": "stack"
+                              "content": "@config.goalText",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "color": "muted",
+                              "content": "@entity.feedback",
+                              "type": "typography",
+                              "variant": "caption"
                             }
                           ],
                           "direction": "vertical",
@@ -3335,74 +3699,135 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
-                              "content": "@config.goalText",
-                              "type": "typography",
-                              "variant": "body"
-                            },
-                            {
+                              "align": "start",
                               "children": [
                                 {
-                                  "content": [
-                                    "str/concat",
-                                    "@entity.paramALabel",
-                                    ": ",
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
                                     [
-                                      "math/round",
-                                      "@entity.paramA",
-                                      2.0
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.solved",
+                                    "Solved",
+                                    [
+                                      "if",
+                                      [
+                                        ">",
+                                        "@entity.attempts",
+                                        0.0
+                                      ],
+                                      "Try again",
+                                      "Tuning"
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.solved",
+                                    "success",
+                                    [
+                                      "if",
+                                      [
+                                        ">",
+                                        "@entity.attempts",
+                                        0.0
+                                      ],
+                                      "warning",
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "CHECK",
+                                  "disabled": [
+                                    "if",
+                                    "@entity.solved",
+                                    true,
+                                    false
+                                  ],
+                                  "icon": "check",
+                                  "label": "@config.checkLabel",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "icon": "rotate-ccw",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "if",
+                                    "@config.showLiveDistance",
+                                    [
+                                      "str/concat",
+                                      "Distance from target: ",
+                                      [
+                                        "math/round",
+                                        "@entity.distance",
+                                        3.0
+                                      ],
+                                      " · attempts: ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        "@entity.attempts"
+                                      ]
+                                    ],
+                                    [
+                                      "str/concat",
+                                      "Attempts: ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        "@entity.attempts"
+                                      ]
                                     ]
                                   ],
                                   "type": "typography",
                                   "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_PARAM_A",
-                                  "max": "@config.paramAMax",
-                                  "min": "@config.paramAMin",
-                                  "showTooltip": true,
-                                  "step": "@config.paramAStep",
-                                  "type": "range-slider",
-                                  "value": "@entity.paramA"
                                 }
                               ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "content": [
-                                    "str/concat",
-                                    "@entity.paramBLabel",
-                                    ": ",
-                                    [
-                                      "math/round",
-                                      "@entity.paramB",
-                                      2.0
-                                    ]
-                                  ],
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_PARAM_B",
-                                  "max": "@config.paramBMax",
-                                  "min": "@config.paramBMin",
-                                  "showTooltip": true,
-                                  "step": "@config.paramBStep",
-                                  "type": "range-slider",
-                                  "value": "@entity.paramB"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": false,
@@ -3410,6 +3835,10 @@
                               "gridStep": "@config.gridStep",
                               "height": "@config.height",
                               "interactive": false,
+                              "keyMap": {
+                                "KeyR": "RESET",
+                                "Space": "CHECK"
+                              },
                               "points": [],
                               "shapes": [],
                               "showAxes": "@config.showAxes",
@@ -3424,67 +3853,82 @@
                               "yMin": "@entity.yMin"
                             },
                             {
-                              "content": [
-                                "if",
-                                "@config.showLiveDistance",
-                                [
-                                  "str/concat",
-                                  "Distance from target: ",
-                                  [
-                                    "math/round",
-                                    "@entity.distance",
-                                    3.0
-                                  ],
-                                  " · attempts: ",
-                                  [
-                                    "str/concat",
-                                    "",
-                                    "@entity.attempts"
-                                  ]
-                                ],
-                                [
-                                  "str/concat",
-                                  "Attempts: ",
-                                  [
-                                    "str/concat",
-                                    "",
-                                    "@entity.attempts"
-                                  ]
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "body"
-                            },
-                            {
                               "children": [
                                 {
-                                  "action": "CHECK",
-                                  "disabled": [
-                                    "if",
-                                    "@entity.solved",
-                                    true,
-                                    false
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@entity.paramALabel",
+                                        ": ",
+                                        [
+                                          "math/round",
+                                          "@entity.paramA",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_PARAM_A",
+                                      "max": "@config.paramAMax",
+                                      "min": "@config.paramAMin",
+                                      "showTooltip": true,
+                                      "step": "@config.paramAStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.paramA"
+                                    }
                                   ],
-                                  "label": "@config.checkLabel",
-                                  "type": "button",
-                                  "variant": "primary"
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
                                 },
                                 {
-                                  "action": "RESET",
-                                  "label": "Reset",
-                                  "type": "button",
-                                  "variant": "ghost"
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@entity.paramBLabel",
+                                        ": ",
+                                        [
+                                          "math/round",
+                                          "@entity.paramB",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_PARAM_B",
+                                      "max": "@config.paramBMax",
+                                      "min": "@config.paramBMin",
+                                      "showTooltip": true,
+                                      "step": "@config.paramBStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.paramB"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
                                 }
                               ],
-                              "direction": "horizontal",
+                              "direction": "vertical",
                               "gap": "sm",
                               "type": "stack"
                             },
                             {
-                              "children": "@entity.resultRow",
-                              "direction": "horizontal",
-                              "gap": "xs",
-                              "type": "stack"
+                              "content": "@config.goalText",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "color": "muted",
+                              "content": "@entity.feedback",
+                              "type": "typography",
+                              "variant": "caption"
                             }
                           ],
                           "direction": "vertical",
@@ -3905,74 +4349,135 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
-                              "content": "@config.goalText",
-                              "type": "typography",
-                              "variant": "body"
-                            },
-                            {
+                              "align": "start",
                               "children": [
                                 {
-                                  "content": [
-                                    "str/concat",
-                                    "@entity.paramALabel",
-                                    ": ",
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
                                     [
-                                      "math/round",
-                                      "@entity.paramA",
-                                      2.0
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.solved",
+                                    "Solved",
+                                    [
+                                      "if",
+                                      [
+                                        ">",
+                                        "@entity.attempts",
+                                        0.0
+                                      ],
+                                      "Try again",
+                                      "Tuning"
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.solved",
+                                    "success",
+                                    [
+                                      "if",
+                                      [
+                                        ">",
+                                        "@entity.attempts",
+                                        0.0
+                                      ],
+                                      "warning",
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "CHECK",
+                                  "disabled": [
+                                    "if",
+                                    "@entity.solved",
+                                    true,
+                                    false
+                                  ],
+                                  "icon": "check",
+                                  "label": "@config.checkLabel",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "icon": "rotate-ccw",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "if",
+                                    "@config.showLiveDistance",
+                                    [
+                                      "str/concat",
+                                      "Distance from target: ",
+                                      [
+                                        "math/round",
+                                        "@entity.distance",
+                                        3.0
+                                      ],
+                                      " · attempts: ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        "@entity.attempts"
+                                      ]
+                                    ],
+                                    [
+                                      "str/concat",
+                                      "Attempts: ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        "@entity.attempts"
+                                      ]
                                     ]
                                   ],
                                   "type": "typography",
                                   "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_PARAM_A",
-                                  "max": "@config.paramAMax",
-                                  "min": "@config.paramAMin",
-                                  "showTooltip": true,
-                                  "step": "@config.paramAStep",
-                                  "type": "range-slider",
-                                  "value": "@entity.paramA"
                                 }
                               ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "content": [
-                                    "str/concat",
-                                    "@entity.paramBLabel",
-                                    ": ",
-                                    [
-                                      "math/round",
-                                      "@entity.paramB",
-                                      2.0
-                                    ]
-                                  ],
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "action": "SET_PARAM_B",
-                                  "max": "@config.paramBMax",
-                                  "min": "@config.paramBMin",
-                                  "showTooltip": true,
-                                  "step": "@config.paramBStep",
-                                  "type": "range-slider",
-                                  "value": "@entity.paramB"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
                             },
                             {
                               "animate": false,
@@ -3980,6 +4485,10 @@
                               "gridStep": "@config.gridStep",
                               "height": "@config.height",
                               "interactive": false,
+                              "keyMap": {
+                                "KeyR": "RESET",
+                                "Space": "CHECK"
+                              },
                               "points": [],
                               "shapes": [],
                               "showAxes": "@config.showAxes",
@@ -3994,67 +4503,82 @@
                               "yMin": "@entity.yMin"
                             },
                             {
-                              "content": [
-                                "if",
-                                "@config.showLiveDistance",
-                                [
-                                  "str/concat",
-                                  "Distance from target: ",
-                                  [
-                                    "math/round",
-                                    "@entity.distance",
-                                    3.0
-                                  ],
-                                  " · attempts: ",
-                                  [
-                                    "str/concat",
-                                    "",
-                                    "@entity.attempts"
-                                  ]
-                                ],
-                                [
-                                  "str/concat",
-                                  "Attempts: ",
-                                  [
-                                    "str/concat",
-                                    "",
-                                    "@entity.attempts"
-                                  ]
-                                ]
-                              ],
-                              "type": "typography",
-                              "variant": "body"
-                            },
-                            {
                               "children": [
                                 {
-                                  "action": "CHECK",
-                                  "disabled": [
-                                    "if",
-                                    "@entity.solved",
-                                    true,
-                                    false
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@entity.paramALabel",
+                                        ": ",
+                                        [
+                                          "math/round",
+                                          "@entity.paramA",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_PARAM_A",
+                                      "max": "@config.paramAMax",
+                                      "min": "@config.paramAMin",
+                                      "showTooltip": true,
+                                      "step": "@config.paramAStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.paramA"
+                                    }
                                   ],
-                                  "label": "@config.checkLabel",
-                                  "type": "button",
-                                  "variant": "primary"
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
                                 },
                                 {
-                                  "action": "RESET",
-                                  "label": "Reset",
-                                  "type": "button",
-                                  "variant": "ghost"
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@entity.paramBLabel",
+                                        ": ",
+                                        [
+                                          "math/round",
+                                          "@entity.paramB",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_PARAM_B",
+                                      "max": "@config.paramBMax",
+                                      "min": "@config.paramBMin",
+                                      "showTooltip": true,
+                                      "step": "@config.paramBStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.paramB"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
                                 }
                               ],
-                              "direction": "horizontal",
+                              "direction": "vertical",
                               "gap": "sm",
                               "type": "stack"
                             },
                             {
-                              "children": "@entity.resultRow",
-                              "direction": "horizontal",
-                              "gap": "xs",
-                              "type": "stack"
+                              "content": "@config.goalText",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "color": "muted",
+                              "content": "@entity.feedback",
+                              "type": "typography",
+                              "variant": "caption"
                             }
                           ],
                           "direction": "vertical",

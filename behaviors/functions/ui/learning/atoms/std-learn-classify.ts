@@ -67,15 +67,15 @@ export interface StdLearnClassifyConfig {
   animate?: boolean;
   /** Default: `false` */
   autoRun?: boolean;
-  /** Default: `"#f8fafc"` */
+  /** Default: `""` */
   backgroundColor?: string;
-  /** Default: `[{"color":"#94a3b8","label":"Category A","value":"a"},{"color":"#64748b","label":"Category B","value":"b"}]` */
+  /** Default: `[{"color":"series-1","label":"Category A","value":"a"},{"color":"series-2","label":"Category B","value":"b"}]` */
   categories?: EntityRow[];
-  /** Default: `"#16a34a"` */
+  /** Default: `"success"` */
   correctColor?: string;
   /** Default: `420` */
   height?: number;
-  /** Default: `"#dc2626"` */
+  /** Default: `"error"` */
   incorrectColor?: string;
   /** Default: `false` */
   interactive?: boolean;
@@ -99,6 +99,10 @@ export interface StdLearnClassifyConfig {
   scoreCap?: number;
   /** Default: `true` */
   showHint?: boolean;
+  /** Default: `""` */
+  summary?: string;
+  /** Default: `0` */
+  taper?: number;
   /** Default: `"Classify"` */
   title?: string;
   /** Default: `640` */

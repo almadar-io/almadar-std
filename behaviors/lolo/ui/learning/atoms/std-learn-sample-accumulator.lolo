@@ -27,6 +27,11 @@ orbital SampleAccumulatorOrbital {
     fill : string
     lineWidth : number
     opacity : number
+    tone : string
+    fillTone : string
+    stroke : string
+    textSize : string
+    fillStyle : string
   }
   type SampleAccShapePoint = {
     x : number!
@@ -65,18 +70,31 @@ orbital SampleAccumulatorOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: DRAW, label: "Draw", variant: primary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (> @entity.sampleCount 0) (str/concat @entity.sampleCount " samples") "No samples"), variant: (if (> @entity.sampleCount 0) "primary" "neutral") }
                   ] },
-                { type: typography, variant: caption, content: (str/concat "Batch size: " @entity.batchSize) },
-                { type: range-slider, min: 1, max: 200, step: 1, value: @entity.batchSize, showTooltip: true, action: "SET_BATCH_SIZE" },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: 1, yMin: 0, yMax: 1, showAxes: false, showGrid: false, gridStep: 0.1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: false, animate: false },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: DRAW, label: "Draw", icon: "plus", variant: primary },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Batch of " @entity.batchSize) }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: 1, yMin: 0, yMax: 1, showAxes: false, showGrid: false, gridStep: 0.1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: false, animate: false, keyMap: { Space: DRAW, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Batch size: " @entity.batchSize) },
+                    { type: range-slider, min: 1, max: 200, step: 1, value: @entity.batchSize, showTooltip: true, action: "SET_BATCH_SIZE" }
+                  ] },
                 { type: typography, variant: body, content: (if (== @entity.sourceKind "coin") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3) ", observed proportion " (math/round @entity.proportion 3) " (bias " @config.bias ")") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3))) }
               ] }
           ]
         })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (render-ui main null)
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (set @entity.active true)
@@ -93,14 +111,23 @@ orbital SampleAccumulatorOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: DRAW, label: "Draw", variant: primary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (> @entity.sampleCount 0) (str/concat @entity.sampleCount " samples") "No samples"), variant: (if (> @entity.sampleCount 0) "primary" "neutral") }
                   ] },
-                { type: typography, variant: caption, content: (str/concat "Batch size: " @entity.batchSize) },
-                { type: range-slider, min: 1, max: 200, step: 1, value: @entity.batchSize, showTooltip: true, action: "SET_BATCH_SIZE" },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: 1, yMin: 0, yMax: 1, showAxes: false, showGrid: false, gridStep: 0.1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: false, animate: false },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: DRAW, label: "Draw", icon: "plus", variant: primary },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Batch of " @entity.batchSize) }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: 1, yMin: 0, yMax: 1, showAxes: false, showGrid: false, gridStep: 0.1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: false, animate: false, keyMap: { Space: DRAW, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Batch size: " @entity.batchSize) },
+                    { type: range-slider, min: 1, max: 200, step: 1, value: @entity.batchSize, showTooltip: true, action: "SET_BATCH_SIZE" }
+                  ] },
                 { type: typography, variant: body, content: (if (== @entity.sourceKind "coin") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3) ", observed proportion " (math/round @entity.proportion 3) " (bias " @config.bias ")") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3))) }
               ] }
           ]
@@ -129,7 +156,7 @@ orbital SampleAccumulatorOrbital {
               (let (
                   (barH (* (/ (array/nth @counts @b) @maxCount) @plotH))
                 )
-                { type: "rect", x: (+ 24 (* @b (/ @plotW @binCountV))), y: (- (+ 24 @plotH) @barH), width: (* (/ @plotW @binCountV) 0.9), height: @barH, fill: @config.color, lineWidth: 0 }))))
+                { type: "rect", x: (+ 24 (* @b (/ @plotW @binCountV))), y: (- (+ 24 @plotH) @barH), width: (* (/ @plotW @binCountV) 0.9), height: @barH, tone: @config.color, fillTone: @config.color, fillStyle: "solid" }))))
           )
           (do
             (set @entity.samples @allSamples)
@@ -144,14 +171,23 @@ orbital SampleAccumulatorOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: DRAW, label: "Draw", variant: primary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (> @entity.sampleCount 0) (str/concat @entity.sampleCount " samples") "No samples"), variant: (if (> @entity.sampleCount 0) "primary" "neutral") }
                   ] },
-                { type: typography, variant: caption, content: (str/concat "Batch size: " @entity.batchSize) },
-                { type: range-slider, min: 1, max: 200, step: 1, value: @entity.batchSize, showTooltip: true, action: "SET_BATCH_SIZE" },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: 1, yMin: 0, yMax: 1, showAxes: false, showGrid: false, gridStep: 0.1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: false, animate: false },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: DRAW, label: "Draw", icon: "plus", variant: primary },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Batch of " @entity.batchSize) }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: 1, yMin: 0, yMax: 1, showAxes: false, showGrid: false, gridStep: 0.1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: false, animate: false, keyMap: { Space: DRAW, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Batch size: " @entity.batchSize) },
+                    { type: range-slider, min: 1, max: 200, step: 1, value: @entity.batchSize, showTooltip: true, action: "SET_BATCH_SIZE" }
+                  ] },
                 { type: typography, variant: body, content: (if (== @entity.sourceKind "coin") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3) ", observed proportion " (math/round @entity.proportion 3) " (bias " @config.bias ")") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3))) }
               ] }
           ]
@@ -165,14 +201,23 @@ orbital SampleAccumulatorOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: DRAW, label: "Draw", variant: primary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (> @entity.sampleCount 0) (str/concat @entity.sampleCount " samples") "No samples"), variant: (if (> @entity.sampleCount 0) "primary" "neutral") }
                   ] },
-                { type: typography, variant: caption, content: (str/concat "Batch size: " @entity.batchSize) },
-                { type: range-slider, min: 1, max: 200, step: 1, value: @entity.batchSize, showTooltip: true, action: "SET_BATCH_SIZE" },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: 1, yMin: 0, yMax: 1, showAxes: false, showGrid: false, gridStep: 0.1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: false, animate: false },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: DRAW, label: "Draw", icon: "plus", variant: primary },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Batch of " @entity.batchSize) }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: 1, yMin: 0, yMax: 1, showAxes: false, showGrid: false, gridStep: 0.1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: false, animate: false, keyMap: { Space: DRAW, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Batch size: " @entity.batchSize) },
+                    { type: range-slider, min: 1, max: 200, step: 1, value: @entity.batchSize, showTooltip: true, action: "SET_BATCH_SIZE" }
+                  ] },
                 { type: typography, variant: body, content: (if (== @entity.sourceKind "coin") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3) ", observed proportion " (math/round @entity.proportion 3) " (bias " @config.bias ")") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3))) }
               ] }
           ]
@@ -189,14 +234,23 @@ orbital SampleAccumulatorOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: DRAW, label: "Draw", variant: primary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (> @entity.sampleCount 0) (str/concat @entity.sampleCount " samples") "No samples"), variant: (if (> @entity.sampleCount 0) "primary" "neutral") }
                   ] },
-                { type: typography, variant: caption, content: (str/concat "Batch size: " @entity.batchSize) },
-                { type: range-slider, min: 1, max: 200, step: 1, value: @entity.batchSize, showTooltip: true, action: "SET_BATCH_SIZE" },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: 1, yMin: 0, yMax: 1, showAxes: false, showGrid: false, gridStep: 0.1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: false, animate: false },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: DRAW, label: "Draw", icon: "plus", variant: primary },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Batch of " @entity.batchSize) }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: 1, yMin: 0, yMax: 1, showAxes: false, showGrid: false, gridStep: 0.1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: false, animate: false, keyMap: { Space: DRAW, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Batch size: " @entity.batchSize) },
+                    { type: range-slider, min: 1, max: 200, step: 1, value: @entity.batchSize, showTooltip: true, action: "SET_BATCH_SIZE" }
+                  ] },
                 { type: typography, variant: body, content: (if (== @entity.sourceKind "coin") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3) ", observed proportion " (math/round @entity.proportion 3) " (bias " @config.bias ")") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3))) }
               ] }
           ]
@@ -239,7 +293,11 @@ orbital SampleAccumulatorOrbital {
         @tier "presentation"
       title : string = "Sample Accumulator"
         @label "Title"
-        @description "Title shown above the canvas."
+        @description "The instrument's name, the header's one hero."
+        @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line."
         @tier "presentation"
       sourceKind : string = "uniform"
         @label "Source Kind"
@@ -260,7 +318,7 @@ orbital SampleAccumulatorOrbital {
         @label "Bin Count"
         @description "Number of histogram buckets across the 0..1 value range."
         @tier "presentation"
-      color : string = "#2563eb"
+      color : string = "series-1"
         @label "Bar Color"
         @tier "presentation"
       width : number = 600

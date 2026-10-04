@@ -73,13 +73,13 @@ export interface StdLearnScatterFitConfig {
   axisYMax?: number;
   /** Default: `0` */
   axisYMin?: number;
-  /** Default: `"#2563eb"` */
+  /** Default: `"series-2"` */
   fitColor?: string;
   /** Default: `"fit"` */
   fitLabel?: string;
   /** Default: `20` */
   gridStep?: number;
-  /** Default: `"#dc2626"` */
+  /** Default: `"series-3"` */
   guessColor?: string;
   /** Default: `"Guess intercept: "` */
   guessInterceptCaption?: string;
@@ -103,7 +103,7 @@ export interface StdLearnScatterFitConfig {
   guessSlopeStep?: number;
   /** Default: `400` */
   height?: number;
-  /** Default: `[{"color":"#334155","id":"p0","label":"","radius":5,"x":15,"y":25},{"color":"#334155","id":"p1","label":"","radius":5,"x":32,"y":40},{"color":"#334155","id":"p2","label":"","radius":5,"x":48,"y":44},{"color":"#334155","id":"p3","label":"","radius":5,"x":63,"y":62},{"color":"#334155","id":"p4","label":"","radius":5,"x":80,"y":70}]` */
+  /** Default: `[{"color":"ink","id":"p0","label":"","radius":5,"x":15,"y":25},{"color":"ink","id":"p1","label":"","radius":5,"x":32,"y":40},{"color":"ink","id":"p2","label":"","radius":5,"x":48,"y":44},{"color":"ink","id":"p3","label":"","radius":5,"x":63,"y":62},{"color":"ink","id":"p4","label":"","radius":5,"x":80,"y":70}]` */
   initialPoints?: EntityRow[];
   /** Default: `true` */
   interactive?: boolean;
@@ -127,7 +127,7 @@ export interface StdLearnScatterFitConfig {
   narrationMovedTemplate?: string;
   /** Default: `"Paused — add manually with Add Point."` */
   narrationPausedTemplate?: string;
-  /** Default: `"#334155"` */
+  /** Default: `"ink"` */
   newPointColor?: string;
   /** Default: `5` */
   newPointRadius?: number;
@@ -137,7 +137,7 @@ export interface StdLearnScatterFitConfig {
   pointMarginPct?: number;
   /** Default: `"Reset"` */
   resetLabel?: string;
-  /** Default: `"#f59e0b"` */
+  /** Default: `"guide"` */
   residualColor?: string;
   /** Default: `"dashed"` */
   residualDash?: 'dashed' | 'dotted';
@@ -155,6 +155,8 @@ export interface StdLearnScatterFitConfig {
   showResiduals?: boolean;
   /** Default: `true` */
   showTickLabels?: boolean;
+  /** Default: `""` */
+  summary?: string;
   /** Default: `"Scatter Fit"` */
   title?: string;
   /** Default: `600` */

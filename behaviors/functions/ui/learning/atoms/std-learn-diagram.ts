@@ -46,22 +46,24 @@ export interface StdLearnDiagramPartSelectedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnDiagramConfig {
-  /** Default: `"#f8fafc"` */
+  /** Default: `""` */
   backgroundColor?: string;
   /** Default: `"Clear"` */
   clearLabel?: string;
   /** Default: `400` */
   height?: number;
-  /** Default: `"#f59e0b"` */
+  /** Default: `"highlight"` */
   highlightColor?: string;
-  /** Default: `[{"color":"#cbd5e1","from":"input","label":"","to":"processor"},{"color":"#cbd5e1","from":"processor","label":"","to":"storage"},{"color":"#cbd5e1","from":"processor","label":"","to":"output"},{"color":"#cbd5e1","from":"controller","label":"","to":"processor"}]` */
+  /** Default: `[{"color":"guide","from":"input","label":"","to":"processor"},{"color":"guide","from":"processor","label":"","to":"storage"},{"color":"guide","from":"processor","label":"","to":"output"},{"color":"guide","from":"controller","label":"","to":"processor"}]` */
   links?: EntityRow[];
   /** Default: `""` */
   matchMode?: string;
   /** Default: `"Select a part below to learn what it does."` */
   overviewText?: string;
-  /** Default: `[{"color":"#2563eb","description":"Receives raw data or requests from the outside world and hands them to the processor.","id":"input","label":"Input","radius":34,"x":120,"y":200},{"color":"#7c3aed","description":"The central component that transforms incoming data according to the system's rules.","id":"processor","label":"Processor","radius":46,"x":300,"y":200},{"color":"#0891b2","description":"Persists data so it can be retrieved later, even after the system restarts.","id":"storage","label":"Storage","radius":34,"x":300,"y":320},{"color":"#16a34a","description":"Delivers the processor's results back out to users or other systems.","id":"output","label":"Output","radius":34,"x":480,"y":200},{"color":"#dc2626","description":"Coordinates timing and configuration for the processor without touching the data itself.","id":"controller","label":"Controller","radius":26,"x":300,"y":80}]` */
+  /** Default: `[{"color":"series-1","description":"Receives raw data or requests from the outside world and hands them to the processor.","id":"input","label":"Input","radius":34,"x":120,"y":200},{"color":"series-2","description":"The central component that transforms incoming data according to the system's rules.","id":"processor","label":"Processor","radius":46,"x":300,"y":200},{"color":"series-3","description":"Persists data so it can be retrieved later, even after the system restarts.","id":"storage","label":"Storage","radius":34,"x":300,"y":320},{"color":"series-4","description":"Delivers the processor's results back out to users or other systems.","id":"output","label":"Output","radius":34,"x":480,"y":200},{"color":"series-5","description":"Coordinates timing and configuration for the processor without touching the data itself.","id":"controller","label":"Controller","radius":26,"x":300,"y":80}]` */
   parts?: EntityRow[];
+  /** Default: `""` */
+  summary?: string;
   /** Default: `"System Diagram"` */
   title?: string;
   /** Default: `600` */

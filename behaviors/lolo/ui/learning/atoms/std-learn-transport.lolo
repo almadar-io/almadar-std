@@ -9,6 +9,7 @@ orbital LearnTransportOrbital {
     steps : int = 0
     elapsedMs : number = 0
     done : boolean = false
+    speed : number = 1
   }
 
   trait LearnTransportSim -> @rebindable LearnTransportScene [interaction, instance] {
@@ -25,14 +26,26 @@ orbital LearnTransportOrbital {
           type: box
           padding: md
           children: [
-            { type: stack, direction: vertical, gap: sm, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: STEP, label: "Step", variant: primary },
-                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Done" (if @entity.running "Running" "Paused")), variant: (if @entity.done "success" (if @entity.running "primary" "neutral")) }
                   ] },
-                { type: typography, variant: caption, content: (str/concat "Steps: " @entity.steps (if @entity.done " — done" (if @entity.running " — auto-stepping" " — paused"))) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: @entity.done }),
+                    { type: button, action: STEP, label: "Step", icon: "step-forward", variant: secondary, disabled: (or @entity.running @entity.done) },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (if (> @config.totalSteps 0) (str/concat "Step " @entity.steps " of " @config.totalSteps) (str/concat "Step " @entity.steps)) }
+                  ] }
               ] }
           ]
         })
@@ -48,18 +61,35 @@ orbital LearnTransportOrbital {
           type: box
           padding: md
           children: [
-            { type: stack, direction: vertical, gap: sm, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: STEP, label: "Step", variant: primary },
-                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Done" (if @entity.running "Running" "Paused")), variant: (if @entity.done "success" (if @entity.running "primary" "neutral")) }
                   ] },
-                { type: typography, variant: caption, content: (str/concat "Steps: " @entity.steps (if @entity.done " — done" (if @entity.running " — auto-stepping" " — paused"))) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: @entity.done }),
+                    { type: button, action: STEP, label: "Step", icon: "step-forward", variant: secondary, disabled: (or @entity.running @entity.done) },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (if (> @config.totalSteps 0) (str/concat "Step " @entity.steps " of " @config.totalSteps) (str/concat "Step " @entity.steps)) }
+                  ] }
               ] }
           ]
         })
         (emit LEARN_UPDATED { running: @entity.running, steps: @entity.steps })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (set @entity.running false)
+        (render-ui main null)
 
       STEP -> idle when (and (== @entity.active true) (not (== @entity.done true)))
         (set @entity.steps (+ @entity.steps 1))
@@ -67,14 +97,26 @@ orbital LearnTransportOrbital {
           type: box
           padding: md
           children: [
-            { type: stack, direction: vertical, gap: sm, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: STEP, label: "Step", variant: primary },
-                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Done" (if @entity.running "Running" "Paused")), variant: (if @entity.done "success" (if @entity.running "primary" "neutral")) }
                   ] },
-                { type: typography, variant: caption, content: (str/concat "Steps: " @entity.steps (if @entity.done " — done" (if @entity.running " — auto-stepping" " — paused"))) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: @entity.done }),
+                    { type: button, action: STEP, label: "Step", icon: "step-forward", variant: secondary, disabled: (or @entity.running @entity.done) },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (if (> @config.totalSteps 0) (str/concat "Step " @entity.steps " of " @config.totalSteps) (str/concat "Step " @entity.steps)) }
+                  ] }
               ] }
           ]
         })
@@ -86,14 +128,26 @@ orbital LearnTransportOrbital {
           type: box
           padding: md
           children: [
-            { type: stack, direction: vertical, gap: sm, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: STEP, label: "Step", variant: primary },
-                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Done" (if @entity.running "Running" "Paused")), variant: (if @entity.done "success" (if @entity.running "primary" "neutral")) }
                   ] },
-                { type: typography, variant: caption, content: (str/concat "Steps: " @entity.steps (if @entity.done " — done" (if @entity.running " — auto-stepping" " — paused"))) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: @entity.done }),
+                    { type: button, action: STEP, label: "Step", icon: "step-forward", variant: secondary, disabled: (or @entity.running @entity.done) },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (if (> @config.totalSteps 0) (str/concat "Step " @entity.steps " of " @config.totalSteps) (str/concat "Step " @entity.steps)) }
+                  ] }
               ] }
           ]
         })
@@ -107,25 +161,67 @@ orbital LearnTransportOrbital {
           type: box
           padding: md
           children: [
-            { type: stack, direction: vertical, gap: sm, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: STEP, label: "Step", variant: primary },
-                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Done" (if @entity.running "Running" "Paused")), variant: (if @entity.done "success" (if @entity.running "primary" "neutral")) }
                   ] },
-                { type: typography, variant: caption, content: (str/concat "Steps: " @entity.steps (if @entity.done " — done" (if @entity.running " — auto-stepping" " — paused"))) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: @entity.done }),
+                    { type: button, action: STEP, label: "Step", icon: "step-forward", variant: secondary, disabled: (or @entity.running @entity.done) },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (if (> @config.totalSteps 0) (str/concat "Step " @entity.steps " of " @config.totalSteps) (str/concat "Step " @entity.steps)) }
+                  ] }
               ] }
           ]
         })
         (emit LEARN_RESET { })
+
+      SPEED_SET -> idle when (== @entity.active true)
+        (set @entity.speed ?speed)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Done" (if @entity.running "Running" "Paused")), variant: (if @entity.done "success" (if @entity.running "primary" "neutral")) }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: @entity.done }),
+                    { type: button, action: STEP, label: "Step", icon: "step-forward", variant: secondary, disabled: (or @entity.running @entity.done) },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (if (> @config.totalSteps 0) (str/concat "Step " @entity.steps " of " @config.totalSteps) (str/concat "Step " @entity.steps)) }
+                  ] }
+              ] }
+          ]
+        })
     }
 
     ticks {
       transportTick every 32ms
         when (and (== @entity.active true) (and (== @entity.running true) (not (== @entity.done true))))
         (set @entity.elapsedMs (+ @entity.elapsedMs 32))
-        (when (>= @entity.elapsedMs @config.stepIntervalMs)
+        (when (>= (* @entity.elapsedMs @entity.speed) @config.stepIntervalMs)
           (do
             (set @entity.elapsedMs 0)
             (set @entity.steps (+ @entity.steps 1))
@@ -134,10 +230,15 @@ orbital LearnTransportOrbital {
     }
 
     listens {
+      SPEED_SET {
+        speed : number
+      }
+        @description "The learner picked a playback speed; the clock steps that many times faster."
+        @tier "presentation"
       MODE_SELECTED {
         mode : string
       }
-        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, and stands down (stops its clock, goes inactive) when another mode is chosen."
         @tier "domain"
     }
 
@@ -169,7 +270,15 @@ orbital LearnTransportOrbital {
         @tier "presentation"
       title : string = "Learning Instrument"
         @label "Title"
-        @description "Title shown above the transport controls."
+        @description "The instrument's name, the header's one hero."
+        @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line."
+        @tier "presentation"
+      totalSteps : int = 0
+        @label "Total Steps"
+        @description "When the walk has a known length, the step counter reads 'Step N of M'. 0 means open-ended."
         @tier "presentation"
       autoRun : boolean = false
         @label "Auto Run"

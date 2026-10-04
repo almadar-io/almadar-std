@@ -30,7 +30,7 @@ const ALIAS = 'LearnGridSim';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnGridSimEventKey = 'CELL_TOGGLED' | 'GRID_RESET' | 'GRID_STEPPED' | 'INIT' | 'MODE_SELECTED' | 'PAUSE' | 'RESET' | 'RUN' | 'RUN_TOGGLED' | 'STEP' | 'TAP_CELL';
+export type StdLearnGridSimEventKey = 'CELL_TOGGLED' | 'GRID_RESET' | 'GRID_STEPPED' | 'INIT' | 'MODE_SELECTED' | 'PAUSE' | 'RESET' | 'RUN' | 'RUN_TOGGLED' | 'SPEED_SET' | 'STEP' | 'TAP_CELL' | 'TOGGLE_RUN';
 
 /**
  * Payload shape for the `RUN_TOGGLED` event.
@@ -71,7 +71,7 @@ export interface StdLearnGridSimGridResetPayload {
 export interface StdLearnGridSimConfig {
   /** Default: `false` */
   autoRun?: boolean;
-  /** Default: `"#f8fafc"` */
+  /** Default: `""` */
   backgroundColor?: string;
   /** Default: `26` */
   cellSize?: number;
@@ -83,15 +83,15 @@ export interface StdLearnGridSimConfig {
   diffuseRate?: number;
   /** Default: `332` */
   height?: number;
-  /** Default: `"#bfdbfe"` */
+  /** Default: `"muted"` */
   lowColor?: string;
   /** Default: `""` */
   matchMode?: string;
-  /** Default: `"#60a5fa"` */
+  /** Default: `"series-3"` */
   midColor?: string;
-  /** Default: `"#e2e8f0"` */
+  /** Default: `"fill"` */
   offColor?: string;
-  /** Default: `"#1d4ed8"` */
+  /** Default: `"series-2"` */
   onColor?: string;
   /** Default: `12` */
   rows?: number;
@@ -101,6 +101,8 @@ export interface StdLearnGridSimConfig {
   seeds?: number[];
   /** Default: `"Step"` */
   stepLabel?: string;
+  /** Default: `""` */
+  summary?: string;
   /** Default: `"Tap cells to seed the world, then Run — or Step one generation at a time to see the rule at work."` */
   taskText?: string;
   /** Default: `"Grid World"` */

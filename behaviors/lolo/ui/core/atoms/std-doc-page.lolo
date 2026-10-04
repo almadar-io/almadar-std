@@ -1,0 +1,153 @@
+app std-doc-page "1.0.0"
+"std-doc-page — one page of a documentation site: a section sidebar with the current page marked, a breadcrumb, the page title and lede, an \"on this page\" contents list, the page's own content (a render slot the call site fills, live behaviors included) and previous/next links. Supports right-to-left pages. Pick for docs sites, handbooks, reference manuals and knowledge bases."
+type DocNavItem = { label : string!, href : string, items : [DocNavItem], active : boolean }
+type DocCrumb = { label : string!, href : string }
+type DocTocEntry = { id : string!, label : string!, level : number! }
+type DocLink = { label : string!, href : string!, category : string }
+orbital DocPageOrbital {
+
+  entity DocPageView [runtime] {
+    id : string!
+  }
+
+  trait DocPageRender -> @rebindable DocPageView [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          type: box
+          paddingY: lg
+          fullWidth: true
+          dir: @config.direction
+          children: [{
+            type: container
+            size: xl
+            maxWidth: xl
+            padding: lg
+            children: [{
+              type: split
+              ratio: "1:4"
+              gap: xl
+              children: [{
+                type: stack
+                direction: vertical
+                gap: sm
+                className: "lg:sticky lg:top-6 self-start"
+                children: [{
+                  type: typography
+                  content: @config.sidebarLabel
+                  variant: label
+                  weight: semibold
+                  className: (if (== @config.sidebarLabel "") hidden "px-3")
+                }, {
+                  type: doc-sidebar
+                  items: @config.navItems
+                  aria-label: @config.sidebarLabel
+                }]
+              }, {
+                type: stack
+                direction: vertical
+                gap: lg
+                className: "min-w-0"
+                children: [{
+                  type: doc-breadcrumb
+                  items: @config.crumbs
+                  className: (if (== (array/len @config.crumbs) 0) hidden "")
+                }, {
+                  type: stack
+                  direction: vertical
+                  gap: sm
+                  children: [{
+                    type: typography
+                    content: @config.title
+                    variant: h1
+                    weight: bold
+                    className: "tracking-tight text-balance"
+                  }, {
+                    type: typography
+                    content: @config.lede
+                    variant: large
+                    color: muted
+                    className: (if (== @config.lede "") hidden "max-w-3xl text-pretty")
+                  }]
+                }, {
+                  type: box
+                  bg: muted
+                  padding: md
+                  rounded: lg
+                  className: (if (== (array/len @config.toc) 0) hidden "")
+                  children: [{
+                    type: stack
+                    direction: vertical
+                    gap: xs
+                    children: [{
+                      type: typography
+                      content: @config.tocLabel
+                      variant: label
+                      weight: semibold
+                    }, {
+                      type: doc-toc
+                      items: @config.toc
+                      aria-label: @config.tocLabel
+                    }]
+                  }]
+                }, @config.content, {
+                  type: divider
+                }, {
+                  type: doc-pagination
+                  prev: (if (== (object/get @config.prev href "") "") null @config.prev)
+                  next: (if (== (object/get @config.next href "") "") null @config.next)
+                }]
+              }]
+            }]
+          }]
+        })
+    }
+
+    config {
+      title : string = "Untitled page"
+        @label "Title"
+        @tier "presentation"
+      lede : string = ""
+        @label "Lede"
+        @description "One or two sentences under the title; empty hides it"
+        @tier "presentation"
+      content : render-ui = { type: stack, direction: vertical, gap: lg, children: [] }
+        @label "Content"
+        @description "The page body: markdown, code and live behaviors (trait references) in reading order"
+        @tier "presentation"
+      navItems : [DocNavItem] = []
+        @label "Sidebar"
+        @description "The documentation tree; mark the current page active"
+        @tier "presentation"
+      sidebarLabel : string = "Documentation"
+        @label "Sidebar label"
+        @tier "presentation"
+      crumbs : [DocCrumb] = []
+        @label "Breadcrumb"
+        @description "Ancestors first, the current page last without a link; empty hides it"
+        @tier "presentation"
+      toc : [DocTocEntry] = []
+        @label "On this page"
+        @description "Anchors of the page's sections (each section declares the same id); empty hides it"
+        @tier "presentation"
+      tocLabel : string = "On this page"
+        @label "Contents label"
+        @tier "presentation"
+      prev : DocLink = { label: "", href: "" }
+        @label "Previous page"
+        @description "Empty href hides it"
+        @tier "presentation"
+      next : DocLink = { label: "", href: "" }
+        @label "Next page"
+        @description "Empty href hides it"
+        @tier "presentation"
+      direction : "ltr" | "rtl" = "ltr"
+        @label "Direction"
+        @tier "presentation"
+    }
+  }
+
+  page "/doc" as DocPage -> DocPageRender
+}

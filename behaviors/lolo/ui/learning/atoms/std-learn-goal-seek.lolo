@@ -98,26 +98,38 @@ orbital GoalSeekOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.solved "Solved" (if (> @entity.attempts 0) "Try again" "Tuning")), variant: (if @entity.solved "success" (if (> @entity.attempts 0) "warning" "neutral")) }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if @entity.solved true false) },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) }
+                  ] },
+                { type: math-canvas, keyMap: { Space: CHECK, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: vertical, gap: sm, children: [
+                { type: stack, direction: vertical, gap: xs, children: [
+                      { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
+                      { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
+                    ] },
+                  { type: stack, direction: vertical, gap: xs, children: [
+                      { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
+                      { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                    ] }
+                  ] },
                 { type: typography, variant: body, content: @config.goalText },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
-                    { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
-                  ] },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
-                    { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
-                  ] },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
-                { type: typography, variant: body, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: CHECK, label: @config.checkLabel, variant: primary, disabled: (if @entity.solved true false) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
-                  ] },
-                { type: stack, direction: horizontal, gap: xs, children: @entity.resultRow }
+                { type: typography, variant: caption, color: muted, content: @entity.feedback }
               ] }
           ]
         })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (render-ui main null)
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (let (
@@ -182,23 +194,31 @@ orbital GoalSeekOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.solved "Solved" (if (> @entity.attempts 0) "Try again" "Tuning")), variant: (if @entity.solved "success" (if (> @entity.attempts 0) "warning" "neutral")) }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if @entity.solved true false) },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) }
+                  ] },
+                { type: math-canvas, keyMap: { Space: CHECK, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: vertical, gap: sm, children: [
+                { type: stack, direction: vertical, gap: xs, children: [
+                      { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
+                      { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
+                    ] },
+                  { type: stack, direction: vertical, gap: xs, children: [
+                      { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
+                      { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                    ] }
+                  ] },
                 { type: typography, variant: body, content: @config.goalText },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
-                    { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
-                  ] },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
-                    { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
-                  ] },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
-                { type: typography, variant: body, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: CHECK, label: @config.checkLabel, variant: primary, disabled: (if @entity.solved true false) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
-                  ] },
-                { type: stack, direction: horizontal, gap: xs, children: @entity.resultRow }
+                { type: typography, variant: caption, color: muted, content: @entity.feedback }
               ] }
           ]
         })
@@ -244,23 +264,31 @@ orbital GoalSeekOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.solved "Solved" (if (> @entity.attempts 0) "Try again" "Tuning")), variant: (if @entity.solved "success" (if (> @entity.attempts 0) "warning" "neutral")) }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if @entity.solved true false) },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) }
+                  ] },
+                { type: math-canvas, keyMap: { Space: CHECK, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: vertical, gap: sm, children: [
+                { type: stack, direction: vertical, gap: xs, children: [
+                      { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
+                      { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
+                    ] },
+                  { type: stack, direction: vertical, gap: xs, children: [
+                      { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
+                      { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                    ] }
+                  ] },
                 { type: typography, variant: body, content: @config.goalText },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
-                    { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
-                  ] },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
-                    { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
-                  ] },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
-                { type: typography, variant: body, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: CHECK, label: @config.checkLabel, variant: primary, disabled: (if @entity.solved true false) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
-                  ] },
-                { type: stack, direction: horizontal, gap: xs, children: @entity.resultRow }
+                { type: typography, variant: caption, color: muted, content: @entity.feedback }
               ] }
           ]
         })
@@ -307,23 +335,31 @@ orbital GoalSeekOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.solved "Solved" (if (> @entity.attempts 0) "Try again" "Tuning")), variant: (if @entity.solved "success" (if (> @entity.attempts 0) "warning" "neutral")) }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if @entity.solved true false) },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) }
+                  ] },
+                { type: math-canvas, keyMap: { Space: CHECK, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: vertical, gap: sm, children: [
+                { type: stack, direction: vertical, gap: xs, children: [
+                      { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
+                      { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
+                    ] },
+                  { type: stack, direction: vertical, gap: xs, children: [
+                      { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
+                      { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                    ] }
+                  ] },
                 { type: typography, variant: body, content: @config.goalText },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
-                    { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
-                  ] },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
-                    { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
-                  ] },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
-                { type: typography, variant: body, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: CHECK, label: @config.checkLabel, variant: primary, disabled: (if @entity.solved true false) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
-                  ] },
-                { type: stack, direction: horizontal, gap: xs, children: @entity.resultRow }
+                { type: typography, variant: caption, color: muted, content: @entity.feedback }
               ] }
           ]
         })
@@ -341,23 +377,31 @@ orbital GoalSeekOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.solved "Solved" (if (> @entity.attempts 0) "Try again" "Tuning")), variant: (if @entity.solved "success" (if (> @entity.attempts 0) "warning" "neutral")) }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if @entity.solved true false) },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) }
+                  ] },
+                { type: math-canvas, keyMap: { Space: CHECK, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: vertical, gap: sm, children: [
+                { type: stack, direction: vertical, gap: xs, children: [
+                      { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
+                      { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
+                    ] },
+                  { type: stack, direction: vertical, gap: xs, children: [
+                      { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
+                      { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                    ] }
+                  ] },
                 { type: typography, variant: body, content: @config.goalText },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
-                    { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
-                  ] },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
-                    { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
-                  ] },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
-                { type: typography, variant: body, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: CHECK, label: @config.checkLabel, variant: primary, disabled: (if @entity.solved true false) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
-                  ] },
-                { type: stack, direction: horizontal, gap: xs, children: @entity.resultRow }
+                { type: typography, variant: caption, color: muted, content: @entity.feedback }
               ] }
           ]
         })
@@ -409,23 +453,31 @@ orbital GoalSeekOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.solved "Solved" (if (> @entity.attempts 0) "Try again" "Tuning")), variant: (if @entity.solved "success" (if (> @entity.attempts 0) "warning" "neutral")) }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if @entity.solved true false) },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) }
+                  ] },
+                { type: math-canvas, keyMap: { Space: CHECK, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: vertical, gap: sm, children: [
+                { type: stack, direction: vertical, gap: xs, children: [
+                      { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
+                      { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
+                    ] },
+                  { type: stack, direction: vertical, gap: xs, children: [
+                      { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
+                      { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                    ] }
+                  ] },
                 { type: typography, variant: body, content: @config.goalText },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
-                    { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
-                  ] },
-                { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
-                    { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
-                  ] },
-                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
-                { type: typography, variant: body, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: CHECK, label: @config.checkLabel, variant: primary, disabled: (if @entity.solved true false) },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
-                  ] },
-                { type: stack, direction: horizontal, gap: xs, children: @entity.resultRow }
+                { type: typography, variant: caption, color: muted, content: @entity.feedback }
               ] }
           ]
         })
@@ -497,6 +549,10 @@ orbital GoalSeekOrbital {
         @label "Title"
         @description "Title shown above the canvas."
         @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line."
+        @tier "presentation"
       goalText : string = "Tune the two sliders until your curve matches the target curve, then press Check."
         @label "Goal Text"
         @description "One-sentence statement of the inverse problem the learner must solve."
@@ -562,10 +618,10 @@ orbital GoalSeekOrbital {
       learnerLabel : string = "Yours"
         @label "Learner Label"
         @tier "presentation"
-      targetColor : string = "#94a3b8"
+      targetColor : string = "guide"
         @label "Target Color"
         @tier "presentation"
-      learnerColor : string = "#3b82f6"
+      learnerColor : string = "series-2"
         @label "Learner Color"
         @tier "presentation"
       checkLabel : string = "Check"

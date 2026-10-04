@@ -60,7 +60,9 @@ export interface StdUiMathCanvasConfig {
   ariaLive?: 'off' | 'polite' | 'assertive';
   ariaPressed?: 'true' | 'false' | 'mixed';
   ariaSelected?: boolean;
-  /** Default: `"var(--color-muted-foreground, #374151)"` */
+  /** Default: `"fit"` */
+  aspect?: 'fit' | 'equal';
+  /** Default: `"axis"` */
   axisColor?: string;
   backgroundColor?: string;
   /** Default: `[]` */
@@ -75,7 +77,7 @@ export interface StdUiMathCanvasConfig {
   enterDelay?: number;
   error?: EntityRow;
   fontFamily?: string;
-  /** Default: `"var(--color-border, #9ca3af)"` */
+  /** Default: `"grid"` */
   gridColor?: string;
   /** Default: `1` */
   gridStep?: number;
@@ -92,7 +94,6 @@ export interface StdUiMathCanvasConfig {
   keyMap?: Record<string, TraitConfig>;
   /** Default: `{"item":"INIT"}` */
   keyUpMap?: Record<string, TraitConfig>;
-  /** Default: `12` */
   labelFontSize?: number;
   lang?: string;
   /** Default: `"SHAPE_CLICK"` */
@@ -105,6 +106,8 @@ export interface StdUiMathCanvasConfig {
   regions?: EntityRow[];
   role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   /** Default: `[]` */
+  series?: string[];
+  /** Default: `[]` */
   shapes?: EntityRow[];
   /** Default: `true` */
   showAxes?: boolean;
@@ -116,7 +119,6 @@ export interface StdUiMathCanvasConfig {
   showTickLabels?: boolean;
   skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
-  /** Default: `10` */
   tickLabelFontSize?: number;
   title?: string;
   /** Default: `[]` */

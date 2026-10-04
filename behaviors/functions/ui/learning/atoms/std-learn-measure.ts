@@ -30,7 +30,7 @@ const ALIAS = 'LearnMeasure';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnMeasureEventKey = 'INIT' | 'MEASURE_RESET' | 'MODE_SELECTED' | 'PAUSE' | 'PROBE' | 'PROBE_RECORDED' | 'RESET' | 'RUN' | 'RUN_TOGGLED';
+export type StdLearnMeasureEventKey = 'INIT' | 'MEASURE_RESET' | 'MODE_SELECTED' | 'PAUSE' | 'PROBE' | 'PROBE_RECORDED' | 'RESET' | 'RUN' | 'RUN_TOGGLED' | 'SPEED_SET' | 'TOGGLE_RUN';
 
 /**
  * Payload shape for the `RUN_TOGGLED` event.
@@ -73,16 +73,18 @@ export interface StdLearnMeasureConfig {
   height?: number;
   /** Default: `""` */
   matchMode?: string;
-  /** Default: `"#dc2626"` */
+  /** Default: `"highlight"` */
   probeColor?: string;
   /** Default: `"Probe"` */
   probeLabel?: string;
   /** Default: `1.2` */
   rate?: number;
-  /** Default: `"#94a3b8"` */
+  /** Default: `"ink"` */
   signalColor?: string;
   /** Default: `"sine"` */
   signalKind?: string;
+  /** Default: `""` */
+  summary?: string;
   /** Default: `"Run the signal, then press Probe to record measurements. Watch the running mean settle."` */
   taskText?: string;
   /** Default: `"Measurement Lab"` */

@@ -206,13 +206,10 @@ describe('factory-runtime', () => {
       // this package: learning subjects live in @almadar-io/behaviors, and std
       // (public, upstream) must never depend on io (private, downstream). The
       // test had been failing with ENOENT, masked in CI by an earlier pnpm
-      // setup error. Every std organism now has exactly one orbital (the
-      // two-orbital std-agent-rabit was retired 2026-10-01), so the whole-orb
-      // path is exercised on a two-orbital program built from two real std
-      // atoms, each a distinct orbital with its own entity.
-      const session = await loadOrb('agent', 'atoms', 'std-agent-session');
-      const trace = await loadOrb('agent', 'atoms', 'std-agent-trace');
-      const orb: OrbitalSchema = { ...session, orbitals: [...session.orbitals, ...trace.orbitals] };
+      // setup error. std-agent-session is a real two-orbital std atom (the
+      // conversation and its kept chats, each with its own entity), so it
+      // exercises the whole-orb path on its own.
+      const orb: OrbitalSchema = await loadOrb('agent', 'atoms', 'std-agent-session');
       expect(orb.orbitals.length).toBe(2);
       const manifests = extractManifest(orb);
       const canonicalByOrbital = new Map(

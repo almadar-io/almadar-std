@@ -29,6 +29,16 @@
             "required": false
           },
           {
+            "name": "speed",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "elapsedMs",
+            "type": "number",
+            "required": false
+          },
+          {
             "name": "bars",
             "type": "array",
             "required": false
@@ -86,6 +96,18 @@
             "tier": "domain"
           },
           {
+            "name": "TOGGLE_RUN",
+            "direction": "listen",
+            "description": "Learner pressed the Play/Pause toggle — starts or freezes the frame cursor.",
+            "tier": "domain"
+          },
+          {
+            "name": "SPEED_SET",
+            "direction": "listen",
+            "description": "The learner picked a playback speed; frames advance that many times faster.",
+            "tier": "presentation"
+          },
+          {
             "name": "PLAY",
             "direction": "listen",
             "description": "Learner pressed Play — the frame cursor begins advancing on the tick until the last frame is reached or Pause is pressed.",
@@ -108,14 +130,15 @@
           {
             "key": "backgroundColor",
             "type": "string",
-            "default": "#f8fafc",
+            "default": "",
             "label": "Background Color",
+            "description": "Canvas ground override; empty uses the theme's drawing ground.",
             "tier": "presentation"
           },
           {
             "key": "baseColor",
             "type": "string",
-            "default": "#3b82f6",
+            "default": "series-1",
             "label": "Base Bar Color",
             "description": "Color of bars not highlighted in the current frame.",
             "tier": "presentation"
@@ -265,7 +288,7 @@
           {
             "key": "highlightColor",
             "type": "string",
-            "default": "#f59e0b",
+            "default": "highlight",
             "label": "Highlight Bar Color",
             "description": "Color of bars whose index appears in the current frame's highlights.",
             "tier": "presentation"
@@ -287,6 +310,14 @@
             "tier": "presentation"
           },
           {
+            "key": "summary",
+            "type": "string",
+            "default": "",
+            "label": "Concept",
+            "description": "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line.",
+            "tier": "presentation"
+          },
+          {
             "key": "tickMs",
             "type": "number",
             "default": 500,
@@ -299,7 +330,7 @@
             "type": "string",
             "default": "Trace Player",
             "label": "Title",
-            "description": "Title shown above the instrument.",
+            "description": "The instrument's name, the header's one hero.",
             "tier": "presentation"
           },
           {
@@ -318,7 +349,9 @@
           "MODE_SELECTED",
           "PAUSE",
           "PLAY",
-          "RESTART"
+          "RESTART",
+          "SPEED_SET",
+          "TOGGLE_RUN"
         ],
         "definerKnobs": [],
         "entityRebindable": true,
@@ -327,10 +360,12 @@
           "provides": [
             "active",
             "bars",
+            "elapsedMs",
             "frameCaption",
             "frameIndex",
             "frameLabel",
             "running",
+            "speed",
             "statusNote",
             "title"
           ]
@@ -374,6 +409,11 @@
           },
           {
             "kind": "set",
+            "resource": "@entity.elapsedMs",
+            "site": "tick"
+          },
+          {
+            "kind": "set",
             "resource": "@entity.frameCaption"
           },
           {
@@ -407,6 +447,10 @@
             "kind": "set",
             "resource": "@entity.running",
             "site": "tick"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.speed"
           },
           {
             "kind": "set",

@@ -1,5 +1,5 @@
 app std-agent-session "3.0.0"
-"std-agent-session — the conversation with an in-app assistant. AgentThread owns the persisted AgentMessage rows (role, content, ownerId stamped with the real @user, createdAt): SEND stores the user's message, reloads the thread and emits CONVERSE with the whole conversation, oldest first, for std-agent-tool-loop to answer; REPLIED stores the reply. AgentConversation is what the user sees, in the browser: the thread as chat bubbles with every step the assistant takes interleaved live (STEP: each model call, each tool it used and what the app answered), a thinking row while it works, and a chat bar. Rows are meant to be private to their owner: owner-scoped access needs an [identity] roster, so the binding organism declares the @read/@create scoping on AgentMessage — this generic atom cannot."
+"std-agent-session — the conversation with an in-app assistant. AgentThread owns the persisted AgentMessage rows (role, content, ownerId stamped with the real @user, createdAt): SEND stores the user's message, reloads the thread and emits CONVERSE with the whole conversation, oldest first, for std-agent-tool-loop to answer; REPLIED stores the reply. AgentConversation is what the user sees, in the browser: the thread as chat bubbles with every step the assistant takes interleaved live (STEP: each model call, each tool it used and what the app answered), a thinking row while it works, and a chat bar. The two talk over the assistant contract, from any orbital: AgentConversation emits ASSISTANT_SEND and hears AgentMessagesLoaded, ASSISTANT_THREAD_FAILED, ASSISTANT_STEP, ASSISTANT_REPLIED and ASSISTANT_REPLY_FAILED; AgentThread hears ASSISTANT_SEND. So a conversation placed on any section's page reaches the app's one assistant (std-agent-assistant) with no wiring. Rows are meant to be private to their owner: owner-scoped access needs an [identity] roster, so the binding organism declares the @read/@create scoping on AgentMessage — this generic atom cannot."
 
 type AgentChatMessage = {
   role : "user" | "assistant"!
@@ -8,6 +8,16 @@ type AgentChatMessage = {
 type AgentLink = {
   label : string!
   href : string!
+}
+type AgentChatRow = {
+  id : string!
+  title : string
+  lastActiveAt : number
+}
+type AgentMemoryRow = {
+  id : string!
+  content : string!
+  createdAt : number
 }
 type AgentThreadRow = {
   role : "user" | "assistant"!
@@ -79,6 +89,7 @@ orbital AgentSessionOrbital {
     role : "user" | "assistant" @description "Who said it." @synonyms "speaker, author" = user
     content : string! @description "What was said." @synonyms "text, message, body"
     createdAt : number @description "When it was said (ms)." @synonyms "time, timestamp" = 0
+    chatId : string @description "The conversation this message belongs to (an AgentChat id)." @synonyms "conversation, thread, session" = ""
   }
 
   entity AgentConversationView [runtime] {
@@ -92,12 +103,17 @@ orbital AgentSessionOrbital {
 
     state ready {
       INIT -> ready
+      OPEN_CHAT -> ready when ["=", (str/default ?chatId ""), ""]
+        (emit AgentMessagesLoaded { data: [] })
+      OPEN_CHAT -> ready when (not ["=", (str/default ?chatId ""), ""])
         (fetch AgentMessage {
           emit: { failure: AgentMessagesLoadFailed, success: AgentMessagesLoaded }
+          filter: ["=", (object/get @entity chatId), ?chatId]
         })
-      SEND -> ready when (not ["=", (str/default ?message ""), ""])
+      SEND_IN_CHAT -> ready when (not ["=", (str/default ?message ""), ""])
         (persist create AgentMessage {
           ownerId: @user.id
+          chatId: ?chatId
           role: user
           content: ?message
           createdAt: @now
@@ -107,27 +123,29 @@ orbital AgentSessionOrbital {
       AgentMessageSaved -> ready
         (fetch AgentMessage {
           emit: { failure: AgentMessagesLoadFailed, success: AgentConversationLoaded }
+          filter: ["=", (object/get @entity chatId), ?chatId]
         })
       AgentConversationLoaded -> ready
         (emit CONVERSE {
           messages: (array/map (array/sort ?data createdAt asc) (fn item { role: @item.role, content: @item.content }))
         })
-      REPLIED -> ready
+      REPLY_IN_CHAT -> ready
         (persist create AgentMessage {
           ownerId: @user.id
+          chatId: ?chatId
           role: assistant
           content: ?reply
           createdAt: @now
         })
       AgentMessagesLoadFailed -> ready
-        (emit THREAD_FAILED { error: ?error })
+        (emit ASSISTANT_THREAD_FAILED { error: ?error })
         (render-ui toast {
           message: ?error
           type: alert
           variant: error
         })
       AgentMessageSaveFailed -> ready
-        (emit THREAD_FAILED { error: ?error })
+        (emit ASSISTANT_THREAD_FAILED { error: ?error })
         (render-ui toast {
           message: ?error
           type: alert
@@ -136,7 +154,7 @@ orbital AgentSessionOrbital {
     }
 
     emits {
-      THREAD_FAILED -> external {
+      ASSISTANT_THREAD_FAILED -> external {
         error : string!
       }
         @description "The conversation could not be loaded or a message could not be stored."
@@ -145,13 +163,13 @@ orbital AgentSessionOrbital {
       CONVERSE -> external {
         messages : [AgentChatMessage]!
       }
-        @description "The conversation to answer, oldest first; the last turn is the request."
+        @description "The current conversation to answer, oldest first; the last turn is the request."
         @synonyms "ask, converse, request"
         @tier "domain"
       AgentMessagesLoaded -> external {
         data : [AgentMessage]
       }
-        @description "The conversation finished loading."
+        @description "The current conversation's messages finished loading (empty for a new conversation)."
         @tier "internal"
       AgentMessagesLoadFailed -> external {
         error : string
@@ -175,16 +193,24 @@ orbital AgentSessionOrbital {
     }
 
     listens {
-      AgentConversation.SEND -> SEND
-      SEND {
+      *.ASSISTANT_CHAT_OPENED -> OPEN_CHAT
+      *.ASSISTANT_SEND_IN_CHAT -> SEND_IN_CHAT
+      *.ASSISTANT_REPLY_IN_CHAT -> REPLY_IN_CHAT
+      OPEN_CHAT {
+        chatId : string
+      }
+        @description "Load a conversation's messages (none for a new one)."
+      SEND_IN_CHAT {
+        chatId : string!
         message : string!
       }
-        @description "Store the user's message and ask the assistant."
+        @description "Store the user's message in this conversation and ask the assistant."
         @synonyms "ask, message, chat"
-      REPLIED {
+      REPLY_IN_CHAT {
+        chatId : string
         reply : string!
       }
-        @description "Store the assistant's answer."
+        @description "Store the assistant's answer in this conversation."
     }
   }
 
@@ -196,25 +222,89 @@ orbital AgentSessionOrbital {
       emptyTitle : string = "Ask me to do something in this app"
         @label "Empty conversation title"
         @tier "presentation"
-      links : [AgentLink] = []
+      links : [AgentLink] = [{ label: "All conversations", href: "/agent-session/chats" }]
         @label "Links above the conversation"
         @description "Related pages (e.g. the run history)."
+        @tier "presentation"
+      newChatLabel : string = "New conversation"
+        @label "New conversation button"
+        @description "Starts a fresh conversation; earlier ones stay in the conversation list."
+        @tier "presentation"
+      chatsLabel : string = "Conversations"
+        @label "Past conversations button"
+        @description "Shows the person's past conversations in place of the chat; picking one reopens it."
+        @tier "presentation"
+      memoryLabel : string = "What I remember"
+        @label "Memory button"
+        @description "Shows what the assistant remembers for this person in place of the chat."
+        @tier "presentation"
+      untitledLabel : string = "New conversation"
+        @label "Title of a conversation with no messages yet"
+        @tier "presentation"
+      chatsEmptyTitle : string = "No conversations yet"
+        @label "Empty conversation list"
+        @tier "presentation"
+      memoryEmptyTitle : string = "Nothing remembered yet"
+        @label "Empty memory list"
+        @tier "presentation"
+      backLabel : string = "Back"
+        @label "Back to the conversation"
         @tier "presentation"
     }
     initial: idle
 
     state idle {
       INIT -> idle
+        (emit ASSISTANT_HISTORY_REQUESTED {})
         (render-ui main {
           children: [{
-            children: (array/map @config.links (fn item {
-              href: @item.href
-              label: @item.label
+            children: [{
+              action: NEW_CHAT_CLICKED
+              aria-label: @config.newChatLabel
+              icon: message-square-plus
+              label: @config.newChatLabel
+              size: sm
               type: button
-              variant: ghost
-            }))
+              variant: secondary
+            }, {
+              children: [{
+                action: OPEN_CHATS_CLICKED
+                aria-label: @config.chatsLabel
+                label: @config.chatsLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                action: OPEN_MEMORY_CLICKED
+                aria-label: @config.memoryLabel
+                label: @config.memoryLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                children: (array/map @config.links (fn item {
+                  href: @item.href
+                  label: @item.label
+                  size: sm
+                  type: button
+                  variant: ghost
+                }))
+                direction: horizontal
+                gap: xs
+                type: stack
+              }]
+              align: center
+              className: shrink-0
+              direction: horizontal
+              gap: none
+              type: stack
+            }]
+            align: center
+            className: shrink-0
             direction: horizontal
             gap: sm
+            justify: between
+            wrap: true
             type: stack
           }, {
             activities: @entity.entries
@@ -238,14 +328,53 @@ orbital AgentSessionOrbital {
         (set @entity.entries (array/map (array/sort ?data createdAt asc) (fn item { type: message, role: @item.role, content: @item.content, timestamp: @item.createdAt })))
         (render-ui main {
           children: [{
-            children: (array/map @config.links (fn item {
-              href: @item.href
-              label: @item.label
+            children: [{
+              action: NEW_CHAT_CLICKED
+              aria-label: @config.newChatLabel
+              icon: message-square-plus
+              label: @config.newChatLabel
+              size: sm
               type: button
-              variant: ghost
-            }))
+              variant: secondary
+            }, {
+              children: [{
+                action: OPEN_CHATS_CLICKED
+                aria-label: @config.chatsLabel
+                label: @config.chatsLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                action: OPEN_MEMORY_CLICKED
+                aria-label: @config.memoryLabel
+                label: @config.memoryLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                children: (array/map @config.links (fn item {
+                  href: @item.href
+                  label: @item.label
+                  size: sm
+                  type: button
+                  variant: ghost
+                }))
+                direction: horizontal
+                gap: xs
+                type: stack
+              }]
+              align: center
+              className: shrink-0
+              direction: horizontal
+              gap: none
+              type: stack
+            }]
+            align: center
+            className: shrink-0
             direction: horizontal
             gap: sm
+            justify: between
+            wrap: true
             type: stack
           }, {
             activities: @entity.entries
@@ -268,17 +397,56 @@ orbital AgentSessionOrbital {
       ASK -> idle when (and (not @entity.working) (not ["=", (str/default ?message ""), ""]))
         (set @entity.entries (array/append @entity.entries { type: message, role: user, content: ?message, timestamp: @now }))
         (set @entity.working true)
-        (emit SEND { message: ?message })
+        (emit ASSISTANT_SEND { message: ?message })
         (render-ui main {
           children: [{
-            children: (array/map @config.links (fn item {
-              href: @item.href
-              label: @item.label
+            children: [{
+              action: NEW_CHAT_CLICKED
+              aria-label: @config.newChatLabel
+              icon: message-square-plus
+              label: @config.newChatLabel
+              size: sm
               type: button
-              variant: ghost
-            }))
+              variant: secondary
+            }, {
+              children: [{
+                action: OPEN_CHATS_CLICKED
+                aria-label: @config.chatsLabel
+                label: @config.chatsLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                action: OPEN_MEMORY_CLICKED
+                aria-label: @config.memoryLabel
+                label: @config.memoryLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                children: (array/map @config.links (fn item {
+                  href: @item.href
+                  label: @item.label
+                  size: sm
+                  type: button
+                  variant: ghost
+                }))
+                direction: horizontal
+                gap: xs
+                type: stack
+              }]
+              align: center
+              className: shrink-0
+              direction: horizontal
+              gap: none
+              type: stack
+            }]
+            align: center
+            className: shrink-0
             direction: horizontal
             gap: sm
+            justify: between
+            wrap: true
             type: stack
           }, {
             activities: @entity.entries
@@ -302,14 +470,53 @@ orbital AgentSessionOrbital {
         (set @entity.entries (array/append @entity.entries ?activity))
         (render-ui main {
           children: [{
-            children: (array/map @config.links (fn item {
-              href: @item.href
-              label: @item.label
+            children: [{
+              action: NEW_CHAT_CLICKED
+              aria-label: @config.newChatLabel
+              icon: message-square-plus
+              label: @config.newChatLabel
+              size: sm
               type: button
-              variant: ghost
-            }))
+              variant: secondary
+            }, {
+              children: [{
+                action: OPEN_CHATS_CLICKED
+                aria-label: @config.chatsLabel
+                label: @config.chatsLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                action: OPEN_MEMORY_CLICKED
+                aria-label: @config.memoryLabel
+                label: @config.memoryLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                children: (array/map @config.links (fn item {
+                  href: @item.href
+                  label: @item.label
+                  size: sm
+                  type: button
+                  variant: ghost
+                }))
+                direction: horizontal
+                gap: xs
+                type: stack
+              }]
+              align: center
+              className: shrink-0
+              direction: horizontal
+              gap: none
+              type: stack
+            }]
+            align: center
+            className: shrink-0
             direction: horizontal
             gap: sm
+            justify: between
+            wrap: true
             type: stack
           }, {
             activities: @entity.entries
@@ -334,14 +541,368 @@ orbital AgentSessionOrbital {
         (set @entity.working false)
         (render-ui main {
           children: [{
-            children: (array/map @config.links (fn item {
-              href: @item.href
-              label: @item.label
+            children: [{
+              action: NEW_CHAT_CLICKED
+              aria-label: @config.newChatLabel
+              icon: message-square-plus
+              label: @config.newChatLabel
+              size: sm
               type: button
-              variant: ghost
-            }))
+              variant: secondary
+            }, {
+              children: [{
+                action: OPEN_CHATS_CLICKED
+                aria-label: @config.chatsLabel
+                label: @config.chatsLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                action: OPEN_MEMORY_CLICKED
+                aria-label: @config.memoryLabel
+                label: @config.memoryLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                children: (array/map @config.links (fn item {
+                  href: @item.href
+                  label: @item.label
+                  size: sm
+                  type: button
+                  variant: ghost
+                }))
+                direction: horizontal
+                gap: xs
+                type: stack
+              }]
+              align: center
+              className: shrink-0
+              direction: horizontal
+              gap: none
+              type: stack
+            }]
+            align: center
+            className: shrink-0
             direction: horizontal
             gap: sm
+            justify: between
+            wrap: true
+            type: stack
+          }, {
+            activities: @entity.entries
+            className: flex-1
+            emptyTitle: @config.emptyTitle
+            idPrefix: agent-conversation
+            rawLlmPreferenceKey: agent-conversation-raw-llm
+            type: agent-chat-feed
+            working: @entity.working
+          }, {
+            placeholder: @config.placeholder
+            sendEvent: ASK
+            type: chat-bar
+          }]
+          className: "h-full min-h-0 flex-1"
+          direction: vertical
+          gap: sm
+          type: stack
+        })
+      NEW_CHAT_CLICKED -> idle when (not @entity.working)
+        (set @entity.entries [])
+        (emit ASSISTANT_NEW_CHAT {})
+        (render-ui main {
+          children: [{
+            children: [{
+              action: NEW_CHAT_CLICKED
+              aria-label: @config.newChatLabel
+              icon: message-square-plus
+              label: @config.newChatLabel
+              size: sm
+              type: button
+              variant: secondary
+            }, {
+              children: [{
+                action: OPEN_CHATS_CLICKED
+                aria-label: @config.chatsLabel
+                label: @config.chatsLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                action: OPEN_MEMORY_CLICKED
+                aria-label: @config.memoryLabel
+                label: @config.memoryLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                children: (array/map @config.links (fn item {
+                  href: @item.href
+                  label: @item.label
+                  size: sm
+                  type: button
+                  variant: ghost
+                }))
+                direction: horizontal
+                gap: xs
+                type: stack
+              }]
+              align: center
+              className: shrink-0
+              direction: horizontal
+              gap: none
+              type: stack
+            }]
+            align: center
+            className: shrink-0
+            direction: horizontal
+            gap: sm
+            justify: between
+            wrap: true
+            type: stack
+          }, {
+            activities: @entity.entries
+            className: flex-1
+            emptyTitle: @config.emptyTitle
+            idPrefix: agent-conversation
+            rawLlmPreferenceKey: agent-conversation-raw-llm
+            type: agent-chat-feed
+            working: @entity.working
+          }, {
+            placeholder: @config.placeholder
+            sendEvent: ASK
+            type: chat-bar
+          }]
+          className: "h-full min-h-0 flex-1"
+          direction: vertical
+          gap: sm
+          type: stack
+        })
+      OPEN_CHATS_CLICKED -> idle
+        (emit ASSISTANT_CHATS_REQUESTED {})
+      CHATS_LISTED -> idle
+        (render-ui main {
+          children: [{
+            children: [{
+              action: BACK_TO_CHAT
+              aria-label: @config.backLabel
+              icon: arrow-left
+              label: @config.backLabel
+              size: sm
+              type: button
+              variant: ghost
+            }, {
+              content: @config.chatsLabel
+              type: typography
+              variant: h4
+            }]
+            align: center
+            className: shrink-0
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            emptyMessage: @config.chatsEmptyTitle
+            entity: ?data
+            fields: []
+            gap: none
+            itemClickEvent: CHAT_PICKED
+            renderItem: (fn item {
+              children: [{
+                className: truncate
+                content: (if ["=", (str/default @item.title ""), ""] @config.untitledLabel @item.title)
+                type: typography
+                variant: body
+              }, {
+                color: muted
+                content: @item.lastActiveAt
+                format: date
+                type: typography
+                variant: caption
+              }]
+              direction: vertical
+              gap: none
+              type: stack
+            })
+            type: data-list
+            variant: compact
+          }]
+          className: "h-full min-h-0 flex-1 overflow-y-auto"
+          direction: vertical
+          gap: sm
+          type: stack
+        })
+      CHAT_PICKED -> idle when (not @entity.working)
+        (emit ASSISTANT_CHAT_SELECTED { chatId: ?id })
+        (render-ui main {
+          children: [{
+            children: [{
+              action: NEW_CHAT_CLICKED
+              aria-label: @config.newChatLabel
+              icon: message-square-plus
+              label: @config.newChatLabel
+              size: sm
+              type: button
+              variant: secondary
+            }, {
+              children: [{
+                action: OPEN_CHATS_CLICKED
+                aria-label: @config.chatsLabel
+                label: @config.chatsLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                action: OPEN_MEMORY_CLICKED
+                aria-label: @config.memoryLabel
+                label: @config.memoryLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                children: (array/map @config.links (fn item {
+                  href: @item.href
+                  label: @item.label
+                  size: sm
+                  type: button
+                  variant: ghost
+                }))
+                direction: horizontal
+                gap: xs
+                type: stack
+              }]
+              align: center
+              className: shrink-0
+              direction: horizontal
+              gap: none
+              type: stack
+            }]
+            align: center
+            className: shrink-0
+            direction: horizontal
+            gap: sm
+            justify: between
+            wrap: true
+            type: stack
+          }, {
+            activities: @entity.entries
+            className: flex-1
+            emptyTitle: @config.emptyTitle
+            idPrefix: agent-conversation
+            rawLlmPreferenceKey: agent-conversation-raw-llm
+            type: agent-chat-feed
+            working: @entity.working
+          }, {
+            placeholder: @config.placeholder
+            sendEvent: ASK
+            type: chat-bar
+          }]
+          className: "h-full min-h-0 flex-1"
+          direction: vertical
+          gap: sm
+          type: stack
+        })
+      OPEN_MEMORY_CLICKED -> idle
+        (emit ASSISTANT_MEMORIES_REQUESTED {})
+      MEMORIES_LISTED -> idle
+        (render-ui main {
+          children: [{
+            children: [{
+              action: BACK_TO_CHAT
+              aria-label: @config.backLabel
+              icon: arrow-left
+              label: @config.backLabel
+              size: sm
+              type: button
+              variant: ghost
+            }, {
+              content: @config.memoryLabel
+              type: typography
+              variant: h4
+            }]
+            align: center
+            className: shrink-0
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            emptyMessage: @config.memoryEmptyTitle
+            entity: ?data
+            fields: []
+            gap: sm
+            renderItem: (fn item {
+              children: [{
+                content: @item.content
+                type: typography
+                variant: body
+              }, {
+                color: muted
+                content: @item.createdAt
+                format: date
+                type: typography
+                variant: caption
+              }]
+              direction: vertical
+              gap: none
+              type: stack
+            })
+            type: data-list
+          }]
+          className: "h-full min-h-0 flex-1 overflow-y-auto"
+          direction: vertical
+          gap: sm
+          type: stack
+        })
+      BACK_TO_CHAT -> idle
+        (render-ui main {
+          children: [{
+            children: [{
+              action: NEW_CHAT_CLICKED
+              aria-label: @config.newChatLabel
+              icon: message-square-plus
+              label: @config.newChatLabel
+              size: sm
+              type: button
+              variant: secondary
+            }, {
+              children: [{
+                action: OPEN_CHATS_CLICKED
+                aria-label: @config.chatsLabel
+                label: @config.chatsLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                action: OPEN_MEMORY_CLICKED
+                aria-label: @config.memoryLabel
+                label: @config.memoryLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                children: (array/map @config.links (fn item {
+                  href: @item.href
+                  label: @item.label
+                  size: sm
+                  type: button
+                  variant: ghost
+                }))
+                direction: horizontal
+                gap: xs
+                type: stack
+              }]
+              align: center
+              className: shrink-0
+              direction: horizontal
+              gap: none
+              type: stack
+            }]
+            align: center
+            className: shrink-0
+            direction: horizontal
+            gap: sm
+            justify: between
+            wrap: true
             type: stack
           }, {
             activities: @entity.entries
@@ -366,14 +927,53 @@ orbital AgentSessionOrbital {
         (set @entity.working false)
         (render-ui main {
           children: [{
-            children: (array/map @config.links (fn item {
-              href: @item.href
-              label: @item.label
+            children: [{
+              action: NEW_CHAT_CLICKED
+              aria-label: @config.newChatLabel
+              icon: message-square-plus
+              label: @config.newChatLabel
+              size: sm
               type: button
-              variant: ghost
-            }))
+              variant: secondary
+            }, {
+              children: [{
+                action: OPEN_CHATS_CLICKED
+                aria-label: @config.chatsLabel
+                label: @config.chatsLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                action: OPEN_MEMORY_CLICKED
+                aria-label: @config.memoryLabel
+                label: @config.memoryLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                children: (array/map @config.links (fn item {
+                  href: @item.href
+                  label: @item.label
+                  size: sm
+                  type: button
+                  variant: ghost
+                }))
+                direction: horizontal
+                gap: xs
+                type: stack
+              }]
+              align: center
+              className: shrink-0
+              direction: horizontal
+              gap: none
+              type: stack
+            }]
+            align: center
+            className: shrink-0
             direction: horizontal
             gap: sm
+            justify: between
+            wrap: true
             type: stack
           }, {
             activities: @entity.entries
@@ -396,12 +996,57 @@ orbital AgentSessionOrbital {
     }
 
     emits {
-      SEND -> external {
+      ASSISTANT_HISTORY_REQUESTED -> external {
+      }
+        @description "This conversation view opened; the assistant thread loads the current conversation into it."
+        @synonyms "load history, restore conversation"
+        @tier "domain"
+      ASSISTANT_NEW_CHAT -> external {
+      }
+        @description "The user started a new conversation."
+        @synonyms "new chat, new conversation, start over"
+        @tier "domain"
+      NEW_CHAT_CLICKED {
+      }
+        @description "Start a new conversation."
+        @synonyms "new chat, start over, clear"
+        @tier "presentation"
+      ASSISTANT_SEND -> external {
         message : string!
       }
         @description "The user asked something; AgentThread stores it and asks the assistant."
         @synonyms "ask, send, submit"
         @tier "domain"
+      ASSISTANT_CHATS_REQUESTED -> external {
+      }
+        @description "The user opened the conversation list; the conversation keeper sends the person's conversations."
+        @synonyms "conversations, history, past chats"
+        @tier "domain"
+      ASSISTANT_CHAT_SELECTED -> external {
+        chatId : string!
+      }
+        @description "The user picked a past conversation to reopen."
+        @synonyms "open conversation, reopen chat"
+        @tier "domain"
+      ASSISTANT_MEMORIES_REQUESTED -> external {
+      }
+        @description "The user opened what the assistant remembers; the assistant's memory sends it."
+        @synonyms "memories, what I remember"
+        @tier "domain"
+      OPEN_CHATS_CLICKED {
+      }
+        @description "Show past conversations."
+        @tier "presentation"
+      OPEN_MEMORY_CLICKED {
+      }
+        @description "Show what the assistant remembers."
+        @tier "presentation"
+      CHAT_PICKED {
+        id : string!
+        row : AgentChatRow
+      }
+        @description "Reopen the picked conversation."
+        @tier "presentation"
       ASK {
         message : string!
       }
@@ -411,8 +1056,24 @@ orbital AgentSessionOrbital {
     }
 
     listens {
-      AgentThread.AgentMessagesLoaded -> THREAD_LOADED
-      AgentThread.THREAD_FAILED -> REPLY_FAILED
+      *.AgentMessagesLoaded -> THREAD_LOADED
+      *.ASSISTANT_THREAD_FAILED -> REPLY_FAILED
+      *.ASSISTANT_STEP -> STEP
+      *.ASSISTANT_REPLIED -> REPLIED
+      *.ASSISTANT_REPLY_FAILED -> REPLY_FAILED
+      *.ASSISTANT_CHATS_LOADED -> CHATS_LISTED
+      *.ASSISTANT_MEMORIES_LOADED -> MEMORIES_LISTED
+      CHATS_LISTED {
+        data : [AgentChatRow]
+      }
+        @description "Show the person's conversations to pick from."
+      MEMORIES_LISTED {
+        data : [AgentMemoryRow]
+      }
+        @description "Show what the assistant remembers."
+      BACK_TO_CHAT {
+      }
+        @description "Back to the conversation."
       THREAD_LOADED {
         data : [AgentThreadRow]
       }
@@ -434,4 +1095,370 @@ orbital AgentSessionOrbital {
   }
 
   page "/agent-session" as AgentSessionPage -> AgentConversation, AgentThread
+}
+
+;; Conversations: each person's kept chats, the current one (most recently
+;; used) and the list of past ones.
+orbital AgentChatsOrbital {
+  type ChatReadyForSend = Event AgentChat "Fired when the current conversation exists and is marked active"
+  type NewChatStarted = Event AgentChat "Fired after a new conversation persists"
+  type ChatSelected = Event AgentChat "Fired after a past conversation is reopened"
+
+  entity AgentChat [persistent: agentChats] {
+    id : string!
+    ownerId : string! @description "Whose conversation this is (the real @user). The binding organism scopes @read to it." @synonyms "user, owner, account"
+    title : string @description "The conversation's first request, shown in the conversation list; empty until the first message." @synonyms "name, subject, topic" = ""
+    startedAt : number @description "When the conversation started (ms)." @synonyms "created, opened" = 0
+    lastActiveAt : number @description "When the conversation was last used (ms). The most recent one is the current conversation." @synonyms "last used, updated, recent" = 0
+    pendingMessage : string @intrinsic = ""
+    pendingReply : string @intrinsic = ""
+  }
+
+  ;; Which conversation is current: each person's most recently used AgentChat.
+  ;; It starts, reopens and touches conversations and tells AgentThread which
+  ;; one a request belongs to, so only this trait (bound to AgentChat) touches
+  ;; conversation rows.
+  trait AgentChatKeeper -> @rebindable AgentChat [lifecycle] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LOAD_HISTORY -> ready
+        (fetch AgentChat {
+          emit: { failure: AgentChatsLoadFailed, success: ChatsForHistory }
+        })
+      ChatsForHistory -> ready
+        (emit ASSISTANT_CHAT_OPENED { chatId: (if [">", (array/len ?data), 0] (object/get (array/first (array/sort ?data lastActiveAt desc)) id) "") })
+      SEND -> ready when (not ["=", (str/default ?message ""), ""])
+        (set @entity.pendingMessage ?message)
+        (fetch AgentChat {
+          emit: { failure: AgentChatsLoadFailed, success: ChatsForSend }
+        })
+      ChatsForSend -> ready when ["=", (array/len ?data), 0]
+        (persist create AgentChat {
+          ownerId: @user.id
+          title: @entity.pendingMessage
+          startedAt: @now
+          lastActiveAt: @now
+        } {
+          emit: { failure: AgentChatsLoadFailed, success: ChatReadyForSend }
+        })
+      ChatsForSend -> ready when [">", (array/len ?data), 0]
+        (persist update AgentChat {
+          id: (object/get (array/first (array/sort ?data lastActiveAt desc)) id)
+          ownerId: (object/get (array/first (array/sort ?data lastActiveAt desc)) ownerId)
+          title: (if ["=", (str/default (object/get (array/first (array/sort ?data lastActiveAt desc)) title) ""), ""] @entity.pendingMessage (object/get (array/first (array/sort ?data lastActiveAt desc)) title))
+          startedAt: (object/get (array/first (array/sort ?data lastActiveAt desc)) startedAt)
+          lastActiveAt: @now
+        } {
+          emit: { failure: AgentChatsLoadFailed, success: ChatReadyForSend }
+        })
+      ChatReadyForSend -> ready
+        (emit ASSISTANT_SEND_IN_CHAT { chatId: ?id, message: @entity.pendingMessage })
+        (emit ASSISTANT_CHATS_CHANGED {})
+      REPLIED -> ready
+        (set @entity.pendingReply ?reply)
+        (fetch AgentChat {
+          emit: { failure: AgentChatsLoadFailed, success: ChatsForReply }
+        })
+      ChatsForReply -> ready
+        (emit ASSISTANT_REPLY_IN_CHAT { chatId: (if [">", (array/len ?data), 0] (object/get (array/first (array/sort ?data lastActiveAt desc)) id) ""), reply: @entity.pendingReply })
+      NEW_CHAT -> ready
+        (persist create AgentChat {
+          ownerId: @user.id
+          title: ""
+          startedAt: @now
+          lastActiveAt: @now
+        } {
+          emit: { failure: AgentChatsLoadFailed, success: NewChatStarted }
+        })
+      NewChatStarted -> ready
+        (emit ASSISTANT_CHAT_OPENED { chatId: ?id })
+        (emit ASSISTANT_CHATS_CHANGED {})
+      SELECT_CHAT -> ready
+        (fetch AgentChat {
+          emit: { failure: AgentChatsLoadFailed, success: ChatsForSelect }
+          filter: ["=", (object/get @entity id), ?chatId]
+        })
+      ChatsForSelect -> ready when [">", (array/len ?data), 0]
+        (persist update AgentChat {
+          id: (object/get (array/first ?data) id)
+          ownerId: (object/get (array/first ?data) ownerId)
+          title: (object/get (array/first ?data) title)
+          startedAt: (object/get (array/first ?data) startedAt)
+          lastActiveAt: @now
+        } {
+          emit: { failure: AgentChatsLoadFailed, success: ChatSelected }
+        })
+      ChatSelected -> ready
+        (emit ASSISTANT_CHAT_OPENED { chatId: ?id })
+        (emit ASSISTANT_CHATS_CHANGED {})
+      LIST_CHATS -> ready
+        (fetch AgentChat {
+          emit: { failure: AgentChatsLoadFailed, success: ChatsForList }
+        })
+      ChatsForList -> ready
+        (emit ASSISTANT_CHATS_LOADED { data: (array/map (array/sort ?data lastActiveAt desc) (fn item { id: @item.id, title: @item.title, lastActiveAt: @item.lastActiveAt })) })
+      AgentChatsLoadFailed -> ready
+        (emit ASSISTANT_THREAD_FAILED { error: ?error })
+        (render-ui toast {
+          message: ?error
+          type: alert
+          variant: error
+        })
+    }
+
+    emits {
+      ASSISTANT_CHAT_OPENED -> external {
+        chatId : string
+      }
+        @description "This conversation is now the current one (empty for none yet); AgentThread loads its messages."
+        @tier "internal"
+      ASSISTANT_SEND_IN_CHAT -> external {
+        chatId : string!
+        message : string!
+      }
+        @description "The user's message, placed in the current conversation."
+        @tier "internal"
+      ASSISTANT_REPLY_IN_CHAT -> external {
+        chatId : string
+        reply : string!
+      }
+        @description "The assistant's answer, placed in the current conversation."
+        @tier "internal"
+      ASSISTANT_CHATS_CHANGED -> external {
+      }
+        @description "A conversation was started, used or reopened; the conversation list refreshes."
+        @synonyms "conversations changed, history changed"
+        @tier "domain"
+      ASSISTANT_THREAD_FAILED -> external {
+        error : string!
+      }
+        @description "A conversation could not be loaded or stored."
+        @tier "domain"
+      ASSISTANT_CHATS_LOADED -> external {
+        data : [AgentChatRow]!
+      }
+        @description "The person's conversations, most recently used first."
+        @synonyms "conversations, history"
+        @tier "domain"
+      ChatsForList -> internal {
+        data : [AgentChat]
+      }
+        @tier "internal"
+      ChatsForHistory -> internal {
+        data : [AgentChat]
+      }
+        @tier "internal"
+      ChatsForSend -> internal {
+        data : [AgentChat]
+      }
+        @tier "internal"
+      ChatsForReply -> internal {
+        data : [AgentChat]
+      }
+        @tier "internal"
+      ChatsForSelect -> internal {
+        data : [AgentChat]
+      }
+        @tier "internal"
+      ChatReadyForSend
+        @description "The current conversation exists and is marked active — payload is the AgentChat row."
+        @tier "internal"
+      NewChatStarted
+        @description "A new conversation started — payload is the AgentChat row."
+        @tier "internal"
+      ChatSelected
+        @description "A past conversation was reopened — payload is the AgentChat row."
+        @tier "internal"
+      AgentChatsLoadFailed -> external {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      *.ASSISTANT_SEND -> SEND
+      *.ASSISTANT_HISTORY_REQUESTED -> LOAD_HISTORY
+      *.ASSISTANT_NEW_CHAT -> NEW_CHAT
+      *.ASSISTANT_CHAT_SELECTED -> SELECT_CHAT
+      *.ASSISTANT_REPLIED -> REPLIED
+      *.ASSISTANT_CHATS_REQUESTED -> LIST_CHATS
+      LIST_CHATS {
+      }
+        @description "Send the person's conversations to the conversation list."
+      SEND {
+        message : string!
+      }
+        @description "The user asked something; place it in the current conversation."
+      REPLIED {
+        reply : string!
+      }
+        @description "The assistant answered; place the answer in the current conversation."
+      LOAD_HISTORY {
+      }
+        @description "A conversation view opened; open the current conversation."
+      NEW_CHAT {
+      }
+        @description "Start a new conversation; the previous one stays in the list."
+      SELECT_CHAT {
+        chatId : string!
+      }
+        @description "Reopen a past conversation and make it the current one."
+    }
+  }
+
+  trait AgentChatList -> @rebindable AgentChat [interaction, instance] {
+    config {
+      newChatLabel : string = "New conversation"
+        @label "New conversation button"
+        @tier "presentation"
+      untitledLabel : string = "New conversation"
+        @label "Name of a conversation with no messages yet"
+        @tier "presentation"
+    }
+    initial: loading
+
+    state loading {
+      INIT -> loading
+        (fetch AgentChat {
+          emit: { failure: AgentChatsLoadFailed, success: AgentChatsLoaded }
+        })
+        (render-ui main { type: skeleton, variant: list, rows: 4 })
+      AgentChatsLoaded -> browsing
+        (render-ui main {
+          children: [{
+            action: NEW_CHAT_CLICKED
+            aria-label: @config.newChatLabel
+            className: w-full
+            icon: message-square-plus
+            label: @config.newChatLabel
+            type: button
+            variant: secondary
+          }, {
+            emptyDescription: "Your conversations with the assistant appear here."
+            emptyIcon: messages-square
+            emptyTitle: "No conversations yet"
+            entity: (array/sort ?data lastActiveAt desc)
+            itemClickEvent: OPEN_CHAT
+            renderItem: (fn item {
+              children: [{
+                className: truncate
+                content: (if ["=", (str/default @item.title ""), ""] @config.untitledLabel @item.title)
+                type: typography
+                variant: body
+              }]
+              direction: vertical
+              gap: none
+              type: stack
+            })
+            type: data-list
+            variant: compact
+          }]
+          className: "h-full min-h-0 overflow-y-auto"
+          direction: vertical
+          gap: sm
+          type: stack
+        })
+      AgentChatsLoadFailed -> browsing
+        (render-ui main { message: ?error, title: "Couldn't load your conversations", type: alert, variant: error })
+    }
+
+    state browsing {
+      INIT -> loading
+        (fetch AgentChat {
+          emit: { failure: AgentChatsLoadFailed, success: AgentChatsLoaded }
+        })
+        (render-ui main { type: skeleton, variant: list, rows: 4 })
+      CHATS_CHANGED -> browsing
+        (fetch AgentChat {
+          emit: { failure: AgentChatsLoadFailed, success: AgentChatsLoaded }
+        })
+      AgentChatsLoaded -> browsing
+        (render-ui main {
+          children: [{
+            action: NEW_CHAT_CLICKED
+            aria-label: @config.newChatLabel
+            className: w-full
+            icon: message-square-plus
+            label: @config.newChatLabel
+            type: button
+            variant: secondary
+          }, {
+            emptyDescription: "Your conversations with the assistant appear here."
+            emptyIcon: messages-square
+            emptyTitle: "No conversations yet"
+            entity: (array/sort ?data lastActiveAt desc)
+            itemClickEvent: OPEN_CHAT
+            renderItem: (fn item {
+              children: [{
+                className: truncate
+                content: (if ["=", (str/default @item.title ""), ""] @config.untitledLabel @item.title)
+                type: typography
+                variant: body
+              }]
+              direction: vertical
+              gap: none
+              type: stack
+            })
+            type: data-list
+            variant: compact
+          }]
+          className: "h-full min-h-0 overflow-y-auto"
+          direction: vertical
+          gap: sm
+          type: stack
+        })
+      AgentChatsLoadFailed -> browsing
+        (render-ui main { message: ?error, title: "Couldn't load your conversations", type: alert, variant: error })
+      OPEN_CHAT -> browsing
+        (emit ASSISTANT_CHAT_SELECTED { chatId: ?id })
+      NEW_CHAT_CLICKED -> browsing
+        (emit ASSISTANT_NEW_CHAT {})
+    }
+
+    emits {
+      ASSISTANT_CHAT_SELECTED -> external {
+        chatId : string!
+      }
+        @description "The user reopened a past conversation."
+        @synonyms "open conversation, switch conversation"
+        @tier "domain"
+      ASSISTANT_NEW_CHAT -> external {
+      }
+        @description "The user started a new conversation."
+        @synonyms "new chat, new conversation, start over"
+        @tier "domain"
+      AgentChatsLoaded -> external {
+        data : [AgentChat]
+      }
+        @tier "internal"
+      AgentChatsLoadFailed -> external {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      *.ASSISTANT_CHATS_CHANGED -> CHATS_CHANGED
+      CHATS_CHANGED {
+      }
+        @description "A conversation was started, used or reopened."
+      OPEN_CHAT {
+        id : string!
+        row : AgentChat
+      }
+        @description "Reopen this conversation."
+        @synonyms "open, select, switch"
+        @tier "presentation"
+      NEW_CHAT_CLICKED {
+      }
+        @description "Start a new conversation."
+        @tier "presentation"
+    }
+  }
+
+  page "/agent-session/chats" as AgentChatsPage -> AgentChatList, AgentChatKeeper
 }

@@ -1,5 +1,5 @@
 app std-learn-sim-3d "1.0.0"
-"Generic 3D simulation-transport (clock) instrument. Contract: the atom owns the transport and the clock but NOT the physics — Run/Pause/Reset plus a 0.5x/1x/2x/4x speed row drive a running flag and speed multiplier, and a 32ms tick advances steps and simTime by dt x speedMultiplier, emitting SIM_3D_TICK { dt, simTime } each step WITHOUT rendering; a composed sibling trait transitions directly on the SIM_3D_TICK / SIM_3D_UPDATED broadcasts (the same bare-event cascade the lab routers use), applies the domain physics, and owns the scene render — this atom renders no canvas. A caption readout shows steps, sim time, and current speed. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+"Generic 3D simulation-transport (clock) instrument. Contract: the atom owns the transport and the clock but NOT the physics — a Play/Pause toggle, Reset and a SPEED_SET 0.5x/1x/2x/4x group (legacy RUN, PAUSE and SPEED_HALF/NORMAL/DOUBLE/QUAD events are still honored) drive a running flag and speed multiplier, and a 32ms tick advances steps and simTime by dt x speedMultiplier, emitting SIM_3D_TICK { dt, simTime } each step WITHOUT rendering; a composed sibling trait transitions directly on the SIM_3D_TICK / SIM_3D_UPDATED broadcasts (the same bare-event cascade the lab routers use), applies the domain physics, and owns the scene render — this atom renders no canvas. A caption readout shows steps, sim time, and current speed. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
 orbital LearnSim3DOrbital {
   entity Learn3DSimScene [runtime] {
     id : string!
@@ -27,23 +27,33 @@ orbital LearnSim3DOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: SPEED_HALF, label: "0.5x", variant: ghost },
-                    { type: button, action: SPEED_NORMAL, label: "1x", variant: ghost },
-                    { type: button, action: SPEED_DOUBLE, label: "2x", variant: ghost },
-                    { type: button, action: SPEED_QUAD, label: "4x", variant: ghost }
-                  ] },
-                { type: typography, variant: caption, content: (str/concat "Steps: " @entity.steps " — sim time: " (math/round @entity.simTime 1) " s — speed: " @entity.speedMultiplier "x") }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speedMultiplier 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speedMultiplier 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speedMultiplier 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speedMultiplier 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Step " @entity.steps " · " (math/round @entity.simTime 1) " s") }
+                  ] }
               ] }
           ]
         })
         (emit SIM_3D_UPDATED { running: @entity.running, speedMultiplier: @entity.speedMultiplier, steps: @entity.steps, simTime: @entity.simTime })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (set @entity.running false)
+        (render-ui main null)
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (set @entity.active true)
@@ -57,19 +67,84 @@ orbital LearnSim3DOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: SPEED_HALF, label: "0.5x", variant: ghost },
-                    { type: button, action: SPEED_NORMAL, label: "1x", variant: ghost },
-                    { type: button, action: SPEED_DOUBLE, label: "2x", variant: ghost },
-                    { type: button, action: SPEED_QUAD, label: "4x", variant: ghost }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speedMultiplier 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speedMultiplier 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speedMultiplier 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speedMultiplier 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Step " @entity.steps " · " (math/round @entity.simTime 1) " s") }
+                  ] }
+              ] }
+          ]
+        })
+        (emit SIM_3D_UPDATED { running: @entity.running, speedMultiplier: @entity.speedMultiplier, steps: @entity.steps, simTime: @entity.simTime })
+
+      TOGGLE_RUN -> idle when (== @entity.active true)
+        (set @entity.running (not @entity.running))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
-                { type: typography, variant: caption, content: (str/concat "Steps: " @entity.steps " — sim time: " (math/round @entity.simTime 1) " s — speed: " @entity.speedMultiplier "x") }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speedMultiplier 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speedMultiplier 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speedMultiplier 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speedMultiplier 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Step " @entity.steps " · " (math/round @entity.simTime 1) " s") }
+                  ] }
+              ] }
+          ]
+        })
+        (emit SIM_3D_UPDATED { running: @entity.running, speedMultiplier: @entity.speedMultiplier, steps: @entity.steps, simTime: @entity.simTime })
+
+      SPEED_SET -> idle when (== @entity.active true)
+        (set @entity.speedMultiplier ?speed)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speedMultiplier 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speedMultiplier 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speedMultiplier 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speedMultiplier 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Step " @entity.steps " · " (math/round @entity.simTime 1) " s") }
+                  ] }
               ] }
           ]
         })
@@ -82,19 +157,24 @@ orbital LearnSim3DOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: SPEED_HALF, label: "0.5x", variant: ghost },
-                    { type: button, action: SPEED_NORMAL, label: "1x", variant: ghost },
-                    { type: button, action: SPEED_DOUBLE, label: "2x", variant: ghost },
-                    { type: button, action: SPEED_QUAD, label: "4x", variant: ghost }
-                  ] },
-                { type: typography, variant: caption, content: (str/concat "Steps: " @entity.steps " — sim time: " (math/round @entity.simTime 1) " s — speed: " @entity.speedMultiplier "x") }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speedMultiplier 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speedMultiplier 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speedMultiplier 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speedMultiplier 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Step " @entity.steps " · " (math/round @entity.simTime 1) " s") }
+                  ] }
               ] }
           ]
         })
@@ -107,19 +187,24 @@ orbital LearnSim3DOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: SPEED_HALF, label: "0.5x", variant: ghost },
-                    { type: button, action: SPEED_NORMAL, label: "1x", variant: ghost },
-                    { type: button, action: SPEED_DOUBLE, label: "2x", variant: ghost },
-                    { type: button, action: SPEED_QUAD, label: "4x", variant: ghost }
-                  ] },
-                { type: typography, variant: caption, content: (str/concat "Steps: " @entity.steps " — sim time: " (math/round @entity.simTime 1) " s — speed: " @entity.speedMultiplier "x") }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speedMultiplier 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speedMultiplier 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speedMultiplier 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speedMultiplier 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Step " @entity.steps " · " (math/round @entity.simTime 1) " s") }
+                  ] }
               ] }
           ]
         })
@@ -135,19 +220,24 @@ orbital LearnSim3DOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: SPEED_HALF, label: "0.5x", variant: ghost },
-                    { type: button, action: SPEED_NORMAL, label: "1x", variant: ghost },
-                    { type: button, action: SPEED_DOUBLE, label: "2x", variant: ghost },
-                    { type: button, action: SPEED_QUAD, label: "4x", variant: ghost }
-                  ] },
-                { type: typography, variant: caption, content: (str/concat "Steps: " @entity.steps " — sim time: " (math/round @entity.simTime 1) " s — speed: " @entity.speedMultiplier "x") }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speedMultiplier 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speedMultiplier 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speedMultiplier 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speedMultiplier 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Step " @entity.steps " · " (math/round @entity.simTime 1) " s") }
+                  ] }
               ] }
           ]
         })
@@ -160,19 +250,24 @@ orbital LearnSim3DOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: SPEED_HALF, label: "0.5x", variant: ghost },
-                    { type: button, action: SPEED_NORMAL, label: "1x", variant: ghost },
-                    { type: button, action: SPEED_DOUBLE, label: "2x", variant: ghost },
-                    { type: button, action: SPEED_QUAD, label: "4x", variant: ghost }
-                  ] },
-                { type: typography, variant: caption, content: (str/concat "Steps: " @entity.steps " — sim time: " (math/round @entity.simTime 1) " s — speed: " @entity.speedMultiplier "x") }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speedMultiplier 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speedMultiplier 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speedMultiplier 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speedMultiplier 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Step " @entity.steps " · " (math/round @entity.simTime 1) " s") }
+                  ] }
               ] }
           ]
         })
@@ -185,19 +280,24 @@ orbital LearnSim3DOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: SPEED_HALF, label: "0.5x", variant: ghost },
-                    { type: button, action: SPEED_NORMAL, label: "1x", variant: ghost },
-                    { type: button, action: SPEED_DOUBLE, label: "2x", variant: ghost },
-                    { type: button, action: SPEED_QUAD, label: "4x", variant: ghost }
-                  ] },
-                { type: typography, variant: caption, content: (str/concat "Steps: " @entity.steps " — sim time: " (math/round @entity.simTime 1) " s — speed: " @entity.speedMultiplier "x") }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speedMultiplier 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speedMultiplier 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speedMultiplier 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speedMultiplier 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Step " @entity.steps " · " (math/round @entity.simTime 1) " s") }
+                  ] }
               ] }
           ]
         })
@@ -210,19 +310,24 @@ orbital LearnSim3DOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: SPEED_HALF, label: "0.5x", variant: ghost },
-                    { type: button, action: SPEED_NORMAL, label: "1x", variant: ghost },
-                    { type: button, action: SPEED_DOUBLE, label: "2x", variant: ghost },
-                    { type: button, action: SPEED_QUAD, label: "4x", variant: ghost }
-                  ] },
-                { type: typography, variant: caption, content: (str/concat "Steps: " @entity.steps " — sim time: " (math/round @entity.simTime 1) " s — speed: " @entity.speedMultiplier "x") }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speedMultiplier 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speedMultiplier 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speedMultiplier 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speedMultiplier 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Step " @entity.steps " · " (math/round @entity.simTime 1) " s") }
+                  ] }
               ] }
           ]
         })
@@ -235,19 +340,24 @@ orbital LearnSim3DOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: RUN, label: "Run", variant: primary },
-                    { type: button, action: PAUSE, label: "Pause", variant: secondary },
-                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: SPEED_HALF, label: "0.5x", variant: ghost },
-                    { type: button, action: SPEED_NORMAL, label: "1x", variant: ghost },
-                    { type: button, action: SPEED_DOUBLE, label: "2x", variant: ghost },
-                    { type: button, action: SPEED_QUAD, label: "4x", variant: ghost }
-                  ] },
-                { type: typography, variant: caption, content: (str/concat "Steps: " @entity.steps " — sim time: " (math/round @entity.simTime 1) " s — speed: " @entity.speedMultiplier "x") }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speedMultiplier 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speedMultiplier 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speedMultiplier 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speedMultiplier 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speedMultiplier 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Step " @entity.steps " · " (math/round @entity.simTime 1) " s") }
+                  ] }
               ] }
           ]
         })
@@ -268,6 +378,11 @@ orbital LearnSim3DOrbital {
     }
 
     listens {
+      SPEED_SET {
+        speed : number
+      }
+        @description "The learner picked a playback speed; the clock advances that many times faster."
+        @tier "presentation"
       MODE_SELECTED {
         mode : string
       }
@@ -301,7 +416,11 @@ orbital LearnSim3DOrbital {
         @tier "presentation"
       title : string = "3D Simulation"
         @label "Title"
-        @description "Title shown above the transport controls."
+        @description "The instrument's name, the header's one hero."
+        @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line."
         @tier "presentation"
       dt : number = 0.02
         @label "Timestep"

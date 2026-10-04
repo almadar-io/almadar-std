@@ -196,38 +196,43 @@
                     "right"
                   ]
                 },
-                "color": {
-                  "name": "color",
-                  "required": true,
-                  "type": "string"
-                },
-                "fill": {
-                  "name": "fill",
+                "fillStyle": {
+                  "name": "fillStyle",
                   "required": false,
                   "type": "string"
                 },
-                "fontSize": {
-                  "name": "fontSize",
+                "fillTone": {
+                  "name": "fillTone",
                   "required": false,
-                  "type": "number"
+                  "type": "string"
                 },
                 "id": {
                   "name": "id",
                   "required": true,
                   "type": "string"
                 },
-                "lineWidth": {
-                  "name": "lineWidth",
-                  "required": false,
-                  "type": "number"
-                },
                 "radius": {
                   "name": "radius",
                   "required": false,
                   "type": "number"
                 },
+                "stroke": {
+                  "name": "stroke",
+                  "required": false,
+                  "type": "string"
+                },
                 "text": {
                   "name": "text",
+                  "required": false,
+                  "type": "string"
+                },
+                "textSize": {
+                  "name": "textSize",
+                  "required": false,
+                  "type": "string"
+                },
+                "tone": {
+                  "name": "tone",
                   "required": false,
                   "type": "string"
                 },
@@ -288,7 +293,7 @@
           "category": "interaction",
           "config": {
             "backgroundColor": {
-              "default": "#f8fafc",
+              "default": "",
               "label": "Background Color",
               "tier": "presentation",
               "type": "string"
@@ -300,7 +305,7 @@
               "type": "number"
             },
             "hitColor": {
-              "default": "#16a34a",
+              "default": "success",
               "description": "Color of the highlight ring drawn around the target once found.",
               "label": "Hit Ring Color",
               "tier": "presentation",
@@ -371,7 +376,7 @@
             "shapes": {
               "default": [
                 {
-                  "color": "#8b5cf6",
+                  "color": "series-1",
                   "id": "nucleus",
                   "label": "Nucleus",
                   "radius": 34.0,
@@ -379,7 +384,7 @@
                   "y": 170.0
                 },
                 {
-                  "color": "#3b82f6",
+                  "color": "series-2",
                   "id": "membrane",
                   "label": "Membrane",
                   "radius": 26.0,
@@ -387,7 +392,7 @@
                   "y": 120.0
                 },
                 {
-                  "color": "#f59e0b",
+                  "color": "series-3",
                   "id": "mitochondrion",
                   "label": "Mitochondrion",
                   "radius": 24.0,
@@ -395,7 +400,7 @@
                   "y": 120.0
                 },
                 {
-                  "color": "#16a34a",
+                  "color": "series-4",
                   "id": "ribosome",
                   "label": "Ribosome",
                   "radius": 18.0,
@@ -403,7 +408,7 @@
                   "y": 280.0
                 },
                 {
-                  "color": "#06b6d4",
+                  "color": "series-5",
                   "id": "vacuole",
                   "label": "Vacuole",
                   "radius": 28.0,
@@ -450,6 +455,13 @@
               "label": "Hotspots",
               "tier": "domain",
               "type": "[HotspotShape]"
+            },
+            "summary": {
+              "default": "",
+              "description": "One line under the title saying what is being identified (keep it under ~65 characters). Empty shows no line.",
+              "label": "Concept",
+              "tier": "presentation",
+              "type": "string"
             },
             "title": {
               "default": "Tap the Part",
@@ -813,17 +825,12 @@
                             "fn",
                             "s",
                             {
-                              "color": [
+                              "fillStyle": "solid",
+                              "fillTone": [
                                 "object/get",
                                 "@s",
                                 "color",
-                                "#3b82f6"
-                              ],
-                              "fill": [
-                                "object/get",
-                                "@s",
-                                "color",
-                                "#3b82f6"
+                                "series-1"
                               ],
                               "id": [
                                 "object/get",
@@ -835,6 +842,12 @@
                                 "@s",
                                 "radius",
                                 22.0
+                              ],
+                              "tone": [
+                                "object/get",
+                                "@s",
+                                "color",
+                                "series-1"
                               ],
                               "type": "circle",
                               "x": [
@@ -861,8 +874,6 @@
                             "s",
                             {
                               "align": "center",
-                              "color": "#0f172a",
-                              "fontSize": 12.0,
                               "id": [
                                 "str/concat",
                                 "label-",
@@ -877,6 +888,8 @@
                                 "@s",
                                 "label"
                               ],
+                              "textSize": "xs",
+                              "tone": "label",
                               "type": "text",
                               "x": [
                                 "object/get",
@@ -1011,6 +1024,11 @@
                             "backgroundColor": "@config.backgroundColor",
                             "height": "@config.height",
                             "interactive": true,
+                            "keyMap": {
+                              "ArrowRight": "NEXT",
+                              "KeyR": "RETRY",
+                              "Space": "NEXT"
+                            },
                             "onShapeClick": "TAP_SHAPE",
                             "shapes": "@entity.canvasShapes",
                             "type": "learning-canvas",
@@ -1021,7 +1039,7 @@
                               {
                                 "content": "@entity.feedback",
                                 "type": "typography",
-                                "variant": "caption"
+                                "variant": "body"
                               }
                             ],
                             "direction": "horizontal",
@@ -1029,6 +1047,7 @@
                             "type": "stack"
                           },
                           {
+                            "align": "center",
                             "children": [
                               {
                                 "action": "NEXT",
@@ -1038,20 +1057,28 @@
                                   false,
                                   true
                                 ],
+                                "icon": "chevron-right",
                                 "label": "@config.nextLabel",
                                 "type": "button",
                                 "variant": "primary"
+                              },
+                              {
+                                "color": "muted",
+                                "content": [
+                                  "str/concat",
+                                  "First-try ",
+                                  "@entity.score",
+                                  " of ",
+                                  "@entity.totalPrompts"
+                                ],
+                                "type": "typography",
+                                "variant": "caption"
                               }
                             ],
                             "direction": "horizontal",
                             "gap": "sm",
-                            "type": "stack"
-                          },
-                          {
-                            "label": "First-try score",
-                            "max": "@entity.totalPrompts",
-                            "type": "stat-display",
-                            "value": "@entity.score"
+                            "type": "stack",
+                            "wrap": true
                           }
                         ]
                       ]
@@ -1065,9 +1092,89 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.done",
+                                    "Round complete",
+                                    [
+                                      "if",
+                                      "@entity.found",
+                                      "Correct",
+                                      [
+                                        "if",
+                                        [
+                                          ">",
+                                          "@entity.tries",
+                                          0.0
+                                        ],
+                                        "Try again",
+                                        [
+                                          "str/concat",
+                                          "Score ",
+                                          "@entity.score",
+                                          " / ",
+                                          "@entity.totalPrompts"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.done",
+                                    "primary",
+                                    [
+                                      "if",
+                                      "@entity.found",
+                                      "success",
+                                      [
+                                        "if",
+                                        [
+                                          ">",
+                                          "@entity.tries",
+                                          0.0
+                                        ],
+                                        "error",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "label": [
@@ -1128,6 +1235,43 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01M075812JWBR49NJTVRXS2MWY",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@config.matchMode",
+                      ""
+                    ]
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
                     "let",
                     [
                       [
@@ -1147,17 +1291,12 @@
                             "fn",
                             "s",
                             {
-                              "color": [
+                              "fillStyle": "solid",
+                              "fillTone": [
                                 "object/get",
                                 "@s",
                                 "color",
-                                "#3b82f6"
-                              ],
-                              "fill": [
-                                "object/get",
-                                "@s",
-                                "color",
-                                "#3b82f6"
+                                "series-1"
                               ],
                               "id": [
                                 "object/get",
@@ -1169,6 +1308,12 @@
                                 "@s",
                                 "radius",
                                 22.0
+                              ],
+                              "tone": [
+                                "object/get",
+                                "@s",
+                                "color",
+                                "series-1"
                               ],
                               "type": "circle",
                               "x": [
@@ -1195,8 +1340,6 @@
                             "s",
                             {
                               "align": "center",
-                              "color": "#0f172a",
-                              "fontSize": 12.0,
                               "id": [
                                 "str/concat",
                                 "label-",
@@ -1211,6 +1354,8 @@
                                 "@s",
                                 "label"
                               ],
+                              "textSize": "xs",
+                              "tone": "label",
                               "type": "text",
                               "x": [
                                 "object/get",
@@ -1345,6 +1490,11 @@
                             "backgroundColor": "@config.backgroundColor",
                             "height": "@config.height",
                             "interactive": true,
+                            "keyMap": {
+                              "ArrowRight": "NEXT",
+                              "KeyR": "RETRY",
+                              "Space": "NEXT"
+                            },
                             "onShapeClick": "TAP_SHAPE",
                             "shapes": "@entity.canvasShapes",
                             "type": "learning-canvas",
@@ -1355,7 +1505,7 @@
                               {
                                 "content": "@entity.feedback",
                                 "type": "typography",
-                                "variant": "caption"
+                                "variant": "body"
                               }
                             ],
                             "direction": "horizontal",
@@ -1363,6 +1513,7 @@
                             "type": "stack"
                           },
                           {
+                            "align": "center",
                             "children": [
                               {
                                 "action": "NEXT",
@@ -1372,20 +1523,28 @@
                                   false,
                                   true
                                 ],
+                                "icon": "chevron-right",
                                 "label": "@config.nextLabel",
                                 "type": "button",
                                 "variant": "primary"
+                              },
+                              {
+                                "color": "muted",
+                                "content": [
+                                  "str/concat",
+                                  "First-try ",
+                                  "@entity.score",
+                                  " of ",
+                                  "@entity.totalPrompts"
+                                ],
+                                "type": "typography",
+                                "variant": "caption"
                               }
                             ],
                             "direction": "horizontal",
                             "gap": "sm",
-                            "type": "stack"
-                          },
-                          {
-                            "label": "First-try score",
-                            "max": "@entity.totalPrompts",
-                            "type": "stat-display",
-                            "value": "@entity.score"
+                            "type": "stack",
+                            "wrap": true
                           }
                         ]
                       ]
@@ -1399,9 +1558,89 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.done",
+                                    "Round complete",
+                                    [
+                                      "if",
+                                      "@entity.found",
+                                      "Correct",
+                                      [
+                                        "if",
+                                        [
+                                          ">",
+                                          "@entity.tries",
+                                          0.0
+                                        ],
+                                        "Try again",
+                                        [
+                                          "str/concat",
+                                          "Score ",
+                                          "@entity.score",
+                                          " / ",
+                                          "@entity.totalPrompts"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.done",
+                                    "primary",
+                                    [
+                                      "if",
+                                      "@entity.found",
+                                      "success",
+                                      [
+                                        "if",
+                                        [
+                                          ">",
+                                          "@entity.tries",
+                                          0.0
+                                        ],
+                                        "error",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "label": [
@@ -1544,17 +1783,12 @@
                             "fn",
                             "s",
                             {
-                              "color": [
+                              "fillStyle": "solid",
+                              "fillTone": [
                                 "object/get",
                                 "@s",
                                 "color",
-                                "#3b82f6"
-                              ],
-                              "fill": [
-                                "object/get",
-                                "@s",
-                                "color",
-                                "#3b82f6"
+                                "series-1"
                               ],
                               "id": [
                                 "object/get",
@@ -1566,6 +1800,12 @@
                                 "@s",
                                 "radius",
                                 22.0
+                              ],
+                              "tone": [
+                                "object/get",
+                                "@s",
+                                "color",
+                                "series-1"
                               ],
                               "type": "circle",
                               "x": [
@@ -1592,8 +1832,6 @@
                             "s",
                             {
                               "align": "center",
-                              "color": "#0f172a",
-                              "fontSize": 12.0,
                               "id": [
                                 "str/concat",
                                 "label-",
@@ -1608,6 +1846,8 @@
                                 "@s",
                                 "label"
                               ],
+                              "textSize": "xs",
+                              "tone": "label",
                               "type": "text",
                               "x": [
                                 "object/get",
@@ -1640,10 +1880,8 @@
                           "@hit",
                           [
                             {
-                              "color": "@config.hitColor",
-                              "fill": "transparent",
+                              "fillStyle": "outline",
                               "id": "hit-ring",
-                              "lineWidth": 4.0,
                               "radius": [
                                 "+",
                                 [
@@ -1654,6 +1892,8 @@
                                 ],
                                 6.0
                               ],
+                              "stroke": "bold",
+                              "tone": "@config.hitColor",
                               "type": "circle",
                               "x": [
                                 "object/get",
@@ -1768,6 +2008,11 @@
                             "backgroundColor": "@config.backgroundColor",
                             "height": "@config.height",
                             "interactive": true,
+                            "keyMap": {
+                              "ArrowRight": "NEXT",
+                              "KeyR": "RETRY",
+                              "Space": "NEXT"
+                            },
                             "onShapeClick": "TAP_SHAPE",
                             "shapes": "@newCanvasShapes",
                             "type": "learning-canvas",
@@ -1776,14 +2021,9 @@
                           {
                             "children": [
                               {
-                                "label": "Found",
-                                "type": "badge",
-                                "variant": "success"
-                              },
-                              {
                                 "content": "@newFeedback",
                                 "type": "typography",
-                                "variant": "caption"
+                                "variant": "body"
                               }
                             ],
                             "direction": "horizontal",
@@ -1791,24 +2031,33 @@
                             "type": "stack"
                           },
                           {
+                            "align": "center",
                             "children": [
                               {
                                 "action": "NEXT",
                                 "disabled": false,
+                                "icon": "chevron-right",
                                 "label": "@config.nextLabel",
                                 "type": "button",
                                 "variant": "primary"
+                              },
+                              {
+                                "color": "muted",
+                                "content": [
+                                  "str/concat",
+                                  "First-try ",
+                                  "@newScore",
+                                  " of ",
+                                  "@entity.totalPrompts"
+                                ],
+                                "type": "typography",
+                                "variant": "caption"
                               }
                             ],
                             "direction": "horizontal",
                             "gap": "sm",
-                            "type": "stack"
-                          },
-                          {
-                            "label": "First-try score",
-                            "max": "@entity.totalPrompts",
-                            "type": "stat-display",
-                            "value": "@newScore"
+                            "type": "stack",
+                            "wrap": true
                           }
                         ]
                       ],
@@ -1832,6 +2081,11 @@
                             "backgroundColor": "@config.backgroundColor",
                             "height": "@config.height",
                             "interactive": true,
+                            "keyMap": {
+                              "ArrowRight": "NEXT",
+                              "KeyR": "RETRY",
+                              "Space": "NEXT"
+                            },
                             "onShapeClick": "TAP_SHAPE",
                             "shapes": "@newCanvasShapes",
                             "type": "learning-canvas",
@@ -1842,7 +2096,7 @@
                               {
                                 "content": "@newFeedback",
                                 "type": "typography",
-                                "variant": "caption"
+                                "variant": "body"
                               }
                             ],
                             "direction": "horizontal",
@@ -1850,24 +2104,33 @@
                             "type": "stack"
                           },
                           {
+                            "align": "center",
                             "children": [
                               {
                                 "action": "NEXT",
                                 "disabled": true,
+                                "icon": "chevron-right",
                                 "label": "@config.nextLabel",
                                 "type": "button",
                                 "variant": "primary"
+                              },
+                              {
+                                "color": "muted",
+                                "content": [
+                                  "str/concat",
+                                  "First-try ",
+                                  "@newScore",
+                                  " of ",
+                                  "@entity.totalPrompts"
+                                ],
+                                "type": "typography",
+                                "variant": "caption"
                               }
                             ],
                             "direction": "horizontal",
                             "gap": "sm",
-                            "type": "stack"
-                          },
-                          {
-                            "label": "First-try score",
-                            "max": "@entity.totalPrompts",
-                            "type": "stat-display",
-                            "value": "@newScore"
+                            "type": "stack",
+                            "wrap": true
                           }
                         ]
                       ]
@@ -1928,9 +2191,89 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.done",
+                                    "Round complete",
+                                    [
+                                      "if",
+                                      "@entity.found",
+                                      "Correct",
+                                      [
+                                        "if",
+                                        [
+                                          ">",
+                                          "@entity.tries",
+                                          0.0
+                                        ],
+                                        "Try again",
+                                        [
+                                          "str/concat",
+                                          "Score ",
+                                          "@entity.score",
+                                          " / ",
+                                          "@entity.totalPrompts"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.done",
+                                    "primary",
+                                    [
+                                      "if",
+                                      "@entity.found",
+                                      "success",
+                                      [
+                                        "if",
+                                        [
+                                          ">",
+                                          "@entity.tries",
+                                          0.0
+                                        ],
+                                        "error",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "label": [
@@ -2092,17 +2435,12 @@
                             "fn",
                             "s",
                             {
-                              "color": [
+                              "fillStyle": "solid",
+                              "fillTone": [
                                 "object/get",
                                 "@s",
                                 "color",
-                                "#3b82f6"
-                              ],
-                              "fill": [
-                                "object/get",
-                                "@s",
-                                "color",
-                                "#3b82f6"
+                                "series-1"
                               ],
                               "id": [
                                 "object/get",
@@ -2114,6 +2452,12 @@
                                 "@s",
                                 "radius",
                                 22.0
+                              ],
+                              "tone": [
+                                "object/get",
+                                "@s",
+                                "color",
+                                "series-1"
                               ],
                               "type": "circle",
                               "x": [
@@ -2140,8 +2484,6 @@
                             "s",
                             {
                               "align": "center",
-                              "color": "#0f172a",
-                              "fontSize": 12.0,
                               "id": [
                                 "str/concat",
                                 "label-",
@@ -2156,6 +2498,8 @@
                                 "@s",
                                 "label"
                               ],
+                              "textSize": "xs",
+                              "tone": "label",
                               "type": "text",
                               "x": [
                                 "object/get",
@@ -2291,6 +2635,7 @@
                             },
                             {
                               "action": "RETRY",
+                              "icon": "rotate-ccw",
                               "label": "@config.retryLabel",
                               "type": "button",
                               "variant": "primary"
@@ -2314,6 +2659,11 @@
                               "backgroundColor": "@config.backgroundColor",
                               "height": "@config.height",
                               "interactive": true,
+                              "keyMap": {
+                                "ArrowRight": "NEXT",
+                                "KeyR": "RETRY",
+                                "Space": "NEXT"
+                              },
                               "onShapeClick": "TAP_SHAPE",
                               "shapes": "@entity.canvasShapes",
                               "type": "learning-canvas",
@@ -2324,7 +2674,7 @@
                                 {
                                   "content": "@entity.feedback",
                                   "type": "typography",
-                                  "variant": "caption"
+                                  "variant": "body"
                                 }
                               ],
                               "direction": "horizontal",
@@ -2332,6 +2682,7 @@
                               "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "action": "NEXT",
@@ -2341,20 +2692,28 @@
                                     false,
                                     true
                                   ],
+                                  "icon": "chevron-right",
                                   "label": "@config.nextLabel",
                                   "type": "button",
                                   "variant": "primary"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "First-try ",
+                                    "@entity.score",
+                                    " of ",
+                                    "@entity.totalPrompts"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "label": "First-try score",
-                              "max": "@entity.totalPrompts",
-                              "type": "stat-display",
-                              "value": "@entity.score"
+                              "type": "stack",
+                              "wrap": true
                             }
                           ]
                         ]
@@ -2369,9 +2728,89 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.done",
+                                    "Round complete",
+                                    [
+                                      "if",
+                                      "@entity.found",
+                                      "Correct",
+                                      [
+                                        "if",
+                                        [
+                                          ">",
+                                          "@entity.tries",
+                                          0.0
+                                        ],
+                                        "Try again",
+                                        [
+                                          "str/concat",
+                                          "Score ",
+                                          "@entity.score",
+                                          " / ",
+                                          "@entity.totalPrompts"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.done",
+                                    "primary",
+                                    [
+                                      "if",
+                                      "@entity.found",
+                                      "success",
+                                      [
+                                        "if",
+                                        [
+                                          ">",
+                                          "@entity.tries",
+                                          0.0
+                                        ],
+                                        "error",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "label": [
@@ -2476,17 +2915,12 @@
                             "fn",
                             "s",
                             {
-                              "color": [
+                              "fillStyle": "solid",
+                              "fillTone": [
                                 "object/get",
                                 "@s",
                                 "color",
-                                "#3b82f6"
-                              ],
-                              "fill": [
-                                "object/get",
-                                "@s",
-                                "color",
-                                "#3b82f6"
+                                "series-1"
                               ],
                               "id": [
                                 "object/get",
@@ -2498,6 +2932,12 @@
                                 "@s",
                                 "radius",
                                 22.0
+                              ],
+                              "tone": [
+                                "object/get",
+                                "@s",
+                                "color",
+                                "series-1"
                               ],
                               "type": "circle",
                               "x": [
@@ -2524,8 +2964,6 @@
                             "s",
                             {
                               "align": "center",
-                              "color": "#0f172a",
-                              "fontSize": 12.0,
                               "id": [
                                 "str/concat",
                                 "label-",
@@ -2540,6 +2978,8 @@
                                 "@s",
                                 "label"
                               ],
+                              "textSize": "xs",
+                              "tone": "label",
                               "type": "text",
                               "x": [
                                 "object/get",
@@ -2656,6 +3096,11 @@
                             "backgroundColor": "@config.backgroundColor",
                             "height": "@config.height",
                             "interactive": true,
+                            "keyMap": {
+                              "ArrowRight": "NEXT",
+                              "KeyR": "RETRY",
+                              "Space": "NEXT"
+                            },
                             "onShapeClick": "TAP_SHAPE",
                             "shapes": "@entity.canvasShapes",
                             "type": "learning-canvas",
@@ -2666,7 +3111,7 @@
                               {
                                 "content": "@entity.feedback",
                                 "type": "typography",
-                                "variant": "caption"
+                                "variant": "body"
                               }
                             ],
                             "direction": "horizontal",
@@ -2674,6 +3119,7 @@
                             "type": "stack"
                           },
                           {
+                            "align": "center",
                             "children": [
                               {
                                 "action": "NEXT",
@@ -2683,20 +3129,28 @@
                                   false,
                                   true
                                 ],
+                                "icon": "chevron-right",
                                 "label": "@config.nextLabel",
                                 "type": "button",
                                 "variant": "primary"
+                              },
+                              {
+                                "color": "muted",
+                                "content": [
+                                  "str/concat",
+                                  "First-try ",
+                                  "@entity.score",
+                                  " of ",
+                                  "@entity.totalPrompts"
+                                ],
+                                "type": "typography",
+                                "variant": "caption"
                               }
                             ],
                             "direction": "horizontal",
                             "gap": "sm",
-                            "type": "stack"
-                          },
-                          {
-                            "label": "First-try score",
-                            "max": "@entity.totalPrompts",
-                            "type": "stat-display",
-                            "value": "@entity.score"
+                            "type": "stack",
+                            "wrap": true
                           }
                         ]
                       ]
@@ -2710,9 +3164,89 @@
                         {
                           "children": [
                             {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.done",
+                                    "Round complete",
+                                    [
+                                      "if",
+                                      "@entity.found",
+                                      "Correct",
+                                      [
+                                        "if",
+                                        [
+                                          ">",
+                                          "@entity.tries",
+                                          0.0
+                                        ],
+                                        "Try again",
+                                        [
+                                          "str/concat",
+                                          "Score ",
+                                          "@entity.score",
+                                          " / ",
+                                          "@entity.totalPrompts"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.done",
+                                    "primary",
+                                    [
+                                      "if",
+                                      "@entity.found",
+                                      "success",
+                                      [
+                                        "if",
+                                        [
+                                          ">",
+                                          "@entity.tries",
+                                          0.0
+                                        ],
+                                        "error",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "label": [
@@ -2816,12 +3350,23 @@
             "type": "number"
           },
           {
-            "name": "color",
-            "required": true,
+            "name": "tone",
             "type": "string"
           },
           {
-            "name": "fill",
+            "name": "fillTone",
+            "type": "string"
+          },
+          {
+            "name": "fillStyle",
+            "type": "string"
+          },
+          {
+            "name": "stroke",
+            "type": "string"
+          },
+          {
+            "name": "textSize",
             "type": "string"
           },
           {
@@ -2829,16 +3374,8 @@
             "type": "string"
           },
           {
-            "name": "fontSize",
-            "type": "number"
-          },
-          {
             "name": "align",
             "type": "string"
-          },
-          {
-            "name": "lineWidth",
-            "type": "number"
           }
         ],
         "HotspotPrompt": [

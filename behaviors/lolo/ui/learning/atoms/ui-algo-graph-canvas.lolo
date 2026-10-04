@@ -26,6 +26,13 @@ orbital AlgoGraphCanvasOrbital {
     color : string
   }
   type AlgoGraphCanvasShapesItem = {
+    tone : "ink" | "label" | "guide" | "axis" | "grid" | "highlight" | "fill" | "series-1" | "series-2" | "series-3" | "series-4" | "series-5" | "series-6" | "series-7" | "series-8" | "primary" | "accent" | "success" | "warning" | "error" | "info" | "muted"
+    fillTone : "ink" | "label" | "guide" | "axis" | "grid" | "highlight" | "fill" | "series-1" | "series-2" | "series-3" | "series-4" | "series-5" | "series-6" | "series-7" | "series-8" | "primary" | "accent" | "success" | "warning" | "error" | "info" | "muted"
+    stroke : "thin" | "normal" | "bold"
+    textSize : "xs" | "sm" | "base" | "lg" | "xl" | "2xl"
+    font : "body" | "display" | "mono"
+    textCase : "theme" | "verbatim"
+    fillStyle : "solid" | "tint" | "outline" | "hatch"
     type : "line" | "arrow" | "circle" | "ellipse" | "rect" | "polygon" | "path" | "text" | "axis" | "grid" | "venn-region"!
     id : string
     x : number
@@ -94,6 +101,9 @@ orbital AlgoGraphCanvasOrbital {
           height: @config.height
           title: @config.title
           backgroundColor: @config.backgroundColor
+          series: @config.series
+          keyMap: @config.keyMap
+          keyUpMap: @config.keyUpMap
           nodes: @config.nodes
           edges: @config.edges
           layout: @config.layout
@@ -159,6 +169,18 @@ orbital AlgoGraphCanvasOrbital {
       backgroundColor : string
         @label "Background Color"
         @description "backgroundColor prop"
+        @tier "presentation"
+      series : [string] = []
+        @label "Series"
+        @description "Overrides the theme's categorical palette (`series-1…N`) for this canvas — real-world conventions like CPK atom colors or resistor bands. Unset, the theme's `--color-series-*` apply."
+        @tier "presentation"
+      keyMap : Map string string = { item: "INIT" }
+        @label "Key Map"
+        @description "Maps a keydown `e.code` (optionally `Mod+`/`Shift+`/`Alt+` prefixed) to a SEMANTIC event emitted as `UI:{event}` — e.g. `{ Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }`; keystrokes inside inputs never route."
+        @tier "presentation"
+      keyUpMap : Map string string = { item: "INIT" }
+        @label "Key Up Map"
+        @description "Maps a keyup `e.code` to a semantic event emitted as `UI:{event}`."
         @tier "presentation"
       nodes : [AlgoGraphCanvasNodesItem] = []
         @label "Nodes"

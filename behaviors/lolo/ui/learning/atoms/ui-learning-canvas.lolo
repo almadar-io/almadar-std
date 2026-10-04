@@ -3,6 +3,13 @@ app ui-learning-canvas "1.0.0"
 ;; @pattern "learning-canvas"
 orbital LearningCanvasOrbital {
   type LearningCanvasShapesItem = {
+    tone : "ink" | "label" | "guide" | "axis" | "grid" | "highlight" | "fill" | "series-1" | "series-2" | "series-3" | "series-4" | "series-5" | "series-6" | "series-7" | "series-8" | "primary" | "accent" | "success" | "warning" | "error" | "info" | "muted"
+    fillTone : "ink" | "label" | "guide" | "axis" | "grid" | "highlight" | "fill" | "series-1" | "series-2" | "series-3" | "series-4" | "series-5" | "series-6" | "series-7" | "series-8" | "primary" | "accent" | "success" | "warning" | "error" | "info" | "muted"
+    stroke : "thin" | "normal" | "bold"
+    textSize : "xs" | "sm" | "base" | "lg" | "xl" | "2xl"
+    font : "body" | "display" | "mono"
+    textCase : "theme" | "verbatim"
+    fillStyle : "solid" | "tint" | "outline" | "hatch"
     type : "line" | "arrow" | "circle" | "ellipse" | "rect" | "polygon" | "path" | "text" | "axis" | "grid" | "venn-region"!
     id : string
     x : number
@@ -103,12 +110,15 @@ orbital LearningCanvasOrbital {
           width: @config.width
           height: @config.height
           backgroundColor: @config.backgroundColor
+          series: @config.series
           fontFamily: @config.fontFamily
           shapes: @config.shapes
           drawables: @config.drawables
           projector: @config.projector
           readouts: @config.readouts
           traces: @config.traces
+          keyMap: @config.keyMap
+          keyUpMap: @config.keyUpMap
           interactive: @config.interactive
           animate: @config.animate
           onShapeClick: @config.onShapeClick
@@ -141,12 +151,15 @@ orbital LearningCanvasOrbital {
           width: @config.width
           height: @config.height
           backgroundColor: @config.backgroundColor
+          series: @payload.series
           fontFamily: @config.fontFamily
           shapes: @payload.shapes
           drawables: @payload.drawables
           projector: @config.projector
           readouts: @payload.readouts
           traces: @payload.traces
+          keyMap: @config.keyMap
+          keyUpMap: @config.keyUpMap
           interactive: @config.interactive
           animate: @config.animate
           onShapeClick: @config.onShapeClick
@@ -190,6 +203,7 @@ orbital LearningCanvasOrbital {
 
     listens {
       UPDATE {
+        series : [string]
         shapes : [LearningCanvasShapesItem]
         drawables : [node]
         readouts : [LearningCanvasReadoutsItem]
@@ -215,7 +229,11 @@ orbital LearningCanvasOrbital {
         @tier "presentation"
       backgroundColor : string
         @label "Background Color"
-        @description "Background color (default transparent)."
+        @description "Canvas ground: a tone name, `var()` token or literal (default the theme's `--surface-diagram`)."
+        @tier "presentation"
+      series : [string] = []
+        @label "Series"
+        @description "Overrides the theme's categorical palette for this canvas: `series-1…N` resolve to these colors instead. For real-world conventions (CPK atom colors, resistor bands); unset, the theme's `--color-series-*` apply."
         @tier "presentation"
       fontFamily : string
         @label "Font Family"
@@ -242,6 +260,14 @@ orbital LearningCanvasOrbital {
         @label "Traces"
         @description "Inset sparkline panels stacked from the bottom-right corner."
         @synonyms "sparkline, time series, history plot"
+        @tier "presentation"
+      keyMap : Map string string = { item: "INIT" }
+        @label "Key Map"
+        @description "Maps a keydown `e.code` — optionally prefixed `Mod+` (⌘/Ctrl), `Shift+`, `Alt+` — to a SEMANTIC event emitted as `UI:{event}` (e.g. `{ Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }`); keystrokes inside inputs never route."
+        @tier "presentation"
+      keyUpMap : Map string string = { item: "INIT" }
+        @label "Key Up Map"
+        @description "Maps a keyup `e.code` to a semantic event emitted as `UI:{event}`."
         @tier "presentation"
       interactive : boolean = false
         @label "Interactive"

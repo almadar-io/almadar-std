@@ -59,12 +59,12 @@ orbital EstimateOrbital {
                   { type: typography, variant: caption, content: (str/concat "Your estimate: " (math/round @entity.estimate 2) " " @entity.unit) },
                   { type: range-slider, min: @config.sliderMin, max: @config.sliderMax, step: @config.sliderStep, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
                 ] },
-              { type: stack, direction: horizontal, gap: sm, children: [
-                  { type: button, action: LOCK_IN, label: @config.lockLabel, variant: primary, disabled: (if @entity.locked true false) },
-                  { type: button, action: NEXT, label: @config.nextLabel, variant: secondary, disabled: (if @entity.locked false true) }
+              { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                  { type: button, action: LOCK_IN, label: @config.lockLabel, icon: "check", variant: primary, disabled: (if @entity.locked true false) },
+                  { type: button, action: NEXT, label: @config.nextLabel, icon: "chevron-right", variant: secondary, disabled: (if @entity.locked false true) }
                 ] },
               { type: stack, direction: horizontal, gap: xs, children: [
-                  { type: typography, variant: caption, content: @entity.feedback }
+                  { type: typography, variant: body, content: @entity.feedback }
                 ] },
               { type: stat-display, label: "Score", value: @entity.score, max: (* @entity.totalPrompts @config.exactPoints) }
             ])))
@@ -73,12 +73,22 @@ orbital EstimateOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Complete" (if (== @entity.band "exact") "Spot on" (if (== @entity.band "close") "Close" (if (== @entity.band "off") "Off" "Estimating")))), variant: (if @entity.done "success" (if (== @entity.band "exact") "success" (if (== @entity.band "close") "warning" (if (== @entity.band "off") "danger" "neutral")))) }
+                  ] },
                 { type: progress-bar, value: (+ @entity.promptIndex 1), max: @entity.totalPrompts, showPercentage: false, label: (str/concat "Prompt " (str/concat "" (+ @entity.promptIndex 1)) " of " (str/concat "" @entity.totalPrompts)) },
                 { type: stack, direction: vertical, gap: md, children: @entity.view }
               ] }
           ]
         })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (render-ui main null)
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (let (
@@ -108,12 +118,12 @@ orbital EstimateOrbital {
                   { type: typography, variant: caption, content: (str/concat "Your estimate: " (math/round @entity.estimate 2) " " @entity.unit) },
                   { type: range-slider, min: @config.sliderMin, max: @config.sliderMax, step: @config.sliderStep, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
                 ] },
-              { type: stack, direction: horizontal, gap: sm, children: [
-                  { type: button, action: LOCK_IN, label: @config.lockLabel, variant: primary, disabled: (if @entity.locked true false) },
-                  { type: button, action: NEXT, label: @config.nextLabel, variant: secondary, disabled: (if @entity.locked false true) }
+              { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                  { type: button, action: LOCK_IN, label: @config.lockLabel, icon: "check", variant: primary, disabled: (if @entity.locked true false) },
+                  { type: button, action: NEXT, label: @config.nextLabel, icon: "chevron-right", variant: secondary, disabled: (if @entity.locked false true) }
                 ] },
               { type: stack, direction: horizontal, gap: xs, children: [
-                  { type: typography, variant: caption, content: @entity.feedback }
+                  { type: typography, variant: body, content: @entity.feedback }
                 ] },
               { type: stat-display, label: "Score", value: @entity.score, max: (* @entity.totalPrompts @config.exactPoints) }
             ])))
@@ -122,7 +132,13 @@ orbital EstimateOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Complete" (if (== @entity.band "exact") "Spot on" (if (== @entity.band "close") "Close" (if (== @entity.band "off") "Off" "Estimating")))), variant: (if @entity.done "success" (if (== @entity.band "exact") "success" (if (== @entity.band "close") "warning" (if (== @entity.band "off") "danger" "neutral")))) }
+                  ] },
                 { type: progress-bar, value: (+ @entity.promptIndex 1), max: @entity.totalPrompts, showPercentage: false, label: (str/concat "Prompt " (str/concat "" (+ @entity.promptIndex 1)) " of " (str/concat "" @entity.totalPrompts)) },
                 { type: stack, direction: vertical, gap: md, children: @entity.view }
               ] }
@@ -140,12 +156,12 @@ orbital EstimateOrbital {
               { type: typography, variant: caption, content: (str/concat "Your estimate: " (math/round @entity.estimate 2) " " @entity.unit) },
               { type: range-slider, min: @config.sliderMin, max: @config.sliderMax, step: @config.sliderStep, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
             ] },
-          { type: stack, direction: horizontal, gap: sm, children: [
-              { type: button, action: LOCK_IN, label: @config.lockLabel, variant: primary, disabled: (if @entity.locked true false) },
-              { type: button, action: NEXT, label: @config.nextLabel, variant: secondary, disabled: (if @entity.locked false true) }
+          { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+              { type: button, action: LOCK_IN, label: @config.lockLabel, icon: "check", variant: primary, disabled: (if @entity.locked true false) },
+              { type: button, action: NEXT, label: @config.nextLabel, icon: "chevron-right", variant: secondary, disabled: (if @entity.locked false true) }
             ] },
           { type: stack, direction: horizontal, gap: xs, children: [
-              { type: typography, variant: caption, content: @entity.feedback }
+              { type: typography, variant: body, content: @entity.feedback }
             ] },
           { type: stat-display, label: "Score", value: @entity.score, max: (* @entity.totalPrompts @config.exactPoints) }
         ])
@@ -154,7 +170,13 @@ orbital EstimateOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Complete" (if (== @entity.band "exact") "Spot on" (if (== @entity.band "close") "Close" (if (== @entity.band "off") "Off" "Estimating")))), variant: (if @entity.done "success" (if (== @entity.band "exact") "success" (if (== @entity.band "close") "warning" (if (== @entity.band "off") "danger" "neutral")))) }
+                  ] },
                 { type: progress-bar, value: (+ @entity.promptIndex 1), max: @entity.totalPrompts, showPercentage: false, label: (str/concat "Prompt " (str/concat "" (+ @entity.promptIndex 1)) " of " (str/concat "" @entity.totalPrompts)) },
                 { type: stack, direction: vertical, gap: md, children: @entity.view }
               ] }
@@ -182,13 +204,12 @@ orbital EstimateOrbital {
                   { type: typography, variant: caption, content: (str/concat "Your estimate: " (math/round @entity.estimate 2) " " @entity.unit) },
                   { type: range-slider, min: @config.sliderMin, max: @config.sliderMax, step: @config.sliderStep, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
                 ] },
-              { type: stack, direction: horizontal, gap: sm, children: [
-                  { type: button, action: LOCK_IN, label: @config.lockLabel, variant: primary, disabled: (if @entity.locked true false) },
-                  { type: button, action: NEXT, label: @config.nextLabel, variant: secondary, disabled: (if @entity.locked false true) }
+              { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                  { type: button, action: LOCK_IN, label: @config.lockLabel, icon: "check", variant: primary, disabled: (if @entity.locked true false) },
+                  { type: button, action: NEXT, label: @config.nextLabel, icon: "chevron-right", variant: secondary, disabled: (if @entity.locked false true) }
                 ] },
               { type: stack, direction: horizontal, gap: xs, children: [
-                  { type: badge, variant: (if (== @entity.band "exact") "success" (if (== @entity.band "close") "warning" "danger")), label: (if (== @entity.band "exact") "Spot on" (if (== @entity.band "close") "Close" "Off")) },
-                  { type: typography, variant: caption, content: @entity.feedback }
+                  { type: typography, variant: body, content: @entity.feedback }
                 ] },
               { type: stat-display, label: "Score", value: @entity.score, max: (* @entity.totalPrompts @config.exactPoints) }
             ])))
@@ -197,7 +218,13 @@ orbital EstimateOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Complete" (if (== @entity.band "exact") "Spot on" (if (== @entity.band "close") "Close" (if (== @entity.band "off") "Off" "Estimating")))), variant: (if @entity.done "success" (if (== @entity.band "exact") "success" (if (== @entity.band "close") "warning" (if (== @entity.band "off") "danger" "neutral")))) }
+                  ] },
                 { type: progress-bar, value: (+ @entity.promptIndex 1), max: @entity.totalPrompts, showPercentage: false, label: (str/concat "Prompt " (str/concat "" (+ @entity.promptIndex 1)) " of " (str/concat "" @entity.totalPrompts)) },
                 { type: stack, direction: vertical, gap: md, children: @entity.view }
               ] }
@@ -227,7 +254,7 @@ orbital EstimateOrbital {
               [
                 { type: typography, variant: h4, content: "Round Complete" },
                 { type: stat-display, label: "Final score", value: @entity.score, max: (* @entity.totalPrompts @config.exactPoints) },
-                { type: button, action: RETRY, label: @config.retryLabel, variant: primary }
+                { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: primary }
               ]
               [
                 { type: card, variant: bordered, padding: md, children: [
@@ -238,12 +265,12 @@ orbital EstimateOrbital {
                     { type: typography, variant: caption, content: (str/concat "Your estimate: " (math/round @entity.estimate 2) " " @entity.unit) },
                     { type: range-slider, min: @config.sliderMin, max: @config.sliderMax, step: @config.sliderStep, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
                   ] },
-                { type: stack, direction: horizontal, gap: sm, children: [
-                    { type: button, action: LOCK_IN, label: @config.lockLabel, variant: primary, disabled: (if @entity.locked true false) },
-                    { type: button, action: NEXT, label: @config.nextLabel, variant: secondary, disabled: (if @entity.locked false true) }
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: LOCK_IN, label: @config.lockLabel, icon: "check", variant: primary, disabled: (if @entity.locked true false) },
+                    { type: button, action: NEXT, label: @config.nextLabel, icon: "chevron-right", variant: secondary, disabled: (if @entity.locked false true) }
                   ] },
                 { type: stack, direction: horizontal, gap: xs, children: [
-                    { type: typography, variant: caption, content: @entity.feedback }
+                    { type: typography, variant: body, content: @entity.feedback }
                   ] },
                 { type: stat-display, label: "Score", value: @entity.score, max: (* @entity.totalPrompts @config.exactPoints) }
               ])))
@@ -253,7 +280,13 @@ orbital EstimateOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Complete" (if (== @entity.band "exact") "Spot on" (if (== @entity.band "close") "Close" (if (== @entity.band "off") "Off" "Estimating")))), variant: (if @entity.done "success" (if (== @entity.band "exact") "success" (if (== @entity.band "close") "warning" (if (== @entity.band "off") "danger" "neutral")))) }
+                  ] },
                 { type: progress-bar, value: (+ @entity.promptIndex 1), max: @entity.totalPrompts, showPercentage: false, label: (str/concat "Prompt " (str/concat "" (+ @entity.promptIndex 1)) " of " (str/concat "" @entity.totalPrompts)) },
                 { type: stack, direction: vertical, gap: md, children: @entity.view }
               ] }
@@ -286,12 +319,12 @@ orbital EstimateOrbital {
                   { type: typography, variant: caption, content: (str/concat "Your estimate: " (math/round @entity.estimate 2) " " @entity.unit) },
                   { type: range-slider, min: @config.sliderMin, max: @config.sliderMax, step: @config.sliderStep, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
                 ] },
-              { type: stack, direction: horizontal, gap: sm, children: [
-                  { type: button, action: LOCK_IN, label: @config.lockLabel, variant: primary, disabled: (if @entity.locked true false) },
-                  { type: button, action: NEXT, label: @config.nextLabel, variant: secondary, disabled: (if @entity.locked false true) }
+              { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                  { type: button, action: LOCK_IN, label: @config.lockLabel, icon: "check", variant: primary, disabled: (if @entity.locked true false) },
+                  { type: button, action: NEXT, label: @config.nextLabel, icon: "chevron-right", variant: secondary, disabled: (if @entity.locked false true) }
                 ] },
               { type: stack, direction: horizontal, gap: xs, children: [
-                  { type: typography, variant: caption, content: @entity.feedback }
+                  { type: typography, variant: body, content: @entity.feedback }
                 ] },
               { type: stat-display, label: "Score", value: @entity.score, max: (* @entity.totalPrompts @config.exactPoints) }
             ])))
@@ -300,7 +333,13 @@ orbital EstimateOrbital {
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Complete" (if (== @entity.band "exact") "Spot on" (if (== @entity.band "close") "Close" (if (== @entity.band "off") "Off" "Estimating")))), variant: (if @entity.done "success" (if (== @entity.band "exact") "success" (if (== @entity.band "close") "warning" (if (== @entity.band "off") "danger" "neutral")))) }
+                  ] },
                 { type: progress-bar, value: (+ @entity.promptIndex 1), max: @entity.totalPrompts, showPercentage: false, label: (str/concat "Prompt " (str/concat "" (+ @entity.promptIndex 1)) " of " (str/concat "" @entity.totalPrompts)) },
                 { type: stack, direction: vertical, gap: md, children: @entity.view }
               ] }
@@ -373,6 +412,10 @@ orbital EstimateOrbital {
       title : string = "Estimate It"
         @label "Title"
         @description "Title shown above the drill."
+        @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line."
         @tier "presentation"
       prompts : [EstimatePrompt] = [
         { prompt: "How many meters does light travel in one microsecond?", answer: 300, unit: "m", hint: "Light covers 300,000 km every second." },
