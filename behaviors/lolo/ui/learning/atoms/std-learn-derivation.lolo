@@ -29,6 +29,8 @@ orbital LearnDerivationOrbital {
   entity LearnDerivationScene [runtime] {
     id : string!
     active : boolean = false
+    premises : [LearnDerivationLine]
+    candidates : [LearnDerivationCandidate]
     title : string
     lines : [LearnDerivationLine]
     feedback : string
@@ -43,7 +45,9 @@ orbital LearnDerivationOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle when (== @config.matchMode "")
+      INIT -> idle when (and (== @config.matchMode "") (== @config.rosterSource "config"))
+        (set @entity.premises @config.premises)
+        (set @entity.candidates @config.candidates)
         (set @entity.active true)
         (set @entity.title @config.title)
         (set @entity.feedback "")
@@ -51,7 +55,7 @@ orbital LearnDerivationOrbital {
         (set @entity.goalReached false)
         (set @entity.running @config.autoRun)
         (set @entity.elapsedMs 0)
-        (set @entity.lines @config.premises)
+        (set @entity.lines @entity.premises)
         (set @entity.renderChildren [
           { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
               { type: stack, direction: vertical, gap: xs, children: [
@@ -67,7 +71,7 @@ orbital LearnDerivationOrbital {
                   { type: typography, variant: body, content: @line.label }
                 ] }
             )) },
-          { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @config.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: secondary, size: lg, disabled: @entity.goalReached })) },
+          { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @entity.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: secondary, size: lg, disabled: @entity.goalReached })) },
           { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
               (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Run", icon: "play", variant: primary, aria-pressed: "false", disabled: @entity.goalReached }),
               { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
@@ -89,7 +93,9 @@ orbital LearnDerivationOrbital {
         (set @entity.running false)
         (render-ui main null)
 
-      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+      MODE_SELECTED -> idle when (and (== ?mode @config.matchMode) (== @config.rosterSource "config"))
+        (set @entity.premises @config.premises)
+        (set @entity.candidates @config.candidates)
         (set @entity.active true)
         (set @entity.title @config.title)
         (set @entity.feedback "")
@@ -97,7 +103,7 @@ orbital LearnDerivationOrbital {
         (set @entity.goalReached false)
         (set @entity.running @config.autoRun)
         (set @entity.elapsedMs 0)
-        (set @entity.lines @config.premises)
+        (set @entity.lines @entity.premises)
         (set @entity.renderChildren [
           { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
               { type: stack, direction: vertical, gap: xs, children: [
@@ -113,7 +119,7 @@ orbital LearnDerivationOrbital {
                   { type: typography, variant: body, content: @line.label }
                 ] }
             )) },
-          { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @config.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: secondary, size: lg, disabled: @entity.goalReached })) },
+          { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @entity.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: secondary, size: lg, disabled: @entity.goalReached })) },
           { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
               (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Run", icon: "play", variant: primary, aria-pressed: "false", disabled: @entity.goalReached }),
               { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
@@ -130,9 +136,57 @@ orbital LearnDerivationOrbital {
           ]
         })
 
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (and (== ?mode @config.matchMode) (and (> (array/len ?premises) 0) (> (array/len ?candidates) 0))))
+        (set @entity.premises ?premises)
+        (set @entity.candidates ?candidates)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.feedback "")
+        (set @entity.narration "")
+        (set @entity.goalReached false)
+        (set @entity.running @config.autoRun)
+        (set @entity.elapsedMs 0)
+        (set @entity.lines @entity.premises)
+        (set @entity.renderChildren [
+          { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+              { type: stack, direction: vertical, gap: xs, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                  (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                ] },
+              { type: badge, label: (if @entity.goalReached "Goal reached" (if @entity.running "Auto-stepping" "In progress")), variant: (if @entity.goalReached "success" (if @entity.running "primary" "neutral")) }
+            ] },
+          { type: typography, variant: body, content: (str/concat @config.goalPrefix @config.goalLabel) },
+          { type: stack, direction: vertical, gap: xs, style: { maxHeight: (str/concat @config.height "px"), overflowY: "auto" }, children: (array/map @entity.lines (fn line
+              { type: stack, direction: horizontal, align: center, gap: sm, children: [
+                  { type: badge, label: @line.badgeLabel, variant: @line.badgeVariant },
+                  { type: typography, variant: body, content: @line.label }
+                ] }
+            )) },
+          { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @entity.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: secondary, size: lg, disabled: @entity.goalReached })) },
+          { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+              (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Run", icon: "play", variant: primary, aria-pressed: "false", disabled: @entity.goalReached }),
+              { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+              { type: typography, variant: caption, color: muted, content: (str/concat (array/len @entity.lines) " lines") }
+            ] },
+          { type: typography, variant: body, content: (if @entity.goalReached @config.goalReachedMessage @entity.narration) }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          maxWidth: (str/concat @config.width "px")
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (set @entity.running false)
+        (render-ui main null)
+
       APPLY_STEP -> idle when (== @entity.active true)
         (let (
-            (candidate (array/first (array/filter @config.candidates (fn c (== @c.key ?candidateKey)))))
+            (candidate (array/first (array/filter @entity.candidates (fn c (== @c.key ?candidateKey)))))
             (links (array/filter @entity.lines (fn l (== @l.kind "link"))))
             (facts (array/filter @entity.lines (fn l (== @l.kind "fact"))))
             (wantLeft (== @candidate.matchSide "left"))
@@ -181,7 +235,7 @@ orbital LearnDerivationOrbital {
                   { type: typography, variant: body, content: @line.label }
                 ] }
             )) },
-          { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @config.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: secondary, size: lg, disabled: @entity.goalReached })) },
+          { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @entity.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: secondary, size: lg, disabled: @entity.goalReached })) },
           { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
               (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Run", icon: "play", variant: primary, aria-pressed: "false", disabled: @entity.goalReached }),
               { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
@@ -218,7 +272,7 @@ orbital LearnDerivationOrbital {
                   { type: typography, variant: body, content: @line.label }
                 ] }
             )) },
-          { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @config.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: secondary, size: lg, disabled: @entity.goalReached })) },
+          { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @entity.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: secondary, size: lg, disabled: @entity.goalReached })) },
           { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
               (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Run", icon: "play", variant: primary, aria-pressed: "false", disabled: @entity.goalReached }),
               { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
@@ -237,7 +291,7 @@ orbital LearnDerivationOrbital {
         (emit DERIVATION_UPDATED { feedback: @entity.feedback, goalReached: @entity.goalReached, lineCount: (array/len @entity.lines), narration: @entity.narration })
 
       RESET -> idle when (== @entity.active true)
-        (set @entity.lines @config.premises)
+        (set @entity.lines @entity.premises)
         (set @entity.feedback "")
         (set @entity.narration "")
         (set @entity.goalReached false)
@@ -258,7 +312,7 @@ orbital LearnDerivationOrbital {
                   { type: typography, variant: body, content: @line.label }
                 ] }
             )) },
-          { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @config.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: secondary, size: lg, disabled: @entity.goalReached })) },
+          { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @entity.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: secondary, size: lg, disabled: @entity.goalReached })) },
           { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
               (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Run", icon: "play", variant: primary, aria-pressed: "false", disabled: @entity.goalReached }),
               { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
@@ -287,7 +341,7 @@ orbital LearnDerivationOrbital {
             (let (
                 (links (array/filter @entity.lines (fn l (== @l.kind "link"))))
                 (facts (array/filter @entity.lines (fn l (== @l.kind "fact"))))
-                (evaluated (array/map @config.candidates (fn c (let (
+                (evaluated (array/map @entity.candidates (fn c (let (
                       (wantLeft (== @c.matchSide "left"))
                       (matchSense (== @c.matchNegationMode "same"))
                       (activeLink (array/first (array/filter @links (fn l (let (
@@ -336,7 +390,7 @@ orbital LearnDerivationOrbital {
                       { type: typography, variant: body, content: @line.label }
                     ] }
                 )) },
-              { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @config.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: secondary, size: lg, disabled: @entity.goalReached })) },
+              { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @entity.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: secondary, size: lg, disabled: @entity.goalReached })) },
               { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
                   (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Run", icon: "play", variant: primary, aria-pressed: "false", disabled: @entity.goalReached }),
                   { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
@@ -361,6 +415,13 @@ orbital LearnDerivationOrbital {
         mode : string
       }
         @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      ROSTER_LOADED {
+        mode : string!
+        premises : [LearnDerivationLine]!
+        candidates : [LearnDerivationCandidate]!
+      }
+        @description "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone), premises are the starting lines and candidates the offered derivation steps; a matching instrument re-initialises from them exactly as INIT does from config, any other instrument hides."
         @tier "domain"
       APPLY_STEP {
         candidateKey : string
@@ -416,6 +477,10 @@ orbital LearnDerivationOrbital {
       autoApplyIntervalMs : number = 800
         @label "Auto-Apply Interval (ms)"
         @description "Milliseconds of running clock per automatic candidate application — the 32ms base tick accumulates elapsed time and applies the first applicable candidate each time this interval elapses."
+        @tier "domain"
+      rosterSource : "config" | "event" = "config"
+        @label "Roster Source"
+        @description "Where the roster comes from: config reads the premises/candidates knob(s) at INIT; event waits for ROSTER_LOADED and takes the roster from its payload."
         @tier "domain"
       premises : [LearnDerivationLine] = [
         { id: "given-a", label: "A", kind: "fact", subject: "A", negated: false, badgeLabel: "GIVEN", badgeVariant: "neutral" },

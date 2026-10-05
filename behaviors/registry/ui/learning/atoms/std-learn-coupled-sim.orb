@@ -136,6 +136,15 @@
         "parent": "trt_01M07580NPVHNKAG807AY3AGFP",
         "renames": []
       },
+      "evt_01M459XDAF4E4SZ1NDKRD26B17": {
+        "bakedName": "ROSTER_LOADED",
+        "curName": "ROSTER_LOADED",
+        "id": "evt_01M459XDAF4E4SZ1NDKRD26B17",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M07580NPVHNKAG807AY3AGFP",
+        "renames": []
+      },
       "orb_01M07580NNXV7ZX3N81A85S1PY": {
         "bakedName": "CoupledSimOrbital",
         "curName": "CoupledSimOrbital",
@@ -180,6 +189,38 @@
           },
           {
             "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "taskText",
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "type": "string"
+          },
+          {
+            "name": "pLabel",
+            "type": "string"
+          },
+          {
+            "name": "qLabel",
+            "type": "string"
+          },
+          {
+            "name": "pStart",
+            "type": "number"
+          },
+          {
+            "name": "qStart",
+            "type": "number"
+          },
+          {
+            "name": "coefALabel",
+            "type": "string"
+          },
+          {
+            "name": "coefBLabel",
             "type": "string"
           },
           {
@@ -430,7 +471,7 @@
             },
             "matchMode": {
               "default": "",
-              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT (or on ROSTER_LOADED when rosterSource is event).",
               "label": "Match Mode",
               "tier": "presentation",
               "type": "string"
@@ -472,6 +513,17 @@
               "label": "Q Start",
               "tier": "domain",
               "type": "number"
+            },
+            "rosterSource": {
+              "default": "config",
+              "description": "Where the system definition (taskText, kind, pLabel, qLabel, pStart, qStart, coefALabel, coefBLabel) comes from: config reads those knobs at INIT; event waits for ROSTER_LOADED and takes them from its payload.",
+              "label": "Roster Source",
+              "tier": "domain",
+              "type": "string",
+              "values": [
+                "config",
+                "event"
+              ]
             },
             "shockDownLabel": {
               "default": "− Prey cull",
@@ -565,7 +617,15 @@
             },
             {
               "kind": "set",
+              "resource": "@entity.coefALabel"
+            },
+            {
+              "kind": "set",
               "resource": "@entity.coefB"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.coefBLabel"
             },
             {
               "kind": "set",
@@ -578,12 +638,20 @@
             },
             {
               "kind": "set",
+              "resource": "@entity.kind"
+            },
+            {
+              "kind": "set",
               "resource": "@entity.p"
             },
             {
               "kind": "set",
               "resource": "@entity.p",
               "site": "tick"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.pLabel"
             },
             {
               "kind": "set",
@@ -596,6 +664,10 @@
             },
             {
               "kind": "set",
+              "resource": "@entity.pStart"
+            },
+            {
+              "kind": "set",
               "resource": "@entity.q"
             },
             {
@@ -605,12 +677,20 @@
             },
             {
               "kind": "set",
+              "resource": "@entity.qLabel"
+            },
+            {
+              "kind": "set",
               "resource": "@entity.qSamples"
             },
             {
               "kind": "set",
               "resource": "@entity.qSamples",
               "site": "tick"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.qStart"
             },
             {
               "kind": "set",
@@ -633,6 +713,10 @@
               "kind": "set",
               "resource": "@entity.t",
               "site": "tick"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.taskText"
             },
             {
               "kind": "set",
@@ -718,15 +802,23 @@
             "provides": [
               "active",
               "coefA",
+              "coefALabel",
               "coefB",
+              "coefBLabel",
               "curves",
+              "kind",
               "p",
+              "pLabel",
               "pSamples",
+              "pStart",
               "q",
+              "qLabel",
               "qSamples",
+              "qStart",
               "running",
               "speed",
               "t",
+              "taskText",
               "title"
             ],
             "requires": []
@@ -755,6 +847,60 @@
                 "payloadSchema": [
                   {
                     "name": "mode",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and taskText, kind, pLabel, qLabel, pStart, qStart, coefALabel and coefBLabel define the coupled system; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
+                "id": "evt_01M459XDAF4E4SZ1NDKRD26B17",
+                "key": "ROSTER_LOADED",
+                "name": "Roster Loaded",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "taskText",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "kind",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "pLabel",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "qLabel",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "pStart",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "qStart",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "coefALabel",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "coefBLabel",
+                    "required": true,
                     "type": "string"
                   }
                 ],
@@ -931,18 +1077,58 @@
                   ],
                   [
                     "set",
+                    "@entity.taskText",
+                    "@config.taskText"
+                  ],
+                  [
+                    "set",
+                    "@entity.kind",
+                    "@config.kind"
+                  ],
+                  [
+                    "set",
+                    "@entity.pLabel",
+                    "@config.pLabel"
+                  ],
+                  [
+                    "set",
+                    "@entity.qLabel",
+                    "@config.qLabel"
+                  ],
+                  [
+                    "set",
+                    "@entity.pStart",
+                    "@config.pStart"
+                  ],
+                  [
+                    "set",
+                    "@entity.qStart",
+                    "@config.qStart"
+                  ],
+                  [
+                    "set",
+                    "@entity.coefALabel",
+                    "@config.coefALabel"
+                  ],
+                  [
+                    "set",
+                    "@entity.coefBLabel",
+                    "@config.coefBLabel"
+                  ],
+                  [
+                    "set",
                     "@entity.t",
                     0.0
                   ],
                   [
                     "set",
                     "@entity.p",
-                    "@config.pStart"
+                    "@entity.pStart"
                   ],
                   [
                     "set",
                     "@entity.q",
-                    "@config.qStart"
+                    "@entity.qStart"
                   ],
                   [
                     "set",
@@ -965,7 +1151,7 @@
                     [
                       {
                         "x": 0.0,
-                        "y": "@config.pStart"
+                        "y": "@entity.pStart"
                       }
                     ]
                   ],
@@ -975,7 +1161,7 @@
                     [
                       {
                         "x": 0.0,
-                        "y": "@config.qStart"
+                        "y": "@entity.qStart"
                       }
                     ]
                   ],
@@ -985,12 +1171,12 @@
                     [
                       {
                         "color": "@config.pColor",
-                        "label": "@config.pLabel",
+                        "label": "@entity.pLabel",
                         "samples": "@entity.pSamples"
                       },
                       {
                         "color": "@config.qColor",
-                        "label": "@config.qLabel",
+                        "label": "@entity.qLabel",
                         "samples": "@entity.qSamples"
                       }
                     ]
@@ -1309,7 +1495,7 @@
                                       "color": "muted",
                                       "content": [
                                         "str/concat",
-                                        "@config.coefALabel",
+                                        "@entity.coefALabel",
                                         ": ",
                                         [
                                           "math/round",
@@ -1340,7 +1526,7 @@
                                       "color": "muted",
                                       "content": [
                                         "str/concat",
-                                        "@config.coefBLabel",
+                                        "@entity.coefBLabel",
                                         ": ",
                                         [
                                           "math/round",
@@ -1373,7 +1559,7 @@
                             {
                               "children": [
                                 {
-                                  "content": "@config.taskText",
+                                  "content": "@entity.taskText",
                                   "type": "typography",
                                   "variant": "body"
                                 },
@@ -1381,7 +1567,7 @@
                                   "color": "muted",
                                   "content": [
                                     "str/concat",
-                                    "@config.pLabel",
+                                    "@entity.pLabel",
                                     " = ",
                                     [
                                       "math/round",
@@ -1389,7 +1575,7 @@
                                       1.0
                                     ],
                                     " · ",
-                                    "@config.qLabel",
+                                    "@entity.qLabel",
                                     " = ",
                                     [
                                       "math/round",
@@ -1420,9 +1606,17 @@
                 "eventId": "evt_01M07580NPAZNGHYHWGA4K622M",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@config.matchMode",
-                  ""
+                  "and",
+                  [
+                    "==",
+                    "@config.matchMode",
+                    ""
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1482,18 +1676,58 @@
                   ],
                   [
                     "set",
+                    "@entity.taskText",
+                    "@config.taskText"
+                  ],
+                  [
+                    "set",
+                    "@entity.kind",
+                    "@config.kind"
+                  ],
+                  [
+                    "set",
+                    "@entity.pLabel",
+                    "@config.pLabel"
+                  ],
+                  [
+                    "set",
+                    "@entity.qLabel",
+                    "@config.qLabel"
+                  ],
+                  [
+                    "set",
+                    "@entity.pStart",
+                    "@config.pStart"
+                  ],
+                  [
+                    "set",
+                    "@entity.qStart",
+                    "@config.qStart"
+                  ],
+                  [
+                    "set",
+                    "@entity.coefALabel",
+                    "@config.coefALabel"
+                  ],
+                  [
+                    "set",
+                    "@entity.coefBLabel",
+                    "@config.coefBLabel"
+                  ],
+                  [
+                    "set",
                     "@entity.t",
                     0.0
                   ],
                   [
                     "set",
                     "@entity.p",
-                    "@config.pStart"
+                    "@entity.pStart"
                   ],
                   [
                     "set",
                     "@entity.q",
-                    "@config.qStart"
+                    "@entity.qStart"
                   ],
                   [
                     "set",
@@ -1516,7 +1750,7 @@
                     [
                       {
                         "x": 0.0,
-                        "y": "@config.pStart"
+                        "y": "@entity.pStart"
                       }
                     ]
                   ],
@@ -1526,7 +1760,7 @@
                     [
                       {
                         "x": 0.0,
-                        "y": "@config.qStart"
+                        "y": "@entity.qStart"
                       }
                     ]
                   ],
@@ -1536,12 +1770,12 @@
                     [
                       {
                         "color": "@config.pColor",
-                        "label": "@config.pLabel",
+                        "label": "@entity.pLabel",
                         "samples": "@entity.pSamples"
                       },
                       {
                         "color": "@config.qColor",
-                        "label": "@config.qLabel",
+                        "label": "@entity.qLabel",
                         "samples": "@entity.qSamples"
                       }
                     ]
@@ -1860,7 +2094,7 @@
                                       "color": "muted",
                                       "content": [
                                         "str/concat",
-                                        "@config.coefALabel",
+                                        "@entity.coefALabel",
                                         ": ",
                                         [
                                           "math/round",
@@ -1891,7 +2125,7 @@
                                       "color": "muted",
                                       "content": [
                                         "str/concat",
-                                        "@config.coefBLabel",
+                                        "@entity.coefBLabel",
                                         ": ",
                                         [
                                           "math/round",
@@ -1924,7 +2158,7 @@
                             {
                               "children": [
                                 {
-                                  "content": "@config.taskText",
+                                  "content": "@entity.taskText",
                                   "type": "typography",
                                   "variant": "body"
                                 },
@@ -1932,7 +2166,7 @@
                                   "color": "muted",
                                   "content": [
                                     "str/concat",
-                                    "@config.pLabel",
+                                    "@entity.pLabel",
                                     " = ",
                                     [
                                       "math/round",
@@ -1940,7 +2174,7 @@
                                       1.0
                                     ],
                                     " · ",
-                                    "@config.qLabel",
+                                    "@entity.qLabel",
                                     " = ",
                                     [
                                       "math/round",
@@ -1971,9 +2205,621 @@
                 "eventId": "evt_01M07580NZG8GTJXJCXM4HAW12",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@payload.mode",
-                  "@config.matchMode"
+                  "and",
+                  [
+                    "==",
+                    "@payload.mode",
+                    "@config.matchMode"
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.taskText",
+                    "@payload.taskText"
+                  ],
+                  [
+                    "set",
+                    "@entity.kind",
+                    "@payload.kind"
+                  ],
+                  [
+                    "set",
+                    "@entity.pLabel",
+                    "@payload.pLabel"
+                  ],
+                  [
+                    "set",
+                    "@entity.qLabel",
+                    "@payload.qLabel"
+                  ],
+                  [
+                    "set",
+                    "@entity.pStart",
+                    "@payload.pStart"
+                  ],
+                  [
+                    "set",
+                    "@entity.qStart",
+                    "@payload.qStart"
+                  ],
+                  [
+                    "set",
+                    "@entity.coefALabel",
+                    "@payload.coefALabel"
+                  ],
+                  [
+                    "set",
+                    "@entity.coefBLabel",
+                    "@payload.coefBLabel"
+                  ],
+                  [
+                    "set",
+                    "@entity.t",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.p",
+                    "@entity.pStart"
+                  ],
+                  [
+                    "set",
+                    "@entity.q",
+                    "@entity.qStart"
+                  ],
+                  [
+                    "set",
+                    "@entity.coefA",
+                    "@config.coefADefault"
+                  ],
+                  [
+                    "set",
+                    "@entity.coefB",
+                    "@config.coefBDefault"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.autoRun"
+                  ],
+                  [
+                    "set",
+                    "@entity.pSamples",
+                    [
+                      {
+                        "x": 0.0,
+                        "y": "@entity.pStart"
+                      }
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.qSamples",
+                    [
+                      {
+                        "x": 0.0,
+                        "y": "@entity.qStart"
+                      }
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.curves",
+                    [
+                      {
+                        "color": "@config.pColor",
+                        "label": "@entity.pLabel",
+                        "samples": "@entity.pSamples"
+                      },
+                      {
+                        "color": "@config.qColor",
+                        "label": "@entity.qLabel",
+                        "samples": "@entity.qSamples"
+                      }
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    [
+                                      ">=",
+                                      "@entity.t",
+                                      "@config.duration"
+                                    ],
+                                    "Done",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "Running",
+                                      "Paused"
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      ">=",
+                                      "@entity.t",
+                                      "@config.duration"
+                                    ],
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "primary",
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "disabled": [
+                                      ">=",
+                                      "@entity.t",
+                                      "@config.duration"
+                                    ],
+                                    "icon": "play",
+                                    "label": "Play",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  }
+                                ],
+                                {
+                                  "action": "RESET",
+                                  "icon": "rotate-ccw",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "action": "SHOCK",
+                                  "actionPayload": {
+                                    "delta": "@config.shockSize"
+                                  },
+                                  "label": "@config.shockUpLabel",
+                                  "size": "sm",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "SHOCK",
+                                  "actionPayload": {
+                                    "delta": [
+                                      "-",
+                                      0.0,
+                                      "@config.shockSize"
+                                    ]
+                                  },
+                                  "label": "@config.shockDownLabel",
+                                  "size": "sm",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "align": "center",
+                                  "aria-label": "Speed",
+                                  "children": [
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 0.5
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          0.5
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "0.5×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          0.5
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 1.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          1.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "1×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          1.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 2.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          2.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "2×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          2.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 4.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          4.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "4×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          4.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "role": "group",
+                                  "type": "stack"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "t = ",
+                                    [
+                                      "math/round",
+                                      "@entity.t",
+                                      1.0
+                                    ],
+                                    " of ",
+                                    "@config.duration"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
+                              "animate": false,
+                              "curves": "@entity.curves",
+                              "gridStep": "@config.gridStep",
+                              "height": "@config.height",
+                              "interactive": false,
+                              "keyMap": {
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
+                              "points": [],
+                              "shapes": [],
+                              "showAxes": true,
+                              "showGrid": true,
+                              "title": "",
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.duration",
+                              "xMin": 0.0,
+                              "yMax": "@config.valueMax",
+                              "yMin": 0.0
+                            },
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "content": [
+                                        "str/concat",
+                                        "@entity.coefALabel",
+                                        ": ",
+                                        [
+                                          "math/round",
+                                          "@entity.coefA",
+                                          3.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_A",
+                                      "max": "@config.coefAMax",
+                                      "min": "@config.coefAMin",
+                                      "showTooltip": true,
+                                      "step": "@config.coefAStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.coefA"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "content": [
+                                        "str/concat",
+                                        "@entity.coefBLabel",
+                                        ": ",
+                                        [
+                                          "math/round",
+                                          "@entity.coefB",
+                                          3.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_B",
+                                      "max": "@config.coefBMax",
+                                      "min": "@config.coefBMin",
+                                      "showTooltip": true,
+                                      "step": "@config.coefBStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.coefB"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": "@entity.taskText",
+                                  "type": "typography",
+                                  "variant": "body"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "@entity.pLabel",
+                                    " = ",
+                                    [
+                                      "math/round",
+                                      "@entity.p",
+                                      1.0
+                                    ],
+                                    " · ",
+                                    "@entity.qLabel",
+                                    " = ",
+                                    [
+                                      "math/round",
+                                      "@entity.q",
+                                      1.0
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459XDAF4E4SZ1NDKRD26B17",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "and",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ],
+                    [
+                      "!=",
+                      "@payload.kind",
+                      ""
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459XDAF4E4SZ1NDKRD26B17",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -2301,7 +3147,7 @@
                                       "color": "muted",
                                       "content": [
                                         "str/concat",
-                                        "@config.coefALabel",
+                                        "@entity.coefALabel",
                                         ": ",
                                         [
                                           "math/round",
@@ -2332,7 +3178,7 @@
                                       "color": "muted",
                                       "content": [
                                         "str/concat",
-                                        "@config.coefBLabel",
+                                        "@entity.coefBLabel",
                                         ": ",
                                         [
                                           "math/round",
@@ -2365,7 +3211,7 @@
                             {
                               "children": [
                                 {
-                                  "content": "@config.taskText",
+                                  "content": "@entity.taskText",
                                   "type": "typography",
                                   "variant": "body"
                                 },
@@ -2373,7 +3219,7 @@
                                   "color": "muted",
                                   "content": [
                                     "str/concat",
-                                    "@config.pLabel",
+                                    "@entity.pLabel",
                                     " = ",
                                     [
                                       "math/round",
@@ -2381,7 +3227,7 @@
                                       1.0
                                     ],
                                     " · ",
-                                    "@config.qLabel",
+                                    "@entity.qLabel",
                                     " = ",
                                     [
                                       "math/round",
@@ -2762,7 +3608,7 @@
                                       "color": "muted",
                                       "content": [
                                         "str/concat",
-                                        "@config.coefALabel",
+                                        "@entity.coefALabel",
                                         ": ",
                                         [
                                           "math/round",
@@ -2793,7 +3639,7 @@
                                       "color": "muted",
                                       "content": [
                                         "str/concat",
-                                        "@config.coefBLabel",
+                                        "@entity.coefBLabel",
                                         ": ",
                                         [
                                           "math/round",
@@ -2826,7 +3672,7 @@
                             {
                               "children": [
                                 {
-                                  "content": "@config.taskText",
+                                  "content": "@entity.taskText",
                                   "type": "typography",
                                   "variant": "body"
                                 },
@@ -2834,7 +3680,7 @@
                                   "color": "muted",
                                   "content": [
                                     "str/concat",
-                                    "@config.pLabel",
+                                    "@entity.pLabel",
                                     " = ",
                                     [
                                       "math/round",
@@ -2842,7 +3688,7 @@
                                       1.0
                                     ],
                                     " · ",
-                                    "@config.qLabel",
+                                    "@entity.qLabel",
                                     " = ",
                                     [
                                       "math/round",
@@ -3200,7 +4046,7 @@
                                       "color": "muted",
                                       "content": [
                                         "str/concat",
-                                        "@config.coefALabel",
+                                        "@entity.coefALabel",
                                         ": ",
                                         [
                                           "math/round",
@@ -3231,7 +4077,7 @@
                                       "color": "muted",
                                       "content": [
                                         "str/concat",
-                                        "@config.coefBLabel",
+                                        "@entity.coefBLabel",
                                         ": ",
                                         [
                                           "math/round",
@@ -3264,7 +4110,7 @@
                             {
                               "children": [
                                 {
-                                  "content": "@config.taskText",
+                                  "content": "@entity.taskText",
                                   "type": "typography",
                                   "variant": "body"
                                 },
@@ -3272,7 +4118,7 @@
                                   "color": "muted",
                                   "content": [
                                     "str/concat",
-                                    "@config.pLabel",
+                                    "@entity.pLabel",
                                     " = ",
                                     [
                                       "math/round",
@@ -3280,7 +4126,7 @@
                                       1.0
                                     ],
                                     " · ",
-                                    "@config.qLabel",
+                                    "@entity.qLabel",
                                     " = ",
                                     [
                                       "math/round",
@@ -3661,7 +4507,7 @@
                                       "color": "muted",
                                       "content": [
                                         "str/concat",
-                                        "@config.coefALabel",
+                                        "@entity.coefALabel",
                                         ": ",
                                         [
                                           "math/round",
@@ -3692,7 +4538,7 @@
                                       "color": "muted",
                                       "content": [
                                         "str/concat",
-                                        "@config.coefBLabel",
+                                        "@entity.coefBLabel",
                                         ": ",
                                         [
                                           "math/round",
@@ -3725,7 +4571,7 @@
                             {
                               "children": [
                                 {
-                                  "content": "@config.taskText",
+                                  "content": "@entity.taskText",
                                   "type": "typography",
                                   "variant": "body"
                                 },
@@ -3733,7 +4579,7 @@
                                   "color": "muted",
                                   "content": [
                                     "str/concat",
-                                    "@config.pLabel",
+                                    "@entity.pLabel",
                                     " = ",
                                     [
                                       "math/round",
@@ -3741,7 +4587,7 @@
                                       1.0
                                     ],
                                     " · ",
-                                    "@config.qLabel",
+                                    "@entity.qLabel",
                                     " = ",
                                     [
                                       "math/round",
@@ -3803,12 +4649,12 @@
                   [
                     "set",
                     "@entity.p",
-                    "@config.pStart"
+                    "@entity.pStart"
                   ],
                   [
                     "set",
                     "@entity.q",
-                    "@config.qStart"
+                    "@entity.qStart"
                   ],
                   [
                     "set",
@@ -3831,7 +4677,7 @@
                     [
                       {
                         "x": 0.0,
-                        "y": "@config.pStart"
+                        "y": "@entity.pStart"
                       }
                     ]
                   ],
@@ -3841,7 +4687,7 @@
                     [
                       {
                         "x": 0.0,
-                        "y": "@config.qStart"
+                        "y": "@entity.qStart"
                       }
                     ]
                   ],
@@ -3851,12 +4697,12 @@
                     [
                       {
                         "color": "@config.pColor",
-                        "label": "@config.pLabel",
+                        "label": "@entity.pLabel",
                         "samples": "@entity.pSamples"
                       },
                       {
                         "color": "@config.qColor",
-                        "label": "@config.qLabel",
+                        "label": "@entity.qLabel",
                         "samples": "@entity.qSamples"
                       }
                     ]
@@ -4175,7 +5021,7 @@
                                       "color": "muted",
                                       "content": [
                                         "str/concat",
-                                        "@config.coefALabel",
+                                        "@entity.coefALabel",
                                         ": ",
                                         [
                                           "math/round",
@@ -4206,7 +5052,7 @@
                                       "color": "muted",
                                       "content": [
                                         "str/concat",
-                                        "@config.coefBLabel",
+                                        "@entity.coefBLabel",
                                         ": ",
                                         [
                                           "math/round",
@@ -4239,7 +5085,7 @@
                             {
                               "children": [
                                 {
-                                  "content": "@config.taskText",
+                                  "content": "@entity.taskText",
                                   "type": "typography",
                                   "variant": "body"
                                 },
@@ -4247,7 +5093,7 @@
                                   "color": "muted",
                                   "content": [
                                     "str/concat",
-                                    "@config.pLabel",
+                                    "@entity.pLabel",
                                     " = ",
                                     [
                                       "math/round",
@@ -4255,7 +5101,7 @@
                                       1.0
                                     ],
                                     " · ",
-                                    "@config.qLabel",
+                                    "@entity.qLabel",
                                     " = ",
                                     [
                                       "math/round",
@@ -4285,8 +5131,8 @@
                     "emit",
                     "SIM_RESET",
                     {
-                      "pStart": "@config.pStart",
-                      "qStart": "@config.qStart"
+                      "pStart": "@entity.pStart",
+                      "qStart": "@entity.qStart"
                     }
                   ]
                 ],
@@ -4626,7 +5472,7 @@
                                       "color": "muted",
                                       "content": [
                                         "str/concat",
-                                        "@config.coefALabel",
+                                        "@entity.coefALabel",
                                         ": ",
                                         [
                                           "math/round",
@@ -4657,7 +5503,7 @@
                                       "color": "muted",
                                       "content": [
                                         "str/concat",
-                                        "@config.coefBLabel",
+                                        "@entity.coefBLabel",
                                         ": ",
                                         [
                                           "math/round",
@@ -4690,7 +5536,7 @@
                             {
                               "children": [
                                 {
-                                  "content": "@config.taskText",
+                                  "content": "@entity.taskText",
                                   "type": "typography",
                                   "variant": "body"
                                 },
@@ -4698,7 +5544,7 @@
                                   "color": "muted",
                                   "content": [
                                     "str/concat",
-                                    "@config.pLabel",
+                                    "@entity.pLabel",
                                     " = ",
                                     [
                                       "math/round",
@@ -4706,7 +5552,7 @@
                                       1.0
                                     ],
                                     " · ",
-                                    "@config.qLabel",
+                                    "@entity.qLabel",
                                     " = ",
                                     [
                                       "math/round",
@@ -5077,7 +5923,7 @@
                                       "color": "muted",
                                       "content": [
                                         "str/concat",
-                                        "@config.coefALabel",
+                                        "@entity.coefALabel",
                                         ": ",
                                         [
                                           "math/round",
@@ -5108,7 +5954,7 @@
                                       "color": "muted",
                                       "content": [
                                         "str/concat",
-                                        "@config.coefBLabel",
+                                        "@entity.coefBLabel",
                                         ": ",
                                         [
                                           "math/round",
@@ -5141,7 +5987,7 @@
                             {
                               "children": [
                                 {
-                                  "content": "@config.taskText",
+                                  "content": "@entity.taskText",
                                   "type": "typography",
                                   "variant": "body"
                                 },
@@ -5149,7 +5995,7 @@
                                   "color": "muted",
                                   "content": [
                                     "str/concat",
-                                    "@config.pLabel",
+                                    "@entity.pLabel",
                                     " = ",
                                     [
                                       "math/round",
@@ -5157,7 +6003,7 @@
                                       1.0
                                     ],
                                     " · ",
-                                    "@config.qLabel",
+                                    "@entity.qLabel",
                                     " = ",
                                     [
                                       "math/round",
@@ -5235,12 +6081,12 @@
                     [
                       {
                         "color": "@config.pColor",
-                        "label": "@config.pLabel",
+                        "label": "@entity.pLabel",
                         "samples": "@entity.pSamples"
                       },
                       {
                         "color": "@config.qColor",
-                        "label": "@config.qLabel",
+                        "label": "@entity.qLabel",
                         "samples": "@entity.qSamples"
                       }
                     ]
@@ -5559,7 +6405,7 @@
                                       "color": "muted",
                                       "content": [
                                         "str/concat",
-                                        "@config.coefALabel",
+                                        "@entity.coefALabel",
                                         ": ",
                                         [
                                           "math/round",
@@ -5590,7 +6436,7 @@
                                       "color": "muted",
                                       "content": [
                                         "str/concat",
-                                        "@config.coefBLabel",
+                                        "@entity.coefBLabel",
                                         ": ",
                                         [
                                           "math/round",
@@ -5623,7 +6469,7 @@
                             {
                               "children": [
                                 {
-                                  "content": "@config.taskText",
+                                  "content": "@entity.taskText",
                                   "type": "typography",
                                   "variant": "body"
                                 },
@@ -5631,7 +6477,7 @@
                                   "color": "muted",
                                   "content": [
                                     "str/concat",
-                                    "@config.pLabel",
+                                    "@entity.pLabel",
                                     " = ",
                                     [
                                       "math/round",
@@ -5639,7 +6485,7 @@
                                       1.0
                                     ],
                                     " · ",
-                                    "@config.qLabel",
+                                    "@entity.qLabel",
                                     " = ",
                                     [
                                       "math/round",
@@ -5727,7 +6573,7 @@
                         "if",
                         [
                           "==",
-                          "@config.kind",
+                          "@entity.kind",
                           "predator-prey"
                         ],
                         [
@@ -5749,7 +6595,7 @@
                           "if",
                           [
                             "==",
-                            "@config.kind",
+                            "@entity.kind",
                             "epidemic"
                           ],
                           [
@@ -5781,7 +6627,7 @@
                         "if",
                         [
                           "==",
-                          "@config.kind",
+                          "@entity.kind",
                           "predator-prey"
                         ],
                         [
@@ -5804,7 +6650,7 @@
                           "if",
                           [
                             "==",
-                            "@config.kind",
+                            "@entity.kind",
                             "epidemic"
                           ],
                           [
@@ -5930,12 +6776,12 @@
                       [
                         {
                           "color": "@config.pColor",
-                          "label": "@config.pLabel",
+                          "label": "@entity.pLabel",
                           "samples": "@entity.pSamples"
                         },
                         {
                           "color": "@config.qColor",
-                          "label": "@config.qLabel",
+                          "label": "@entity.qLabel",
                           "samples": "@entity.qSamples"
                         }
                       ]

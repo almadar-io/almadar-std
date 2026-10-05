@@ -100,6 +100,15 @@
         "parent": "trt_01M07580VZCAQ803GS0E38Q1J0",
         "renames": []
       },
+      "evt_01M459XDGMG0ZW5KN8VP84RT82": {
+        "bakedName": "ROSTER_LOADED",
+        "curName": "ROSTER_LOADED",
+        "id": "evt_01M459XDGMG0ZW5KN8VP84RT82",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M07580VZCAQ803GS0E38Q1J0",
+        "renames": []
+      },
       "orb_01M07580VZ7B4B990TA9QZ36GF": {
         "bakedName": "GoalSeekOrbital",
         "curName": "GoalSeekOrbital",
@@ -149,6 +158,18 @@
           {
             "name": "curveKind",
             "type": "string"
+          },
+          {
+            "name": "goalText",
+            "type": "string"
+          },
+          {
+            "name": "targetA",
+            "type": "number"
+          },
+          {
+            "name": "targetB",
+            "type": "number"
           },
           {
             "name": "paramA",
@@ -329,7 +350,7 @@
             },
             "matchMode": {
               "default": "",
-              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT (or on ROSTER_LOADED when rosterSource is event).",
               "label": "Match Mode",
               "tier": "presentation",
               "type": "string"
@@ -397,6 +418,17 @@
               "label": "Parameter B Step",
               "tier": "presentation",
               "type": "number"
+            },
+            "rosterSource": {
+              "default": "config",
+              "description": "Where the problem definition (goalText, curveKind, targetA, targetB) comes from: config reads those knobs at INIT; event waits for ROSTER_LOADED and takes them from its payload.",
+              "label": "Roster Source",
+              "tier": "domain",
+              "type": "string",
+              "values": [
+                "config",
+                "event"
+              ]
             },
             "showAxes": {
               "default": true,
@@ -530,6 +562,10 @@
             },
             {
               "kind": "set",
+              "resource": "@entity.goalText"
+            },
+            {
+              "kind": "set",
               "resource": "@entity.paramA"
             },
             {
@@ -551,6 +587,14 @@
             {
               "kind": "set",
               "resource": "@entity.solved"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.targetA"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.targetB"
             },
             {
               "kind": "set",
@@ -653,12 +697,15 @@
               "curves",
               "distance",
               "feedback",
+              "goalText",
               "paramA",
               "paramALabel",
               "paramB",
               "paramBLabel",
               "resultRow",
               "solved",
+              "targetA",
+              "targetB",
               "targetSamples",
               "title",
               "yMax",
@@ -691,6 +738,40 @@
                   {
                     "name": "mode",
                     "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and goalText, curveKind, targetA and targetB define the inverse problem; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
+                "id": "evt_01M459XDGMG0ZW5KN8VP84RT82",
+                "key": "ROSTER_LOADED",
+                "name": "Roster Loaded",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "goalText",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "curveKind",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "targetA",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "targetB",
+                    "required": true,
+                    "type": "number"
                   }
                 ],
                 "tier": "domain"
@@ -1201,6 +1282,21 @@
                       ],
                       [
                         "set",
+                        "@entity.goalText",
+                        "@config.goalText"
+                      ],
+                      [
+                        "set",
+                        "@entity.targetA",
+                        "@tA"
+                      ],
+                      [
+                        "set",
+                        "@entity.targetB",
+                        "@tB"
+                      ],
+                      [
+                        "set",
                         "@entity.paramA",
                         "@A"
                       ],
@@ -1535,7 +1631,7 @@
                               "type": "stack"
                             },
                             {
-                              "content": "@config.goalText",
+                              "content": "@entity.goalText",
                               "type": "typography",
                               "variant": "body"
                             },
@@ -1560,9 +1656,17 @@
                 "eventId": "evt_01M07580VZ8RDZMA3WMX2DKFAR",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@config.matchMode",
-                  ""
+                  "and",
+                  [
+                    "==",
+                    "@config.matchMode",
+                    ""
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1987,6 +2091,21 @@
                       ],
                       [
                         "set",
+                        "@entity.goalText",
+                        "@config.goalText"
+                      ],
+                      [
+                        "set",
+                        "@entity.targetA",
+                        "@tA"
+                      ],
+                      [
+                        "set",
+                        "@entity.targetB",
+                        "@tB"
+                      ],
+                      [
+                        "set",
                         "@entity.paramA",
                         "@A"
                       ],
@@ -2321,7 +2440,7 @@
                               "type": "stack"
                             },
                             {
-                              "content": "@config.goalText",
+                              "content": "@entity.goalText",
                               "type": "typography",
                               "variant": "body"
                             },
@@ -2346,9 +2465,831 @@
                 "eventId": "evt_01M07580W5HD3M1WG88XEPW7CQ",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@payload.mode",
-                  "@config.matchMode"
+                  "and",
+                  [
+                    "==",
+                    "@payload.mode",
+                    "@config.matchMode"
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "kind",
+                        "@payload.curveKind"
+                      ],
+                      [
+                        "span",
+                        [
+                          "-",
+                          "@config.xMax",
+                          "@config.xMin"
+                        ]
+                      ],
+                      [
+                        "tA",
+                        "@payload.targetA"
+                      ],
+                      [
+                        "tB",
+                        "@payload.targetB"
+                      ],
+                      [
+                        "A",
+                        "@config.paramADefault"
+                      ],
+                      [
+                        "B",
+                        "@config.paramBDefault"
+                      ],
+                      [
+                        "targetSamples",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            0.0,
+                            81.0
+                          ],
+                          [
+                            "fn",
+                            [
+                              "i"
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "x",
+                                  [
+                                    "+",
+                                    "@config.xMin",
+                                    [
+                                      "*",
+                                      "@i",
+                                      [
+                                        "/",
+                                        "@span",
+                                        80.0
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "yVal",
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@kind",
+                                      "power"
+                                    ],
+                                    [
+                                      "*",
+                                      "@tA",
+                                      [
+                                        "math/pow",
+                                        "@x",
+                                        "@tB"
+                                      ]
+                                    ],
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@kind",
+                                        "linear"
+                                      ],
+                                      [
+                                        "+",
+                                        "@tA",
+                                        [
+                                          "*",
+                                          "@tB",
+                                          "@x"
+                                        ]
+                                      ],
+                                      [
+                                        "*",
+                                        "@tA",
+                                        [
+                                          "math/sin",
+                                          [
+                                            "*",
+                                            "@tB",
+                                            "@x"
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              {
+                                "x": "@x",
+                                "y": "@yVal"
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "samples",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            0.0,
+                            81.0
+                          ],
+                          [
+                            "fn",
+                            [
+                              "i"
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "x",
+                                  [
+                                    "+",
+                                    "@config.xMin",
+                                    [
+                                      "*",
+                                      "@i",
+                                      [
+                                        "/",
+                                        "@span",
+                                        80.0
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "yVal",
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@kind",
+                                      "power"
+                                    ],
+                                    [
+                                      "*",
+                                      "@A",
+                                      [
+                                        "math/pow",
+                                        "@x",
+                                        "@B"
+                                      ]
+                                    ],
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@kind",
+                                        "linear"
+                                      ],
+                                      [
+                                        "+",
+                                        "@A",
+                                        [
+                                          "*",
+                                          "@B",
+                                          "@x"
+                                        ]
+                                      ],
+                                      [
+                                        "*",
+                                        "@A",
+                                        [
+                                          "math/sin",
+                                          [
+                                            "*",
+                                            "@B",
+                                            "@x"
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              {
+                                "x": "@x",
+                                "y": "@yVal"
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "dist",
+                        [
+                          "math/sqrt",
+                          [
+                            "/",
+                            [
+                              "array/sum",
+                              [
+                                "array/map",
+                                [
+                                  "array/range",
+                                  0.0,
+                                  81.0
+                                ],
+                                [
+                                  "fn",
+                                  [
+                                    "i"
+                                  ],
+                                  [
+                                    "let",
+                                    [
+                                      [
+                                        "dY",
+                                        [
+                                          "-",
+                                          [
+                                            "object/get",
+                                            [
+                                              "array/nth",
+                                              "@samples",
+                                              "@i"
+                                            ],
+                                            "y"
+                                          ],
+                                          [
+                                            "object/get",
+                                            [
+                                              "array/nth",
+                                              "@targetSamples",
+                                              "@i"
+                                            ],
+                                            "y"
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "*",
+                                      "@dY",
+                                      "@dY"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ],
+                            81.0
+                          ]
+                        ]
+                      ],
+                      [
+                        "allSamples",
+                        [
+                          "array/concat",
+                          "@samples",
+                          "@targetSamples"
+                        ]
+                      ],
+                      [
+                        "yMinRaw",
+                        [
+                          "array/reduce",
+                          "@allSamples",
+                          [
+                            "object/get",
+                            [
+                              "array/nth",
+                              "@allSamples",
+                              0.0
+                            ],
+                            "y"
+                          ],
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "s"
+                            ],
+                            [
+                              "math/min",
+                              "@acc",
+                              [
+                                "object/get",
+                                "@s",
+                                "y"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "yMaxRaw",
+                        [
+                          "array/reduce",
+                          "@allSamples",
+                          [
+                            "object/get",
+                            [
+                              "array/nth",
+                              "@allSamples",
+                              0.0
+                            ],
+                            "y"
+                          ],
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "s"
+                            ],
+                            [
+                              "math/max",
+                              "@acc",
+                              [
+                                "object/get",
+                                "@s",
+                                "y"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "yPad",
+                        [
+                          "*",
+                          0.1,
+                          [
+                            "math/max",
+                            0.001,
+                            [
+                              "-",
+                              "@yMaxRaw",
+                              "@yMinRaw"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.active",
+                        true
+                      ],
+                      [
+                        "set",
+                        "@entity.title",
+                        "@config.title"
+                      ],
+                      [
+                        "set",
+                        "@entity.curveKind",
+                        "@kind"
+                      ],
+                      [
+                        "set",
+                        "@entity.goalText",
+                        "@payload.goalText"
+                      ],
+                      [
+                        "set",
+                        "@entity.targetA",
+                        "@payload.targetA"
+                      ],
+                      [
+                        "set",
+                        "@entity.targetB",
+                        "@payload.targetB"
+                      ],
+                      [
+                        "set",
+                        "@entity.paramA",
+                        "@A"
+                      ],
+                      [
+                        "set",
+                        "@entity.paramB",
+                        "@B"
+                      ],
+                      [
+                        "set",
+                        "@entity.paramALabel",
+                        "@config.paramALabel"
+                      ],
+                      [
+                        "set",
+                        "@entity.paramBLabel",
+                        "@config.paramBLabel"
+                      ],
+                      [
+                        "set",
+                        "@entity.targetSamples",
+                        "@targetSamples"
+                      ],
+                      [
+                        "set",
+                        "@entity.distance",
+                        "@dist"
+                      ],
+                      [
+                        "set",
+                        "@entity.attempts",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.solved",
+                        false
+                      ],
+                      [
+                        "set",
+                        "@entity.feedback",
+                        ""
+                      ],
+                      [
+                        "set",
+                        "@entity.yMin",
+                        [
+                          "-",
+                          "@yMinRaw",
+                          "@yPad"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.yMax",
+                        [
+                          "+",
+                          "@yMaxRaw",
+                          "@yPad"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.curves",
+                        [
+                          {
+                            "color": "@config.targetColor",
+                            "label": "@config.targetLabel",
+                            "samples": "@targetSamples"
+                          },
+                          {
+                            "color": "@config.learnerColor",
+                            "label": "@config.learnerLabel",
+                            "samples": "@samples"
+                          }
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.resultRow",
+                    [
+                      "array/concat",
+                      [
+                        "if",
+                        "@entity.solved",
+                        [
+                          {
+                            "label": "Solved",
+                            "type": "badge",
+                            "variant": "success"
+                          }
+                        ],
+                        []
+                      ],
+                      [
+                        {
+                          "content": "@entity.feedback",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.solved",
+                                    "Solved",
+                                    [
+                                      "if",
+                                      [
+                                        ">",
+                                        "@entity.attempts",
+                                        0.0
+                                      ],
+                                      "Try again",
+                                      "Tuning"
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.solved",
+                                    "success",
+                                    [
+                                      "if",
+                                      [
+                                        ">",
+                                        "@entity.attempts",
+                                        0.0
+                                      ],
+                                      "warning",
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "CHECK",
+                                  "disabled": [
+                                    "if",
+                                    "@entity.solved",
+                                    true,
+                                    false
+                                  ],
+                                  "icon": "check",
+                                  "label": "@config.checkLabel",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "icon": "rotate-ccw",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "if",
+                                    "@config.showLiveDistance",
+                                    [
+                                      "str/concat",
+                                      "Distance from target: ",
+                                      [
+                                        "math/round",
+                                        "@entity.distance",
+                                        3.0
+                                      ],
+                                      " · attempts: ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        "@entity.attempts"
+                                      ]
+                                    ],
+                                    [
+                                      "str/concat",
+                                      "Attempts: ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        "@entity.attempts"
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
+                              "animate": false,
+                              "curves": "@entity.curves",
+                              "gridStep": "@config.gridStep",
+                              "height": "@config.height",
+                              "interactive": false,
+                              "keyMap": {
+                                "KeyR": "RESET",
+                                "Space": "CHECK"
+                              },
+                              "points": [],
+                              "shapes": [],
+                              "showAxes": "@config.showAxes",
+                              "showGrid": "@config.showGrid",
+                              "title": "",
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.xMax",
+                              "xMin": "@config.xMin",
+                              "yMax": "@entity.yMax",
+                              "yMin": "@entity.yMin"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@entity.paramALabel",
+                                        ": ",
+                                        [
+                                          "math/round",
+                                          "@entity.paramA",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_PARAM_A",
+                                      "max": "@config.paramAMax",
+                                      "min": "@config.paramAMin",
+                                      "showTooltip": true,
+                                      "step": "@config.paramAStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.paramA"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@entity.paramBLabel",
+                                        ": ",
+                                        [
+                                          "math/round",
+                                          "@entity.paramB",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_PARAM_B",
+                                      "max": "@config.paramBMax",
+                                      "min": "@config.paramBMin",
+                                      "showTooltip": true,
+                                      "step": "@config.paramBStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.paramB"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": "@entity.goalText",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "color": "muted",
+                              "content": "@entity.feedback",
+                              "type": "typography",
+                              "variant": "caption"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459XDGMG0ZW5KN8VP84RT82",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "and",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ],
+                    [
+                      "!=",
+                      "@payload.curveKind",
+                      ""
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459XDGMG0ZW5KN8VP84RT82",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -2926,7 +3867,7 @@
                               "type": "stack"
                             },
                             {
-                              "content": "@config.goalText",
+                              "content": "@entity.goalText",
                               "type": "typography",
                               "variant": "body"
                             },
@@ -3548,7 +4489,7 @@
                               "type": "stack"
                             },
                             {
-                              "content": "@config.goalText",
+                              "content": "@entity.goalText",
                               "type": "typography",
                               "variant": "body"
                             },
@@ -3920,7 +4861,7 @@
                               "type": "stack"
                             },
                             {
-                              "content": "@config.goalText",
+                              "content": "@entity.goalText",
                               "type": "typography",
                               "variant": "body"
                             },
@@ -4570,7 +5511,7 @@
                               "type": "stack"
                             },
                             {
-                              "content": "@config.goalText",
+                              "content": "@entity.goalText",
                               "type": "typography",
                               "variant": "body"
                             },

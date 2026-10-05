@@ -28,6 +28,7 @@ orbital AppLayoutOrbital {
           type: box
           children: [{
             appName: @config.appName
+            logo: (if (== @config.logoSrc "") null { type: image, src: @config.logoSrc, alt: "", fit: contain, className: "h-8 w-8" })
             children: [{
               children: [@config.contentTrait]
               className: @config.contentClassName
@@ -40,7 +41,8 @@ orbital AppLayoutOrbital {
             navItems: (array/map (array/filter @config.navItems (fn item (or (= (array/len (object/get @item roles [])) 0) (array/includes (object/get @item roles []) @config.viewerRole)))) (fn item (if (object/has @item children) (object/merge @item { children: (array/filter (object/get @item children []) (fn child (or (= (array/len (object/get @child roles [])) 0) (array/includes (object/get @child roles []) @config.viewerRole)))) }) @item)))
             notificationClickEvent: @config.notificationClickEvent
             notifications: @config.notifications
-            searchEvent: @config.searchEvent
+            searchEvent: (if @config.showSearch @config.searchEvent null)
+            showThemeToggle: @config.showThemeToggle
             sidebarContent: @config.sidebarTrait
             topBarActions: (array/filter @config.topBarActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             type: @config.layoutPattern
@@ -58,6 +60,7 @@ orbital AppLayoutOrbital {
           type: box
           children: [{
             appName: @config.appName
+            logo: (if (== @config.logoSrc "") null { type: image, src: @config.logoSrc, alt: "", fit: contain, className: "h-8 w-8" })
             children: [{
               children: [{
                 description: @config.accessDeniedDescription
@@ -75,7 +78,8 @@ orbital AppLayoutOrbital {
             navItems: (array/map (array/filter @config.navItems (fn item (or (= (array/len (object/get @item roles [])) 0) (array/includes (object/get @item roles []) @config.viewerRole)))) (fn item (if (object/has @item children) (object/merge @item { children: (array/filter (object/get @item children []) (fn child (or (= (array/len (object/get @child roles [])) 0) (array/includes (object/get @child roles []) @config.viewerRole)))) }) @item)))
             notificationClickEvent: @config.notificationClickEvent
             notifications: @config.notifications
-            searchEvent: @config.searchEvent
+            searchEvent: (if @config.showSearch @config.searchEvent null)
+            showThemeToggle: @config.showThemeToggle
             sidebarContent: @config.sidebarTrait
             topBarActions: (array/filter @config.topBarActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             type: @config.layoutPattern
@@ -137,6 +141,11 @@ orbital AppLayoutOrbital {
         @description "Name shown in the top-left of the chrome header."
         @synonyms "app title, product name, brand name, application name, site name"
         @tier "presentation"
+      logoSrc : string = ""
+        @label "Logo image"
+        @description "Address of the logo shown beside the app name in the chrome header (an image URL or an inline data: SVG); empty shows the name's first letter."
+        @synonyms "logo, brand mark, app icon, logo url"
+        @tier "presentation"
       viewerName : string = ""
         @label "Who is signed in"
         @description "Display name of the signed-in viewer, shown in the app bar's account menu — typically @user.name. Blank renders no account menu, so people can see which account (and which persona) they are viewing the app as only when it is actually known."
@@ -159,6 +168,16 @@ orbital AppLayoutOrbital {
         @label "Search event"
         @description "Event emitted when the user runs a global search"
         @tier "internal"
+      showSearch : boolean = true
+        @label "Show the search box?"
+        @description "The top-bar search box; turn off for apps whose pages carry their own search."
+        @synonyms "search bar, top search, hide search"
+        @tier "presentation"
+      showThemeToggle : boolean = true
+        @label "Show the light/dark toggle?"
+        @description "The theme toggle in the top bar; turn off when the app offers it elsewhere, such as a settings page."
+        @synonyms "dark mode button, theme switch, hide theme toggle"
+        @tier "presentation"
       topBarActions : [ItemAction] = []
         @label "What shortcuts go in the top bar?"
         @description "Icon buttons shown on the right side of the top bar (e.g. cart, help, profile)."
@@ -177,9 +196,9 @@ orbital AppLayoutOrbital {
         @label "Layout pattern"
         @description "UI pattern used to render the application chrome"
         @tier "internal"
-      layoutMode : "sidebar" | "topnav" | "bottomnav" | "minimal" = sidebar
+      layoutMode : "sidebar" | "topnav" | "bottomnav" | "minimal" | "drawer" = sidebar
         @label "Where should navigation be placed?"
-        @description "sidebar = left rail; topnav = top bar; bottomnav = mobile tab bar; minimal = no nav."
+        @description "sidebar = left rail; topnav = top bar; bottomnav = mobile tab bar; minimal = no nav; drawer = navigation behind a menu button at every width, content full width."
         @synonyms "nav position, navigation style, menu placement, layout style"
         @tier "presentation"
       currentPath : string = ""

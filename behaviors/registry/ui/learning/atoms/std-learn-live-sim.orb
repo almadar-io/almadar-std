@@ -100,6 +100,15 @@
         "parent": "trt_01M055GQ2YKEPWZ35KVYNSCRGC",
         "renames": []
       },
+      "evt_01M459VBBQNQQF6RSEWE131H3E": {
+        "bakedName": "ROSTER_LOADED",
+        "curName": "ROSTER_LOADED",
+        "id": "evt_01M459VBBQNQQF6RSEWE131H3E",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M055GQ2YKEPWZ35KVYNSCRGC",
+        "renames": []
+      },
       "orb_01M055GQ2Y935GEHYW54KNWCS4": {
         "bakedName": "LearnLiveSimOrbital",
         "curName": "LearnLiveSimOrbital",
@@ -191,6 +200,50 @@
             "type": "array"
           },
           {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": false,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "loadedBodies",
+            "type": "array"
+          },
+          {
             "default": false,
             "name": "running",
             "type": "boolean"
@@ -276,7 +329,7 @@
                   "y": 40.0
                 }
               ],
-              "description": "Initial bodies; each carries position (x,y), radius, color, and velocity (vx,vy). Restored on Reset.",
+              "description": "Initial bodies; each carries position (x,y), radius, color, and velocity (vx,vy). Restored on Reset. Used when rosterSource is config.",
               "items": {
                 "properties": {
                   "color": {
@@ -344,7 +397,7 @@
             },
             "matchMode": {
               "default": "",
-              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT (or on ROSTER_LOADED when rosterSource is event).",
               "label": "Match Mode",
               "tier": "presentation",
               "type": "string"
@@ -355,6 +408,17 @@
               "label": "Restitution",
               "tier": "domain",
               "type": "number"
+            },
+            "rosterSource": {
+              "default": "config",
+              "description": "Where the body roster comes from: config reads the bodies knob at INIT; event waits for ROSTER_LOADED and takes the bodies from its payload.",
+              "label": "Roster Source",
+              "tier": "domain",
+              "type": "string",
+              "values": [
+                "config",
+                "event"
+              ]
             },
             "running": {
               "default": false,
@@ -440,6 +504,10 @@
             },
             {
               "kind": "set",
+              "resource": "@entity.loadedBodies"
+            },
+            {
+              "kind": "set",
               "resource": "@entity.running"
             },
             {
@@ -505,6 +573,7 @@
               "bodies",
               "damping",
               "gravity",
+              "loadedBodies",
               "running",
               "sampleSpeed",
               "tickCount",
@@ -537,6 +606,57 @@
                   {
                     "name": "mode",
                     "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and bodies is the initial body list; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
+                "id": "evt_01M459VBBQNQQF6RSEWE131H3E",
+                "key": "ROSTER_LOADED",
+                "name": "Roster Loaded",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "bodies",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "radius",
+                        "type": "number"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      },
+                      {
+                        "name": "vx",
+                        "type": "number"
+                      },
+                      {
+                        "name": "vy",
+                        "type": "number"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
                   }
                 ],
                 "tier": "domain"
@@ -642,6 +762,11 @@
                     "set",
                     "@entity.title",
                     "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.loadedBodies",
+                    "@config.bodies"
                   ],
                   [
                     "set",
@@ -886,9 +1011,17 @@
                 "eventId": "evt_01M055GQ2Y9A0FGVJ8PVC52HY1",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@config.matchMode",
-                  ""
+                  "and",
+                  [
+                    "==",
+                    "@config.matchMode",
+                    ""
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
                 ],
                 "to": "idle"
               },
@@ -945,6 +1078,11 @@
                     "set",
                     "@entity.title",
                     "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.loadedBodies",
+                    "@config.bodies"
                   ],
                   [
                     "set",
@@ -1189,9 +1327,341 @@
                 "eventId": "evt_01M055GQ31CXPPY57H8M8MZEZ1",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@payload.mode",
-                  "@config.matchMode"
+                  "and",
+                  [
+                    "==",
+                    "@payload.mode",
+                    "@config.matchMode"
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.loadedBodies",
+                    "@payload.bodies"
+                  ],
+                  [
+                    "set",
+                    "@entity.bodies",
+                    "@payload.bodies"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "set",
+                    "@entity.gravity",
+                    "@config.gravity"
+                  ],
+                  [
+                    "set",
+                    "@entity.damping",
+                    "@config.damping"
+                  ],
+                  [
+                    "set",
+                    "@entity.tickCount",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.sampleSpeed",
+                    0.0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.running",
+                                    "Running",
+                                    "Paused"
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.running",
+                                    "primary",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "icon": "play",
+                                    "label": "Play",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  }
+                                ],
+                                {
+                                  "action": "RESET",
+                                  "icon": "rotate-ccw",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Tick ",
+                                    "@entity.tickCount"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
+                              "backgroundColor": "@config.backgroundColor",
+                              "bodies": "@entity.bodies",
+                              "height": "@config.height",
+                              "keyMap": {
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
+                              "showForces": false,
+                              "showVelocity": "@config.showVelocity",
+                              "type": "physics-canvas",
+                              "velocityScale": "@config.velocityScale",
+                              "width": "@config.width"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "content": [
+                                        "str/concat",
+                                        "Gravity: ",
+                                        [
+                                          "math/round",
+                                          "@entity.gravity",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_GRAVITY",
+                                      "max": 1.5,
+                                      "min": -1.0,
+                                      "showTooltip": true,
+                                      "step": 0.05,
+                                      "type": "range-slider",
+                                      "value": "@entity.gravity"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "content": [
+                                        "str/concat",
+                                        "Damping: ",
+                                        [
+                                          "math/round",
+                                          "@entity.damping",
+                                          3.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "SET_DAMPING",
+                                      "max": 1.0,
+                                      "min": 0.9,
+                                      "showTooltip": true,
+                                      "step": 0.005,
+                                      "type": "range-slider",
+                                      "value": "@entity.damping"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Sample body speed ",
+                                [
+                                  "math/round",
+                                  "@entity.sampleSpeed",
+                                  2.0
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459VBBQNQQF6RSEWE131H3E",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "and",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ],
+                    [
+                      ">",
+                      [
+                        "array/len",
+                        "@payload.bodies"
+                      ],
+                      0.0
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459VBBQNQQF6RSEWE131H3E",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1902,7 +2372,7 @@
                   [
                     "set",
                     "@entity.bodies",
-                    "@config.bodies"
+                    "@entity.loadedBodies"
                   ],
                   [
                     "set",

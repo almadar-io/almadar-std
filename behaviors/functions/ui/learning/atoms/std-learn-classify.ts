@@ -30,7 +30,7 @@ const ALIAS = 'LearnClassify';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnClassifyEventKey = 'ADVANCE' | 'CLASSIFY_UPDATED' | 'INIT' | 'LEARN_ROUND_COMPLETE' | 'MODE_SELECTED' | 'PICK' | 'RETRY' | 'TOGGLE_RUN';
+export type StdLearnClassifyEventKey = 'ADVANCE' | 'CLASSIFY_UPDATED' | 'INIT' | 'LEARN_ROUND_COMPLETE' | 'MODE_SELECTED' | 'PICK' | 'RETRY' | 'ROSTER_LOADED' | 'TOGGLE_RUN';
 
 /**
  * Payload shape for the `CLASSIFY_UPDATED` event.
@@ -95,6 +95,8 @@ export interface StdLearnClassifyConfig {
   pointsPerCorrect?: number;
   /** Default: `"Retry Round"` */
   retryLabel?: string;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
   /** Default: `0` */
   scoreCap?: number;
   /** Default: `true` */

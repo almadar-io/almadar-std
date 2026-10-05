@@ -27,6 +27,7 @@ orbital PredictOrbital {
     id : string!
     active : boolean = false
     title : string
+    scenarios : [PredictScenario]
     scenarioIndex : number = 0
     totalScenarios : number = 0
     phase : string
@@ -52,7 +53,7 @@ orbital PredictOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle when (== @config.matchMode "")
+      INIT -> idle when (and (== @config.matchMode "") (== @config.rosterSource "config"))
         (let (
             (first (array/nth @config.scenarios 0))
           )
@@ -60,6 +61,7 @@ orbital PredictOrbital {
             (set @entity.active true)
             (set @entity.title @config.title)
             (set @entity.scenarioIndex 0)
+            (set @entity.scenarios @config.scenarios)
             (set @entity.totalScenarios (array/len @config.scenarios))
             (set @entity.phase "commit")
             (set @entity.chosenIndex 0)
@@ -115,7 +117,7 @@ orbital PredictOrbital {
         (set @entity.active false)
         (render-ui main null)
 
-      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+      MODE_SELECTED -> idle when (and (== ?mode @config.matchMode) (== @config.rosterSource "config"))
         (let (
             (first (array/nth @config.scenarios 0))
           )
@@ -123,6 +125,7 @@ orbital PredictOrbital {
             (set @entity.active true)
             (set @entity.title @config.title)
             (set @entity.scenarioIndex 0)
+            (set @entity.scenarios @config.scenarios)
             (set @entity.totalScenarios (array/len @config.scenarios))
             (set @entity.phase "commit")
             (set @entity.chosenIndex 0)
@@ -174,6 +177,71 @@ orbital PredictOrbital {
           ]
         })
 
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (and (== ?mode @config.matchMode) (> (array/len ?scenarios) 0)))
+        (let (
+            (first (array/nth ?scenarios 0))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.scenarioIndex 0)
+            (set @entity.scenarios ?scenarios)
+            (set @entity.totalScenarios (array/len ?scenarios))
+            (set @entity.phase "commit")
+            (set @entity.chosenIndex 0)
+            (set @entity.frames (object/get @first frames))
+            (set @entity.frameIndex 0)
+            (set @entity.frameCaption "")
+            (set @entity.frameValue 0)
+            (set @entity.revealSamples [])
+            (set @entity.revealCurves [])
+            (set @entity.score 0)
+            (set @entity.done false)
+            (set @entity.setupText (object/get @first setup))
+            (set @entity.question (object/get @first question))
+            (set @entity.options (object/get @first options))
+            (set @entity.correctIndex (object/get @first correctIndex))
+            (set @entity.explanation (object/get @first explanation ""))
+            (set @entity.feedback "")
+            (set @entity.view [
+              { type: card, variant: bordered, padding: md, children: [
+                  { type: typography, variant: body, content: @entity.setupText },
+                  { type: typography, variant: h4, content: @entity.question }
+                ] }
+            ])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done (str/concat @entity.score " / " @entity.totalScenarios " correct") (if (== @entity.phase "commit") "Predict" (if (== @entity.phase "reveal") "Revealing" (if (== @entity.chosenIndex @entity.correctIndex) "Correct" "Incorrect")))), variant: (if @entity.done "primary" (if (== @entity.phase "judged") (if (== @entity.chosenIndex @entity.correctIndex) "success" "error") "neutral")) }
+                  ] },
+                { type: progress-bar, value: (+ @entity.scenarioIndex 1), max: @entity.totalScenarios, showPercentage: false, label: (str/concat "Scenario " (str/concat "" (+ @entity.scenarioIndex 1)) " of " (str/concat "" @entity.totalScenarios)) },
+                { type: stack, direction: vertical, gap: md, children: @entity.view },
+                { type: stack, direction: vertical, gap: sm, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
+                    { type: button, action: PREDICT, actionPayload: { index: @i }, label: (array/nth @entity.options @i), size: lg, disabled: (!= @entity.phase "commit"), variant: (if (== @entity.phase "commit") "secondary" (if (== @entity.phase "reveal") (if (== @entity.chosenIndex @i) "primary" "ghost") (if (== @i @entity.correctIndex) "success" (if (== @entity.chosenIndex @i) "danger" "ghost")))) })) },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: (math/max 1 (- (array/len @entity.frames) 1)), yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.revealCurves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { ArrowRight: NEXT, KeyR: RETRY } },
+                { type: typography, variant: body, content: @entity.frameCaption },
+                { type: typography, variant: body, content: @entity.feedback },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: NEXT, label: @config.nextLabel, icon: "chevron-right", variant: primary, disabled: (if (and (== @entity.phase "judged") (== @entity.done false)) false true) },
+                    { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: ghost, disabled: (if @entity.done false true) },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Correct " @entity.score " of " @entity.totalScenarios) }
+                  ] }
+              ] }
+          ]
+        })
+
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (render-ui main null)
+
       PREDICT -> idle when (and (== @entity.active true) (and (== @entity.phase "commit") (== @entity.done false)))
         (let (
             (frame0 (array/nth @entity.frames 0))
@@ -190,11 +258,11 @@ orbital PredictOrbital {
         (emit PREDICTION_COMMITTED { scenarioIndex: @entity.scenarioIndex, chosenIndex: @entity.chosenIndex })
 
       NEXT -> idle when (and (== @entity.active true) (and (== @entity.phase "judged") (== @entity.done false)))
-        (if (>= (+ @entity.scenarioIndex 1) (array/len @config.scenarios)) (emit LEARN_ROUND_COMPLETE { score: @entity.score, total: (array/len @config.scenarios) }) null)
+        (if (>= (+ @entity.scenarioIndex 1) (array/len @entity.scenarios)) (emit LEARN_ROUND_COMPLETE { score: @entity.score, total: (array/len @entity.scenarios) }) null)
         (let (
             (nextIndex (+ @entity.scenarioIndex 1))
-            (finished (>= @nextIndex (array/len @config.scenarios)))
-            (next (array/nth @config.scenarios (math/min @nextIndex (- (array/len @config.scenarios) 1))))
+            (finished (>= @nextIndex (array/len @entity.scenarios)))
+            (next (array/nth @entity.scenarios (math/min @nextIndex (- (array/len @entity.scenarios) 1))))
           )
           (do
             (set @entity.scenarioIndex (if @finished @entity.scenarioIndex @nextIndex))
@@ -256,7 +324,7 @@ orbital PredictOrbital {
 
       RETRY -> idle when (and (== @entity.active true) (== @entity.done true))
         (let (
-            (first (array/nth @config.scenarios 0))
+            (first (array/nth @entity.scenarios 0))
           )
           (do
             (set @entity.scenarioIndex 0)
@@ -335,6 +403,12 @@ orbital PredictOrbital {
       }
         @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
         @tier "domain"
+      ROSTER_LOADED {
+        mode : string!
+        scenarios : [PredictScenario]!
+      }
+        @description "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and scenarios is the scenario list; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides."
+        @tier "domain"
       PREDICT {
         index : number
       }
@@ -384,6 +458,10 @@ orbital PredictOrbital {
         @label "Match Mode"
         @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
         @tier "presentation"
+      rosterSource : "config" | "event" = "config"
+        @label "Roster Source"
+        @description "Where the scenario roster comes from: config reads the scenarios knob at INIT; event waits for ROSTER_LOADED and takes the roster from its payload."
+        @tier "domain"
       title : string = "Predict, Then Watch"
         @label "Title"
         @description "Title shown above the instrument."

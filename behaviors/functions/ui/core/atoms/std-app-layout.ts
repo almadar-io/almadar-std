@@ -82,9 +82,11 @@ export interface StdAppLayoutConfig {
   /** Default: `""` */
   currentPath?: string;
   /** Default: `"sidebar"` */
-  layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal';
+  layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal' | 'drawer';
   /** Default: `"dashboard-layout"` */
   layoutPattern?: unknown;
+  /** Default: `""` */
+  logoSrc?: string;
   /** Default: `"@pages"` */
   navItems?: EntityRow[];
   /** Default: `"NOTIFY_CLICK"` */
@@ -93,6 +95,10 @@ export interface StdAppLayoutConfig {
   notifications?: EntityRow[];
   /** Default: `"SEARCH"` */
   searchEvent?: string;
+  /** Default: `true` */
+  showSearch?: boolean;
+  /** Default: `true` */
+  showThemeToggle?: boolean;
   sidebarTrait?: TraitFieldRef;
   /** Default: `"@currentTheme"` */
   theme?: string;
@@ -305,7 +311,7 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
           },
           'layoutMode': {
             'default': 'sidebar',
-            'description': 'sidebar = left rail; topnav = top bar; bottomnav = mobile tab bar; minimal = no nav.',
+            'description': 'sidebar = left rail; topnav = top bar; bottomnav = mobile tab bar; minimal = no nav; drawer = navigation behind a menu button at every width, content full width.',
             'label': 'Where should navigation be placed?',
             'synonyms': 'nav position, navigation style, menu placement, layout style',
             'tier': 'presentation',
@@ -315,6 +321,7 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
               'topnav',
               'bottomnav',
               'minimal',
+              'drawer',
             ],
           },
           'layoutPattern': {
@@ -323,6 +330,14 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
             'label': 'Layout pattern',
             'tier': 'internal',
             'type': 'pattern',
+          },
+          'logoSrc': {
+            'default': '',
+            'description': 'Address of the logo shown beside the app name in the chrome header (an image URL or an inline data: SVG); empty shows the name\'s first letter.',
+            'label': 'Logo image',
+            'synonyms': 'logo, brand mark, app icon, logo url',
+            'tier': 'presentation',
+            'type': 'string',
           },
           'navItems': {
             'default': '@pages',
@@ -417,6 +432,22 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
             'label': 'Search event',
             'tier': 'internal',
             'type': 'event',
+          },
+          'showSearch': {
+            'default': true,
+            'description': 'The top-bar search box; turn off for apps whose pages carry their own search.',
+            'label': 'Show the search box?',
+            'synonyms': 'search bar, top search, hide search',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'showThemeToggle': {
+            'default': true,
+            'description': 'The theme toggle in the top bar; turn off when the app offers it elsewhere, such as a settings page.',
+            'label': 'Show the light/dark toggle?',
+            'synonyms': 'dark mode button, theme switch, hide theme toggle',
+            'tier': 'presentation',
+            'type': 'boolean',
           },
           'sidebarTrait': {
             'description': 'Optional trait rendered in the sidebar between the nav links and the footer — the Notion/Confluence-style always-visible page tree; scrolls independently. Unset renders plain nav only.',
@@ -706,6 +737,22 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
                         ],
                         'currentPath': '@config.currentPath',
                         'layoutMode': '@config.layoutMode',
+                        'logo': [
+                          'if',
+                          [
+                            '==',
+                            '@config.logoSrc',
+                            '',
+                          ],
+                          null,
+                          {
+                            'alt': '',
+                            'className': 'h-8 w-8',
+                            'fit': 'contain',
+                            'src': '@config.logoSrc',
+                            'type': 'image',
+                          },
+                        ],
                         'navItems': [
                           'array/map',
                           [
@@ -803,7 +850,13 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
                         ],
                         'notificationClickEvent': '@config.notificationClickEvent',
                         'notifications': '@config.notifications',
-                        'searchEvent': '@config.searchEvent',
+                        'searchEvent': [
+                          'if',
+                          '@config.showSearch',
+                          '@config.searchEvent',
+                          null,
+                        ],
+                        'showThemeToggle': '@config.showThemeToggle',
                         'sidebarContent': '@config.sidebarTrait',
                         'topBarActions': [
                           'array/filter',
@@ -916,6 +969,22 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
                         ],
                         'currentPath': '@config.currentPath',
                         'layoutMode': '@config.layoutMode',
+                        'logo': [
+                          'if',
+                          [
+                            '==',
+                            '@config.logoSrc',
+                            '',
+                          ],
+                          null,
+                          {
+                            'alt': '',
+                            'className': 'h-8 w-8',
+                            'fit': 'contain',
+                            'src': '@config.logoSrc',
+                            'type': 'image',
+                          },
+                        ],
                         'navItems': [
                           'array/map',
                           [
@@ -1013,7 +1082,13 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
                         ],
                         'notificationClickEvent': '@config.notificationClickEvent',
                         'notifications': '@config.notifications',
-                        'searchEvent': '@config.searchEvent',
+                        'searchEvent': [
+                          'if',
+                          '@config.showSearch',
+                          '@config.searchEvent',
+                          null,
+                        ],
+                        'showThemeToggle': '@config.showThemeToggle',
                         'sidebarContent': '@config.sidebarTrait',
                         'topBarActions': [
                           'array/filter',

@@ -100,6 +100,15 @@
         "parent": "trt_01M07580RX52695MAC42HPZBTK",
         "renames": []
       },
+      "evt_01M459WM3WBX4QC9DQRQ7GX6AB": {
+        "bakedName": "ROSTER_LOADED",
+        "curName": "ROSTER_LOADED",
+        "id": "evt_01M459WM3WBX4QC9DQRQ7GX6AB",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M07580RX52695MAC42HPZBTK",
+        "renames": []
+      },
       "orb_01M07580RX0RP4X8BB9P83K6CW": {
         "bakedName": "EstimateOrbital",
         "curName": "EstimateOrbital",
@@ -145,6 +154,35 @@
           {
             "name": "title",
             "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "answer": {
+                  "name": "answer",
+                  "required": true,
+                  "type": "number"
+                },
+                "hint": {
+                  "name": "hint",
+                  "required": false,
+                  "type": "string"
+                },
+                "prompt": {
+                  "name": "prompt",
+                  "required": true,
+                  "type": "string"
+                },
+                "unit": {
+                  "name": "unit",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "prompts",
+            "type": "array"
           },
           {
             "default": 0.0,
@@ -334,6 +372,17 @@
               "tier": "presentation",
               "type": "string"
             },
+            "rosterSource": {
+              "default": "config",
+              "description": "Where the prompt roster comes from: config reads the prompts knob at INIT; event waits for ROSTER_LOADED and takes the roster from its payload.",
+              "label": "Roster Source",
+              "tier": "domain",
+              "type": "string",
+              "values": [
+                "config",
+                "event"
+              ]
+            },
             "sliderDefault": {
               "default": 100.0,
               "description": "Starting position of the estimate slider for each prompt.",
@@ -436,6 +485,10 @@
             {
               "kind": "set",
               "resource": "@entity.promptText"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.prompts"
             },
             {
               "kind": "set",
@@ -550,6 +603,7 @@
               "promptHint",
               "promptIndex",
               "promptText",
+              "prompts",
               "score",
               "title",
               "totalPrompts",
@@ -583,6 +637,45 @@
                   {
                     "name": "mode",
                     "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and prompts is the prompt list; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
+                "id": "evt_01M459WM3WBX4QC9DQRQ7GX6AB",
+                "key": "ROSTER_LOADED",
+                "name": "Roster Loaded",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "prompts",
+                    "properties": [
+                      {
+                        "name": "prompt",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "answer",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "unit",
+                        "type": "string"
+                      },
+                      {
+                        "name": "hint",
+                        "type": "string"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
                   }
                 ],
                 "tier": "domain"
@@ -710,13 +803,18 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.prompts",
+                    "@config.prompts"
+                  ],
+                  [
                     "let",
                     [
                       [
                         "first",
                         [
                           "array/nth",
-                          "@config.prompts",
+                          "@entity.prompts",
                           0.0
                         ]
                       ]
@@ -743,7 +841,7 @@
                         "@entity.totalPrompts",
                         [
                           "array/len",
-                          "@config.prompts"
+                          "@entity.prompts"
                         ]
                       ],
                       [
@@ -1090,9 +1188,17 @@
                 "eventId": "evt_01M07580RXB3P80VXGSNZ13RQ1",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@config.matchMode",
-                  ""
+                  "and",
+                  [
+                    "==",
+                    "@config.matchMode",
+                    ""
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1136,13 +1242,18 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.prompts",
+                    "@config.prompts"
+                  ],
+                  [
                     "let",
                     [
                       [
                         "first",
                         [
                           "array/nth",
-                          "@config.prompts",
+                          "@entity.prompts",
                           0.0
                         ]
                       ]
@@ -1169,7 +1280,7 @@
                         "@entity.totalPrompts",
                         [
                           "array/len",
-                          "@config.prompts"
+                          "@entity.prompts"
                         ]
                       ],
                       [
@@ -1516,9 +1627,464 @@
                 "eventId": "evt_01M07580S12EWNDQQZKD0R318W",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@payload.mode",
-                  "@config.matchMode"
+                  "and",
+                  [
+                    "==",
+                    "@payload.mode",
+                    "@config.matchMode"
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.prompts",
+                    "@payload.prompts"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "first",
+                        [
+                          "array/nth",
+                          "@entity.prompts",
+                          0.0
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.active",
+                        true
+                      ],
+                      [
+                        "set",
+                        "@entity.title",
+                        "@config.title"
+                      ],
+                      [
+                        "set",
+                        "@entity.promptIndex",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.totalPrompts",
+                        [
+                          "array/len",
+                          "@entity.prompts"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.estimate",
+                        "@config.sliderDefault"
+                      ],
+                      [
+                        "set",
+                        "@entity.locked",
+                        false
+                      ],
+                      [
+                        "set",
+                        "@entity.band",
+                        ""
+                      ],
+                      [
+                        "set",
+                        "@entity.score",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.done",
+                        false
+                      ],
+                      [
+                        "set",
+                        "@entity.promptText",
+                        [
+                          "object/get",
+                          "@first",
+                          "prompt"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.promptHint",
+                        [
+                          "object/get",
+                          "@first",
+                          "hint",
+                          ""
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.answer",
+                        [
+                          "object/get",
+                          "@first",
+                          "answer"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.unit",
+                        [
+                          "object/get",
+                          "@first",
+                          "unit",
+                          ""
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.feedback",
+                        ""
+                      ],
+                      [
+                        "set",
+                        "@entity.view",
+                        [
+                          {
+                            "children": [
+                              {
+                                "content": "@entity.promptText",
+                                "type": "typography",
+                                "variant": "body"
+                              },
+                              {
+                                "color": "muted",
+                                "content": "@entity.promptHint",
+                                "type": "typography",
+                                "variant": "caption"
+                              }
+                            ],
+                            "padding": "md",
+                            "type": "card",
+                            "variant": "bordered"
+                          },
+                          {
+                            "children": [
+                              {
+                                "content": [
+                                  "str/concat",
+                                  "Your estimate: ",
+                                  [
+                                    "math/round",
+                                    "@entity.estimate",
+                                    2.0
+                                  ],
+                                  " ",
+                                  "@entity.unit"
+                                ],
+                                "type": "typography",
+                                "variant": "caption"
+                              },
+                              {
+                                "action": "SET_ESTIMATE",
+                                "max": "@config.sliderMax",
+                                "min": "@config.sliderMin",
+                                "showTooltip": true,
+                                "step": "@config.sliderStep",
+                                "type": "range-slider",
+                                "value": "@entity.estimate"
+                              }
+                            ],
+                            "direction": "vertical",
+                            "gap": "xs",
+                            "type": "stack"
+                          },
+                          {
+                            "align": "center",
+                            "children": [
+                              {
+                                "action": "LOCK_IN",
+                                "disabled": [
+                                  "if",
+                                  "@entity.locked",
+                                  true,
+                                  false
+                                ],
+                                "icon": "check",
+                                "label": "@config.lockLabel",
+                                "type": "button",
+                                "variant": "primary"
+                              },
+                              {
+                                "action": "NEXT",
+                                "disabled": [
+                                  "if",
+                                  "@entity.locked",
+                                  false,
+                                  true
+                                ],
+                                "icon": "chevron-right",
+                                "label": "@config.nextLabel",
+                                "type": "button",
+                                "variant": "secondary"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack",
+                            "wrap": true
+                          },
+                          {
+                            "children": [
+                              {
+                                "content": "@entity.feedback",
+                                "type": "typography",
+                                "variant": "body"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "xs",
+                            "type": "stack"
+                          },
+                          {
+                            "label": "Score",
+                            "max": [
+                              "*",
+                              "@entity.totalPrompts",
+                              "@config.exactPoints"
+                            ],
+                            "type": "stat-display",
+                            "value": "@entity.score"
+                          }
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.done",
+                                    "Complete",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.band",
+                                        "exact"
+                                      ],
+                                      "Spot on",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.band",
+                                          "close"
+                                        ],
+                                        "Close",
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.band",
+                                            "off"
+                                          ],
+                                          "Off",
+                                          "Estimating"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.done",
+                                    "success",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.band",
+                                        "exact"
+                                      ],
+                                      "success",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.band",
+                                          "close"
+                                        ],
+                                        "warning",
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.band",
+                                            "off"
+                                          ],
+                                          "danger",
+                                          "neutral"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "label": [
+                                "str/concat",
+                                "Prompt ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  [
+                                    "+",
+                                    "@entity.promptIndex",
+                                    1.0
+                                  ]
+                                ],
+                                " of ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  "@entity.totalPrompts"
+                                ]
+                              ],
+                              "max": "@entity.totalPrompts",
+                              "showPercentage": false,
+                              "type": "progress-bar",
+                              "value": [
+                                "+",
+                                "@entity.promptIndex",
+                                1.0
+                              ]
+                            },
+                            {
+                              "children": "@entity.view",
+                              "direction": "vertical",
+                              "gap": "md",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459WM3WBX4QC9DQRQ7GX6AB",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "and",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ],
+                    [
+                      ">",
+                      [
+                        "array/len",
+                        "@payload.prompts"
+                      ],
+                      0.0
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459WM3WBX4QC9DQRQ7GX6AB",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -2286,7 +2852,7 @@
                       ],
                       [
                         "array/len",
-                        "@config.prompts"
+                        "@entity.prompts"
                       ]
                     ],
                     [
@@ -2296,7 +2862,7 @@
                         "score": "@entity.score",
                         "total": [
                           "array/len",
-                          "@config.prompts"
+                          "@entity.prompts"
                         ]
                       }
                     ],
@@ -2320,7 +2886,7 @@
                           "@nextIndex",
                           [
                             "array/len",
-                            "@config.prompts"
+                            "@entity.prompts"
                           ]
                         ]
                       ],
@@ -2328,7 +2894,7 @@
                         "next",
                         [
                           "array/nth",
-                          "@config.prompts",
+                          "@entity.prompts",
                           [
                             "math/min",
                             "@nextIndex",
@@ -2336,7 +2902,7 @@
                               "-",
                               [
                                 "array/len",
-                                "@config.prompts"
+                                "@entity.prompts"
                               ],
                               1.0
                             ]
@@ -2788,7 +3354,7 @@
                         "first",
                         [
                           "array/nth",
-                          "@config.prompts",
+                          "@entity.prompts",
                           0.0
                         ]
                       ]

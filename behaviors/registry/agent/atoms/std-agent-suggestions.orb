@@ -1,0 +1,5079 @@
+{
+  "description": "std-agent-suggestions — an agent that proactively proposes things to the signed-in person, who accepts or dismisses each one. The agent proposes through one declared input, PROPOSE_SUGGESTION (its @description is the tool text): a kind, a title, a body that gives its reasoning, an optional action (a name the app routes) with a payload, an optional href, and a subject (what it is about). A suggestion's signature is kind:action:subject; a signature that was ever proposed to this person, accepted or dismissed included, is never stored again (SUGGESTION_DUPLICATE), and no more than `maxPending` wait at once (SUGGESTION_LIMIT_REACHED). `kinds` and `actions`, when listed, are the only values accepted (SUGGESTION_REJECTED). The agent runs on its own: any trait emitting SUGGESTIONS_TRIGGERED (or an app event routed into AgentSuggestionTrigger's TRIGGERED by re-binding that trait in the import body with `omit { AgentSuggestionTrigger }` and its own `listens`) asks for a run, and once `cooldownMinutes` have passed since this person's last run a second std-agent-tool-loop answers `prompt` with `tools` as the signed-in person — `quiet`, so it streams no live steps and toasts no failure, and its reply and failure are renamed PROACTIVE_REPLIED / PROACTIVE_FAILED so they never reach the assistant's chat. AgentSuggestionInbox lists the pending suggestions with Accept and Dismiss and an empty state that offers to look again (SUGGESTIONS_ANALYZE_REQUESTED). Accept stores accepted, emits SUGGESTION_ACCEPTED { action, payload, href, … } for the app to route (and navigates to `href` when the suggestion has one); Dismiss stores dismissed and emits SUGGESTION_DISMISSED. The inbox renders into `panelSlot`: `main` inline (the content of a std-panel-launcher), or `modal`/`drawer` opened with OPEN and closed with CLOSE (set std-app-layout's notificationClickEvent, or a topBarActions event, to SUGGESTIONS_OPEN_REQUESTED). Import the orbital once per app: `orbital Suggestions = Suggest.orbitals.AgentSuggestionsOrbital { entity MySuggestion  entities { AgentSuggestionRun: MySuggestionRun } config { … } }`, retargeting the records onto owner-scoped entities (`ownerId` a relation to your [identity] roster, with @read/@create/@update); a suggestion's proposer, inbox and trigger read only the rows whose ownerId is the signed-in person. PROPOSE_SUGGESTION's refusals (SUGGESTION_DUPLICATE, SUGGESTION_LIMIT_REACHED, SUGGESTION_REJECTED) are the agent's tool response; no trait listens to them. Suggestion kinds, actions and prompts are the app's vocabulary, declared in config.",
+  "ledger": {
+    "entries": {
+      "ent_01M45A3ZSMT8D9NB2TYANWY05Q": {
+        "bakedName": "AgentSuggestionRun",
+        "curName": "AgentSuggestionRun",
+        "id": "ent_01M45A3ZSMT8D9NB2TYANWY05Q",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "ent_01M45A3ZSMTCCF585VQQX6MJZS": {
+        "bakedName": "AgentSuggestion",
+        "curName": "AgentSuggestion",
+        "id": "ent_01M45A3ZSMTCCF585VQQX6MJZS",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "ent_01M45AE1ZZTXVPSXHJM72M3FSF": {
+        "bakedName": "AgentSuggestionsHost",
+        "curName": "AgentSuggestionsHost",
+        "id": "ent_01M45AE1ZZTXVPSXHJM72M3FSF",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01M45A3ZSM13J21R1C72WPQKP5": {
+        "bakedName": "SuggestionsLoadFailed",
+        "curName": "SuggestionsLoadFailed",
+        "id": "evt_01M45A3ZSM13J21R1C72WPQKP5",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMAR11VVGSP4GA59MS",
+        "renames": []
+      },
+      "evt_01M45A3ZSM1JEE7G11HPVY4D22": {
+        "bakedName": "SUGGESTION_ADDED",
+        "curName": "SUGGESTION_ADDED",
+        "id": "evt_01M45A3ZSM1JEE7G11HPVY4D22",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMJ7R7JA3K90WX7SE8",
+        "renames": []
+      },
+      "evt_01M45A3ZSM26CZ16WSRDS3R8W4": {
+        "bakedName": "START",
+        "curName": "START",
+        "id": "evt_01M45A3ZSM26CZ16WSRDS3R8W4",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMZGE1W5T0HSCPP5DD",
+        "renames": []
+      },
+      "evt_01M45A3ZSM39YZ8C4K8CKF57QN": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M45A3ZSM39YZ8C4K8CKF57QN",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMQ7DPJF00CQEZF6ZZ",
+        "renames": []
+      },
+      "evt_01M45A3ZSM4QPDTQNTJ5TBR6C6": {
+        "bakedName": "DISMISS",
+        "curName": "DISMISS",
+        "id": "evt_01M45A3ZSM4QPDTQNTJ5TBR6C6",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMAR11VVGSP4GA59MS",
+        "renames": []
+      },
+      "evt_01M45A3ZSM8SBFRK0AV3PZWKWE": {
+        "bakedName": "ANALYZE",
+        "curName": "ANALYZE",
+        "id": "evt_01M45A3ZSM8SBFRK0AV3PZWKWE",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMAR11VVGSP4GA59MS",
+        "renames": []
+      },
+      "evt_01M45A3ZSM8Y8K2NY6F8TYW2P5": {
+        "bakedName": "ACCEPT",
+        "curName": "ACCEPT",
+        "id": "evt_01M45A3ZSM8Y8K2NY6F8TYW2P5",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMAR11VVGSP4GA59MS",
+        "renames": []
+      },
+      "evt_01M45A3ZSM95RHXS6FT8WT65S2": {
+        "bakedName": "PROPOSE_SUGGESTION",
+        "curName": "PROPOSE_SUGGESTION",
+        "id": "evt_01M45A3ZSM95RHXS6FT8WT65S2",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMJ7R7JA3K90WX7SE8",
+        "renames": []
+      },
+      "evt_01M45A3ZSM9CE3Y5HHZ6FS8ZBE": {
+        "bakedName": "SuggestionAccepted",
+        "curName": "SuggestionAccepted",
+        "id": "evt_01M45A3ZSM9CE3Y5HHZ6FS8ZBE",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMAR11VVGSP4GA59MS",
+        "renames": []
+      },
+      "evt_01M45A3ZSM9MGJ5FA4R6ZY0S7Q": {
+        "bakedName": "SUGGESTION_RUN_FAILED",
+        "curName": "SUGGESTION_RUN_FAILED",
+        "id": "evt_01M45A3ZSM9MGJ5FA4R6ZY0S7Q",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMZGE1W5T0HSCPP5DD",
+        "renames": []
+      },
+      "evt_01M45A3ZSMC1G2REPAFY2WAE2B": {
+        "bakedName": "SuggestionForAccept",
+        "curName": "SuggestionForAccept",
+        "id": "evt_01M45A3ZSMC1G2REPAFY2WAE2B",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMAR11VVGSP4GA59MS",
+        "renames": []
+      },
+      "evt_01M45A3ZSMD44H1TP3RJTXBRKB": {
+        "bakedName": "SuggestionsLoaded",
+        "curName": "SuggestionsLoaded",
+        "id": "evt_01M45A3ZSMD44H1TP3RJTXBRKB",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMAR11VVGSP4GA59MS",
+        "renames": []
+      },
+      "evt_01M45A3ZSMD9NM8BZVWYVMKWPM": {
+        "bakedName": "SUGGESTION_ACCEPTED",
+        "curName": "SUGGESTION_ACCEPTED",
+        "id": "evt_01M45A3ZSMD9NM8BZVWYVMKWPM",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMAR11VVGSP4GA59MS",
+        "renames": []
+      },
+      "evt_01M45A3ZSMDCDY1274JEDCNEQ7": {
+        "bakedName": "SUGGESTION_DISMISSED",
+        "curName": "SUGGESTION_DISMISSED",
+        "id": "evt_01M45A3ZSMDCDY1274JEDCNEQ7",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMAR11VVGSP4GA59MS",
+        "renames": []
+      },
+      "evt_01M45A3ZSMDNHTFXM2PB7YEXK0": {
+        "bakedName": "RunsLoadFailed",
+        "curName": "RunsLoadFailed",
+        "id": "evt_01M45A3ZSMDNHTFXM2PB7YEXK0",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMQ7DPJF00CQEZF6ZZ",
+        "renames": []
+      },
+      "evt_01M45A3ZSME98W1RQ8V9J8ZQXT": {
+        "bakedName": "SuggestionSaveFailed",
+        "curName": "SuggestionSaveFailed",
+        "id": "evt_01M45A3ZSME98W1RQ8V9J8ZQXT",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMJ7R7JA3K90WX7SE8",
+        "renames": []
+      },
+      "evt_01M45A3ZSMFJ1CTNZFDPCKVD52": {
+        "bakedName": "SUGGESTION_RUN_DONE",
+        "curName": "SUGGESTION_RUN_DONE",
+        "id": "evt_01M45A3ZSMFJ1CTNZFDPCKVD52",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMZGE1W5T0HSCPP5DD",
+        "renames": []
+      },
+      "evt_01M45A3ZSMG46EQ3KBGHF74668": {
+        "bakedName": "SUGGESTION_RUN_ALLOWED",
+        "curName": "SUGGESTION_RUN_ALLOWED",
+        "id": "evt_01M45A3ZSMG46EQ3KBGHF74668",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMQ7DPJF00CQEZF6ZZ",
+        "renames": []
+      },
+      "evt_01M45A3ZSMHA5Z1FNR12MXKAN0": {
+        "bakedName": "RunRecordFailed",
+        "curName": "RunRecordFailed",
+        "id": "evt_01M45A3ZSMHA5Z1FNR12MXKAN0",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMZGE1W5T0HSCPP5DD",
+        "renames": []
+      },
+      "evt_01M45A3ZSMHCM41TQJSC6GCA6K": {
+        "bakedName": "CLOSE",
+        "curName": "CLOSE",
+        "id": "evt_01M45A3ZSMHCM41TQJSC6GCA6K",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMAR11VVGSP4GA59MS",
+        "renames": []
+      },
+      "evt_01M45A3ZSMKN83W8F28Z8RNT40": {
+        "bakedName": "SUGGESTION_LIMIT_REACHED",
+        "curName": "SUGGESTION_LIMIT_REACHED",
+        "id": "evt_01M45A3ZSMKN83W8F28Z8RNT40",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMJ7R7JA3K90WX7SE8",
+        "renames": []
+      },
+      "evt_01M45A3ZSMMVVXARNX1PFWJ0SP": {
+        "bakedName": "LOOP_REPLIED",
+        "curName": "LOOP_REPLIED",
+        "id": "evt_01M45A3ZSMMVVXARNX1PFWJ0SP",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMZGE1W5T0HSCPP5DD",
+        "renames": []
+      },
+      "evt_01M45A3ZSMNHT7BMZ8NHMW33CB": {
+        "bakedName": "SuggestionDismissed",
+        "curName": "SuggestionDismissed",
+        "id": "evt_01M45A3ZSMNHT7BMZ8NHMW33CB",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMAR11VVGSP4GA59MS",
+        "renames": []
+      },
+      "evt_01M45A3ZSMNHX3Y17Z98WCTR75": {
+        "bakedName": "SUGGESTION_RUN_STARTED",
+        "curName": "SUGGESTION_RUN_STARTED",
+        "id": "evt_01M45A3ZSMNHX3Y17Z98WCTR75",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMZGE1W5T0HSCPP5DD",
+        "renames": []
+      },
+      "evt_01M45A3ZSMNMG55P7QX0ACKQ5F": {
+        "bakedName": "SuggestionCheckFailed",
+        "curName": "SuggestionCheckFailed",
+        "id": "evt_01M45A3ZSMNMG55P7QX0ACKQ5F",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMJ7R7JA3K90WX7SE8",
+        "renames": []
+      },
+      "evt_01M45A3ZSMNXFE3GN725SVX128": {
+        "bakedName": "SuggestionResolveFailed",
+        "curName": "SuggestionResolveFailed",
+        "id": "evt_01M45A3ZSMNXFE3GN725SVX128",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMAR11VVGSP4GA59MS",
+        "renames": []
+      },
+      "evt_01M45A3ZSMPTN7Z2YDY4ZPBKJN": {
+        "bakedName": "REFRESH",
+        "curName": "REFRESH",
+        "id": "evt_01M45A3ZSMPTN7Z2YDY4ZPBKJN",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMAR11VVGSP4GA59MS",
+        "renames": []
+      },
+      "evt_01M45A3ZSMQ5E0YHBJ3XMEDHY9": {
+        "bakedName": "RunsForTrigger",
+        "curName": "RunsForTrigger",
+        "id": "evt_01M45A3ZSMQ5E0YHBJ3XMEDHY9",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMQ7DPJF00CQEZF6ZZ",
+        "renames": []
+      },
+      "evt_01M45A3ZSMQM2WAFRRJXB0K2C9": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M45A3ZSMQM2WAFRRJXB0K2C9",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMAR11VVGSP4GA59MS",
+        "renames": []
+      },
+      "evt_01M45A3ZSMQWCD6DKPHAM78TEK": {
+        "bakedName": "OPEN",
+        "curName": "OPEN",
+        "id": "evt_01M45A3ZSMQWCD6DKPHAM78TEK",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMAR11VVGSP4GA59MS",
+        "renames": []
+      },
+      "evt_01M45A3ZSMR5VA1TC7E8Y7KJE1": {
+        "bakedName": "RunRecorded",
+        "curName": "RunRecorded",
+        "id": "evt_01M45A3ZSMR5VA1TC7E8Y7KJE1",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMZGE1W5T0HSCPP5DD",
+        "renames": []
+      },
+      "evt_01M45A3ZSMRHXVFWRQDAZ7RWJ4": {
+        "bakedName": "TRIGGERED",
+        "curName": "TRIGGERED",
+        "id": "evt_01M45A3ZSMRHXVFWRQDAZ7RWJ4",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMQ7DPJF00CQEZF6ZZ",
+        "renames": []
+      },
+      "evt_01M45A3ZSMRJ5HZV620GHFJER1": {
+        "bakedName": "SuggestionForDismiss",
+        "curName": "SuggestionForDismiss",
+        "id": "evt_01M45A3ZSMRJ5HZV620GHFJER1",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMAR11VVGSP4GA59MS",
+        "renames": []
+      },
+      "evt_01M45A3ZSMSB0SE1BRAJQZ0G3V": {
+        "bakedName": "SUGGESTION_DUPLICATE",
+        "curName": "SUGGESTION_DUPLICATE",
+        "id": "evt_01M45A3ZSMSB0SE1BRAJQZ0G3V",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMJ7R7JA3K90WX7SE8",
+        "renames": []
+      },
+      "evt_01M45A3ZSMTB0PPJY3XDEHXE5J": {
+        "bakedName": "SUGGESTIONS_ANALYZE_REQUESTED",
+        "curName": "SUGGESTIONS_ANALYZE_REQUESTED",
+        "id": "evt_01M45A3ZSMTB0PPJY3XDEHXE5J",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMAR11VVGSP4GA59MS",
+        "renames": []
+      },
+      "evt_01M45A3ZSMV9HQJH2HW0XGHN3K": {
+        "bakedName": "SUGGESTION_REJECTED",
+        "curName": "SUGGESTION_REJECTED",
+        "id": "evt_01M45A3ZSMV9HQJH2HW0XGHN3K",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMJ7R7JA3K90WX7SE8",
+        "renames": []
+      },
+      "evt_01M45A3ZSMVWRJDFPWPBVD21K1": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M45A3ZSMVWRJDFPWPBVD21K1",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMZGE1W5T0HSCPP5DD",
+        "renames": []
+      },
+      "evt_01M45A3ZSMWKKZVA1APWSCE3EM": {
+        "bakedName": "SuggestionsForPropose",
+        "curName": "SuggestionsForPropose",
+        "id": "evt_01M45A3ZSMWKKZVA1APWSCE3EM",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMJ7R7JA3K90WX7SE8",
+        "renames": []
+      },
+      "evt_01M45A3ZSMXJKQ1KB8564MHABV": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M45A3ZSMXJKQ1KB8564MHABV",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMJ7R7JA3K90WX7SE8",
+        "renames": []
+      },
+      "evt_01M45A3ZSMYAF4B1RDRGGEEEET": {
+        "bakedName": "LOOP_FAILED",
+        "curName": "LOOP_FAILED",
+        "id": "evt_01M45A3ZSMYAF4B1RDRGGEEEET",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45A3ZSMZGE1W5T0HSCPP5DD",
+        "renames": []
+      },
+      "evt_01M45AE1ZZ18BQZY2Q6BW9D3DQ": {
+        "bakedName": "SuggestionsLoadFailed",
+        "curName": "SuggestionsLoadFailed",
+        "id": "evt_01M45AE1ZZ18BQZY2Q6BW9D3DQ",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45AE1ZZ5ZMP9XMS4Y5KTBCN",
+        "renames": []
+      },
+      "evt_01M45AE1ZZ5G2B3FB1TFXZ07GQ": {
+        "bakedName": "SuggestionsLoaded",
+        "curName": "SuggestionsLoaded",
+        "id": "evt_01M45AE1ZZ5G2B3FB1TFXZ07GQ",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45AE1ZZ5ZMP9XMS4Y5KTBCN",
+        "renames": []
+      },
+      "evt_01M45AE1ZZPFSZ7C33R86ZZA2E": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M45AE1ZZPFSZ7C33R86ZZA2E",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M45AE1ZZ5ZMP9XMS4Y5KTBCN",
+        "renames": []
+      },
+      "orb_01M45A3ZSMA7KCT62M443DH3B5": {
+        "bakedName": "AgentSuggestionsOrbital",
+        "curName": "AgentSuggestionsOrbital",
+        "id": "orb_01M45A3ZSMA7KCT62M443DH3B5",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "orb_01M45AE1ZZZWPDN8T2QH9Q51HY": {
+        "bakedName": "AgentSuggestionRecordsOrbital",
+        "curName": "AgentSuggestionRecordsOrbital",
+        "id": "orb_01M45AE1ZZZWPDN8T2QH9Q51HY",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01M45A3ZSM5GV7K3GGSHSA7MAH": {
+        "bakedName": "AgentSuggestionsPage",
+        "curName": "AgentSuggestionsPage",
+        "id": "pag_01M45A3ZSM5GV7K3GGSHSA7MAH",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01M45AE1ZZXVRWDCR3AAN80DE7": {
+        "bakedName": "AgentSuggestionHistoryPage",
+        "curName": "AgentSuggestionHistoryPage",
+        "id": "pag_01M45AE1ZZXVRWDCR3AAN80DE7",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M45A3ZSMAR11VVGSP4GA59MS": {
+        "bakedName": "AgentSuggestionInbox",
+        "curName": "AgentSuggestionInbox",
+        "id": "trt_01M45A3ZSMAR11VVGSP4GA59MS",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M45A3ZSMJ7R7JA3K90WX7SE8": {
+        "bakedName": "AgentSuggestionProposer",
+        "curName": "AgentSuggestionProposer",
+        "id": "trt_01M45A3ZSMJ7R7JA3K90WX7SE8",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M45A3ZSMQ7DPJF00CQEZF6ZZ": {
+        "bakedName": "AgentSuggestionTrigger",
+        "curName": "AgentSuggestionTrigger",
+        "id": "trt_01M45A3ZSMQ7DPJF00CQEZF6ZZ",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M45A3ZSMW125VR1RA72GS3PV": {
+        "bakedName": "AgentSuggestionLoop",
+        "curName": "AgentSuggestionLoop",
+        "id": "trt_01M45A3ZSMW125VR1RA72GS3PV",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M45A3ZSMZGE1W5T0HSCPP5DD": {
+        "bakedName": "AgentSuggestionRunner",
+        "curName": "AgentSuggestionRunner",
+        "id": "trt_01M45A3ZSMZGE1W5T0HSCPP5DD",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M45AE1ZZ5ZMP9XMS4Y5KTBCN": {
+        "bakedName": "AgentSuggestionHistory",
+        "curName": "AgentSuggestionHistory",
+        "id": "trt_01M45AE1ZZ5ZMP9XMS4Y5KTBCN",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "std-agent-suggestions",
+  "orbitals": [
+    {
+      "config": {
+        "acceptLabel": {
+          "default": "Accept",
+          "label": "Accept button",
+          "tier": "presentation",
+          "type": "string"
+        },
+        "actions": {
+          "default": [],
+          "description": "When listed, a proposal carrying any other action, or none, is refused (SUGGESTION_REJECTED). Empty accepts any action.",
+          "items": {
+            "type": "string"
+          },
+          "label": "Which actions may a suggestion carry?",
+          "tier": "domain",
+          "type": "[string]"
+        },
+        "analyzeLabel": {
+          "default": "Look for suggestions",
+          "description": "Shown in the empty inbox; asks the agent to look again.",
+          "label": "Look-again button",
+          "tier": "presentation",
+          "type": "string"
+        },
+        "closeLabel": {
+          "default": "Close",
+          "label": "Close button",
+          "tier": "presentation",
+          "type": "string"
+        },
+        "cooldownMinutes": {
+          "default": 60.0,
+          "description": "A trigger starts a run only when this long has passed since the person's last run. 0 runs on every trigger.",
+          "label": "Minutes between proactive runs",
+          "tier": "policy",
+          "type": "number"
+        },
+        "dismissLabel": {
+          "default": "Dismiss",
+          "label": "Dismiss button",
+          "tier": "presentation",
+          "type": "string"
+        },
+        "emptyDescription": {
+          "default": "",
+          "label": "Empty inbox hint",
+          "tier": "presentation",
+          "type": "string"
+        },
+        "emptyTitle": {
+          "default": "No suggestions right now",
+          "label": "Empty inbox title",
+          "tier": "presentation",
+          "type": "string"
+        },
+        "historyHref": {
+          "default": "/agent-suggestions/history",
+          "description": "The page the inbox links to for accepted and dismissed suggestions; empty hides the link. The history page of an app that imports this orbital is its own page over its retargeted entity.",
+          "label": "Where past suggestions are listed",
+          "tier": "presentation",
+          "type": "string"
+        },
+        "historyLabel": {
+          "default": "Past suggestions",
+          "label": "Past-suggestions link",
+          "tier": "presentation",
+          "type": "string"
+        },
+        "icon": {
+          "default": "lightbulb",
+          "label": "Inbox icon",
+          "tier": "presentation",
+          "type": "string"
+        },
+        "instructions": {
+          "default": "You propose next steps to the signed-in person. Look things up with the tools, then call the proposal tool once for each suggestion worth making, with the reason in its body. When a proposal is refused as a duplicate or the pending limit is reached, do not propose again. Propose nothing when nothing is worth suggesting.",
+          "description": "Standing instructions sent with every proactive run.",
+          "label": "How should the agent behave?",
+          "tier": "domain",
+          "type": "string"
+        },
+        "kinds": {
+          "default": [],
+          "description": "When listed, a proposal of any other kind is refused (SUGGESTION_REJECTED). Empty accepts any kind.",
+          "items": {
+            "type": "string"
+          },
+          "label": "Which kinds may be proposed?",
+          "tier": "domain",
+          "type": "[string]"
+        },
+        "maxPending": {
+          "default": 5.0,
+          "description": "A proposal is refused (SUGGESTION_LIMIT_REACHED) while this many are pending. 0 refuses every proposal.",
+          "label": "How many suggestions may wait at once?",
+          "tier": "policy",
+          "type": "number"
+        },
+        "maxSteps": {
+          "default": 8.0,
+          "label": "Model round-trips per run",
+          "tier": "policy",
+          "type": "number"
+        },
+        "panelSlot": {
+          "default": "main",
+          "description": "`main` for the content of a launcher or page; `modal` or `drawer` for an overlay opened with OPEN (a notification bell).",
+          "label": "Where the inbox renders",
+          "tier": "presentation",
+          "type": "slot"
+        },
+        "prompt": {
+          "default": "Look at what I have been doing and propose what I could do next, one suggestion at a time.",
+          "description": "The request each proactive run answers.",
+          "label": "What does the agent look into?",
+          "tier": "domain",
+          "type": "string"
+        },
+        "startOpen": {
+          "default": true,
+          "description": "Off for an overlay that waits for OPEN.",
+          "label": "Show the inbox as soon as it mounts?",
+          "tier": "presentation",
+          "type": "boolean"
+        },
+        "title": {
+          "default": "Suggestions",
+          "label": "Inbox heading",
+          "tier": "presentation",
+          "type": "string"
+        },
+        "tools": {
+          "default": [
+            {
+              "event": "AgentSuggestionProposer.PROPOSE_SUGGESTION"
+            }
+          ],
+          "description": "The declared inputs it may fire and the entities it may read, as the signed-in person. An importing app restates the list with the proposal input addressed by its local orbital name (`{ event: Suggestions.AgentSuggestionProposer.PROPOSE_SUGGESTION }`), which the agent can never propose without.",
+          "items": {
+            "properties": {
+              "event": {
+                "name": "event",
+                "required": false,
+                "type": "event"
+              },
+              "read": {
+                "name": "read",
+                "required": false,
+                "type": "string"
+              },
+              "scope": {
+                "name": "scope",
+                "required": false,
+                "type": "string",
+                "values": [
+                  "declared"
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "label": "What may the agent do?",
+          "tier": "domain",
+          "type": "[AgentTool]"
+        }
+      },
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "id": "ent_01M45AE1ZZTXVPSXHJM72M3FSF",
+        "name": "AgentSuggestionsHost",
+        "persistence": "runtime"
+      },
+      "id": "orb_01M45A3ZSMA7KCT62M443DH3B5",
+      "name": "AgentSuggestionsOrbital",
+      "pages": [
+        {
+          "id": "pag_01M45A3ZSM5GV7K3GGSHSA7MAH",
+          "name": "AgentSuggestionsPage",
+          "path": "/agent-suggestions",
+          "traits": [
+            {
+              "ref": "AgentSuggestionInbox",
+              "refId": "trt_01M45A3ZSMAR11VVGSP4GA59MS"
+            },
+            {
+              "ref": "AgentSuggestionProposer",
+              "refId": "trt_01M45A3ZSMJ7R7JA3K90WX7SE8"
+            },
+            {
+              "ref": "AgentSuggestionTrigger",
+              "refId": "trt_01M45A3ZSMQ7DPJF00CQEZF6ZZ"
+            },
+            {
+              "ref": "AgentSuggestionRunner",
+              "refId": "trt_01M45A3ZSMZGE1W5T0HSCPP5DD"
+            },
+            {
+              "ref": "AgentSuggestionLoop",
+              "refId": "trt_01M45A3ZSMW125VR1RA72GS3PV"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "config": {
+            "allowedActions": {
+              "default": "@config.actions",
+              "description": "When listed, any other action is refused. Empty accepts any.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Which actions may a suggestion carry?",
+              "synonyms": "allowed actions, commands, events",
+              "tier": "domain",
+              "type": "[string]"
+            },
+            "allowedKinds": {
+              "default": "@config.kinds",
+              "description": "When listed, any other kind is refused. Empty accepts any.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Which kinds may be proposed?",
+              "synonyms": "types, categories, allowed kinds",
+              "tier": "domain",
+              "type": "[string]"
+            },
+            "pendingLimit": {
+              "default": "@config.maxPending",
+              "description": "A proposal is refused (SUGGESTION_LIMIT_REACHED) while this many are pending.",
+              "label": "How many suggestions may wait at once?",
+              "synonyms": "limit, cap, queue size",
+              "tier": "policy",
+              "type": "number"
+            }
+          },
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "SUGGESTION_DUPLICATE"
+            },
+            {
+              "kind": "emit",
+              "resource": "SUGGESTION_LIMIT_REACHED"
+            },
+            {
+              "kind": "emit",
+              "resource": "SUGGESTION_REJECTED"
+            },
+            {
+              "kind": "fetch",
+              "resource": "AgentSuggestion"
+            },
+            {
+              "kind": "persist",
+              "resource": "AgentSuggestion"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.pendingProposal"
+            }
+          ],
+          "emits": [
+            {
+              "description": "A suggestion was stored for the person — payload is the created AgentSuggestion row itself.",
+              "event": "SUGGESTION_ADDED",
+              "eventId": "evt_01M45A3ZSM1JEE7G11HPVY4D22",
+              "scope": "external",
+              "synonyms": "proposed, suggested, new suggestion",
+              "tier": "domain"
+            },
+            {
+              "description": "This signature was already proposed to the person (pending, accepted or dismissed), so nothing was stored.",
+              "event": "SUGGESTION_DUPLICATE",
+              "eventId": "evt_01M45A3ZSMSB0SE1BRAJQZ0G3V",
+              "payloadSchema": [
+                {
+                  "name": "signature",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "already proposed, repeat, seen before",
+              "tier": "domain"
+            },
+            {
+              "description": "The person already has the most pending suggestions allowed, so nothing was stored.",
+              "event": "SUGGESTION_LIMIT_REACHED",
+              "eventId": "evt_01M45A3ZSMKN83W8F28Z8RNT40",
+              "payloadSchema": [
+                {
+                  "name": "maxPending",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "too many, queue full, cap",
+              "tier": "domain"
+            },
+            {
+              "description": "The proposal was refused (a kind or action not allowed, or it could not be checked or stored); the reason says why.",
+              "event": "SUGGESTION_REJECTED",
+              "eventId": "evt_01M45A3ZSMV9HQJH2HW0XGHN3K",
+              "payloadSchema": [
+                {
+                  "name": "reason",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "refused, invalid, not allowed",
+              "tier": "domain"
+            },
+            {
+              "event": "SuggestionsForPropose",
+              "eventId": "evt_01M45A3ZSMWKKZVA1APWSCE3EM",
+              "payloadSchema": [
+                {
+                  "entity": "SuggestionRow",
+                  "name": "data",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "ownerId",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "kind",
+                      "type": "string"
+                    },
+                    {
+                      "name": "title",
+                      "type": "string"
+                    },
+                    {
+                      "name": "body",
+                      "type": "string"
+                    },
+                    {
+                      "name": "action",
+                      "type": "string"
+                    },
+                    {
+                      "name": "href",
+                      "type": "string"
+                    },
+                    {
+                      "name": "payload",
+                      "type": "Map<string,scalar>"
+                    },
+                    {
+                      "name": "subject",
+                      "type": "string"
+                    },
+                    {
+                      "name": "signature",
+                      "type": "string"
+                    },
+                    {
+                      "name": "status",
+                      "type": "string"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "resolvedAt",
+                      "type": "number"
+                    }
+                  ],
+                  "type": "[object]"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            },
+            {
+              "event": "SuggestionCheckFailed",
+              "eventId": "evt_01M45A3ZSMNMG55P7QX0ACKQ5F",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            },
+            {
+              "event": "SuggestionSaveFailed",
+              "eventId": "evt_01M45A3ZSME98W1RQ8V9J8ZQXT",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "pendingProposal"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "id": "trt_01M45A3ZSMJ7R7JA3K90WX7SE8",
+          "linkedEntity": "AgentSuggestion",
+          "name": "AgentSuggestionProposer",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M45A3ZSMXJKQ1KB8564MHABV",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Propose something to the signed-in person: a kind, a title, a body that gives the reason, an optional action with its payload, an optional href, and the subject it is about (an id or slug). A proposal whose kind, action and subject were already proposed to this person is refused, whatever became of the first; so is one past the pending limit.",
+                "external": true,
+                "id": "evt_01M45A3ZSM95RHXS6FT8WT65S2",
+                "key": "PROPOSE_SUGGESTION",
+                "name": "Propose Suggestion",
+                "payloadSchema": [
+                  {
+                    "name": "kind",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "title",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "body",
+                    "type": "string"
+                  },
+                  {
+                    "name": "action",
+                    "type": "string"
+                  },
+                  {
+                    "name": "href",
+                    "type": "string"
+                  },
+                  {
+                    "name": "subject",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "payload",
+                    "type": "Map<string,scalar>"
+                  }
+                ],
+                "synonyms": "suggest, recommend, propose, offer"
+              },
+              {
+                "id": "evt_01M45A3ZSMWKKZVA1APWSCE3EM",
+                "key": "SuggestionsForPropose",
+                "name": "Suggestions for propose",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "kind",
+                        "type": "string"
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "body",
+                        "type": "string"
+                      },
+                      {
+                        "name": "action",
+                        "type": "string"
+                      },
+                      {
+                        "name": "href",
+                        "type": "string"
+                      },
+                      {
+                        "name": "payload",
+                        "type": "Map<string,scalar>"
+                      },
+                      {
+                        "name": "subject",
+                        "type": "string"
+                      },
+                      {
+                        "name": "signature",
+                        "type": "string"
+                      },
+                      {
+                        "name": "status",
+                        "type": "string"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "resolvedAt",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "id": "evt_01M45A3ZSMNMG55P7QX0ACKQ5F",
+                "key": "SuggestionCheckFailed",
+                "name": "Suggestion check failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "id": "evt_01M45A3ZSME98W1RQ8V9J8ZQXT",
+                "key": "SuggestionSaveFailed",
+                "name": "Suggestion save failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "description": "A suggestion was stored for the person — payload is the created AgentSuggestion row itself.",
+                "id": "evt_01M45A3ZSM1JEE7G11HPVY4D22",
+                "key": "SUGGESTION_ADDED",
+                "name": "Suggestion Added",
+                "synonyms": "proposed, suggested, new suggestion",
+                "tier": "domain"
+              },
+              {
+                "description": "This signature was already proposed to the person (pending, accepted or dismissed), so nothing was stored.",
+                "id": "evt_01M45A3ZSMSB0SE1BRAJQZ0G3V",
+                "key": "SUGGESTION_DUPLICATE",
+                "name": "Suggestion Duplicate",
+                "payloadSchema": [
+                  {
+                    "name": "signature",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "already proposed, repeat, seen before",
+                "tier": "domain"
+              },
+              {
+                "description": "The person already has the most pending suggestions allowed, so nothing was stored.",
+                "id": "evt_01M45A3ZSMKN83W8F28Z8RNT40",
+                "key": "SUGGESTION_LIMIT_REACHED",
+                "name": "Suggestion Limit Reached",
+                "payloadSchema": [
+                  {
+                    "name": "maxPending",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "synonyms": "too many, queue full, cap",
+                "tier": "domain"
+              },
+              {
+                "description": "The proposal was refused (a kind or action not allowed, or it could not be checked or stored); the reason says why.",
+                "id": "evt_01M45A3ZSMV9HQJH2HW0XGHN3K",
+                "key": "SUGGESTION_REJECTED",
+                "name": "Suggestion Rejected",
+                "payloadSchema": [
+                  {
+                    "name": "reason",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "refused, invalid, not allowed",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "ready"
+              }
+            ],
+            "transitions": [
+              {
+                "event": "INIT",
+                "eventId": "evt_01M45A3ZSMXJKQ1KB8564MHABV",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "SUGGESTION_REJECTED",
+                    {
+                      "reason": [
+                        "str/concat",
+                        "Unknown kind \"",
+                        "@payload.kind",
+                        "\". Allowed kinds: ",
+                        [
+                          "str/join",
+                          "@config.allowedKinds",
+                          ", "
+                        ]
+                      ]
+                    }
+                  ]
+                ],
+                "event": "PROPOSE_SUGGESTION",
+                "eventId": "evt_01M45A3ZSM95RHXS6FT8WT65S2",
+                "from": "ready",
+                "guard": [
+                  "and",
+                  [
+                    ">",
+                    [
+                      "array/len",
+                      "@config.allowedKinds"
+                    ],
+                    0.0
+                  ],
+                  [
+                    "not",
+                    [
+                      "array/includes",
+                      "@config.allowedKinds",
+                      "@payload.kind"
+                    ]
+                  ]
+                ],
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "SUGGESTION_REJECTED",
+                    {
+                      "reason": [
+                        "str/concat",
+                        "Unknown action \"",
+                        [
+                          "str/default",
+                          "@payload.action",
+                          ""
+                        ],
+                        "\". Allowed actions: ",
+                        [
+                          "str/join",
+                          "@config.allowedActions",
+                          ", "
+                        ]
+                      ]
+                    }
+                  ]
+                ],
+                "event": "PROPOSE_SUGGESTION",
+                "eventId": "evt_01M45A3ZSM95RHXS6FT8WT65S2",
+                "from": "ready",
+                "guard": [
+                  "and",
+                  [
+                    "or",
+                    [
+                      "=",
+                      [
+                        "array/len",
+                        "@config.allowedKinds"
+                      ],
+                      0.0
+                    ],
+                    [
+                      "array/includes",
+                      "@config.allowedKinds",
+                      "@payload.kind"
+                    ]
+                  ],
+                  [
+                    ">",
+                    [
+                      "array/len",
+                      "@config.allowedActions"
+                    ],
+                    0.0
+                  ],
+                  [
+                    "not",
+                    [
+                      "array/includes",
+                      "@config.allowedActions",
+                      [
+                        "str/default",
+                        "@payload.action",
+                        ""
+                      ]
+                    ]
+                  ]
+                ],
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pendingProposal",
+                    {
+                      "action": [
+                        "str/default",
+                        "@payload.action",
+                        ""
+                      ],
+                      "body": [
+                        "str/default",
+                        "@payload.body",
+                        ""
+                      ],
+                      "href": [
+                        "str/default",
+                        "@payload.href",
+                        ""
+                      ],
+                      "kind": "@payload.kind",
+                      "payload": [
+                        "if",
+                        "@payload.payload",
+                        "@payload.payload",
+                        {}
+                      ],
+                      "signature": [
+                        "str/concat",
+                        "@payload.kind",
+                        ":",
+                        [
+                          "str/default",
+                          "@payload.action",
+                          ""
+                        ],
+                        ":",
+                        "@payload.subject"
+                      ],
+                      "subject": "@payload.subject",
+                      "title": "@payload.title"
+                    }
+                  ],
+                  [
+                    "fetch",
+                    "AgentSuggestion",
+                    {
+                      "emit": {
+                        "failure": "SuggestionCheckFailed",
+                        "success": "SuggestionsForPropose"
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "ownerId"
+                        ],
+                        "@user.id"
+                      ]
+                    }
+                  ]
+                ],
+                "event": "PROPOSE_SUGGESTION",
+                "eventId": "evt_01M45A3ZSM95RHXS6FT8WT65S2",
+                "from": "ready",
+                "guard": [
+                  "and",
+                  [
+                    "or",
+                    [
+                      "=",
+                      [
+                        "array/len",
+                        "@config.allowedKinds"
+                      ],
+                      0.0
+                    ],
+                    [
+                      "array/includes",
+                      "@config.allowedKinds",
+                      "@payload.kind"
+                    ]
+                  ],
+                  [
+                    "or",
+                    [
+                      "=",
+                      [
+                        "array/len",
+                        "@config.allowedActions"
+                      ],
+                      0.0
+                    ],
+                    [
+                      "array/includes",
+                      "@config.allowedActions",
+                      [
+                        "str/default",
+                        "@payload.action",
+                        ""
+                      ]
+                    ]
+                  ]
+                ],
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "SUGGESTION_DUPLICATE",
+                    {
+                      "signature": "@entity.pendingProposal.signature"
+                    }
+                  ]
+                ],
+                "event": "SuggestionsForPropose",
+                "eventId": "evt_01M45A3ZSMWKKZVA1APWSCE3EM",
+                "from": "ready",
+                "guard": [
+                  "array/some",
+                  "@payload.data",
+                  [
+                    "fn",
+                    "item",
+                    [
+                      "=",
+                      "@item.signature",
+                      "@entity.pendingProposal.signature"
+                    ]
+                  ]
+                ],
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "SUGGESTION_LIMIT_REACHED",
+                    {
+                      "maxPending": "@config.pendingLimit"
+                    }
+                  ]
+                ],
+                "event": "SuggestionsForPropose",
+                "eventId": "evt_01M45A3ZSMWKKZVA1APWSCE3EM",
+                "from": "ready",
+                "guard": [
+                  "and",
+                  [
+                    "not",
+                    [
+                      "array/some",
+                      "@payload.data",
+                      [
+                        "fn",
+                        "item",
+                        [
+                          "=",
+                          "@item.signature",
+                          "@entity.pendingProposal.signature"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    ">=",
+                    [
+                      "array/count",
+                      "@payload.data",
+                      [
+                        "fn",
+                        "item",
+                        [
+                          "=",
+                          "@item.status",
+                          "pending"
+                        ]
+                      ]
+                    ],
+                    "@config.pendingLimit"
+                  ]
+                ],
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "AgentSuggestion",
+                    {
+                      "action": "@entity.pendingProposal.action",
+                      "body": "@entity.pendingProposal.body",
+                      "createdAt": "@now",
+                      "href": "@entity.pendingProposal.href",
+                      "kind": "@entity.pendingProposal.kind",
+                      "ownerId": "@user.id",
+                      "payload": "@entity.pendingProposal.payload",
+                      "signature": "@entity.pendingProposal.signature",
+                      "status": "pending",
+                      "subject": "@entity.pendingProposal.subject",
+                      "title": "@entity.pendingProposal.title"
+                    },
+                    {
+                      "emit": {
+                        "failure": "SuggestionSaveFailed",
+                        "success": "SUGGESTION_ADDED"
+                      }
+                    }
+                  ]
+                ],
+                "event": "SuggestionsForPropose",
+                "eventId": "evt_01M45A3ZSMWKKZVA1APWSCE3EM",
+                "from": "ready",
+                "guard": [
+                  "and",
+                  [
+                    "not",
+                    [
+                      "array/some",
+                      "@payload.data",
+                      [
+                        "fn",
+                        "item",
+                        [
+                          "=",
+                          "@item.signature",
+                          "@entity.pendingProposal.signature"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "<",
+                    [
+                      "array/count",
+                      "@payload.data",
+                      [
+                        "fn",
+                        "item",
+                        [
+                          "=",
+                          "@item.status",
+                          "pending"
+                        ]
+                      ]
+                    ],
+                    "@config.pendingLimit"
+                  ]
+                ],
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "SUGGESTION_REJECTED",
+                    {
+                      "reason": [
+                        "str/concat",
+                        "Could not check earlier suggestions: ",
+                        "@payload.error"
+                      ]
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "warning"
+                    }
+                  ]
+                ],
+                "event": "SuggestionCheckFailed",
+                "eventId": "evt_01M45A3ZSMNMG55P7QX0ACKQ5F",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "SUGGESTION_REJECTED",
+                    {
+                      "reason": [
+                        "str/concat",
+                        "Could not store the suggestion: ",
+                        "@payload.error"
+                      ]
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "warning"
+                    }
+                  ]
+                ],
+                "event": "SuggestionSaveFailed",
+                "eventId": "evt_01M45A3ZSME98W1RQ8V9J8ZQXT",
+                "from": "ready",
+                "to": "ready"
+              }
+            ]
+          }
+        },
+        {
+          "category": "interaction",
+          "config": {
+            "approveLabel": {
+              "default": "@config.acceptLabel",
+              "label": "Accept button label",
+              "synonyms": "approve, yes, do it",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "closeButtonLabel": {
+              "default": "@config.closeLabel",
+              "label": "Close button label",
+              "synonyms": "back, hide",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "declineLabel": {
+              "default": "@config.dismissLabel",
+              "label": "Dismiss button label",
+              "synonyms": "reject, no thanks, hide",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "emptyHeading": {
+              "default": "@config.emptyTitle",
+              "label": "What shows when nothing is pending?",
+              "synonyms": "empty state, no suggestions",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "emptyHint": {
+              "default": "@config.emptyDescription",
+              "label": "Hint under the empty heading",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "heading": {
+              "default": "@config.title",
+              "description": "Heading at the top of the inbox.",
+              "label": "Inbox heading",
+              "synonyms": "panel title, suggestions title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "headingIcon": {
+              "default": "@config.icon",
+              "description": "Lucide icon name shown beside the heading.",
+              "label": "Inbox icon",
+              "synonyms": "header icon",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "historyLink": {
+              "default": "@config.historyHref",
+              "description": "Where accepted and dismissed suggestions are listed; empty hides the link.",
+              "label": "Past-suggestions page",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "historyLinkLabel": {
+              "default": "@config.historyLabel",
+              "label": "Past-suggestions link label",
+              "synonyms": "history, archive, earlier suggestions",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "inboxSlot": {
+              "default": "@config.panelSlot",
+              "description": "`main` inline; `modal` or `drawer` for an overlay opened with OPEN.",
+              "label": "Where the inbox renders",
+              "tier": "internal",
+              "type": "slot"
+            },
+            "lookAgainLabel": {
+              "default": "@config.analyzeLabel",
+              "description": "The empty inbox's button, which asks the agent to look again.",
+              "label": "Look-again button label",
+              "synonyms": "refresh, find suggestions, analyze",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "showOnMount": {
+              "default": "@config.startOpen",
+              "description": "Off for an overlay that waits for OPEN.",
+              "label": "Show the inbox as soon as it mounts?",
+              "tier": "presentation",
+              "type": "boolean"
+            }
+          },
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "SUGGESTIONS_ANALYZE_REQUESTED"
+            },
+            {
+              "kind": "emit",
+              "resource": "SUGGESTION_ACCEPTED"
+            },
+            {
+              "kind": "emit",
+              "resource": "SUGGESTION_DISMISSED"
+            },
+            {
+              "kind": "fetch",
+              "resource": "AgentSuggestion"
+            },
+            {
+              "kind": "navigate",
+              "resource": "@payload.href"
+            },
+            {
+              "kind": "persist",
+              "resource": "AgentSuggestion"
+            },
+            {
+              "kind": "render-ui",
+              "resolved": false,
+              "resource": "@config.inboxSlot"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
+            }
+          ],
+          "emits": [
+            {
+              "description": "The person accepted a suggestion; the app routes `action` with `payload` (a suggestion with an href has already navigated there).",
+              "event": "SUGGESTION_ACCEPTED",
+              "eventId": "evt_01M45A3ZSMD9NM8BZVWYVMKWPM",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "kind",
+                  "type": "string"
+                },
+                {
+                  "name": "action",
+                  "type": "string"
+                },
+                {
+                  "name": "href",
+                  "type": "string"
+                },
+                {
+                  "name": "subject",
+                  "type": "string"
+                },
+                {
+                  "name": "payload",
+                  "type": "Map<string,scalar>"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "accepted, approved, taken up, do it",
+              "tier": "domain"
+            },
+            {
+              "description": "The person dismissed a suggestion; its signature is never proposed to them again.",
+              "event": "SUGGESTION_DISMISSED",
+              "eventId": "evt_01M45A3ZSMDCDY1274JEDCNEQ7",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "kind",
+                  "type": "string"
+                },
+                {
+                  "name": "action",
+                  "type": "string"
+                },
+                {
+                  "name": "subject",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "dismissed, rejected, declined, no thanks",
+              "tier": "domain"
+            },
+            {
+              "description": "The person asked the agent to look for suggestions again.",
+              "event": "SUGGESTIONS_ANALYZE_REQUESTED",
+              "eventId": "evt_01M45A3ZSMTB0PPJY3XDEHXE5J",
+              "scope": "external",
+              "synonyms": "look again, refresh suggestions, analyze",
+              "tier": "domain"
+            },
+            {
+              "event": "SuggestionsLoaded",
+              "eventId": "evt_01M45A3ZSMD44H1TP3RJTXBRKB",
+              "payloadSchema": [
+                {
+                  "entity": "SuggestionRow",
+                  "name": "data",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "ownerId",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "kind",
+                      "type": "string"
+                    },
+                    {
+                      "name": "title",
+                      "type": "string"
+                    },
+                    {
+                      "name": "body",
+                      "type": "string"
+                    },
+                    {
+                      "name": "action",
+                      "type": "string"
+                    },
+                    {
+                      "name": "href",
+                      "type": "string"
+                    },
+                    {
+                      "name": "payload",
+                      "type": "Map<string,scalar>"
+                    },
+                    {
+                      "name": "subject",
+                      "type": "string"
+                    },
+                    {
+                      "name": "signature",
+                      "type": "string"
+                    },
+                    {
+                      "name": "status",
+                      "type": "string"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "resolvedAt",
+                      "type": "number"
+                    }
+                  ],
+                  "type": "[object]"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            },
+            {
+              "event": "SuggestionsLoadFailed",
+              "eventId": "evt_01M45A3ZSM13J21R1C72WPQKP5",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            },
+            {
+              "event": "SuggestionResolveFailed",
+              "eventId": "evt_01M45A3ZSMNXFE3GN725SVX128",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            },
+            {
+              "event": "SuggestionForAccept",
+              "eventId": "evt_01M45A3ZSMC1G2REPAFY2WAE2B",
+              "payloadSchema": [
+                {
+                  "entity": "SuggestionRow",
+                  "name": "data",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "ownerId",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "kind",
+                      "type": "string"
+                    },
+                    {
+                      "name": "title",
+                      "type": "string"
+                    },
+                    {
+                      "name": "body",
+                      "type": "string"
+                    },
+                    {
+                      "name": "action",
+                      "type": "string"
+                    },
+                    {
+                      "name": "href",
+                      "type": "string"
+                    },
+                    {
+                      "name": "payload",
+                      "type": "Map<string,scalar>"
+                    },
+                    {
+                      "name": "subject",
+                      "type": "string"
+                    },
+                    {
+                      "name": "signature",
+                      "type": "string"
+                    },
+                    {
+                      "name": "status",
+                      "type": "string"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "resolvedAt",
+                      "type": "number"
+                    }
+                  ],
+                  "type": "[object]"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            },
+            {
+              "event": "SuggestionForDismiss",
+              "eventId": "evt_01M45A3ZSMRJ5HZV620GHFJER1",
+              "payloadSchema": [
+                {
+                  "entity": "SuggestionRow",
+                  "name": "data",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "ownerId",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "kind",
+                      "type": "string"
+                    },
+                    {
+                      "name": "title",
+                      "type": "string"
+                    },
+                    {
+                      "name": "body",
+                      "type": "string"
+                    },
+                    {
+                      "name": "action",
+                      "type": "string"
+                    },
+                    {
+                      "name": "href",
+                      "type": "string"
+                    },
+                    {
+                      "name": "payload",
+                      "type": "Map<string,scalar>"
+                    },
+                    {
+                      "name": "subject",
+                      "type": "string"
+                    },
+                    {
+                      "name": "signature",
+                      "type": "string"
+                    },
+                    {
+                      "name": "status",
+                      "type": "string"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "resolvedAt",
+                      "type": "number"
+                    }
+                  ],
+                  "type": "[object]"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            },
+            {
+              "description": "Fired after a suggestion is stored as accepted",
+              "event": "SuggestionAccepted",
+              "eventId": "evt_01M45A3ZSM9CE3Y5HHZ6FS8ZBE",
+              "payloadEntity": "SuggestionRow",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "ownerId",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "kind",
+                  "type": "string"
+                },
+                {
+                  "name": "title",
+                  "type": "string"
+                },
+                {
+                  "name": "body",
+                  "type": "string"
+                },
+                {
+                  "name": "action",
+                  "type": "string"
+                },
+                {
+                  "name": "href",
+                  "type": "string"
+                },
+                {
+                  "name": "payload",
+                  "type": "Map<string,scalar>"
+                },
+                {
+                  "name": "subject",
+                  "type": "string"
+                },
+                {
+                  "name": "signature",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "number"
+                },
+                {
+                  "name": "resolvedAt",
+                  "type": "number"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            },
+            {
+              "description": "Fired after a suggestion is stored as dismissed",
+              "event": "SuggestionDismissed",
+              "eventId": "evt_01M45A3ZSMNHT7BMZ8NHMW33CB",
+              "payloadEntity": "SuggestionRow",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "ownerId",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "kind",
+                  "type": "string"
+                },
+                {
+                  "name": "title",
+                  "type": "string"
+                },
+                {
+                  "name": "body",
+                  "type": "string"
+                },
+                {
+                  "name": "action",
+                  "type": "string"
+                },
+                {
+                  "name": "href",
+                  "type": "string"
+                },
+                {
+                  "name": "payload",
+                  "type": "Map<string,scalar>"
+                },
+                {
+                  "name": "subject",
+                  "type": "string"
+                },
+                {
+                  "name": "signature",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "number"
+                },
+                {
+                  "name": "resolvedAt",
+                  "type": "number"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "id": "trt_01M45A3ZSMAR11VVGSP4GA59MS",
+          "linkedEntity": "AgentSuggestion",
+          "listens": [
+            {
+              "event": "SUGGESTION_ADDED",
+              "eventId": "evt_01M45A3ZSM1JEE7G11HPVY4D22",
+              "source": {
+                "kind": "trait",
+                "trait": "AgentSuggestionProposer",
+                "traitId": "trt_01M45A3ZSMJ7R7JA3K90WX7SE8"
+              },
+              "triggers": "REFRESH",
+              "triggersId": "evt_01M45A3ZSMPTN7Z2YDY4ZPBKJN"
+            },
+            {
+              "event": "SUGGESTION_RUN_DONE",
+              "eventId": "evt_01M45A3ZSMFJ1CTNZFDPCKVD52",
+              "source": {
+                "kind": "trait",
+                "trait": "AgentSuggestionRunner",
+                "traitId": "trt_01M45A3ZSMZGE1W5T0HSCPP5DD"
+              },
+              "triggers": "REFRESH",
+              "triggersId": "evt_01M45A3ZSMPTN7Z2YDY4ZPBKJN"
+            },
+            {
+              "event": "SUGGESTION_RUN_FAILED",
+              "eventId": "evt_01M45A3ZSM9MGJ5FA4R6ZY0S7Q",
+              "source": {
+                "kind": "trait",
+                "trait": "AgentSuggestionRunner",
+                "traitId": "trt_01M45A3ZSMZGE1W5T0HSCPP5DD"
+              },
+              "triggers": "REFRESH",
+              "triggersId": "evt_01M45A3ZSMPTN7Z2YDY4ZPBKJN"
+            },
+            {
+              "event": "SUGGESTIONS_OPEN_REQUESTED",
+              "source": {
+                "kind": "any"
+              },
+              "triggers": "OPEN",
+              "triggersId": "evt_01M45A3ZSMQWCD6DKPHAM78TEK"
+            }
+          ],
+          "name": "AgentSuggestionInbox",
+          "scope": "collection",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M45A3ZSMQM2WAFRRJXB0K2C9",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Show the suggestions inbox. SUGGESTIONS_OPEN_REQUESTED from any trait arrives here.",
+                "id": "evt_01M45A3ZSMQWCD6DKPHAM78TEK",
+                "key": "OPEN",
+                "name": "Open",
+                "synonyms": "show suggestions, open bell, view suggestions",
+                "tier": "presentation"
+              },
+              {
+                "id": "evt_01M45A3ZSMD44H1TP3RJTXBRKB",
+                "key": "SuggestionsLoaded",
+                "name": "Suggestions loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "kind",
+                        "type": "string"
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "body",
+                        "type": "string"
+                      },
+                      {
+                        "name": "action",
+                        "type": "string"
+                      },
+                      {
+                        "name": "href",
+                        "type": "string"
+                      },
+                      {
+                        "name": "payload",
+                        "type": "Map<string,scalar>"
+                      },
+                      {
+                        "name": "subject",
+                        "type": "string"
+                      },
+                      {
+                        "name": "signature",
+                        "type": "string"
+                      },
+                      {
+                        "name": "status",
+                        "type": "string"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "resolvedAt",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "id": "evt_01M45A3ZSM13J21R1C72WPQKP5",
+                "key": "SuggestionsLoadFailed",
+                "name": "Suggestions load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "id": "evt_01M45A3ZSMNXFE3GN725SVX128",
+                "key": "SuggestionResolveFailed",
+                "name": "Suggestion resolve failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "description": "Reload the pending suggestions.",
+                "id": "evt_01M45A3ZSMPTN7Z2YDY4ZPBKJN",
+                "key": "REFRESH",
+                "name": "Refresh"
+              },
+              {
+                "description": "Ask the agent to look for suggestions again.",
+                "id": "evt_01M45A3ZSM8SBFRK0AV3PZWKWE",
+                "key": "ANALYZE",
+                "name": "Analyze",
+                "tier": "presentation"
+              },
+              {
+                "description": "Accept this suggestion.",
+                "id": "evt_01M45A3ZSM8Y8K2NY6F8TYW2P5",
+                "key": "ACCEPT",
+                "name": "Accept",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "presentation"
+              },
+              {
+                "id": "evt_01M45A3ZSMC1G2REPAFY2WAE2B",
+                "key": "SuggestionForAccept",
+                "name": "Suggestion for accept",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "kind",
+                        "type": "string"
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "body",
+                        "type": "string"
+                      },
+                      {
+                        "name": "action",
+                        "type": "string"
+                      },
+                      {
+                        "name": "href",
+                        "type": "string"
+                      },
+                      {
+                        "name": "payload",
+                        "type": "Map<string,scalar>"
+                      },
+                      {
+                        "name": "subject",
+                        "type": "string"
+                      },
+                      {
+                        "name": "signature",
+                        "type": "string"
+                      },
+                      {
+                        "name": "status",
+                        "type": "string"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "resolvedAt",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "id": "evt_01M45A3ZSM9CE3Y5HHZ6FS8ZBE",
+                "key": "SuggestionAccepted",
+                "name": "Suggestion accepted",
+                "payloadEntity": "SuggestionRow",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "ownerId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "kind",
+                    "type": "string"
+                  },
+                  {
+                    "name": "title",
+                    "type": "string"
+                  },
+                  {
+                    "name": "body",
+                    "type": "string"
+                  },
+                  {
+                    "name": "action",
+                    "type": "string"
+                  },
+                  {
+                    "name": "href",
+                    "type": "string"
+                  },
+                  {
+                    "name": "payload",
+                    "type": "Map<string,scalar>"
+                  },
+                  {
+                    "name": "subject",
+                    "type": "string"
+                  },
+                  {
+                    "name": "signature",
+                    "type": "string"
+                  },
+                  {
+                    "name": "status",
+                    "type": "string"
+                  },
+                  {
+                    "name": "createdAt",
+                    "type": "number"
+                  },
+                  {
+                    "name": "resolvedAt",
+                    "type": "number"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "description": "Dismiss this suggestion.",
+                "id": "evt_01M45A3ZSM4QPDTQNTJ5TBR6C6",
+                "key": "DISMISS",
+                "name": "Dismiss",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "presentation"
+              },
+              {
+                "id": "evt_01M45A3ZSMRJ5HZV620GHFJER1",
+                "key": "SuggestionForDismiss",
+                "name": "Suggestion for dismiss",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "kind",
+                        "type": "string"
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "body",
+                        "type": "string"
+                      },
+                      {
+                        "name": "action",
+                        "type": "string"
+                      },
+                      {
+                        "name": "href",
+                        "type": "string"
+                      },
+                      {
+                        "name": "payload",
+                        "type": "Map<string,scalar>"
+                      },
+                      {
+                        "name": "subject",
+                        "type": "string"
+                      },
+                      {
+                        "name": "signature",
+                        "type": "string"
+                      },
+                      {
+                        "name": "status",
+                        "type": "string"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "resolvedAt",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "id": "evt_01M45A3ZSMNHT7BMZ8NHMW33CB",
+                "key": "SuggestionDismissed",
+                "name": "Suggestion dismissed",
+                "payloadEntity": "SuggestionRow",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "ownerId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "kind",
+                    "type": "string"
+                  },
+                  {
+                    "name": "title",
+                    "type": "string"
+                  },
+                  {
+                    "name": "body",
+                    "type": "string"
+                  },
+                  {
+                    "name": "action",
+                    "type": "string"
+                  },
+                  {
+                    "name": "href",
+                    "type": "string"
+                  },
+                  {
+                    "name": "payload",
+                    "type": "Map<string,scalar>"
+                  },
+                  {
+                    "name": "subject",
+                    "type": "string"
+                  },
+                  {
+                    "name": "signature",
+                    "type": "string"
+                  },
+                  {
+                    "name": "status",
+                    "type": "string"
+                  },
+                  {
+                    "name": "createdAt",
+                    "type": "number"
+                  },
+                  {
+                    "name": "resolvedAt",
+                    "type": "number"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "description": "Hide the suggestions inbox.",
+                "id": "evt_01M45A3ZSMHCM41TQJSC6GCA6K",
+                "key": "CLOSE",
+                "name": "Close",
+                "synonyms": "close, hide, dismiss panel",
+                "tier": "presentation"
+              },
+              {
+                "description": "The person accepted a suggestion; the app routes `action` with `payload` (a suggestion with an href has already navigated there).",
+                "id": "evt_01M45A3ZSMD9NM8BZVWYVMKWPM",
+                "key": "SUGGESTION_ACCEPTED",
+                "name": "Suggestion Accepted",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "kind",
+                    "type": "string"
+                  },
+                  {
+                    "name": "action",
+                    "type": "string"
+                  },
+                  {
+                    "name": "href",
+                    "type": "string"
+                  },
+                  {
+                    "name": "subject",
+                    "type": "string"
+                  },
+                  {
+                    "name": "payload",
+                    "type": "Map<string,scalar>"
+                  }
+                ],
+                "synonyms": "accepted, approved, taken up, do it",
+                "tier": "domain"
+              },
+              {
+                "description": "The person dismissed a suggestion; its signature is never proposed to them again.",
+                "id": "evt_01M45A3ZSMDCDY1274JEDCNEQ7",
+                "key": "SUGGESTION_DISMISSED",
+                "name": "Suggestion Dismissed",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "kind",
+                    "type": "string"
+                  },
+                  {
+                    "name": "action",
+                    "type": "string"
+                  },
+                  {
+                    "name": "subject",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "dismissed, rejected, declined, no thanks",
+                "tier": "domain"
+              },
+              {
+                "description": "The person asked the agent to look for suggestions again.",
+                "id": "evt_01M45A3ZSMTB0PPJY3XDEHXE5J",
+                "key": "SUGGESTIONS_ANALYZE_REQUESTED",
+                "name": "Suggestions Analyze Requested",
+                "synonyms": "look again, refresh suggestions, analyze",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "closed"
+              },
+              {
+                "name": "open"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentSuggestion",
+                    {
+                      "emit": {
+                        "failure": "SuggestionsLoadFailed",
+                        "success": "SuggestionsLoaded"
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "ownerId"
+                        ],
+                        "@user.id"
+                      ]
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M45A3ZSMQM2WAFRRJXB0K2C9",
+                "from": "closed",
+                "guard": "@config.showOnMount",
+                "to": "open"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "@config.inboxSlot",
+                    null
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M45A3ZSMQM2WAFRRJXB0K2C9",
+                "from": "closed",
+                "guard": [
+                  "not",
+                  "@config.showOnMount"
+                ],
+                "to": "closed"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentSuggestion",
+                    {
+                      "emit": {
+                        "failure": "SuggestionsLoadFailed",
+                        "success": "SuggestionsLoaded"
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "ownerId"
+                        ],
+                        "@user.id"
+                      ]
+                    }
+                  ]
+                ],
+                "event": "OPEN",
+                "eventId": "evt_01M45A3ZSMQWCD6DKPHAM78TEK",
+                "from": "closed",
+                "to": "open"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "@config.inboxSlot",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "name": "@config.headingIcon",
+                                  "size": "lg",
+                                  "type": "icon"
+                                },
+                                {
+                                  "content": "@config.heading",
+                                  "type": "typography",
+                                  "variant": "h3"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            [
+                              "if",
+                              [
+                                "not",
+                                [
+                                  "=",
+                                  "@config.inboxSlot",
+                                  "main"
+                                ]
+                              ],
+                              {
+                                "action": "CLOSE",
+                                "icon": "x",
+                                "label": "@config.closeButtonLabel",
+                                "type": "button",
+                                "variant": "ghost"
+                              },
+                              null
+                            ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "between",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "emptyAction": {
+                            "event": "ANALYZE",
+                            "label": "@config.lookAgainLabel"
+                          },
+                          "emptyDescription": "@config.emptyHint",
+                          "emptyTitle": "@config.emptyHeading",
+                          "entity": [
+                            "array/sort",
+                            [
+                              "array/filter",
+                              "@payload.data",
+                              [
+                                "fn",
+                                "item",
+                                [
+                                  "=",
+                                  "@item.status",
+                                  "pending"
+                                ]
+                              ]
+                            ],
+                            "createdAt",
+                            "desc"
+                          ],
+                          "fields": [
+                            {
+                              "label": "Kind",
+                              "name": "kind",
+                              "variant": "badge"
+                            },
+                            {
+                              "label": "Suggestion",
+                              "name": "title",
+                              "variant": "h4"
+                            },
+                            {
+                              "label": "Why",
+                              "name": "body",
+                              "variant": "body"
+                            }
+                          ],
+                          "gap": "sm",
+                          "itemActions": [
+                            {
+                              "event": "ACCEPT",
+                              "icon": "check",
+                              "label": "@config.approveLabel",
+                              "variant": "primary"
+                            },
+                            {
+                              "event": "DISMISS",
+                              "icon": "x",
+                              "label": "@config.declineLabel",
+                              "variant": "ghost"
+                            }
+                          ],
+                          "type": "data-list",
+                          "variant": "card"
+                        },
+                        [
+                          "if",
+                          [
+                            "not",
+                            [
+                              "=",
+                              "@config.historyLink",
+                              ""
+                            ]
+                          ],
+                          {
+                            "href": "@config.historyLink",
+                            "label": "@config.historyLinkLabel",
+                            "size": "sm",
+                            "type": "button",
+                            "variant": "ghost"
+                          },
+                          null
+                        ]
+                      ],
+                      "className": "max-h-[60vh] overflow-y-auto",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "SuggestionsLoaded",
+                "eventId": "evt_01M45A3ZSMD44H1TP3RJTXBRKB",
+                "from": "open",
+                "to": "open"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ],
+                "event": "SuggestionsLoadFailed",
+                "eventId": "evt_01M45A3ZSM13J21R1C72WPQKP5",
+                "from": "open",
+                "to": "open"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ],
+                "event": "SuggestionResolveFailed",
+                "eventId": "evt_01M45A3ZSMNXFE3GN725SVX128",
+                "from": "open",
+                "to": "open"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentSuggestion",
+                    {
+                      "emit": {
+                        "failure": "SuggestionsLoadFailed",
+                        "success": "SuggestionsLoaded"
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "ownerId"
+                        ],
+                        "@user.id"
+                      ]
+                    }
+                  ]
+                ],
+                "event": "REFRESH",
+                "eventId": "evt_01M45A3ZSMPTN7Z2YDY4ZPBKJN",
+                "from": "open",
+                "to": "open"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentSuggestion",
+                    {
+                      "emit": {
+                        "failure": "SuggestionsLoadFailed",
+                        "success": "SuggestionsLoaded"
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "ownerId"
+                        ],
+                        "@user.id"
+                      ]
+                    }
+                  ]
+                ],
+                "event": "OPEN",
+                "eventId": "evt_01M45A3ZSMQWCD6DKPHAM78TEK",
+                "from": "open",
+                "to": "open"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "SUGGESTIONS_ANALYZE_REQUESTED",
+                    {}
+                  ]
+                ],
+                "event": "ANALYZE",
+                "eventId": "evt_01M45A3ZSM8SBFRK0AV3PZWKWE",
+                "from": "open",
+                "to": "open"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentSuggestion",
+                    {
+                      "emit": {
+                        "failure": "SuggestionResolveFailed",
+                        "success": "SuggestionForAccept"
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "id"
+                        ],
+                        "@payload.id"
+                      ]
+                    }
+                  ]
+                ],
+                "event": "ACCEPT",
+                "eventId": "evt_01M45A3ZSM8Y8K2NY6F8TYW2P5",
+                "from": "open",
+                "to": "open"
+              },
+              {
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "AgentSuggestion",
+                    {
+                      "action": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "action"
+                      ],
+                      "body": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "body"
+                      ],
+                      "createdAt": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "createdAt"
+                      ],
+                      "href": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "href"
+                      ],
+                      "id": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "id"
+                      ],
+                      "kind": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "kind"
+                      ],
+                      "ownerId": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "ownerId"
+                      ],
+                      "payload": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "payload"
+                      ],
+                      "resolvedAt": "@now",
+                      "signature": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "signature"
+                      ],
+                      "status": "accepted",
+                      "subject": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "subject"
+                      ],
+                      "title": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "title"
+                      ]
+                    },
+                    {
+                      "emit": {
+                        "failure": "SuggestionResolveFailed",
+                        "success": "SuggestionAccepted"
+                      }
+                    }
+                  ]
+                ],
+                "event": "SuggestionForAccept",
+                "eventId": "evt_01M45A3ZSMC1G2REPAFY2WAE2B",
+                "from": "open",
+                "guard": [
+                  "and",
+                  [
+                    ">",
+                    [
+                      "array/len",
+                      "@payload.data"
+                    ],
+                    0.0
+                  ],
+                  [
+                    "=",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        "@payload.data"
+                      ],
+                      "status"
+                    ],
+                    "pending"
+                  ]
+                ],
+                "to": "open"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "SUGGESTION_ACCEPTED",
+                    {
+                      "action": "@payload.action",
+                      "href": "@payload.href",
+                      "id": "@payload.id",
+                      "kind": "@payload.kind",
+                      "payload": "@payload.payload",
+                      "subject": "@payload.subject"
+                    }
+                  ],
+                  [
+                    "fetch",
+                    "AgentSuggestion",
+                    {
+                      "emit": {
+                        "failure": "SuggestionsLoadFailed",
+                        "success": "SuggestionsLoaded"
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "ownerId"
+                        ],
+                        "@user.id"
+                      ]
+                    }
+                  ]
+                ],
+                "event": "SuggestionAccepted",
+                "eventId": "evt_01M45A3ZSM9CE3Y5HHZ6FS8ZBE",
+                "from": "open",
+                "guard": [
+                  "=",
+                  [
+                    "str/default",
+                    "@payload.href",
+                    ""
+                  ],
+                  ""
+                ],
+                "to": "open"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "SUGGESTION_ACCEPTED",
+                    {
+                      "action": "@payload.action",
+                      "href": "@payload.href",
+                      "id": "@payload.id",
+                      "kind": "@payload.kind",
+                      "payload": "@payload.payload",
+                      "subject": "@payload.subject"
+                    }
+                  ],
+                  [
+                    "fetch",
+                    "AgentSuggestion",
+                    {
+                      "emit": {
+                        "failure": "SuggestionsLoadFailed",
+                        "success": "SuggestionsLoaded"
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "ownerId"
+                        ],
+                        "@user.id"
+                      ]
+                    }
+                  ],
+                  [
+                    "navigate",
+                    "@payload.href"
+                  ]
+                ],
+                "event": "SuggestionAccepted",
+                "eventId": "evt_01M45A3ZSM9CE3Y5HHZ6FS8ZBE",
+                "from": "open",
+                "guard": [
+                  "not",
+                  [
+                    "=",
+                    [
+                      "str/default",
+                      "@payload.href",
+                      ""
+                    ],
+                    ""
+                  ]
+                ],
+                "to": "open"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentSuggestion",
+                    {
+                      "emit": {
+                        "failure": "SuggestionResolveFailed",
+                        "success": "SuggestionForDismiss"
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "id"
+                        ],
+                        "@payload.id"
+                      ]
+                    }
+                  ]
+                ],
+                "event": "DISMISS",
+                "eventId": "evt_01M45A3ZSM4QPDTQNTJ5TBR6C6",
+                "from": "open",
+                "to": "open"
+              },
+              {
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "AgentSuggestion",
+                    {
+                      "action": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "action"
+                      ],
+                      "body": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "body"
+                      ],
+                      "createdAt": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "createdAt"
+                      ],
+                      "href": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "href"
+                      ],
+                      "id": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "id"
+                      ],
+                      "kind": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "kind"
+                      ],
+                      "ownerId": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "ownerId"
+                      ],
+                      "payload": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "payload"
+                      ],
+                      "resolvedAt": "@now",
+                      "signature": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "signature"
+                      ],
+                      "status": "dismissed",
+                      "subject": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "subject"
+                      ],
+                      "title": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "title"
+                      ]
+                    },
+                    {
+                      "emit": {
+                        "failure": "SuggestionResolveFailed",
+                        "success": "SuggestionDismissed"
+                      }
+                    }
+                  ]
+                ],
+                "event": "SuggestionForDismiss",
+                "eventId": "evt_01M45A3ZSMRJ5HZV620GHFJER1",
+                "from": "open",
+                "guard": [
+                  "and",
+                  [
+                    ">",
+                    [
+                      "array/len",
+                      "@payload.data"
+                    ],
+                    0.0
+                  ],
+                  [
+                    "=",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        "@payload.data"
+                      ],
+                      "status"
+                    ],
+                    "pending"
+                  ]
+                ],
+                "to": "open"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "SUGGESTION_DISMISSED",
+                    {
+                      "action": "@payload.action",
+                      "id": "@payload.id",
+                      "kind": "@payload.kind",
+                      "subject": "@payload.subject"
+                    }
+                  ],
+                  [
+                    "fetch",
+                    "AgentSuggestion",
+                    {
+                      "emit": {
+                        "failure": "SuggestionsLoadFailed",
+                        "success": "SuggestionsLoaded"
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "ownerId"
+                        ],
+                        "@user.id"
+                      ]
+                    }
+                  ]
+                ],
+                "event": "SuggestionDismissed",
+                "eventId": "evt_01M45A3ZSMNHT7BMZ8NHMW33CB",
+                "from": "open",
+                "to": "open"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "@config.inboxSlot",
+                    null
+                  ]
+                ],
+                "event": "CLOSE",
+                "eventId": "evt_01M45A3ZSMHCM41TQJSC6GCA6K",
+                "from": "open",
+                "to": "closed"
+              }
+            ]
+          }
+        },
+        {
+          "category": "lifecycle",
+          "config": {
+            "gapMinutes": {
+              "default": "@config.cooldownMinutes",
+              "description": "A trigger starts a run only when this long has passed since the person's last run.",
+              "label": "Minutes between proactive runs",
+              "synonyms": "throttle, rate limit, interval, frequency",
+              "tier": "policy",
+              "type": "number"
+            }
+          },
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "SUGGESTION_RUN_ALLOWED"
+            },
+            {
+              "kind": "fetch",
+              "resource": "AgentSuggestionRun"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
+            }
+          ],
+          "emits": [
+            {
+              "description": "A trigger arrived and the cooldown has passed, so the agent is asked to look.",
+              "event": "SUGGESTION_RUN_ALLOWED",
+              "eventId": "evt_01M45A3ZSMG46EQ3KBGHF74668",
+              "scope": "external",
+              "synonyms": "run allowed, cooldown passed",
+              "tier": "domain"
+            },
+            {
+              "event": "RunsForTrigger",
+              "eventId": "evt_01M45A3ZSMQ5E0YHBJ3XMEDHY9",
+              "payloadSchema": [
+                {
+                  "entity": "RunRow",
+                  "name": "data",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "ownerId",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "ranAt",
+                      "type": "number"
+                    }
+                  ],
+                  "type": "[object]"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            },
+            {
+              "event": "RunsLoadFailed",
+              "eventId": "evt_01M45A3ZSMDNHTFXM2PB7YEXK0",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "id": "trt_01M45A3ZSMQ7DPJF00CQEZF6ZZ",
+          "linkedEntity": "AgentSuggestionRun",
+          "listens": [
+            {
+              "event": "SUGGESTIONS_TRIGGERED",
+              "source": {
+                "kind": "any"
+              },
+              "triggers": "TRIGGERED",
+              "triggersId": "evt_01M45A3ZSMRHXVFWRQDAZ7RWJ4"
+            }
+          ],
+          "name": "AgentSuggestionTrigger",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M45A3ZSM39YZ8C4K8CKF57QN",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Something happened that is a reason to look for suggestions. SUGGESTIONS_TRIGGERED from any trait arrives here; an app routes its own events with `listens { Source.EVENT -> TRIGGERED }` on a re-bound AgentSuggestionTrigger.",
+                "id": "evt_01M45A3ZSMRHXVFWRQDAZ7RWJ4",
+                "key": "TRIGGERED",
+                "name": "Triggered",
+                "synonyms": "trigger, start analysis, look for suggestions",
+                "tier": "domain"
+              },
+              {
+                "id": "evt_01M45A3ZSMQ5E0YHBJ3XMEDHY9",
+                "key": "RunsForTrigger",
+                "name": "Runs for trigger",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "ranAt",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "id": "evt_01M45A3ZSMDNHTFXM2PB7YEXK0",
+                "key": "RunsLoadFailed",
+                "name": "Runs load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "description": "A trigger arrived and the cooldown has passed, so the agent is asked to look.",
+                "id": "evt_01M45A3ZSMG46EQ3KBGHF74668",
+                "key": "SUGGESTION_RUN_ALLOWED",
+                "name": "Suggestion Run Allowed",
+                "synonyms": "run allowed, cooldown passed",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "ready"
+              }
+            ],
+            "transitions": [
+              {
+                "event": "INIT",
+                "eventId": "evt_01M45A3ZSM39YZ8C4K8CKF57QN",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentSuggestionRun",
+                    {
+                      "emit": {
+                        "failure": "RunsLoadFailed",
+                        "success": "RunsForTrigger"
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "ownerId"
+                        ],
+                        "@user.id"
+                      ]
+                    }
+                  ]
+                ],
+                "event": "TRIGGERED",
+                "eventId": "evt_01M45A3ZSMRHXVFWRQDAZ7RWJ4",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "SUGGESTION_RUN_ALLOWED",
+                    {}
+                  ]
+                ],
+                "event": "RunsForTrigger",
+                "eventId": "evt_01M45A3ZSMQ5E0YHBJ3XMEDHY9",
+                "from": "ready",
+                "guard": [
+                  ">=",
+                  [
+                    "-",
+                    "@now",
+                    [
+                      "if",
+                      [
+                        "=",
+                        [
+                          "array/len",
+                          "@payload.data"
+                        ],
+                        0.0
+                      ],
+                      0.0,
+                      [
+                        "array/max",
+                        "@payload.data",
+                        "ranAt"
+                      ]
+                    ]
+                  ],
+                  [
+                    "*",
+                    "@config.gapMinutes",
+                    60000.0
+                  ]
+                ],
+                "to": "ready"
+              },
+              {
+                "event": "RunsForTrigger",
+                "eventId": "evt_01M45A3ZSMQ5E0YHBJ3XMEDHY9",
+                "from": "ready",
+                "guard": [
+                  "<",
+                  [
+                    "-",
+                    "@now",
+                    [
+                      "if",
+                      [
+                        "=",
+                        [
+                          "array/len",
+                          "@payload.data"
+                        ],
+                        0.0
+                      ],
+                      0.0,
+                      [
+                        "array/max",
+                        "@payload.data",
+                        "ranAt"
+                      ]
+                    ]
+                  ],
+                  [
+                    "*",
+                    "@config.gapMinutes",
+                    60000.0
+                  ]
+                ],
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "warning"
+                    }
+                  ]
+                ],
+                "event": "RunsLoadFailed",
+                "eventId": "evt_01M45A3ZSMDNHTFXM2PB7YEXK0",
+                "from": "ready",
+                "to": "ready"
+              }
+            ]
+          }
+        },
+        {
+          "category": "lifecycle",
+          "config": {
+            "request": {
+              "default": "@config.prompt",
+              "description": "The request each proactive run answers.",
+              "label": "What does the agent look into?",
+              "synonyms": "task, goal, question, brief",
+              "tier": "domain",
+              "type": "string"
+            }
+          },
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "SUGGESTION_RUN_DONE"
+            },
+            {
+              "kind": "emit",
+              "resource": "SUGGESTION_RUN_FAILED"
+            },
+            {
+              "kind": "emit",
+              "resource": "SUGGESTION_RUN_STARTED"
+            },
+            {
+              "kind": "persist",
+              "resource": "AgentSuggestionRun"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
+            }
+          ],
+          "emits": [
+            {
+              "description": "The agent was asked to look for suggestions.",
+              "event": "SUGGESTION_RUN_STARTED",
+              "eventId": "evt_01M45A3ZSMNHX3Y17Z98WCTR75",
+              "payloadSchema": [
+                {
+                  "entity": "AgentChatMessage",
+                  "name": "messages",
+                  "properties": [
+                    {
+                      "name": "role",
+                      "type": "string"
+                    },
+                    {
+                      "name": "content",
+                      "required": true,
+                      "type": "string"
+                    }
+                  ],
+                  "required": true,
+                  "type": "[object]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "analysis started, looking",
+              "tier": "domain"
+            },
+            {
+              "description": "The agent finished looking; any suggestions it made are in the inbox.",
+              "event": "SUGGESTION_RUN_DONE",
+              "eventId": "evt_01M45A3ZSMFJ1CTNZFDPCKVD52",
+              "scope": "external",
+              "synonyms": "analysis done, finished",
+              "tier": "domain"
+            },
+            {
+              "description": "The agent could not finish looking (no toast; the inbox simply has nothing new).",
+              "event": "SUGGESTION_RUN_FAILED",
+              "eventId": "evt_01M45A3ZSM9MGJ5FA4R6ZY0S7Q",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "analysis failed, error",
+              "tier": "domain"
+            },
+            {
+              "description": "Fired after a run is recorded",
+              "event": "RunRecorded",
+              "eventId": "evt_01M45A3ZSMR5VA1TC7E8Y7KJE1",
+              "payloadEntity": "RunRow",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "ownerId",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "ranAt",
+                  "type": "number"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            },
+            {
+              "event": "RunRecordFailed",
+              "eventId": "evt_01M45A3ZSMHA5Z1FNR12MXKAN0",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "id": "trt_01M45A3ZSMZGE1W5T0HSCPP5DD",
+          "linkedEntity": "AgentSuggestionRun",
+          "listens": [
+            {
+              "event": "SUGGESTION_RUN_ALLOWED",
+              "eventId": "evt_01M45A3ZSMG46EQ3KBGHF74668",
+              "source": {
+                "kind": "trait",
+                "trait": "AgentSuggestionTrigger",
+                "traitId": "trt_01M45A3ZSMQ7DPJF00CQEZF6ZZ"
+              },
+              "triggers": "START",
+              "triggersId": "evt_01M45A3ZSM26CZ16WSRDS3R8W4"
+            },
+            {
+              "event": "SUGGESTIONS_ANALYZE_REQUESTED",
+              "eventId": "evt_01M45A3ZSMTB0PPJY3XDEHXE5J",
+              "source": {
+                "kind": "trait",
+                "trait": "AgentSuggestionInbox",
+                "traitId": "trt_01M45A3ZSMAR11VVGSP4GA59MS"
+              },
+              "triggers": "START",
+              "triggersId": "evt_01M45A3ZSM26CZ16WSRDS3R8W4"
+            },
+            {
+              "event": "PROACTIVE_REPLIED",
+              "source": {
+                "kind": "trait",
+                "trait": "AgentSuggestionLoop",
+                "traitId": "trt_01M45A3ZSMW125VR1RA72GS3PV"
+              },
+              "triggers": "LOOP_REPLIED",
+              "triggersId": "evt_01M45A3ZSMMVVXARNX1PFWJ0SP"
+            },
+            {
+              "event": "PROACTIVE_FAILED",
+              "source": {
+                "kind": "trait",
+                "trait": "AgentSuggestionLoop",
+                "traitId": "trt_01M45A3ZSMW125VR1RA72GS3PV"
+              },
+              "triggers": "LOOP_FAILED",
+              "triggersId": "evt_01M45A3ZSMYAF4B1RDRGGEEEET"
+            }
+          ],
+          "name": "AgentSuggestionRunner",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M45A3ZSMVWRJDFPWPBVD21K1",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Ask the agent to look for suggestions now.",
+                "id": "evt_01M45A3ZSM26CZ16WSRDS3R8W4",
+                "key": "START",
+                "name": "Start"
+              },
+              {
+                "id": "evt_01M45A3ZSMR5VA1TC7E8Y7KJE1",
+                "key": "RunRecorded",
+                "name": "Run recorded",
+                "payloadEntity": "RunRow",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "ownerId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "ranAt",
+                    "type": "number"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "id": "evt_01M45A3ZSMHA5Z1FNR12MXKAN0",
+                "key": "RunRecordFailed",
+                "name": "Run record failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "description": "The agent answered.",
+                "id": "evt_01M45A3ZSMMVVXARNX1PFWJ0SP",
+                "key": "LOOP_REPLIED",
+                "name": "Loop Replied",
+                "payloadSchema": [
+                  {
+                    "name": "reply",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "description": "The agent could not answer.",
+                "id": "evt_01M45A3ZSMYAF4B1RDRGGEEEET",
+                "key": "LOOP_FAILED",
+                "name": "Loop Failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "description": "The agent was asked to look for suggestions.",
+                "id": "evt_01M45A3ZSMNHX3Y17Z98WCTR75",
+                "key": "SUGGESTION_RUN_STARTED",
+                "name": "Suggestion Run Started",
+                "payloadSchema": [
+                  {
+                    "entity": "AgentChatMessage",
+                    "name": "messages",
+                    "properties": [
+                      {
+                        "name": "role",
+                        "type": "string"
+                      },
+                      {
+                        "name": "content",
+                        "required": true,
+                        "type": "string"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
+                  }
+                ],
+                "synonyms": "analysis started, looking",
+                "tier": "domain"
+              },
+              {
+                "description": "The agent finished looking; any suggestions it made are in the inbox.",
+                "id": "evt_01M45A3ZSMFJ1CTNZFDPCKVD52",
+                "key": "SUGGESTION_RUN_DONE",
+                "name": "Suggestion Run Done",
+                "synonyms": "analysis done, finished",
+                "tier": "domain"
+              },
+              {
+                "description": "The agent could not finish looking (no toast; the inbox simply has nothing new).",
+                "id": "evt_01M45A3ZSM9MGJ5FA4R6ZY0S7Q",
+                "key": "SUGGESTION_RUN_FAILED",
+                "name": "Suggestion Run Failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "analysis failed, error",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "ready"
+              },
+              {
+                "name": "starting"
+              },
+              {
+                "name": "analyzing"
+              }
+            ],
+            "transitions": [
+              {
+                "event": "INIT",
+                "eventId": "evt_01M45A3ZSMVWRJDFPWPBVD21K1",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "AgentSuggestionRun",
+                    {
+                      "ownerId": "@user.id",
+                      "ranAt": "@now"
+                    },
+                    {
+                      "emit": {
+                        "failure": "RunRecordFailed",
+                        "success": "RunRecorded"
+                      }
+                    }
+                  ]
+                ],
+                "event": "START",
+                "eventId": "evt_01M45A3ZSM26CZ16WSRDS3R8W4",
+                "from": "ready",
+                "to": "starting"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "SUGGESTION_RUN_STARTED",
+                    {
+                      "messages": [
+                        {
+                          "content": "@config.request",
+                          "role": "user"
+                        }
+                      ]
+                    }
+                  ]
+                ],
+                "event": "RunRecorded",
+                "eventId": "evt_01M45A3ZSMR5VA1TC7E8Y7KJE1",
+                "from": "starting",
+                "to": "analyzing"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "SUGGESTION_RUN_FAILED",
+                    {
+                      "error": "@payload.error"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "warning"
+                    }
+                  ]
+                ],
+                "event": "RunRecordFailed",
+                "eventId": "evt_01M45A3ZSMHA5Z1FNR12MXKAN0",
+                "from": "starting",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "SUGGESTION_RUN_DONE",
+                    {}
+                  ]
+                ],
+                "event": "LOOP_REPLIED",
+                "eventId": "evt_01M45A3ZSMMVVXARNX1PFWJ0SP",
+                "from": "analyzing",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "SUGGESTION_RUN_FAILED",
+                    {
+                      "error": "@payload.error"
+                    }
+                  ]
+                ],
+                "event": "LOOP_FAILED",
+                "eventId": "evt_01M45A3ZSMYAF4B1RDRGGEEEET",
+                "from": "analyzing",
+                "to": "ready"
+              }
+            ]
+          }
+        },
+        {
+          "config": {
+            "cancelKey": {
+              "default": "agent-suggestions",
+              "type": "unknown"
+            },
+            "instructions": {
+              "default": "@config.instructions",
+              "type": "unknown"
+            },
+            "maxSteps": {
+              "default": "@config.maxSteps",
+              "type": "unknown"
+            },
+            "quiet": {
+              "default": true,
+              "type": "unknown"
+            },
+            "tools": {
+              "default": "@config.tools",
+              "type": "unknown"
+            }
+          },
+          "events": {
+            "ASSISTANT_REPLIED": "PROACTIVE_REPLIED",
+            "ASSISTANT_REPLY_FAILED": "PROACTIVE_FAILED"
+          },
+          "id": "trt_01M45A3ZSMW125VR1RA72GS3PV",
+          "listens": [
+            {
+              "event": "SUGGESTION_RUN_STARTED",
+              "source": {
+                "kind": "trait",
+                "trait": "AgentSuggestionRunner"
+              },
+              "triggers": "CONVERSE"
+            }
+          ],
+          "name": "AgentSuggestionLoop",
+          "ref": "Loop.traits.AgentToolLoop"
+        }
+      ],
+      "types": {
+        "AgentChatMessage": [
+          {
+            "name": "role",
+            "type": "string"
+          },
+          {
+            "name": "content",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "AgentTool": [
+          {
+            "name": "event",
+            "type": "event"
+          },
+          {
+            "name": "read",
+            "type": "string"
+          },
+          {
+            "name": "scope",
+            "type": "string"
+          }
+        ],
+        "RunRow": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "ownerId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "ranAt",
+            "type": "number"
+          }
+        ],
+        "SuggestionProposal": [
+          {
+            "name": "kind",
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "type": "string"
+          },
+          {
+            "name": "action",
+            "type": "string"
+          },
+          {
+            "name": "href",
+            "type": "string"
+          },
+          {
+            "name": "subject",
+            "type": "string"
+          },
+          {
+            "name": "signature",
+            "type": "string"
+          },
+          {
+            "name": "payload",
+            "type": "Map<string,scalar>"
+          }
+        ],
+        "SuggestionRow": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "ownerId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "type": "string"
+          },
+          {
+            "name": "action",
+            "type": "string"
+          },
+          {
+            "name": "href",
+            "type": "string"
+          },
+          {
+            "name": "payload",
+            "type": "Map<string,scalar>"
+          },
+          {
+            "name": "subject",
+            "type": "string"
+          },
+          {
+            "name": "signature",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string"
+          },
+          {
+            "name": "createdAt",
+            "type": "number"
+          },
+          {
+            "name": "resolvedAt",
+            "type": "number"
+          }
+        ]
+      },
+      "uses": [
+        {
+          "as": "Loop",
+          "from": "std/behaviors/std-agent-tool-loop"
+        }
+      ]
+    },
+    {
+      "auxiliaryEntities": [
+        {
+          "collection": "agentSuggestionRuns",
+          "fields": [
+            {
+              "name": "id",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "description": "Whose run this was (the real @user). The binding organism scopes @read/@create to it.",
+              "name": "ownerId",
+              "required": true,
+              "synonyms": "user, owner, account",
+              "type": "string"
+            },
+            {
+              "default": 0.0,
+              "description": "When the agent was last asked to look (ms).",
+              "name": "ranAt",
+              "synonyms": "time, started",
+              "type": "number"
+            }
+          ],
+          "id": "ent_01M45A3ZSMT8D9NB2TYANWY05Q",
+          "name": "AgentSuggestionRun",
+          "persistence": "persistent"
+        }
+      ],
+      "entity": {
+        "collection": "agentSuggestions",
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Whom this is proposed to (the real @user). The binding organism scopes @read/@create/@update to it.",
+            "name": "ownerId",
+            "required": true,
+            "synonyms": "user, owner, account",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "What sort of suggestion this is; the app's own vocabulary.",
+            "name": "kind",
+            "synonyms": "type, category",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "The suggestion in a line.",
+            "name": "title",
+            "synonyms": "headline, name",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "Why the agent proposes it.",
+            "name": "body",
+            "synonyms": "reasoning, reason, description, explanation",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "What accepting it does: a name the app routes from SUGGESTION_ACCEPTED.",
+            "name": "action",
+            "synonyms": "event, command",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "A page accepting it opens; empty for none.",
+            "name": "href",
+            "synonyms": "link, url, route",
+            "type": "string"
+          },
+          {
+            "default": {},
+            "description": "What the action needs.",
+            "items": {
+              "type": "scalar"
+            },
+            "name": "payload",
+            "synonyms": "params, arguments, data",
+            "type": "object"
+          },
+          {
+            "default": "",
+            "description": "What the suggestion is about (an id or slug).",
+            "name": "subject",
+            "synonyms": "target, topic",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "kind:action:subject. One signature is proposed to a person at most once, whatever became of it.",
+            "name": "signature",
+            "synonyms": "dedup key, fingerprint",
+            "type": "string"
+          },
+          {
+            "default": "pending",
+            "description": "Where the suggestion stands.",
+            "name": "status",
+            "type": "string",
+            "values": [
+              "pending",
+              "accepted",
+              "dismissed"
+            ]
+          },
+          {
+            "default": 0.0,
+            "description": "When it was proposed (ms).",
+            "name": "createdAt",
+            "synonyms": "time, timestamp",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "description": "When it was accepted or dismissed (ms).",
+            "name": "resolvedAt",
+            "type": "number"
+          },
+          {
+            "default": {
+              "action": "",
+              "body": "",
+              "href": "",
+              "kind": "",
+              "payload": {},
+              "signature": "",
+              "subject": "",
+              "title": ""
+            },
+            "description": "The proposal being checked for a duplicate.",
+            "intrinsic": true,
+            "name": "pendingProposal",
+            "properties": {
+              "action": {
+                "name": "action",
+                "required": false,
+                "type": "string"
+              },
+              "body": {
+                "name": "body",
+                "required": false,
+                "type": "string"
+              },
+              "href": {
+                "name": "href",
+                "required": false,
+                "type": "string"
+              },
+              "kind": {
+                "name": "kind",
+                "required": false,
+                "type": "string"
+              },
+              "payload": {
+                "items": {
+                  "type": "scalar"
+                },
+                "name": "payload",
+                "required": false,
+                "type": "object"
+              },
+              "signature": {
+                "name": "signature",
+                "required": false,
+                "type": "string"
+              },
+              "subject": {
+                "name": "subject",
+                "required": false,
+                "type": "string"
+              },
+              "title": {
+                "name": "title",
+                "required": false,
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        ],
+        "id": "ent_01M45A3ZSMTCCF585VQQX6MJZS",
+        "name": "AgentSuggestion",
+        "persistence": "persistent"
+      },
+      "id": "orb_01M45AE1ZZZWPDN8T2QH9Q51HY",
+      "name": "AgentSuggestionRecordsOrbital",
+      "pages": [
+        {
+          "id": "pag_01M45AE1ZZXVRWDCR3AAN80DE7",
+          "name": "AgentSuggestionHistoryPage",
+          "path": "/agent-suggestions/history",
+          "traits": [
+            {
+              "ref": "AgentSuggestionHistory",
+              "refId": "trt_01M45AE1ZZ5ZMP9XMS4Y5KTBCN"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "emptyHeading": {
+              "default": "Nothing suggested yet",
+              "label": "What shows when nothing was ever suggested?",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "effectRow": [
+            {
+              "kind": "fetch",
+              "resource": "AgentSuggestion"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "main"
+            }
+          ],
+          "emits": [
+            {
+              "event": "SuggestionsLoaded",
+              "eventId": "evt_01M45AE1ZZ5G2B3FB1TFXZ07GQ",
+              "payloadSchema": [
+                {
+                  "entity": "SuggestionRow",
+                  "name": "data",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "ownerId",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "kind",
+                      "type": "string"
+                    },
+                    {
+                      "name": "title",
+                      "type": "string"
+                    },
+                    {
+                      "name": "body",
+                      "type": "string"
+                    },
+                    {
+                      "name": "action",
+                      "type": "string"
+                    },
+                    {
+                      "name": "href",
+                      "type": "string"
+                    },
+                    {
+                      "name": "payload",
+                      "type": "Map<string,scalar>"
+                    },
+                    {
+                      "name": "subject",
+                      "type": "string"
+                    },
+                    {
+                      "name": "signature",
+                      "type": "string"
+                    },
+                    {
+                      "name": "status",
+                      "type": "string"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "resolvedAt",
+                      "type": "number"
+                    }
+                  ],
+                  "type": "[object]"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            },
+            {
+              "event": "SuggestionsLoadFailed",
+              "eventId": "evt_01M45AE1ZZ18BQZY2Q6BW9D3DQ",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ],
+              "scope": "internal",
+              "tier": "internal"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "entityRefIds": {
+            "AgentSuggestion": "ent_01M45A3ZSMTCCF585VQQX6MJZS"
+          },
+          "id": "trt_01M45AE1ZZ5ZMP9XMS4Y5KTBCN",
+          "linkedEntity": "AgentSuggestion",
+          "linkedEntityId": "ent_01M45A3ZSMTCCF585VQQX6MJZS",
+          "name": "AgentSuggestionHistory",
+          "scope": "collection",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M45AE1ZZPFSZ7C33R86ZZA2E",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "id": "evt_01M45AE1ZZ5G2B3FB1TFXZ07GQ",
+                "key": "SuggestionsLoaded",
+                "name": "Suggestions loaded",
+                "payloadSchema": [
+                  {
+                    "entity": "SuggestionRow",
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "kind",
+                        "type": "string"
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "body",
+                        "type": "string"
+                      },
+                      {
+                        "name": "action",
+                        "type": "string"
+                      },
+                      {
+                        "name": "href",
+                        "type": "string"
+                      },
+                      {
+                        "name": "payload",
+                        "type": "Map<string,scalar>"
+                      },
+                      {
+                        "name": "subject",
+                        "type": "string"
+                      },
+                      {
+                        "name": "signature",
+                        "type": "string"
+                      },
+                      {
+                        "name": "status",
+                        "type": "string"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "resolvedAt",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "id": "evt_01M45AE1ZZ18BQZY2Q6BW9D3DQ",
+                "key": "SuggestionsLoadFailed",
+                "name": "Suggestions load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "tier": "internal"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "browsing"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentSuggestion",
+                    {
+                      "emit": {
+                        "failure": "SuggestionsLoadFailed",
+                        "success": "SuggestionsLoaded"
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "ownerId"
+                        ],
+                        "@user.id"
+                      ]
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "rows": 6.0,
+                      "type": "skeleton",
+                      "variant": "list"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M45AE1ZZPFSZ7C33R86ZZA2E",
+                "from": "browsing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "emptyTitle": "@config.emptyHeading",
+                      "entity": [
+                        "array/sort",
+                        "@payload.data",
+                        "createdAt",
+                        "desc"
+                      ],
+                      "fields": [
+                        {
+                          "label": "Status",
+                          "name": "status",
+                          "variant": "badge"
+                        },
+                        {
+                          "label": "Suggestion",
+                          "name": "title",
+                          "variant": "h4"
+                        },
+                        {
+                          "label": "Why",
+                          "name": "body",
+                          "variant": "body"
+                        }
+                      ],
+                      "gap": "sm",
+                      "type": "data-list",
+                      "variant": "card"
+                    }
+                  ]
+                ],
+                "event": "SuggestionsLoaded",
+                "eventId": "evt_01M45AE1ZZ5G2B3FB1TFXZ07GQ",
+                "from": "browsing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ],
+                "event": "SuggestionsLoadFailed",
+                "eventId": "evt_01M45AE1ZZ18BQZY2Q6BW9D3DQ",
+                "from": "browsing",
+                "to": "browsing"
+              }
+            ]
+          }
+        }
+      ],
+      "types": {
+        "AgentChatMessage": [
+          {
+            "name": "role",
+            "type": "string"
+          },
+          {
+            "name": "content",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "AgentTool": [
+          {
+            "name": "event",
+            "type": "event"
+          },
+          {
+            "name": "read",
+            "type": "string"
+          },
+          {
+            "name": "scope",
+            "type": "string"
+          }
+        ],
+        "RunRow": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "ownerId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "ranAt",
+            "type": "number"
+          }
+        ],
+        "SuggestionProposal": [
+          {
+            "name": "kind",
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "type": "string"
+          },
+          {
+            "name": "action",
+            "type": "string"
+          },
+          {
+            "name": "href",
+            "type": "string"
+          },
+          {
+            "name": "subject",
+            "type": "string"
+          },
+          {
+            "name": "signature",
+            "type": "string"
+          },
+          {
+            "name": "payload",
+            "type": "Map<string,scalar>"
+          }
+        ],
+        "SuggestionRow": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "ownerId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "type": "string"
+          },
+          {
+            "name": "action",
+            "type": "string"
+          },
+          {
+            "name": "href",
+            "type": "string"
+          },
+          {
+            "name": "payload",
+            "type": "Map<string,scalar>"
+          },
+          {
+            "name": "subject",
+            "type": "string"
+          },
+          {
+            "name": "signature",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string"
+          },
+          {
+            "name": "createdAt",
+            "type": "number"
+          },
+          {
+            "name": "resolvedAt",
+            "type": "number"
+          }
+        ]
+      }
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}

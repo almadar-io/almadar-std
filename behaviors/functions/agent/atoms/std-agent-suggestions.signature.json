@@ -1,0 +1,1115 @@
+[
+  {
+    "organism": "std-agent-suggestions",
+    "orbital": "AgentSuggestionsOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/agent/atoms/std-agent-suggestions.ts",
+    "entities": [
+      {
+        "name": "AgentSuggestionsHost",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "AgentSuggestionProposer",
+        "emittedEvents": [
+          "SUGGESTION_ADDED",
+          "SUGGESTION_DUPLICATE",
+          "SUGGESTION_LIMIT_REACHED",
+          "SUGGESTION_REJECTED",
+          "SuggestionsForPropose",
+          "SuggestionCheckFailed",
+          "SuggestionSaveFailed"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "SUGGESTION_ADDED",
+            "direction": "emit",
+            "description": "A suggestion was stored for the person — payload is the created AgentSuggestion row itself.",
+            "synonyms": "proposed, suggested, new suggestion",
+            "tier": "domain"
+          },
+          {
+            "name": "SUGGESTION_DUPLICATE",
+            "direction": "emit",
+            "description": "This signature was already proposed to the person (pending, accepted or dismissed), so nothing was stored.",
+            "synonyms": "already proposed, repeat, seen before",
+            "tier": "domain"
+          },
+          {
+            "name": "SUGGESTION_LIMIT_REACHED",
+            "direction": "emit",
+            "description": "The person already has the most pending suggestions allowed, so nothing was stored.",
+            "synonyms": "too many, queue full, cap",
+            "tier": "domain"
+          },
+          {
+            "name": "SUGGESTION_REJECTED",
+            "direction": "emit",
+            "description": "The proposal was refused (a kind or action not allowed, or it could not be checked or stored); the reason says why.",
+            "synonyms": "refused, invalid, not allowed",
+            "tier": "domain"
+          },
+          {
+            "name": "SuggestionsForPropose",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "SuggestionCheckFailed",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "SuggestionSaveFailed",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "PROPOSE_SUGGESTION",
+            "direction": "listen",
+            "description": "Propose something to the signed-in person: a kind, a title, a body that gives the reason, an optional action with its payload, an optional href, and the subject it is about (an id or slug). A proposal whose kind, action and subject were already proposed to this person is refused, whatever became of the first; so is one past the pending limit.",
+            "synonyms": "suggest, recommend, propose, offer"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "allowedActions",
+            "type": "[string]",
+            "default": "@config.actions",
+            "label": "Which actions may a suggestion carry?",
+            "description": "When listed, any other action is refused. Empty accepts any.",
+            "synonyms": "allowed actions, commands, events",
+            "tier": "domain",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "allowedKinds",
+            "type": "[string]",
+            "default": "@config.kinds",
+            "label": "Which kinds may be proposed?",
+            "description": "When listed, any other kind is refused. Empty accepts any.",
+            "synonyms": "types, categories, allowed kinds",
+            "tier": "domain",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "pendingLimit",
+            "type": "number",
+            "default": "@config.maxPending",
+            "label": "How many suggestions may wait at once?",
+            "description": "A proposal is refused (SUGGESTION_LIMIT_REACHED) while this many are pending.",
+            "synonyms": "limit, cap, queue size",
+            "tier": "policy"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "AgentSuggestion",
+        "transitionEvents": [
+          "INIT",
+          "PROPOSE_SUGGESTION",
+          "SuggestionCheckFailed",
+          "SuggestionSaveFailed",
+          "SuggestionsForPropose"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "pendingProposal"
+          ]
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "SUGGESTION_DUPLICATE"
+          },
+          {
+            "kind": "emit",
+            "resource": "SUGGESTION_LIMIT_REACHED"
+          },
+          {
+            "kind": "emit",
+            "resource": "SUGGESTION_REJECTED"
+          },
+          {
+            "kind": "fetch",
+            "resource": "AgentSuggestion"
+          },
+          {
+            "kind": "persist",
+            "resource": "AgentSuggestion"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "toast"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.pendingProposal"
+          }
+        ],
+        "effectEntityRefs": [
+          "AgentSuggestion"
+        ]
+      },
+      {
+        "name": "AgentSuggestionInbox",
+        "emittedEvents": [
+          "SUGGESTION_ACCEPTED",
+          "SUGGESTION_DISMISSED",
+          "SUGGESTIONS_ANALYZE_REQUESTED",
+          "SuggestionsLoaded",
+          "SuggestionsLoadFailed",
+          "SuggestionResolveFailed",
+          "SuggestionForAccept",
+          "SuggestionForDismiss",
+          "SuggestionAccepted",
+          "SuggestionDismissed"
+        ],
+        "listenedEvents": [
+          "SUGGESTION_ADDED",
+          "SUGGESTION_RUN_DONE",
+          "SUGGESTION_RUN_FAILED",
+          "SUGGESTIONS_OPEN_REQUESTED"
+        ],
+        "events": [
+          {
+            "name": "SUGGESTION_ACCEPTED",
+            "direction": "emit",
+            "description": "The person accepted a suggestion; the app routes `action` with `payload` (a suggestion with an href has already navigated there).",
+            "synonyms": "accepted, approved, taken up, do it",
+            "tier": "domain"
+          },
+          {
+            "name": "SUGGESTION_DISMISSED",
+            "direction": "emit",
+            "description": "The person dismissed a suggestion; its signature is never proposed to them again.",
+            "synonyms": "dismissed, rejected, declined, no thanks",
+            "tier": "domain"
+          },
+          {
+            "name": "SUGGESTIONS_ANALYZE_REQUESTED",
+            "direction": "emit",
+            "description": "The person asked the agent to look for suggestions again.",
+            "synonyms": "look again, refresh suggestions, analyze",
+            "tier": "domain"
+          },
+          {
+            "name": "SuggestionsLoaded",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "SuggestionsLoadFailed",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "SuggestionResolveFailed",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "SuggestionForAccept",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "SuggestionForDismiss",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "SuggestionAccepted",
+            "direction": "emit",
+            "description": "Fired after a suggestion is stored as accepted",
+            "tier": "internal"
+          },
+          {
+            "name": "SuggestionDismissed",
+            "direction": "emit",
+            "description": "Fired after a suggestion is stored as dismissed",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "OPEN",
+            "direction": "listen",
+            "description": "Show the suggestions inbox. SUGGESTIONS_OPEN_REQUESTED from any trait arrives here.",
+            "synonyms": "show suggestions, open bell, view suggestions",
+            "tier": "presentation"
+          },
+          {
+            "name": "REFRESH",
+            "direction": "listen",
+            "description": "Reload the pending suggestions."
+          },
+          {
+            "name": "ANALYZE",
+            "direction": "listen",
+            "description": "Ask the agent to look for suggestions again.",
+            "tier": "presentation"
+          },
+          {
+            "name": "ACCEPT",
+            "direction": "listen",
+            "description": "Accept this suggestion.",
+            "tier": "presentation"
+          },
+          {
+            "name": "DISMISS",
+            "direction": "listen",
+            "description": "Dismiss this suggestion.",
+            "tier": "presentation"
+          },
+          {
+            "name": "CLOSE",
+            "direction": "listen",
+            "description": "Hide the suggestions inbox.",
+            "synonyms": "close, hide, dismiss panel",
+            "tier": "presentation"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "approveLabel",
+            "type": "string",
+            "default": "@config.acceptLabel",
+            "label": "Accept button label",
+            "synonyms": "approve, yes, do it",
+            "tier": "presentation"
+          },
+          {
+            "key": "closeButtonLabel",
+            "type": "string",
+            "default": "@config.closeLabel",
+            "label": "Close button label",
+            "synonyms": "back, hide",
+            "tier": "presentation"
+          },
+          {
+            "key": "declineLabel",
+            "type": "string",
+            "default": "@config.dismissLabel",
+            "label": "Dismiss button label",
+            "synonyms": "reject, no thanks, hide",
+            "tier": "presentation"
+          },
+          {
+            "key": "emptyHeading",
+            "type": "string",
+            "default": "@config.emptyTitle",
+            "label": "What shows when nothing is pending?",
+            "synonyms": "empty state, no suggestions",
+            "tier": "presentation"
+          },
+          {
+            "key": "emptyHint",
+            "type": "string",
+            "default": "@config.emptyDescription",
+            "label": "Hint under the empty heading",
+            "tier": "presentation"
+          },
+          {
+            "key": "heading",
+            "type": "string",
+            "default": "@config.title",
+            "label": "Inbox heading",
+            "description": "Heading at the top of the inbox.",
+            "synonyms": "panel title, suggestions title",
+            "tier": "presentation"
+          },
+          {
+            "key": "headingIcon",
+            "type": "string",
+            "default": "@config.icon",
+            "label": "Inbox icon",
+            "description": "Lucide icon name shown beside the heading.",
+            "synonyms": "header icon",
+            "tier": "presentation"
+          },
+          {
+            "key": "historyLink",
+            "type": "string",
+            "default": "@config.historyHref",
+            "label": "Past-suggestions page",
+            "description": "Where accepted and dismissed suggestions are listed; empty hides the link.",
+            "tier": "presentation"
+          },
+          {
+            "key": "historyLinkLabel",
+            "type": "string",
+            "default": "@config.historyLabel",
+            "label": "Past-suggestions link label",
+            "synonyms": "history, archive, earlier suggestions",
+            "tier": "presentation"
+          },
+          {
+            "key": "inboxSlot",
+            "type": "slot",
+            "default": "@config.panelSlot",
+            "label": "Where the inbox renders",
+            "description": "`main` inline; `modal` or `drawer` for an overlay opened with OPEN.",
+            "tier": "internal"
+          },
+          {
+            "key": "lookAgainLabel",
+            "type": "string",
+            "default": "@config.analyzeLabel",
+            "label": "Look-again button label",
+            "description": "The empty inbox's button, which asks the agent to look again.",
+            "synonyms": "refresh, find suggestions, analyze",
+            "tier": "presentation"
+          },
+          {
+            "key": "showOnMount",
+            "type": "boolean",
+            "default": "@config.startOpen",
+            "label": "Show the inbox as soon as it mounts?",
+            "description": "Off for an overlay that waits for OPEN.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "AgentSuggestion",
+        "transitionEvents": [
+          "ACCEPT",
+          "ANALYZE",
+          "CLOSE",
+          "DISMISS",
+          "INIT",
+          "OPEN",
+          "REFRESH",
+          "SuggestionAccepted",
+          "SuggestionDismissed",
+          "SuggestionForAccept",
+          "SuggestionForDismiss",
+          "SuggestionResolveFailed",
+          "SuggestionsLoadFailed",
+          "SuggestionsLoaded"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "SUGGESTIONS_ANALYZE_REQUESTED"
+          },
+          {
+            "kind": "emit",
+            "resource": "SUGGESTION_ACCEPTED"
+          },
+          {
+            "kind": "emit",
+            "resource": "SUGGESTION_DISMISSED"
+          },
+          {
+            "kind": "fetch",
+            "resource": "AgentSuggestion"
+          },
+          {
+            "kind": "navigate",
+            "resource": "@payload.href"
+          },
+          {
+            "kind": "persist",
+            "resource": "AgentSuggestion"
+          },
+          {
+            "kind": "render-ui",
+            "resolved": false,
+            "resource": "@config.inboxSlot"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "toast"
+          }
+        ],
+        "effectEntityRefs": [
+          "AgentSuggestion"
+        ]
+      },
+      {
+        "name": "AgentSuggestionTrigger",
+        "emittedEvents": [
+          "SUGGESTION_RUN_ALLOWED",
+          "RunsForTrigger",
+          "RunsLoadFailed"
+        ],
+        "listenedEvents": [
+          "SUGGESTIONS_TRIGGERED"
+        ],
+        "events": [
+          {
+            "name": "SUGGESTION_RUN_ALLOWED",
+            "direction": "emit",
+            "description": "A trigger arrived and the cooldown has passed, so the agent is asked to look.",
+            "synonyms": "run allowed, cooldown passed",
+            "tier": "domain"
+          },
+          {
+            "name": "RunsForTrigger",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "RunsLoadFailed",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "TRIGGERED",
+            "direction": "listen",
+            "description": "Something happened that is a reason to look for suggestions. SUGGESTIONS_TRIGGERED from any trait arrives here; an app routes its own events with `listens { Source.EVENT -> TRIGGERED }` on a re-bound AgentSuggestionTrigger.",
+            "synonyms": "trigger, start analysis, look for suggestions",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "gapMinutes",
+            "type": "number",
+            "default": "@config.cooldownMinutes",
+            "label": "Minutes between proactive runs",
+            "description": "A trigger starts a run only when this long has passed since the person's last run.",
+            "synonyms": "throttle, rate limit, interval, frequency",
+            "tier": "policy"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "AgentSuggestionRun",
+        "transitionEvents": [
+          "INIT",
+          "RunsForTrigger",
+          "RunsLoadFailed",
+          "TRIGGERED"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "SUGGESTION_RUN_ALLOWED"
+          },
+          {
+            "kind": "fetch",
+            "resource": "AgentSuggestionRun"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "toast"
+          }
+        ],
+        "effectEntityRefs": [
+          "AgentSuggestionRun"
+        ]
+      },
+      {
+        "name": "AgentSuggestionRunner",
+        "emittedEvents": [
+          "SUGGESTION_RUN_STARTED",
+          "SUGGESTION_RUN_DONE",
+          "SUGGESTION_RUN_FAILED",
+          "RunRecorded",
+          "RunRecordFailed"
+        ],
+        "listenedEvents": [
+          "SUGGESTION_RUN_ALLOWED",
+          "SUGGESTIONS_ANALYZE_REQUESTED",
+          "PROACTIVE_REPLIED",
+          "PROACTIVE_FAILED"
+        ],
+        "events": [
+          {
+            "name": "SUGGESTION_RUN_STARTED",
+            "direction": "emit",
+            "description": "The agent was asked to look for suggestions.",
+            "synonyms": "analysis started, looking",
+            "tier": "domain"
+          },
+          {
+            "name": "SUGGESTION_RUN_DONE",
+            "direction": "emit",
+            "description": "The agent finished looking; any suggestions it made are in the inbox.",
+            "synonyms": "analysis done, finished",
+            "tier": "domain"
+          },
+          {
+            "name": "SUGGESTION_RUN_FAILED",
+            "direction": "emit",
+            "description": "The agent could not finish looking (no toast; the inbox simply has nothing new).",
+            "synonyms": "analysis failed, error",
+            "tier": "domain"
+          },
+          {
+            "name": "RunRecorded",
+            "direction": "emit",
+            "description": "Fired after a run is recorded",
+            "tier": "internal"
+          },
+          {
+            "name": "RunRecordFailed",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "START",
+            "direction": "listen",
+            "description": "Ask the agent to look for suggestions now."
+          },
+          {
+            "name": "LOOP_REPLIED",
+            "direction": "listen",
+            "description": "The agent answered."
+          },
+          {
+            "name": "LOOP_FAILED",
+            "direction": "listen",
+            "description": "The agent could not answer."
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "request",
+            "type": "string",
+            "default": "@config.prompt",
+            "label": "What does the agent look into?",
+            "description": "The request each proactive run answers.",
+            "synonyms": "task, goal, question, brief",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "AgentSuggestionRun",
+        "transitionEvents": [
+          "INIT",
+          "LOOP_FAILED",
+          "LOOP_REPLIED",
+          "RunRecordFailed",
+          "RunRecorded",
+          "START"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "SUGGESTION_RUN_DONE"
+          },
+          {
+            "kind": "emit",
+            "resource": "SUGGESTION_RUN_FAILED"
+          },
+          {
+            "kind": "emit",
+            "resource": "SUGGESTION_RUN_STARTED"
+          },
+          {
+            "kind": "persist",
+            "resource": "AgentSuggestionRun"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "toast"
+          }
+        ],
+        "effectEntityRefs": [
+          "AgentSuggestionRun"
+        ]
+      },
+      {
+        "name": "AgentSuggestionLoop",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "SUGGESTION_RUN_STARTED"
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "cancelKey",
+            "type": "unknown",
+            "default": "agent-suggestions"
+          },
+          {
+            "key": "instructions",
+            "type": "unknown",
+            "default": "@config.instructions"
+          },
+          {
+            "key": "maxSteps",
+            "type": "unknown",
+            "default": "@config.maxSteps"
+          },
+          {
+            "key": "quiet",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "tools",
+            "type": "unknown",
+            "default": "@config.tools"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Loop.traits.AgentToolLoop",
+        "eventRenames": {
+          "ASSISTANT_REPLIED": "PROACTIVE_REPLIED",
+          "ASSISTANT_REPLY_FAILED": "PROACTIVE_FAILED"
+        },
+        "transitionEvents": [
+          "ANSWERED",
+          "ASK_FAILED",
+          "CANCEL",
+          "CONVERSE",
+          "INIT"
+        ],
+        "definerKnobs": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "AgentSuggestionsPage",
+        "defaultPath": "/agent-suggestions",
+        "primaryEntity": "AgentSuggestionsHost"
+      }
+    ],
+    "emittedEvents": [
+      "RunRecordFailed",
+      "RunRecorded",
+      "RunsForTrigger",
+      "RunsLoadFailed",
+      "SUGGESTIONS_ANALYZE_REQUESTED",
+      "SUGGESTION_ACCEPTED",
+      "SUGGESTION_ADDED",
+      "SUGGESTION_DISMISSED",
+      "SUGGESTION_DUPLICATE",
+      "SUGGESTION_LIMIT_REACHED",
+      "SUGGESTION_REJECTED",
+      "SUGGESTION_RUN_ALLOWED",
+      "SUGGESTION_RUN_DONE",
+      "SUGGESTION_RUN_FAILED",
+      "SUGGESTION_RUN_STARTED",
+      "SuggestionAccepted",
+      "SuggestionCheckFailed",
+      "SuggestionDismissed",
+      "SuggestionForAccept",
+      "SuggestionForDismiss",
+      "SuggestionResolveFailed",
+      "SuggestionSaveFailed",
+      "SuggestionsForPropose",
+      "SuggestionsLoadFailed",
+      "SuggestionsLoaded"
+    ],
+    "listenedEvents": [
+      "PROACTIVE_FAILED",
+      "PROACTIVE_REPLIED",
+      "SUGGESTIONS_ANALYZE_REQUESTED",
+      "SUGGESTIONS_OPEN_REQUESTED",
+      "SUGGESTIONS_TRIGGERED",
+      "SUGGESTION_ADDED",
+      "SUGGESTION_RUN_ALLOWED",
+      "SUGGESTION_RUN_DONE",
+      "SUGGESTION_RUN_FAILED",
+      "SUGGESTION_RUN_STARTED"
+    ],
+    "config": [
+      {
+        "key": "acceptLabel",
+        "type": "string",
+        "default": "Accept",
+        "label": "Accept button",
+        "tier": "presentation"
+      },
+      {
+        "key": "actions",
+        "type": "[string]",
+        "default": [],
+        "label": "Which actions may a suggestion carry?",
+        "description": "When listed, a proposal carrying any other action, or none, is refused (SUGGESTION_REJECTED). Empty accepts any action.",
+        "tier": "domain",
+        "items": {
+          "type": "string"
+        }
+      },
+      {
+        "key": "analyzeLabel",
+        "type": "string",
+        "default": "Look for suggestions",
+        "label": "Look-again button",
+        "description": "Shown in the empty inbox; asks the agent to look again.",
+        "tier": "presentation"
+      },
+      {
+        "key": "closeLabel",
+        "type": "string",
+        "default": "Close",
+        "label": "Close button",
+        "tier": "presentation"
+      },
+      {
+        "key": "cooldownMinutes",
+        "type": "number",
+        "default": 60,
+        "label": "Minutes between proactive runs",
+        "description": "A trigger starts a run only when this long has passed since the person's last run. 0 runs on every trigger.",
+        "tier": "policy"
+      },
+      {
+        "key": "dismissLabel",
+        "type": "string",
+        "default": "Dismiss",
+        "label": "Dismiss button",
+        "tier": "presentation"
+      },
+      {
+        "key": "emptyDescription",
+        "type": "string",
+        "default": "",
+        "label": "Empty inbox hint",
+        "tier": "presentation"
+      },
+      {
+        "key": "emptyTitle",
+        "type": "string",
+        "default": "No suggestions right now",
+        "label": "Empty inbox title",
+        "tier": "presentation"
+      },
+      {
+        "key": "historyHref",
+        "type": "string",
+        "default": "/agent-suggestions/history",
+        "label": "Where past suggestions are listed",
+        "description": "The page the inbox links to for accepted and dismissed suggestions; empty hides the link. The history page of an app that imports this orbital is its own page over its retargeted entity.",
+        "tier": "presentation"
+      },
+      {
+        "key": "historyLabel",
+        "type": "string",
+        "default": "Past suggestions",
+        "label": "Past-suggestions link",
+        "tier": "presentation"
+      },
+      {
+        "key": "icon",
+        "type": "string",
+        "default": "lightbulb",
+        "label": "Inbox icon",
+        "tier": "presentation"
+      },
+      {
+        "key": "instructions",
+        "type": "string",
+        "default": "You propose next steps to the signed-in person. Look things up with the tools, then call the proposal tool once for each suggestion worth making, with the reason in its body. When a proposal is refused as a duplicate or the pending limit is reached, do not propose again. Propose nothing when nothing is worth suggesting.",
+        "label": "How should the agent behave?",
+        "description": "Standing instructions sent with every proactive run.",
+        "tier": "domain"
+      },
+      {
+        "key": "kinds",
+        "type": "[string]",
+        "default": [],
+        "label": "Which kinds may be proposed?",
+        "description": "When listed, a proposal of any other kind is refused (SUGGESTION_REJECTED). Empty accepts any kind.",
+        "tier": "domain",
+        "items": {
+          "type": "string"
+        }
+      },
+      {
+        "key": "maxPending",
+        "type": "number",
+        "default": 5,
+        "label": "How many suggestions may wait at once?",
+        "description": "A proposal is refused (SUGGESTION_LIMIT_REACHED) while this many are pending. 0 refuses every proposal.",
+        "tier": "policy"
+      },
+      {
+        "key": "maxSteps",
+        "type": "number",
+        "default": 8,
+        "label": "Model round-trips per run",
+        "tier": "policy"
+      },
+      {
+        "key": "panelSlot",
+        "type": "slot",
+        "default": "main",
+        "label": "Where the inbox renders",
+        "description": "`main` for the content of a launcher or page; `modal` or `drawer` for an overlay opened with OPEN (a notification bell).",
+        "tier": "presentation"
+      },
+      {
+        "key": "prompt",
+        "type": "string",
+        "default": "Look at what I have been doing and propose what I could do next, one suggestion at a time.",
+        "label": "What does the agent look into?",
+        "description": "The request each proactive run answers.",
+        "tier": "domain"
+      },
+      {
+        "key": "startOpen",
+        "type": "boolean",
+        "default": true,
+        "label": "Show the inbox as soon as it mounts?",
+        "description": "Off for an overlay that waits for OPEN.",
+        "tier": "presentation"
+      },
+      {
+        "key": "title",
+        "type": "string",
+        "default": "Suggestions",
+        "label": "Inbox heading",
+        "tier": "presentation"
+      },
+      {
+        "key": "tools",
+        "type": "[AgentTool]",
+        "default": [
+          {
+            "event": "AgentSuggestionProposer.PROPOSE_SUGGESTION"
+          }
+        ],
+        "label": "What may the agent do?",
+        "description": "The declared inputs it may fire and the entities it may read, as the signed-in person. An importing app restates the list with the proposal input addressed by its local orbital name (`{ event: Suggestions.AgentSuggestionProposer.PROPOSE_SUGGESTION }`), which the agent can never propose without.",
+        "tier": "domain",
+        "items": {
+          "properties": {
+            "event": {
+              "name": "event",
+              "required": false,
+              "type": "event"
+            },
+            "read": {
+              "name": "read",
+              "required": false,
+              "type": "string"
+            },
+            "scope": {
+              "name": "scope",
+              "required": false,
+              "type": "string",
+              "values": [
+                "declared"
+              ]
+            }
+          },
+          "type": "object"
+        }
+      }
+    ],
+    "exposure": "both",
+    "provenance": "authored",
+    "capabilities": "proactive suggestions, agent recommendations, suggestion inbox, next best action, accept or dismiss suggestions, notification bell suggestions, agent proposals",
+    "sourceValid": true
+  },
+  {
+    "organism": "std-agent-suggestions",
+    "orbital": "AgentSuggestionRecordsOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/agent/atoms/std-agent-suggestions.ts",
+    "entities": [
+      {
+        "name": "AgentSuggestion",
+        "fields": [
+          {
+            "name": "ownerId",
+            "type": "string",
+            "required": true,
+            "description": "Whom this is proposed to (the real @user). The binding organism scopes @read/@create/@update to it.",
+            "synonyms": "user, owner, account"
+          },
+          {
+            "name": "kind",
+            "type": "string",
+            "required": false,
+            "description": "What sort of suggestion this is; the app's own vocabulary.",
+            "synonyms": "type, category"
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false,
+            "description": "The suggestion in a line.",
+            "synonyms": "headline, name"
+          },
+          {
+            "name": "body",
+            "type": "string",
+            "required": false,
+            "description": "Why the agent proposes it.",
+            "synonyms": "reasoning, reason, description, explanation"
+          },
+          {
+            "name": "action",
+            "type": "string",
+            "required": false,
+            "description": "What accepting it does: a name the app routes from SUGGESTION_ACCEPTED.",
+            "synonyms": "event, command"
+          },
+          {
+            "name": "href",
+            "type": "string",
+            "required": false,
+            "description": "A page accepting it opens; empty for none.",
+            "synonyms": "link, url, route"
+          },
+          {
+            "name": "payload",
+            "type": "object",
+            "required": false,
+            "description": "What the action needs.",
+            "synonyms": "params, arguments, data"
+          },
+          {
+            "name": "subject",
+            "type": "string",
+            "required": false,
+            "description": "What the suggestion is about (an id or slug).",
+            "synonyms": "target, topic"
+          },
+          {
+            "name": "signature",
+            "type": "string",
+            "required": false,
+            "description": "kind:action:subject. One signature is proposed to a person at most once, whatever became of it.",
+            "synonyms": "dedup key, fingerprint"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false,
+            "description": "Where the suggestion stands."
+          },
+          {
+            "name": "resolvedAt",
+            "type": "number",
+            "required": false,
+            "description": "When it was accepted or dismissed (ms)."
+          },
+          {
+            "name": "pendingProposal",
+            "type": "object",
+            "required": false,
+            "intrinsic": true,
+            "description": "The proposal being checked for a duplicate."
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "AgentSuggestionHistory",
+        "emittedEvents": [
+          "SuggestionsLoaded",
+          "SuggestionsLoadFailed"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "SuggestionsLoaded",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "SuggestionsLoadFailed",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "emptyHeading",
+            "type": "string",
+            "default": "Nothing suggested yet",
+            "label": "What shows when nothing was ever suggested?",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "AgentSuggestion",
+        "transitionEvents": [
+          "INIT",
+          "SuggestionsLoadFailed",
+          "SuggestionsLoaded"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        },
+        "effectRow": [
+          {
+            "kind": "fetch",
+            "resource": "AgentSuggestion"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "main"
+          }
+        ],
+        "effectEntityRefs": [
+          "AgentSuggestion"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "AgentSuggestionHistoryPage",
+        "defaultPath": "/agent-suggestions/history",
+        "primaryEntity": "AgentSuggestion"
+      }
+    ],
+    "emittedEvents": [
+      "SuggestionsLoadFailed",
+      "SuggestionsLoaded"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "capabilities": "proactive suggestions, agent recommendations, suggestion inbox, next best action, accept or dismiss suggestions, notification bell suggestions, agent proposals",
+    "sourceValid": true
+  }
+]

@@ -30,7 +30,7 @@ const ALIAS = 'LearnDoser';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnDoserEventKey = 'ADD_LARGE' | 'ADD_SMALL' | 'DOSER_UPDATED' | 'DOSE_ADDED' | 'DOSE_RESET' | 'INIT' | 'LEARN_ROUND_COMPLETE' | 'MODE_SELECTED' | 'RESET' | 'TOGGLE_DRIP';
+export type StdLearnDoserEventKey = 'ADD_LARGE' | 'ADD_SMALL' | 'DOSER_UPDATED' | 'DOSE_ADDED' | 'DOSE_RESET' | 'INIT' | 'LEARN_ROUND_COMPLETE' | 'MODE_SELECTED' | 'RESET' | 'ROSTER_LOADED' | 'TOGGLE_DRIP';
 
 /**
  * Payload shape for the `DOSE_ADDED` event.
@@ -87,6 +87,8 @@ export interface StdLearnDoserConfig {
   quantityLabel?: string;
   /** Default: `"Reservoir"` */
   reservoirLabel?: string;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
   /** Default: `[]` */
   series?: string[];
   /** Default: `true` */

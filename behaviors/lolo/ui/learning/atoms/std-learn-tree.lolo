@@ -25,6 +25,7 @@ orbital LearnTreeOrbital {
     id : string!
     active : boolean = false
     title : string
+    values : [number]
     nodes : [LearnTreeNode]
     edges : [LearnTreeEdge]
     entries : [LearnTreeEntry]
@@ -51,9 +52,10 @@ orbital LearnTreeOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle when (== @config.matchMode "")
+      INIT -> idle when (and (== @config.matchMode "") (== @config.rosterSource "config"))
         (set @entity.active true)
         (set @entity.title @config.title)
+        (set @entity.values @config.values)
         (set @entity.nodes [])
         (set @entity.edges [])
         (set @entity.entries [])
@@ -101,9 +103,10 @@ orbital LearnTreeOrbital {
         (set @entity.running false)
         (render-ui main null)
 
-      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+      MODE_SELECTED -> idle when (and (== ?mode @config.matchMode) (== @config.rosterSource "config"))
         (set @entity.active true)
         (set @entity.title @config.title)
+        (set @entity.values @config.values)
         (set @entity.nodes [])
         (set @entity.edges [])
         (set @entity.entries [])
@@ -146,14 +149,66 @@ orbital LearnTreeOrbital {
         })
         (emit TREE_UPDATED { nodes: @entity.nodes, edges: @entity.edges, count: @entity.count, narration: @entity.narration })
 
-      INSERT_VALUE -> idle when (and (== @entity.active true) (or @entity.descending (< @entity.cursor (array/len @config.values))))
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (and (== ?mode @config.matchMode) (> (array/len ?values) 0)))
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.values ?values)
+        (set @entity.nodes [])
+        (set @entity.edges [])
+        (set @entity.entries [])
+        (set @entity.cursor 0)
+        (set @entity.descending false)
+        (set @entity.trail [])
+        (set @entity.depth 0)
+        (set @entity.maxDepth 0)
+        (set @entity.count 0)
+        (set @entity.traversing false)
+        (set @entity.traversalOrder [])
+        (set @entity.sweptIds [])
+        (set @entity.done false)
+        (set @entity.running @config.autoRun)
+        (set @entity.narration "Press Insert to add the next value; keep pressing to watch it descend.")
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.traversing "Traversing" (if @entity.running "Auto-stepping" "Building")), variant: (if @entity.traversing "success" (if @entity.running "primary" "neutral")) }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: INSERT_VALUE, label: "Insert", icon: "plus", variant: primary },
+                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
+                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", icon: "step-forward", variant: secondary },
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Run", icon: "play", variant: secondary, aria-pressed: "false" }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat (str/concat "" @entity.count) " nodes") }
+                  ] },
+                { type: algo-graph-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: RUN_TRAVERSAL, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit TREE_UPDATED { nodes: @entity.nodes, edges: @entity.edges, count: @entity.count, narration: @entity.narration })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (set @entity.running false)
+        (render-ui main null)
+
+
+      INSERT_VALUE -> idle when (and (== @entity.active true) (or @entity.descending (< @entity.cursor (array/len @entity.values))))
         (set @entity.traversing false)
         (set @entity.traversalOrder [])
         (set @entity.sweptIds [])
         (set @entity.done false)
         (if (not @entity.descending)
           (let (
-              (v (array/nth @config.values @entity.cursor))
+              (v (array/nth @entity.values @entity.cursor))
             )
             (if (== @entity.count 0)
               (do
@@ -491,6 +546,12 @@ orbital LearnTreeOrbital {
       }
         @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
         @tier "domain"
+      ROSTER_LOADED {
+        mode : string!
+        values : [number]!
+      }
+        @description "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and values is the insertion sequence; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides."
+        @tier "domain"
       INSERT_VALUE {
       }
         @description "Insert the next config-declared value: descends one comparison step per press from the root, coloring the descent cursor and comparison trail, until it attaches as a leaf. Pressing again while a descent is in flight continues that same descent."
@@ -535,6 +596,10 @@ orbital LearnTreeOrbital {
         @label "Match Mode"
         @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
         @tier "presentation"
+      rosterSource : "config" | "event" = "config"
+        @label "Roster Source"
+        @description "Where the insertion values come from: config reads the values knob at INIT; event waits for ROSTER_LOADED and takes them from its payload."
+        @tier "domain"
       autoRun : boolean = false
         @label "Auto Run"
         @description "When true, the tick auto-steps the traversal sweep started by Traverse; toggle live with the Run/Pause button. Has no effect on Insert/Delete, which stay manual."

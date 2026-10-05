@@ -177,6 +177,7 @@
           "ASSISTANT_HISTORY_REQUESTED",
           "ASSISTANT_NEW_CHAT",
           "NEW_CHAT_CLICKED",
+          "ASSISTANT_EPHEMERAL_SEND",
           "ASSISTANT_SEND",
           "ASSISTANT_CHATS_REQUESTED",
           "ASSISTANT_CHAT_SELECTED",
@@ -193,7 +194,8 @@
           "ASSISTANT_REPLIED",
           "ASSISTANT_REPLY_FAILED",
           "ASSISTANT_CHATS_LOADED",
-          "ASSISTANT_MEMORIES_LOADED"
+          "ASSISTANT_MEMORIES_LOADED",
+          "ASSISTANT_CHAT_START"
         ],
         "events": [
           {
@@ -216,6 +218,13 @@
             "description": "Start a new conversation.",
             "synonyms": "new chat, start over, clear",
             "tier": "presentation"
+          },
+          {
+            "name": "ASSISTANT_EPHEMERAL_SEND",
+            "direction": "emit",
+            "description": "An ephemeral conversation asked something: the whole conversation so far (greeting included), and its own `instructions` and `tools`. Nothing is stored or remembered; the assistant answers under exactly these.",
+            "synonyms": "ask privately, scoped ask",
+            "tier": "domain"
           },
           {
             "name": "ASSISTANT_SEND",
@@ -280,6 +289,12 @@
             "description": "Show the stored conversation."
           },
           {
+            "name": "START_CHAT",
+            "direction": "listen",
+            "description": "Start an ephemeral conversation (only on an AgentConversation whose `ephemeral` knob is on): it opens with `greeting` as the assistant's first message under a header of `title`, `subtitle` and `avatar` (an image URL), and every ask runs under `instructions` (empty: the assistant's configured ones) and exactly `tools` (absent or `[]`: none). Ignored while it is answering.",
+            "synonyms": "open private chat, begin scoped conversation"
+          },
+          {
             "name": "STEP",
             "direction": "listen",
             "description": "One step the assistant just took, shown as it happens.",
@@ -340,6 +355,15 @@
             "default": "Ask me to do something in this app",
             "label": "Empty conversation title",
             "tier": "presentation"
+          },
+          {
+            "key": "ephemeral",
+            "type": "boolean",
+            "default": false,
+            "label": "Ephemeral conversation?",
+            "description": "A self-contained conversation: it runs under the instructions, tools, greeting and header the app starts it with (ASSISTANT_CHAT_START), is never stored among the person's conversations or remembered, shows no conversation, past-chat or memory buttons, and ignores the assistant's own replies.",
+            "synonyms": "private, one-off, scoped chat, own persona, not saved",
+            "tier": "domain"
           },
           {
             "key": "links",
@@ -421,6 +445,7 @@
           "OPEN_MEMORY_CLICKED",
           "REPLIED",
           "REPLY_FAILED",
+          "START_CHAT",
           "STEP",
           "THREAD_LOADED"
         ],
@@ -429,6 +454,11 @@
         "entityContract": {
           "requires": [],
           "provides": [
+            "chatAvatar",
+            "chatInstructions",
+            "chatSubtitle",
+            "chatTitle",
+            "chatTools",
             "entries",
             "working"
           ]
@@ -441,6 +471,10 @@
           {
             "kind": "emit",
             "resource": "ASSISTANT_CHAT_SELECTED"
+          },
+          {
+            "kind": "emit",
+            "resource": "ASSISTANT_EPHEMERAL_SEND"
           },
           {
             "kind": "emit",
@@ -464,6 +498,26 @@
           },
           {
             "kind": "set",
+            "resource": "@entity.chatAvatar"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.chatInstructions"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.chatSubtitle"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.chatTitle"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.chatTools"
+          },
+          {
+            "kind": "set",
             "resource": "@entity.entries"
           },
           {
@@ -484,6 +538,7 @@
       "ASK",
       "ASSISTANT_CHATS_REQUESTED",
       "ASSISTANT_CHAT_SELECTED",
+      "ASSISTANT_EPHEMERAL_SEND",
       "ASSISTANT_HISTORY_REQUESTED",
       "ASSISTANT_MEMORIES_REQUESTED",
       "ASSISTANT_NEW_CHAT",
@@ -503,6 +558,7 @@
     "listenedEvents": [
       "ASSISTANT_CHATS_LOADED",
       "ASSISTANT_CHAT_OPENED",
+      "ASSISTANT_CHAT_START",
       "ASSISTANT_MEMORIES_LOADED",
       "ASSISTANT_REPLIED",
       "ASSISTANT_REPLY_FAILED",

@@ -2,10 +2,49 @@ app ui-segment-renderer "1.0.0"
 "SegmentRenderer — UI factory (1:1 with the @almadar/ui segment-renderer pattern)."
 ;; @pattern "segment-renderer"
 orbital SegmentRendererOrbital {
-  type SegmentRendererSegmentsItem = {
+  type SegmentRendererSegmentsItem = SegmentRendererSegmentsItemMarkdown | SegmentRendererSegmentsItemCode | SegmentRendererSegmentsItemQuiz | SegmentRendererSegmentsItemActivate | SegmentRendererSegmentsItemConnect | SegmentRendererSegmentsItemReflect | SegmentRendererSegmentsItemBloom | SegmentRendererSegmentsItemVisualization
+  type SegmentRendererSegmentsItemMarkdown = {
+    type : "markdown"!
+    content : string!
+  }
+  type SegmentRendererSegmentsItemCode = {
+    type : "code"!
+    language : string!
+    content : string!
+    runnable : boolean
+  }
+  type SegmentRendererSegmentsItemQuiz = {
     type : "quiz"!
     question : string!
     answer : string!
+  }
+  type SegmentRendererSegmentsItemActivate = {
+    type : "activate"!
+    question : string!
+  }
+  type SegmentRendererSegmentsItemConnect = {
+    type : "connect"!
+    content : string!
+  }
+  type SegmentRendererSegmentsItemReflect = {
+    type : "reflect"!
+    prompt : string!
+  }
+  type SegmentRendererSegmentsItemBloom = {
+    type : "bloom"!
+    level : "remember" | "understand" | "apply" | "analyze" | "evaluate" | "create"!
+    question : string!
+    answer : string!
+  }
+  type SegmentRendererSegmentsItemVisualization = {
+    type : "visualization"!
+    visualizationType : "algorithms" | "math" | "physics" | "biology" | "chemistry" | "probability"!
+    description : string!
+  }
+  type SegmentRendererAnnotationsItem = {
+    id : string!
+    text : string!
+    kind : "question" | "note"!
   }
   type SegmentRendererUserProgress = {
     activationResponse : string
@@ -24,6 +63,16 @@ orbital SegmentRendererOrbital {
       INIT -> idle
         (render-ui main {
           segments: @config.segments
+          lesson: @config.lesson
+          activationSaveEvent: @config.activationSaveEvent
+          reflectionSaveEvent: @config.reflectionSaveEvent
+          bloomAnswerEvent: @config.bloomAnswerEvent
+          askEvent: @config.askEvent
+          noteEvent: @config.noteEvent
+          askLabel: @config.askLabel
+          noteLabel: @config.noteLabel
+          annotations: @config.annotations
+          annotationEvent: @config.annotationEvent
           className: @config.className
           containerClassName: @config.containerClassName
           userProgress: @config.userProgress
@@ -48,10 +97,85 @@ orbital SegmentRendererOrbital {
         })
     }
 
+    emits {
+      @config.activationSaveEvent -> external {
+        response : string!
+      }
+        @description "Event emitted when the activation prompt is saved or skipped (as `UI:<activationSaveEvent>`)"
+        @tier "essential"
+      @config.reflectionSaveEvent -> external {
+        index : number!
+        note : string!
+      }
+        @description "Event emitted when a reflection note is saved (as `UI:<reflectionSaveEvent>`)"
+        @tier "essential"
+      @config.bloomAnswerEvent -> external {
+        index : number!
+        level : "remember" | "understand" | "apply" | "analyze" | "evaluate" | "create"!
+      }
+        @description "Event emitted on the first reveal of a Bloom question (as `UI:<bloomAnswerEvent>`)"
+        @tier "essential"
+      @config.askEvent -> external {
+        selectedText : string!
+      }
+        @description "Event emitted when the reader picks Ask on selected text (as `UI:<askEvent>`)"
+        @tier "essential"
+      @config.noteEvent -> external {
+        selectedText : string!
+      }
+        @description "Event emitted when the reader picks Note on selected text (as `UI:<noteEvent>`)"
+        @tier "essential"
+      @config.annotationEvent -> external {
+        annotationId : string
+      }
+        @description "Event emitted when a highlighted passage is clicked (as `UI:<annotationEvent>`)"
+        @tier "essential"
+    }
+
     config {
-      segments : [SegmentRendererSegmentsItem] = [{ type: quiz, question: "Question", answer: "Answer" }, { type: quiz, question: "Question 2", answer: "Answer 2" }]
+      segments : [SegmentRendererSegmentsItem] = []
         @label "Segments"
-        @description "Parsed lesson segments (see `parseLessonSegments`)"
+        @description "Parsed lesson segments (see `parseLessonSegments`). Ignored when `lesson` is given."
+        @tier "presentation"
+      lesson : string
+        @label "Lesson"
+        @description "Raw lesson markdown with learning tags; parsed with `parseLessonSegments` and rendered"
+        @tier "presentation"
+      activationSaveEvent : event = "ACTIVATION_SAVE"
+        @label "Activation Save Event"
+        @description "Event emitted when the activation prompt is saved or skipped (as `UI:<activationSaveEvent>`)"
+        @tier "presentation"
+      reflectionSaveEvent : event = "REFLECTION_SAVE"
+        @label "Reflection Save Event"
+        @description "Event emitted when a reflection note is saved (as `UI:<reflectionSaveEvent>`)"
+        @tier "presentation"
+      bloomAnswerEvent : event = "BLOOM_ANSWER"
+        @label "Bloom Answer Event"
+        @description "Event emitted on the first reveal of a Bloom question (as `UI:<bloomAnswerEvent>`)"
+        @tier "presentation"
+      askEvent : event = "ASK"
+        @label "Ask Event"
+        @description "Event emitted when the reader picks Ask on selected text (as `UI:<askEvent>`)"
+        @tier "presentation"
+      noteEvent : event = "NOTE"
+        @label "Note Event"
+        @description "Event emitted when the reader picks Note on selected text (as `UI:<noteEvent>`)"
+        @tier "presentation"
+      askLabel : string
+        @label "Ask Label"
+        @description "Ask action label (default: translated)"
+        @tier "presentation"
+      noteLabel : string
+        @label "Note Label"
+        @description "Note action label (default: translated)"
+        @tier "presentation"
+      annotations : [SegmentRendererAnnotationsItem] = []
+        @label "Annotations"
+        @description "Passages to highlight. Each `text` is matched exactly against the markdown segments, first segment whose source contains it, first occurrence inside one rendered text node (outside code); one that spans formatting is not highlighted."
+        @tier "presentation"
+      annotationEvent : event = "ANNOTATION"
+        @label "Annotation Event"
+        @description "Event emitted when a highlighted passage is clicked (as `UI:<annotationEvent>`)"
         @tier "presentation"
       className : string
         @label "Class Name"

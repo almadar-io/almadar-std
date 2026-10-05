@@ -73,6 +73,15 @@
         "parent": "trt_01M0CGJFW9PRAPQTAZS9GBDEVH",
         "renames": []
       },
+      "evt_01M459W790350DY3T859VK82KZ": {
+        "bakedName": "ROSTER_LOADED",
+        "curName": "ROSTER_LOADED",
+        "id": "evt_01M459W790350DY3T859VK82KZ",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0CGJFW9PRAPQTAZS9GBDEVH",
+        "renames": []
+      },
       "orb_01M0CGJFW9KQ380JGA7R8T6ZCR": {
         "bakedName": "LearnDerivationOrbital",
         "curName": "LearnDerivationOrbital",
@@ -114,6 +123,144 @@
             "default": false,
             "name": "active",
             "type": "boolean"
+          },
+          {
+            "items": {
+              "properties": {
+                "badgeLabel": {
+                  "name": "badgeLabel",
+                  "required": false,
+                  "type": "string"
+                },
+                "badgeVariant": {
+                  "name": "badgeVariant",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "fact",
+                    "link"
+                  ]
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "leftNegated": {
+                  "name": "leftNegated",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "leftSubject": {
+                  "name": "leftSubject",
+                  "required": false,
+                  "type": "string"
+                },
+                "negated": {
+                  "name": "negated",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "rightNegated": {
+                  "name": "rightNegated",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "rightSubject": {
+                  "name": "rightSubject",
+                  "required": false,
+                  "type": "string"
+                },
+                "subject": {
+                  "name": "subject",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "premises",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "deriveNegationMode": {
+                  "name": "deriveNegationMode",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "same",
+                    "invert"
+                  ]
+                },
+                "deriveSide": {
+                  "name": "deriveSide",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "left",
+                    "right"
+                  ]
+                },
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "matchNegationMode": {
+                  "name": "matchNegationMode",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "same",
+                    "opposite"
+                  ]
+                },
+                "matchSide": {
+                  "name": "matchSide",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "left",
+                    "right"
+                  ]
+                },
+                "noMatchFeedback": {
+                  "name": "noMatchFeedback",
+                  "required": false,
+                  "type": "string"
+                },
+                "resultBadgeLabel": {
+                  "name": "resultBadgeLabel",
+                  "required": false,
+                  "type": "string"
+                },
+                "resultBadgeVariant": {
+                  "name": "resultBadgeVariant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "candidates",
+            "type": "array"
           },
           {
             "name": "title",
@@ -516,6 +663,17 @@
               "tier": "presentation",
               "type": "string"
             },
+            "rosterSource": {
+              "default": "config",
+              "description": "Where the roster comes from: config reads the premises/candidates knob(s) at INIT; event waits for ROSTER_LOADED and takes the roster from its payload.",
+              "label": "Roster Source",
+              "tier": "domain",
+              "type": "string",
+              "values": [
+                "config",
+                "event"
+              ]
+            },
             "summary": {
               "default": "",
               "description": "One line under the title saying what is being derived (keep it under ~65 characters). Empty shows no line.",
@@ -567,6 +725,10 @@
             },
             {
               "kind": "set",
+              "resource": "@entity.candidates"
+            },
+            {
+              "kind": "set",
               "resource": "@entity.elapsedMs"
             },
             {
@@ -609,6 +771,10 @@
               "kind": "set",
               "resource": "@entity.narration",
               "site": "tick"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.premises"
             },
             {
               "kind": "set",
@@ -681,11 +847,13 @@
           "entityContract": {
             "provides": [
               "active",
+              "candidates",
               "elapsedMs",
               "feedback",
               "goalReached",
               "lines",
               "narration",
+              "premises",
               "renderChildren",
               "running",
               "title"
@@ -717,6 +885,123 @@
                   {
                     "name": "mode",
                     "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone), premises are the starting lines and candidates the offered derivation steps; a matching instrument re-initialises from them exactly as INIT does from config, any other instrument hides.",
+                "id": "evt_01M459W790350DY3T859VK82KZ",
+                "key": "ROSTER_LOADED",
+                "name": "Roster Loaded",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "premises",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "kind",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "subject",
+                        "type": "string"
+                      },
+                      {
+                        "name": "negated",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "leftSubject",
+                        "type": "string"
+                      },
+                      {
+                        "name": "leftNegated",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "rightSubject",
+                        "type": "string"
+                      },
+                      {
+                        "name": "rightNegated",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "badgeLabel",
+                        "type": "string"
+                      },
+                      {
+                        "name": "badgeVariant",
+                        "type": "string"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
+                  },
+                  {
+                    "name": "candidates",
+                    "properties": [
+                      {
+                        "name": "key",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "matchSide",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "matchNegationMode",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "deriveSide",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "deriveNegationMode",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "resultBadgeLabel",
+                        "type": "string"
+                      },
+                      {
+                        "name": "resultBadgeVariant",
+                        "type": "string"
+                      },
+                      {
+                        "name": "noMatchFeedback",
+                        "type": "string"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
                   }
                 ],
                 "tier": "domain"
@@ -804,6 +1089,16 @@
                 "effects": [
                   [
                     "set",
+                    "@entity.premises",
+                    "@config.premises"
+                  ],
+                  [
+                    "set",
+                    "@entity.candidates",
+                    "@config.candidates"
+                  ],
+                  [
+                    "set",
                     "@entity.active",
                     true
                   ],
@@ -840,7 +1135,7 @@
                   [
                     "set",
                     "@entity.lines",
-                    "@config.premises"
+                    "@entity.premises"
                   ],
                   [
                     "set",
@@ -959,7 +1254,7 @@
                         "align": "center",
                         "children": [
                           "array/map",
-                          "@config.candidates",
+                          "@entity.candidates",
                           [
                             "fn",
                             "c",
@@ -1069,9 +1364,17 @@
                 "eventId": "evt_01M0CGJFW9FJVWEPW6PZH91R9A",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@config.matchMode",
-                  ""
+                  "and",
+                  [
+                    "==",
+                    "@config.matchMode",
+                    ""
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1121,6 +1424,16 @@
                 "effects": [
                   [
                     "set",
+                    "@entity.premises",
+                    "@config.premises"
+                  ],
+                  [
+                    "set",
+                    "@entity.candidates",
+                    "@config.candidates"
+                  ],
+                  [
+                    "set",
                     "@entity.active",
                     true
                   ],
@@ -1157,7 +1470,7 @@
                   [
                     "set",
                     "@entity.lines",
-                    "@config.premises"
+                    "@entity.premises"
                   ],
                   [
                     "set",
@@ -1276,7 +1589,7 @@
                         "align": "center",
                         "children": [
                           "array/map",
-                          "@config.candidates",
+                          "@entity.candidates",
                           [
                             "fn",
                             "c",
@@ -1386,9 +1699,371 @@
                 "eventId": "evt_01M0CGJFW96K8FBC6WV4D341YQ",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@payload.mode",
-                  "@config.matchMode"
+                  "and",
+                  [
+                    "==",
+                    "@payload.mode",
+                    "@config.matchMode"
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.premises",
+                    "@payload.premises"
+                  ],
+                  [
+                    "set",
+                    "@entity.candidates",
+                    "@payload.candidates"
+                  ],
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.feedback",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.narration",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.goalReached",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.autoRun"
+                  ],
+                  [
+                    "set",
+                    "@entity.elapsedMs",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.lines",
+                    "@entity.premises"
+                  ],
+                  [
+                    "set",
+                    "@entity.renderChildren",
+                    [
+                      {
+                        "align": "start",
+                        "children": [
+                          {
+                            "children": [
+                              {
+                                "content": "@entity.title",
+                                "type": "typography",
+                                "variant": "h4"
+                              },
+                              [
+                                "if",
+                                [
+                                  "==",
+                                  "@config.summary",
+                                  ""
+                                ],
+                                null,
+                                {
+                                  "color": "muted",
+                                  "content": "@config.summary",
+                                  "type": "typography",
+                                  "variant": "body2"
+                                }
+                              ]
+                            ],
+                            "direction": "vertical",
+                            "gap": "xs",
+                            "type": "stack"
+                          },
+                          {
+                            "label": [
+                              "if",
+                              "@entity.goalReached",
+                              "Goal reached",
+                              [
+                                "if",
+                                "@entity.running",
+                                "Auto-stepping",
+                                "In progress"
+                              ]
+                            ],
+                            "type": "badge",
+                            "variant": [
+                              "if",
+                              "@entity.goalReached",
+                              "success",
+                              [
+                                "if",
+                                "@entity.running",
+                                "primary",
+                                "neutral"
+                              ]
+                            ]
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      {
+                        "content": [
+                          "str/concat",
+                          "@config.goalPrefix",
+                          "@config.goalLabel"
+                        ],
+                        "type": "typography",
+                        "variant": "body"
+                      },
+                      {
+                        "children": [
+                          "array/map",
+                          "@entity.lines",
+                          [
+                            "fn",
+                            "line",
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "label": "@line.badgeLabel",
+                                  "type": "badge",
+                                  "variant": "@line.badgeVariant"
+                                },
+                                {
+                                  "content": "@line.label",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            }
+                          ]
+                        ],
+                        "direction": "vertical",
+                        "gap": "xs",
+                        "style": {
+                          "maxHeight": [
+                            "str/concat",
+                            "@config.height",
+                            "px"
+                          ],
+                          "overflowY": "auto"
+                        },
+                        "type": "stack"
+                      },
+                      {
+                        "align": "center",
+                        "children": [
+                          "array/map",
+                          "@entity.candidates",
+                          [
+                            "fn",
+                            "c",
+                            {
+                              "action": "APPLY_STEP",
+                              "actionPayload": {
+                                "candidateKey": "@c.key"
+                              },
+                              "disabled": "@entity.goalReached",
+                              "label": "@c.label",
+                              "size": "lg",
+                              "type": "button",
+                              "variant": "secondary"
+                            }
+                          ]
+                        ],
+                        "direction": "horizontal",
+                        "gap": "sm",
+                        "type": "stack",
+                        "wrap": true
+                      },
+                      {
+                        "align": "center",
+                        "children": [
+                          [
+                            "if",
+                            "@entity.running",
+                            {
+                              "action": "TOGGLE_RUN",
+                              "aria-pressed": "true",
+                              "icon": "pause",
+                              "label": "Pause",
+                              "type": "button",
+                              "variant": "primary"
+                            },
+                            {
+                              "action": "TOGGLE_RUN",
+                              "aria-pressed": "false",
+                              "disabled": "@entity.goalReached",
+                              "icon": "play",
+                              "label": "Run",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          {
+                            "action": "RESET",
+                            "icon": "rotate-ccw",
+                            "label": "@config.resetLabel",
+                            "type": "button",
+                            "variant": "ghost"
+                          },
+                          {
+                            "color": "muted",
+                            "content": [
+                              "str/concat",
+                              [
+                                "array/len",
+                                "@entity.lines"
+                              ],
+                              " lines"
+                            ],
+                            "type": "typography",
+                            "variant": "caption"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "sm",
+                        "type": "stack",
+                        "wrap": true
+                      },
+                      {
+                        "content": [
+                          "if",
+                          "@entity.goalReached",
+                          "@config.goalReachedMessage",
+                          "@entity.narration"
+                        ],
+                        "type": "typography",
+                        "variant": "body"
+                      }
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": "@entity.renderChildren",
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "maxWidth": [
+                        "str/concat",
+                        "@config.width",
+                        "px"
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459W790350DY3T859VK82KZ",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "and",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ],
+                    [
+                      "and",
+                      [
+                        ">",
+                        [
+                          "array/len",
+                          "@payload.premises"
+                        ],
+                        0.0
+                      ],
+                      [
+                        ">",
+                        [
+                          "array/len",
+                          "@payload.candidates"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459W790350DY3T859VK82KZ",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1403,7 +2078,7 @@
                           "array/first",
                           [
                             "array/filter",
-                            "@config.candidates",
+                            "@entity.candidates",
                             [
                               "fn",
                               "c",
@@ -1870,7 +2545,7 @@
                         "align": "center",
                         "children": [
                           "array/map",
-                          "@config.candidates",
+                          "@entity.candidates",
                           [
                             "fn",
                             "c",
@@ -2141,7 +2816,7 @@
                         "align": "center",
                         "children": [
                           "array/map",
-                          "@config.candidates",
+                          "@entity.candidates",
                           [
                             "fn",
                             "c",
@@ -2275,7 +2950,7 @@
                   [
                     "set",
                     "@entity.lines",
-                    "@config.premises"
+                    "@entity.premises"
                   ],
                   [
                     "set",
@@ -2419,7 +3094,7 @@
                         "align": "center",
                         "children": [
                           "array/map",
-                          "@config.candidates",
+                          "@entity.candidates",
                           [
                             "fn",
                             "c",
@@ -2615,7 +3290,7 @@
                           "evaluated",
                           [
                             "array/map",
-                            "@config.candidates",
+                            "@entity.candidates",
                             [
                               "fn",
                               "c",
@@ -3055,7 +3730,7 @@
                           "align": "center",
                           "children": [
                             "array/map",
-                            "@config.candidates",
+                            "@entity.candidates",
                             [
                               "fn",
                               "c",

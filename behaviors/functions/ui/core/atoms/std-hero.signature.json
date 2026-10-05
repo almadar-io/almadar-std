@@ -65,6 +65,17 @@
             ]
           },
           {
+            "key": "backdropContent",
+            "type": "render-ui",
+            "default": {
+              "className": "hidden",
+              "type": "box"
+            },
+            "label": "Backdrop",
+            "description": "A scene behind the whole block, such as an animated canvas; it fills the block, never takes clicks, and the copy stays on top. Empty by default.",
+            "tier": "presentation"
+          },
+          {
             "key": "command",
             "type": "string",
             "default": "",
@@ -275,6 +286,18 @@
             "tier": "presentation"
           },
           {
+            "key": "height",
+            "type": "string",
+            "default": "auto",
+            "label": "Height",
+            "description": "auto fits the copy; tall fills most of the screen with the copy centred, for a hero over a backdrop scene",
+            "tier": "presentation",
+            "enumValues": [
+              "auto",
+              "tall"
+            ]
+          },
+          {
             "key": "lede",
             "type": "string",
             "default": "",
@@ -386,65 +409,92 @@
               ],
               "children": [
                 {
+                  "aria-hidden": true,
+                  "children": [
+                    "@config.backdropContent"
+                  ],
+                  "className": "inset-0 pointer-events-none",
+                  "position": "absolute",
+                  "type": "box"
+                },
+                {
                   "children": [
                     {
-                      "bg": [
-                        "if",
-                        [
-                          "==",
-                          "@config.look",
-                          "banner"
-                        ],
-                        "muted",
-                        "transparent"
-                      ],
-                      "border": [
-                        "==",
-                        "@config.look",
-                        "banner"
-                      ],
                       "children": [
                         {
-                          "align": "center",
-                          "children": [
-                            "@config.copyContent",
-                            "@config.mediaContent"
+                          "bg": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "muted",
+                            "transparent"
                           ],
-                          "gap": "xl",
-                          "ratio": "1:1",
-                          "type": "split"
+                          "border": [
+                            "==",
+                            "@config.look",
+                            "banner"
+                          ],
+                          "children": [
+                            {
+                              "align": "center",
+                              "children": [
+                                "@config.copyContent",
+                                "@config.mediaContent"
+                              ],
+                              "gap": "xl",
+                              "ratio": "1:1",
+                              "type": "split"
+                            }
+                          ],
+                          "padding": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "xl",
+                            "none"
+                          ],
+                          "rounded": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "2xl",
+                            "none"
+                          ],
+                          "type": "box"
                         }
                       ],
-                      "padding": [
-                        "if",
-                        [
-                          "==",
-                          "@config.look",
-                          "banner"
-                        ],
-                        "xl",
-                        "none"
-                      ],
-                      "rounded": [
-                        "if",
-                        [
-                          "==",
-                          "@config.look",
-                          "banner"
-                        ],
-                        "2xl",
-                        "none"
-                      ],
-                      "type": "box"
+                      "maxWidth": "xl",
+                      "padding": "lg",
+                      "size": "xl",
+                      "type": "container"
                     }
                   ],
-                  "maxWidth": "xl",
-                  "padding": "lg",
-                  "size": "xl",
-                  "type": "container"
+                  "fullWidth": true,
+                  "position": "relative",
+                  "type": "box"
                 }
               ],
+              "className": [
+                "if",
+                [
+                  "==",
+                  "@config.height",
+                  "tall"
+                ],
+                "flex min-h-[80vh] items-center",
+                ""
+              ],
               "fullWidth": true,
+              "overflow": "hidden",
               "paddingY": [
                 "if",
                 [
@@ -455,6 +505,7 @@
                 "xl",
                 "2xl"
               ],
+              "position": "relative",
               "type": "box"
             },
             "label": "Side-by-side body",
@@ -476,74 +527,101 @@
               ],
               "children": [
                 {
+                  "aria-hidden": true,
+                  "children": [
+                    "@config.backdropContent"
+                  ],
+                  "className": "inset-0 pointer-events-none",
+                  "position": "absolute",
+                  "type": "box"
+                },
+                {
                   "children": [
                     {
-                      "bg": [
-                        "if",
-                        [
-                          "==",
-                          "@config.look",
-                          "banner"
-                        ],
-                        "muted",
-                        "transparent"
-                      ],
-                      "border": [
-                        "==",
-                        "@config.look",
-                        "banner"
-                      ],
                       "children": [
                         {
-                          "align": [
+                          "bg": [
                             "if",
                             [
                               "==",
-                              "@config.alignment",
-                              "center"
+                              "@config.look",
+                              "banner"
                             ],
-                            "center",
-                            "stretch"
+                            "muted",
+                            "transparent"
+                          ],
+                          "border": [
+                            "==",
+                            "@config.look",
+                            "banner"
                           ],
                           "children": [
-                            "@config.copyContent",
-                            "@config.mediaContent"
+                            {
+                              "align": [
+                                "if",
+                                [
+                                  "==",
+                                  "@config.alignment",
+                                  "center"
+                                ],
+                                "center",
+                                "stretch"
+                              ],
+                              "children": [
+                                "@config.copyContent",
+                                "@config.mediaContent"
+                              ],
+                              "direction": "vertical",
+                              "gap": "2xl",
+                              "type": "stack"
+                            }
                           ],
-                          "direction": "vertical",
-                          "gap": "2xl",
-                          "type": "stack"
+                          "padding": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "xl",
+                            "none"
+                          ],
+                          "rounded": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "2xl",
+                            "none"
+                          ],
+                          "type": "box"
                         }
                       ],
-                      "padding": [
-                        "if",
-                        [
-                          "==",
-                          "@config.look",
-                          "banner"
-                        ],
-                        "xl",
-                        "none"
-                      ],
-                      "rounded": [
-                        "if",
-                        [
-                          "==",
-                          "@config.look",
-                          "banner"
-                        ],
-                        "2xl",
-                        "none"
-                      ],
-                      "type": "box"
+                      "maxWidth": "xl",
+                      "padding": "lg",
+                      "size": "xl",
+                      "type": "container"
                     }
                   ],
-                  "maxWidth": "xl",
-                  "padding": "lg",
-                  "size": "xl",
-                  "type": "container"
+                  "fullWidth": true,
+                  "position": "relative",
+                  "type": "box"
                 }
               ],
+              "className": [
+                "if",
+                [
+                  "==",
+                  "@config.height",
+                  "tall"
+                ],
+                "flex min-h-[80vh] items-center",
+                ""
+              ],
               "fullWidth": true,
+              "overflow": "hidden",
               "paddingY": [
                 "if",
                 [
@@ -554,6 +632,7 @@
                 "xl",
                 "2xl"
               ],
+              "position": "relative",
               "type": "box"
             },
             "label": "Stacked body",

@@ -127,6 +127,15 @@
         "parent": "trt_01M07580Z0ZBVSWZ4K8C6V4AV1",
         "renames": []
       },
+      "evt_01M459XDPHZCTQJT5GDWQG49D0": {
+        "bakedName": "ROSTER_LOADED",
+        "curName": "ROSTER_LOADED",
+        "id": "evt_01M459XDPHZCTQJT5GDWQG49D0",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M07580Z0ZBVSWZ4K8C6V4AV1",
+        "renames": []
+      },
       "orb_01M07580Z0K57SKR5RVGYKB7XW": {
         "bakedName": "GridSimOrbital",
         "curName": "GridSimOrbital",
@@ -172,6 +181,29 @@
           {
             "name": "title",
             "type": "string"
+          },
+          {
+            "name": "taskText",
+            "type": "string"
+          },
+          {
+            "name": "rule",
+            "type": "string"
+          },
+          {
+            "name": "rows",
+            "type": "number"
+          },
+          {
+            "name": "cols",
+            "type": "number"
+          },
+          {
+            "items": {
+              "type": "number"
+            },
+            "name": "seeds",
+            "type": "array"
           },
           {
             "items": {
@@ -335,7 +367,7 @@
             },
             "matchMode": {
               "default": "",
-              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT (or on ROSTER_LOADED when rosterSource is event).",
               "label": "Match Mode",
               "tier": "presentation",
               "type": "string"
@@ -357,6 +389,17 @@
               "label": "On Color",
               "tier": "presentation",
               "type": "string"
+            },
+            "rosterSource": {
+              "default": "config",
+              "description": "Where the world definition (taskText, rule, rows, cols, seeds) comes from: config reads those knobs at INIT; event waits for ROSTER_LOADED and takes them from its payload.",
+              "label": "Roster Source",
+              "tier": "domain",
+              "type": "string",
+              "values": [
+                "config",
+                "event"
+              ]
             },
             "rows": {
               "default": 12.0,
@@ -479,6 +522,10 @@
             },
             {
               "kind": "set",
+              "resource": "@entity.cols"
+            },
+            {
+              "kind": "set",
               "resource": "@entity.elapsedMs",
               "site": "tick"
             },
@@ -493,11 +540,27 @@
             },
             {
               "kind": "set",
+              "resource": "@entity.rows"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.rule"
+            },
+            {
+              "kind": "set",
               "resource": "@entity.running"
             },
             {
               "kind": "set",
+              "resource": "@entity.seeds"
+            },
+            {
+              "kind": "set",
               "resource": "@entity.speed"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.taskText"
             },
             {
               "kind": "set",
@@ -577,10 +640,15 @@
               "aliveCount",
               "cellShapes",
               "cells",
+              "cols",
               "elapsedMs",
               "generation",
+              "rows",
+              "rule",
               "running",
+              "seeds",
               "speed",
+              "taskText",
               "title"
             ],
             "requires": []
@@ -610,6 +678,45 @@
                   {
                     "name": "mode",
                     "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and taskText, rule, rows, cols and seeds define the world; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
+                "id": "evt_01M459XDPHZCTQJT5GDWQG49D0",
+                "key": "ROSTER_LOADED",
+                "name": "Roster Loaded",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "taskText",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "rule",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "rows",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "cols",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "seeds",
+                    "required": true,
+                    "type": "[number]"
                   }
                 ],
                 "tier": "domain"
@@ -773,6 +880,31 @@
                   ],
                   [
                     "set",
+                    "@entity.seeds",
+                    "@config.seeds"
+                  ],
+                  [
+                    "set",
+                    "@entity.rule",
+                    "@config.rule"
+                  ],
+                  [
+                    "set",
+                    "@entity.rows",
+                    "@config.rows"
+                  ],
+                  [
+                    "set",
+                    "@entity.cols",
+                    "@config.cols"
+                  ],
+                  [
+                    "set",
+                    "@entity.taskText",
+                    "@config.taskText"
+                  ],
+                  [
+                    "set",
                     "@entity.generation",
                     0.0
                   ],
@@ -791,8 +923,8 @@
                         0.0,
                         [
                           "*",
-                          "@config.rows",
-                          "@config.cols"
+                          "@entity.rows",
+                          "@entity.cols"
                         ]
                       ],
                       [
@@ -804,7 +936,7 @@
                           "if",
                           [
                             "array/includes",
-                            "@config.seeds",
+                            "@entity.seeds",
                             "@i"
                           ],
                           1.0,
@@ -843,8 +975,8 @@
                         0.0,
                         [
                           "*",
-                          "@config.rows",
-                          "@config.cols"
+                          "@entity.rows",
+                          "@entity.cols"
                         ]
                       ],
                       [
@@ -862,7 +994,7 @@
                                 [
                                   "/",
                                   "@i",
-                                  "@config.cols"
+                                  "@entity.cols"
                                 ]
                               ]
                             ],
@@ -871,7 +1003,7 @@
                               [
                                 "math/mod",
                                 "@i",
-                                "@config.cols"
+                                "@entity.cols"
                               ]
                             ],
                             [
@@ -1213,7 +1345,7 @@
                               "width": "@config.width"
                             },
                             {
-                              "content": "@config.taskText",
+                              "content": "@entity.taskText",
                               "type": "typography",
                               "variant": "body"
                             }
@@ -1232,9 +1364,17 @@
                 "eventId": "evt_01M07580Z07WFR9K4P23VT04GJ",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@config.matchMode",
-                  ""
+                  "and",
+                  [
+                    "==",
+                    "@config.matchMode",
+                    ""
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1294,6 +1434,31 @@
                   ],
                   [
                     "set",
+                    "@entity.seeds",
+                    "@config.seeds"
+                  ],
+                  [
+                    "set",
+                    "@entity.rule",
+                    "@config.rule"
+                  ],
+                  [
+                    "set",
+                    "@entity.rows",
+                    "@config.rows"
+                  ],
+                  [
+                    "set",
+                    "@entity.cols",
+                    "@config.cols"
+                  ],
+                  [
+                    "set",
+                    "@entity.taskText",
+                    "@config.taskText"
+                  ],
+                  [
+                    "set",
                     "@entity.generation",
                     0.0
                   ],
@@ -1312,8 +1477,8 @@
                         0.0,
                         [
                           "*",
-                          "@config.rows",
-                          "@config.cols"
+                          "@entity.rows",
+                          "@entity.cols"
                         ]
                       ],
                       [
@@ -1325,7 +1490,7 @@
                           "if",
                           [
                             "array/includes",
-                            "@config.seeds",
+                            "@entity.seeds",
                             "@i"
                           ],
                           1.0,
@@ -1364,8 +1529,8 @@
                         0.0,
                         [
                           "*",
-                          "@config.rows",
-                          "@config.cols"
+                          "@entity.rows",
+                          "@entity.cols"
                         ]
                       ],
                       [
@@ -1383,7 +1548,7 @@
                                 [
                                   "/",
                                   "@i",
-                                  "@config.cols"
+                                  "@entity.cols"
                                 ]
                               ]
                             ],
@@ -1392,7 +1557,7 @@
                               [
                                 "math/mod",
                                 "@i",
-                                "@config.cols"
+                                "@entity.cols"
                               ]
                             ],
                             [
@@ -1734,7 +1899,7 @@
                               "width": "@config.width"
                             },
                             {
-                              "content": "@config.taskText",
+                              "content": "@entity.taskText",
                               "type": "typography",
                               "variant": "body"
                             }
@@ -1753,9 +1918,584 @@
                 "eventId": "evt_01M07580Z4ZBCV8MXBRY5824Z6",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@payload.mode",
-                  "@config.matchMode"
+                  "and",
+                  [
+                    "==",
+                    "@payload.mode",
+                    "@config.matchMode"
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.seeds",
+                    "@payload.seeds"
+                  ],
+                  [
+                    "set",
+                    "@entity.rule",
+                    "@payload.rule"
+                  ],
+                  [
+                    "set",
+                    "@entity.rows",
+                    "@payload.rows"
+                  ],
+                  [
+                    "set",
+                    "@entity.cols",
+                    "@payload.cols"
+                  ],
+                  [
+                    "set",
+                    "@entity.taskText",
+                    "@payload.taskText"
+                  ],
+                  [
+                    "set",
+                    "@entity.generation",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.autoRun"
+                  ],
+                  [
+                    "set",
+                    "@entity.cells",
+                    [
+                      "array/map",
+                      [
+                        "array/range",
+                        0.0,
+                        [
+                          "*",
+                          "@entity.rows",
+                          "@entity.cols"
+                        ]
+                      ],
+                      [
+                        "fn",
+                        [
+                          "i"
+                        ],
+                        [
+                          "if",
+                          [
+                            "array/includes",
+                            "@entity.seeds",
+                            "@i"
+                          ],
+                          1.0,
+                          0.0
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.aliveCount",
+                    [
+                      "array/len",
+                      [
+                        "array/filter",
+                        "@entity.cells",
+                        [
+                          "fn",
+                          "v",
+                          [
+                            ">",
+                            "@v",
+                            0.05
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.cellShapes",
+                    [
+                      "array/map",
+                      [
+                        "array/range",
+                        0.0,
+                        [
+                          "*",
+                          "@entity.rows",
+                          "@entity.cols"
+                        ]
+                      ],
+                      [
+                        "fn",
+                        [
+                          "i"
+                        ],
+                        [
+                          "let",
+                          [
+                            [
+                              "r",
+                              [
+                                "math/floor",
+                                [
+                                  "/",
+                                  "@i",
+                                  "@entity.cols"
+                                ]
+                              ]
+                            ],
+                            [
+                              "c",
+                              [
+                                "math/mod",
+                                "@i",
+                                "@entity.cols"
+                              ]
+                            ],
+                            [
+                              "v",
+                              [
+                                "array/nth",
+                                "@entity.cells",
+                                "@i"
+                              ]
+                            ],
+                            [
+                              "cellColor",
+                              [
+                                "if",
+                                [
+                                  ">",
+                                  "@v",
+                                  0.66
+                                ],
+                                "@config.onColor",
+                                [
+                                  "if",
+                                  [
+                                    ">",
+                                    "@v",
+                                    0.33
+                                  ],
+                                  "@config.midColor",
+                                  [
+                                    "if",
+                                    [
+                                      ">",
+                                      "@v",
+                                      0.05
+                                    ],
+                                    "@config.lowColor",
+                                    "@config.offColor"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ],
+                          {
+                            "color": "@cellColor",
+                            "fill": "@cellColor",
+                            "height": [
+                              "-",
+                              "@config.cellSize",
+                              2.0
+                            ],
+                            "id": [
+                              "str/concat",
+                              "cell-",
+                              "@i"
+                            ],
+                            "type": "rect",
+                            "width": [
+                              "-",
+                              "@config.cellSize",
+                              2.0
+                            ],
+                            "x": [
+                              "+",
+                              10.0,
+                              [
+                                "*",
+                                "@c",
+                                "@config.cellSize"
+                              ]
+                            ],
+                            "y": [
+                              "+",
+                              10.0,
+                              [
+                                "*",
+                                "@r",
+                                "@config.cellSize"
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.running",
+                                    "Running",
+                                    "Paused"
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.running",
+                                    "primary",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "icon": "play",
+                                    "label": "Play",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  }
+                                ],
+                                {
+                                  "action": "STEP",
+                                  "disabled": "@entity.running",
+                                  "icon": "step-forward",
+                                  "label": "@config.stepLabel",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "icon": "rotate-ccw",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "align": "center",
+                                  "aria-label": "Speed",
+                                  "children": [
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 0.5
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          0.5
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "0.5×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          0.5
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 1.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          1.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "1×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          1.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 2.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          2.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "2×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          2.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 4.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          4.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "4×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          4.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "role": "group",
+                                  "type": "stack"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Generation ",
+                                    "@entity.generation",
+                                    " · ",
+                                    "@entity.aliveCount",
+                                    " active"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
+                              "animate": false,
+                              "backgroundColor": "@config.backgroundColor",
+                              "height": "@config.height",
+                              "interactive": true,
+                              "keyMap": {
+                                "ArrowRight": "STEP",
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
+                              "onShapeClick": "TAP_CELL",
+                              "shapes": "@entity.cellShapes",
+                              "type": "learning-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "content": "@entity.taskText",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459XDPHZCTQJT5GDWQG49D0",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "and",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ],
+                    [
+                      "and",
+                      [
+                        ">",
+                        "@payload.rows",
+                        0.0
+                      ],
+                      [
+                        ">",
+                        "@payload.cols",
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459XDPHZCTQJT5GDWQG49D0",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -2026,7 +2766,7 @@
                               "width": "@config.width"
                             },
                             {
-                              "content": "@config.taskText",
+                              "content": "@entity.taskText",
                               "type": "typography",
                               "variant": "body"
                             }
@@ -2322,7 +3062,7 @@
                               "width": "@config.width"
                             },
                             {
-                              "content": "@config.taskText",
+                              "content": "@entity.taskText",
                               "type": "typography",
                               "variant": "body"
                             }
@@ -2611,7 +3351,7 @@
                               "width": "@config.width"
                             },
                             {
-                              "content": "@config.taskText",
+                              "content": "@entity.taskText",
                               "type": "typography",
                               "variant": "body"
                             }
@@ -2915,7 +3655,7 @@
                               "width": "@config.width"
                             },
                             {
-                              "content": "@config.taskText",
+                              "content": "@entity.taskText",
                               "type": "typography",
                               "variant": "body"
                             }
@@ -2967,8 +3707,8 @@
                         0.0,
                         [
                           "*",
-                          "@config.rows",
-                          "@config.cols"
+                          "@entity.rows",
+                          "@entity.cols"
                         ]
                       ],
                       [
@@ -2986,7 +3726,7 @@
                                 [
                                   "/",
                                   "@i",
-                                  "@config.cols"
+                                  "@entity.cols"
                                 ]
                               ]
                             ],
@@ -2995,7 +3735,7 @@
                               [
                                 "math/mod",
                                 "@i",
-                                "@config.cols"
+                                "@entity.cols"
                               ]
                             ],
                             [
@@ -3021,7 +3761,7 @@
                                   [
                                     "-",
                                     "@i",
-                                    "@config.cols"
+                                    "@entity.cols"
                                   ]
                                 ],
                                 0.0
@@ -3036,7 +3776,7 @@
                                   "@r",
                                   [
                                     "-",
-                                    "@config.rows",
+                                    "@entity.rows",
                                     1.0
                                   ]
                                 ],
@@ -3046,7 +3786,7 @@
                                   [
                                     "+",
                                     "@i",
-                                    "@config.cols"
+                                    "@entity.cols"
                                   ]
                                 ],
                                 0.0
@@ -3082,7 +3822,7 @@
                                   "@c",
                                   [
                                     "-",
-                                    "@config.cols",
+                                    "@entity.cols",
                                     1.0
                                   ]
                                 ],
@@ -3123,7 +3863,7 @@
                                     [
                                       "-",
                                       "@i",
-                                      "@config.cols"
+                                      "@entity.cols"
                                     ],
                                     1.0
                                   ]
@@ -3147,7 +3887,7 @@
                                     "@c",
                                     [
                                       "-",
-                                      "@config.cols",
+                                      "@entity.cols",
                                       1.0
                                     ]
                                   ]
@@ -3160,7 +3900,7 @@
                                     [
                                       "-",
                                       "@i",
-                                      "@config.cols"
+                                      "@entity.cols"
                                     ],
                                     1.0
                                   ]
@@ -3179,7 +3919,7 @@
                                     "@r",
                                     [
                                       "-",
-                                      "@config.rows",
+                                      "@entity.rows",
                                       1.0
                                     ]
                                   ],
@@ -3197,7 +3937,7 @@
                                     [
                                       "+",
                                       "@i",
-                                      "@config.cols"
+                                      "@entity.cols"
                                     ],
                                     1.0
                                   ]
@@ -3216,7 +3956,7 @@
                                     "@r",
                                     [
                                       "-",
-                                      "@config.rows",
+                                      "@entity.rows",
                                       1.0
                                     ]
                                   ],
@@ -3225,7 +3965,7 @@
                                     "@c",
                                     [
                                       "-",
-                                      "@config.cols",
+                                      "@entity.cols",
                                       1.0
                                     ]
                                   ]
@@ -3236,7 +3976,7 @@
                                   [
                                     "+",
                                     "@i",
-                                    "@config.cols",
+                                    "@entity.cols",
                                     1.0
                                   ]
                                 ],
@@ -3269,7 +4009,7 @@
                             "if",
                             [
                               "==",
-                              "@config.rule",
+                              "@entity.rule",
                               "life"
                             ],
                             [
@@ -3320,7 +4060,7 @@
                               "if",
                               [
                                 "==",
-                                "@config.rule",
+                                "@entity.rule",
                                 "spread"
                               ],
                               [
@@ -3412,8 +4152,8 @@
                         0.0,
                         [
                           "*",
-                          "@config.rows",
-                          "@config.cols"
+                          "@entity.rows",
+                          "@entity.cols"
                         ]
                       ],
                       [
@@ -3431,7 +4171,7 @@
                                 [
                                   "/",
                                   "@i",
-                                  "@config.cols"
+                                  "@entity.cols"
                                 ]
                               ]
                             ],
@@ -3440,7 +4180,7 @@
                               [
                                 "math/mod",
                                 "@i",
-                                "@config.cols"
+                                "@entity.cols"
                               ]
                             ],
                             [
@@ -3782,7 +4522,7 @@
                               "width": "@config.width"
                             },
                             {
-                              "content": "@config.taskText",
+                              "content": "@entity.taskText",
                               "type": "typography",
                               "variant": "body"
                             }
@@ -3835,8 +4575,8 @@
                         0.0,
                         [
                           "*",
-                          "@config.rows",
-                          "@config.cols"
+                          "@entity.rows",
+                          "@entity.cols"
                         ]
                       ],
                       [
@@ -3908,8 +4648,8 @@
                         0.0,
                         [
                           "*",
-                          "@config.rows",
-                          "@config.cols"
+                          "@entity.rows",
+                          "@entity.cols"
                         ]
                       ],
                       [
@@ -3927,7 +4667,7 @@
                                 [
                                   "/",
                                   "@i",
-                                  "@config.cols"
+                                  "@entity.cols"
                                 ]
                               ]
                             ],
@@ -3936,7 +4676,7 @@
                               [
                                 "math/mod",
                                 "@i",
-                                "@config.cols"
+                                "@entity.cols"
                               ]
                             ],
                             [
@@ -4278,7 +5018,7 @@
                               "width": "@config.width"
                             },
                             {
-                              "content": "@config.taskText",
+                              "content": "@entity.taskText",
                               "type": "typography",
                               "variant": "body"
                             }
@@ -4337,8 +5077,8 @@
                         0.0,
                         [
                           "*",
-                          "@config.rows",
-                          "@config.cols"
+                          "@entity.rows",
+                          "@entity.cols"
                         ]
                       ],
                       [
@@ -4350,7 +5090,7 @@
                           "if",
                           [
                             "array/includes",
-                            "@config.seeds",
+                            "@entity.seeds",
                             "@i"
                           ],
                           1.0,
@@ -4389,8 +5129,8 @@
                         0.0,
                         [
                           "*",
-                          "@config.rows",
-                          "@config.cols"
+                          "@entity.rows",
+                          "@entity.cols"
                         ]
                       ],
                       [
@@ -4408,7 +5148,7 @@
                                 [
                                   "/",
                                   "@i",
-                                  "@config.cols"
+                                  "@entity.cols"
                                 ]
                               ]
                             ],
@@ -4417,7 +5157,7 @@
                               [
                                 "math/mod",
                                 "@i",
-                                "@config.cols"
+                                "@entity.cols"
                               ]
                             ],
                             [
@@ -4759,7 +5499,7 @@
                               "width": "@config.width"
                             },
                             {
-                              "content": "@config.taskText",
+                              "content": "@entity.taskText",
                               "type": "typography",
                               "variant": "body"
                             }
@@ -4779,7 +5519,7 @@
                     {
                       "seedCount": [
                         "array/len",
-                        "@config.seeds"
+                        "@entity.seeds"
                       ]
                     }
                   ]
@@ -4836,8 +5576,8 @@
                           0.0,
                           [
                             "*",
-                            "@config.rows",
-                            "@config.cols"
+                            "@entity.rows",
+                            "@entity.cols"
                           ]
                         ],
                         [
@@ -4855,7 +5595,7 @@
                                   [
                                     "/",
                                     "@i",
-                                    "@config.cols"
+                                    "@entity.cols"
                                   ]
                                 ]
                               ],
@@ -4864,7 +5604,7 @@
                                 [
                                   "math/mod",
                                   "@i",
-                                  "@config.cols"
+                                  "@entity.cols"
                                 ]
                               ],
                               [
@@ -4890,7 +5630,7 @@
                                     [
                                       "-",
                                       "@i",
-                                      "@config.cols"
+                                      "@entity.cols"
                                     ]
                                   ],
                                   0.0
@@ -4905,7 +5645,7 @@
                                     "@r",
                                     [
                                       "-",
-                                      "@config.rows",
+                                      "@entity.rows",
                                       1.0
                                     ]
                                   ],
@@ -4915,7 +5655,7 @@
                                     [
                                       "+",
                                       "@i",
-                                      "@config.cols"
+                                      "@entity.cols"
                                     ]
                                   ],
                                   0.0
@@ -4951,7 +5691,7 @@
                                     "@c",
                                     [
                                       "-",
-                                      "@config.cols",
+                                      "@entity.cols",
                                       1.0
                                     ]
                                   ],
@@ -4992,7 +5732,7 @@
                                       [
                                         "-",
                                         "@i",
-                                        "@config.cols"
+                                        "@entity.cols"
                                       ],
                                       1.0
                                     ]
@@ -5016,7 +5756,7 @@
                                       "@c",
                                       [
                                         "-",
-                                        "@config.cols",
+                                        "@entity.cols",
                                         1.0
                                       ]
                                     ]
@@ -5029,7 +5769,7 @@
                                       [
                                         "-",
                                         "@i",
-                                        "@config.cols"
+                                        "@entity.cols"
                                       ],
                                       1.0
                                     ]
@@ -5048,7 +5788,7 @@
                                       "@r",
                                       [
                                         "-",
-                                        "@config.rows",
+                                        "@entity.rows",
                                         1.0
                                       ]
                                     ],
@@ -5066,7 +5806,7 @@
                                       [
                                         "+",
                                         "@i",
-                                        "@config.cols"
+                                        "@entity.cols"
                                       ],
                                       1.0
                                     ]
@@ -5085,7 +5825,7 @@
                                       "@r",
                                       [
                                         "-",
-                                        "@config.rows",
+                                        "@entity.rows",
                                         1.0
                                       ]
                                     ],
@@ -5094,7 +5834,7 @@
                                       "@c",
                                       [
                                         "-",
-                                        "@config.cols",
+                                        "@entity.cols",
                                         1.0
                                       ]
                                     ]
@@ -5105,7 +5845,7 @@
                                     [
                                       "+",
                                       "@i",
-                                      "@config.cols",
+                                      "@entity.cols",
                                       1.0
                                     ]
                                   ],
@@ -5138,7 +5878,7 @@
                               "if",
                               [
                                 "==",
-                                "@config.rule",
+                                "@entity.rule",
                                 "life"
                               ],
                               [
@@ -5189,7 +5929,7 @@
                                 "if",
                                 [
                                   "==",
-                                  "@config.rule",
+                                  "@entity.rule",
                                   "spread"
                                 ],
                                 [
@@ -5281,8 +6021,8 @@
                           0.0,
                           [
                             "*",
-                            "@config.rows",
-                            "@config.cols"
+                            "@entity.rows",
+                            "@entity.cols"
                           ]
                         ],
                         [
@@ -5300,7 +6040,7 @@
                                   [
                                     "/",
                                     "@i",
-                                    "@config.cols"
+                                    "@entity.cols"
                                   ]
                                 ]
                               ],
@@ -5309,7 +6049,7 @@
                                 [
                                   "math/mod",
                                   "@i",
-                                  "@config.cols"
+                                  "@entity.cols"
                                 ]
                               ],
                               [

@@ -5,6 +5,11 @@ type AgentChatMessage = {
   role : "user" | "assistant"
   content : string!
 }
+type AgentTool = {
+  event : event
+  read : string
+  scope : "declared"
+}
 
 orbital AgentContextOrbital {
   type ContextSummarized = Event { summary : string, keyPoints : [string] } "Fired when the older turns have been summarized"
@@ -14,6 +19,9 @@ orbital AgentContextOrbital {
     id : string!
     pendingMessages : [AgentChatMessage] @description "The conversation being compacted." = []
     lastSize : number @description "Turns in the last conversation compacted." @synonyms "size, length" = 0
+    pendingInstructions : string @description "The ephemeral conversation's own instructions, carried through a summarizing." = ""
+    pendingTools : [AgentTool] @description "The ephemeral conversation's own tools, carried through a summarizing." = []
+    pendingEphemeral : boolean @description "The conversation being compacted is ephemeral." = false
   }
 
   trait AgentContextCompactor -> AgentContextWindow [interaction] {
@@ -31,10 +39,13 @@ orbital AgentContextOrbital {
         (set @entity.lastSize 0)
       COMPACT -> ready when (<= (array/len ?messages) @config.keepMessages)
         (set @entity.lastSize (array/len ?messages))
-        (emit COMPACTED { messages: ?messages })
+        (emit COMPACTED { messages: ?messages, instructions: (str/default ?instructions ""), tools: (object/get ? tools []), ephemeral: (if ?ephemeral true false) })
       COMPACT -> summarizing when (> (array/len ?messages) @config.keepMessages)
         (set @entity.lastSize (array/len ?messages))
         (set @entity.pendingMessages ?messages)
+        (set @entity.pendingInstructions (str/default ?instructions ""))
+        (set @entity.pendingTools (object/get ? tools []))
+        (set @entity.pendingEphemeral (if ?ephemeral true false))
         (call-service llm summarize {
           text: (str/join (array/map (array/dropLast ?messages @config.keepMessages) (fn item (str/concat @item.role ": " @item.content))) "\n")
         } {
@@ -46,9 +57,12 @@ orbital AgentContextOrbital {
       ContextSummarized -> ready
         (emit COMPACTED {
           messages: (array/prepend (array/takeLast @entity.pendingMessages @config.keepMessages) { role: assistant, content: (str/concat "Earlier in this conversation: " ?summary) })
+          instructions: @entity.pendingInstructions
+          tools: @entity.pendingTools
+          ephemeral: @entity.pendingEphemeral
         })
       ContextSummarizeFailed -> ready
-        (emit COMPACTED { messages: (array/takeLast @entity.pendingMessages @config.keepMessages) })
+        (emit COMPACTED { messages: (array/takeLast @entity.pendingMessages @config.keepMessages), instructions: @entity.pendingInstructions, tools: @entity.pendingTools, ephemeral: @entity.pendingEphemeral })
         (render-ui toast {
           message: ?error
           type: alert
@@ -59,8 +73,11 @@ orbital AgentContextOrbital {
     emits {
       COMPACTED -> external {
         messages : [AgentChatMessage]!
+        instructions : string
+        tools : [AgentTool]
+        ephemeral : boolean
       }
-        @description "The conversation, bounded: recent turns verbatim, older turns as one summary note."
+        @description "The conversation, bounded: recent turns verbatim, older turns as one summary note. An ephemeral conversation's own `instructions`, `tools` and `ephemeral` flag pass through untouched."
         @synonyms "compacted, trimmed, bounded"
         @tier "domain"
       ContextSummarized -> internal {
@@ -77,8 +94,11 @@ orbital AgentContextOrbital {
     listens {
       COMPACT {
         messages : [AgentChatMessage]!
+        instructions : string
+        tools : [AgentTool]
+        ephemeral : boolean
       }
-        @description "Bound this conversation for the model."
+        @description "Bound this conversation for the model. An ephemeral conversation's own `instructions`, `tools` and `ephemeral` flag ride along."
     }
   }
 

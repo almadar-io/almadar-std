@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-03T09:14:54.097Z",
+  "generated": "2026-10-05T09:42:07.216Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -2282,7 +2282,7 @@
       "minArity": 2,
       "maxArity": 4,
       "returnType": "void",
-      "description": "Invoke an external service action. Optional trailing { emit: { success, failure } } options object attaches closed-circuit emit routing (V2 frame contract).",
+      "description": "Invoke an external service action. Optional trailing { key, emit: { success, failure, cancelled } } options object attaches closed-circuit emit routing (V2 frame contract); key names the call for cancel-call.",
       "module": "core",
       "hasSideEffects": true,
       "effect": {
@@ -2305,6 +2305,30 @@
       ],
       "examples": [
         "(call-service \"email\" \"send\")"
+      ],
+      "docsSource": "generated"
+    },
+    "cancel-call": {
+      "category": "effect",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "void",
+      "description": "Abort the in-flight call-service started with this key in the same running app; a no-op when none is in flight. The cancelled call emits its declared emit.cancelled event with { key }, never success or failure.",
+      "module": "core",
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "cancel-call"
+      },
+      "runsOn": "server",
+      "params": [
+        {
+          "name": "key",
+          "type": "string",
+          "description": "The key the call-service declared in its options"
+        }
+      ],
+      "examples": [
+        "(cancel-call @entity.id)"
       ],
       "docsSource": "generated"
     },
@@ -6795,6 +6819,25 @@
         "(prob/variance [2 4 4 4 5 5 7 9]) // => 4"
       ],
       "docsSource": "reference-docs"
+    },
+    "quote": {
+      "category": "control",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "sexpr",
+      "description": "Holds an S-expression as data: nothing inside it is evaluated, and its bindings are not resolved (a guard or effect handed to a diagram)",
+      "module": "core",
+      "params": [
+        {
+          "name": "body",
+          "type": "string",
+          "description": "The quoted expression as canonical JSON text with every @ written as \\u0040 (the .lolo parser encodes `(quote x)`)"
+        }
+      ],
+      "examples": [
+        "(quote (> @payload.amount 0)) // => [\">\", \"@payload.amount\", 0]"
+      ],
+      "docsSource": "generated"
     },
     "ref": {
       "category": "effect",

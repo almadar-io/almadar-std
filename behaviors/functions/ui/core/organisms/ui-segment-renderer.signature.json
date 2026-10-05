@@ -14,15 +14,106 @@
     "traits": [
       {
         "name": "SegmentRendererRender",
-        "emittedEvents": [],
+        "emittedEvents": [
+          "ACTIVATION_SAVE",
+          "REFLECTION_SAVE",
+          "BLOOM_ANSWER",
+          "ASK",
+          "NOTE",
+          "ANNOTATION"
+        ],
         "listenedEvents": [],
         "events": [
+          {
+            "name": "ACTIVATION_SAVE",
+            "direction": "emit",
+            "description": "Event emitted when the activation prompt is saved or skipped (as `UI:<activationSaveEvent>`)",
+            "tier": "essential"
+          },
+          {
+            "name": "REFLECTION_SAVE",
+            "direction": "emit",
+            "description": "Event emitted when a reflection note is saved (as `UI:<reflectionSaveEvent>`)",
+            "tier": "essential"
+          },
+          {
+            "name": "BLOOM_ANSWER",
+            "direction": "emit",
+            "description": "Event emitted on the first reveal of a Bloom question (as `UI:<bloomAnswerEvent>`)",
+            "tier": "essential"
+          },
+          {
+            "name": "ASK",
+            "direction": "emit",
+            "description": "Event emitted when the reader picks Ask on selected text (as `UI:<askEvent>`)",
+            "tier": "essential"
+          },
+          {
+            "name": "NOTE",
+            "direction": "emit",
+            "description": "Event emitted when the reader picks Note on selected text (as `UI:<noteEvent>`)",
+            "tier": "essential"
+          },
+          {
+            "name": "ANNOTATION",
+            "direction": "emit",
+            "description": "Event emitted when a highlighted passage is clicked (as `UI:<annotationEvent>`)",
+            "tier": "essential"
+          },
           {
             "name": "INIT",
             "direction": "listen"
           }
         ],
         "overridableConfigKeys": [
+          {
+            "key": "activationSaveEvent",
+            "type": "event",
+            "default": "ACTIVATION_SAVE",
+            "label": "Activation Save Event",
+            "description": "Event emitted when the activation prompt is saved or skipped (as `UI:<activationSaveEvent>`)",
+            "tier": "presentation"
+          },
+          {
+            "key": "annotationEvent",
+            "type": "event",
+            "default": "ANNOTATION",
+            "label": "Annotation Event",
+            "description": "Event emitted when a highlighted passage is clicked (as `UI:<annotationEvent>`)",
+            "tier": "presentation"
+          },
+          {
+            "key": "annotations",
+            "type": "[SegmentRendererAnnotationsItem]",
+            "default": [],
+            "label": "Annotations",
+            "description": "Passages to highlight. Each `text` is matched exactly against the markdown segments, first segment whose source contains it, first occurrence inside one rendered text node (outside code); one that spans formatting is not highlighted.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "question",
+                    "note"
+                  ]
+                },
+                "text": {
+                  "name": "text",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
           {
             "key": "ariaBusy",
             "type": "boolean",
@@ -123,6 +214,29 @@
             "tier": "presentation"
           },
           {
+            "key": "askEvent",
+            "type": "event",
+            "default": "ASK",
+            "label": "Ask Event",
+            "description": "Event emitted when the reader picks Ask on selected text (as `UI:<askEvent>`)",
+            "tier": "presentation"
+          },
+          {
+            "key": "askLabel",
+            "type": "string",
+            "label": "Ask Label",
+            "description": "Ask action label (default: translated)",
+            "tier": "presentation"
+          },
+          {
+            "key": "bloomAnswerEvent",
+            "type": "event",
+            "default": "BLOOM_ANSWER",
+            "label": "Bloom Answer Event",
+            "description": "Event emitted on the first reveal of a Bloom question (as `UI:<bloomAnswerEvent>`)",
+            "tier": "presentation"
+          },
+          {
             "key": "className",
             "type": "string",
             "label": "Class Name",
@@ -174,6 +288,36 @@
             "type": "string",
             "label": "Lang",
             "description": "Language of this element's content (BCP 47, e.g. ar, sl, en).",
+            "tier": "presentation"
+          },
+          {
+            "key": "lesson",
+            "type": "string",
+            "label": "Lesson",
+            "description": "Raw lesson markdown with learning tags; parsed with `parseLessonSegments` and rendered",
+            "tier": "presentation"
+          },
+          {
+            "key": "noteEvent",
+            "type": "event",
+            "default": "NOTE",
+            "label": "Note Event",
+            "description": "Event emitted when the reader picks Note on selected text (as `UI:<noteEvent>`)",
+            "tier": "presentation"
+          },
+          {
+            "key": "noteLabel",
+            "type": "string",
+            "label": "Note Label",
+            "description": "Note action label (default: translated)",
+            "tier": "presentation"
+          },
+          {
+            "key": "reflectionSaveEvent",
+            "type": "event",
+            "default": "REFLECTION_SAVE",
+            "label": "Reflection Save Event",
+            "description": "Event emitted when a reflection note is saved (as `UI:<reflectionSaveEvent>`)",
             "tier": "presentation"
           },
           {
@@ -269,43 +413,222 @@
           {
             "key": "segments",
             "type": "[SegmentRendererSegmentsItem]",
-            "default": [
-              {
-                "answer": "Answer",
-                "question": "Question",
-                "type": "quiz"
-              },
-              {
-                "answer": "Answer 2",
-                "question": "Question 2",
-                "type": "quiz"
-              }
-            ],
+            "default": [],
             "label": "Segments",
-            "description": "Parsed lesson segments (see `parseLessonSegments`)",
+            "description": "Parsed lesson segments (see `parseLessonSegments`). Ignored when `lesson` is given.",
             "tier": "presentation",
             "items": {
               "properties": {
-                "answer": {
-                  "name": "answer",
-                  "required": true,
-                  "type": "string"
+                "SegmentRendererSegmentsItemActivate": {
+                  "name": "SegmentRendererSegmentsItemActivate",
+                  "properties": {
+                    "question": {
+                      "name": "question",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "type": {
+                      "name": "type",
+                      "required": true,
+                      "type": "string",
+                      "values": [
+                        "activate"
+                      ]
+                    }
+                  },
+                  "type": "object"
                 },
-                "question": {
-                  "name": "question",
-                  "required": true,
-                  "type": "string"
+                "SegmentRendererSegmentsItemBloom": {
+                  "name": "SegmentRendererSegmentsItemBloom",
+                  "properties": {
+                    "answer": {
+                      "name": "answer",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "level": {
+                      "name": "level",
+                      "required": true,
+                      "type": "string",
+                      "values": [
+                        "remember",
+                        "understand",
+                        "apply",
+                        "analyze",
+                        "evaluate",
+                        "create"
+                      ]
+                    },
+                    "question": {
+                      "name": "question",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "type": {
+                      "name": "type",
+                      "required": true,
+                      "type": "string",
+                      "values": [
+                        "bloom"
+                      ]
+                    }
+                  },
+                  "type": "object"
                 },
-                "type": {
-                  "name": "type",
-                  "required": true,
-                  "type": "string",
-                  "values": [
-                    "quiz"
-                  ]
+                "SegmentRendererSegmentsItemCode": {
+                  "name": "SegmentRendererSegmentsItemCode",
+                  "properties": {
+                    "content": {
+                      "name": "content",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "language": {
+                      "name": "language",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "runnable": {
+                      "name": "runnable",
+                      "required": false,
+                      "type": "boolean"
+                    },
+                    "type": {
+                      "name": "type",
+                      "required": true,
+                      "type": "string",
+                      "values": [
+                        "code"
+                      ]
+                    }
+                  },
+                  "type": "object"
+                },
+                "SegmentRendererSegmentsItemConnect": {
+                  "name": "SegmentRendererSegmentsItemConnect",
+                  "properties": {
+                    "content": {
+                      "name": "content",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "type": {
+                      "name": "type",
+                      "required": true,
+                      "type": "string",
+                      "values": [
+                        "connect"
+                      ]
+                    }
+                  },
+                  "type": "object"
+                },
+                "SegmentRendererSegmentsItemMarkdown": {
+                  "name": "SegmentRendererSegmentsItemMarkdown",
+                  "properties": {
+                    "content": {
+                      "name": "content",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "type": {
+                      "name": "type",
+                      "required": true,
+                      "type": "string",
+                      "values": [
+                        "markdown"
+                      ]
+                    }
+                  },
+                  "type": "object"
+                },
+                "SegmentRendererSegmentsItemQuiz": {
+                  "name": "SegmentRendererSegmentsItemQuiz",
+                  "properties": {
+                    "answer": {
+                      "name": "answer",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "question": {
+                      "name": "question",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "type": {
+                      "name": "type",
+                      "required": true,
+                      "type": "string",
+                      "values": [
+                        "quiz"
+                      ]
+                    }
+                  },
+                  "type": "object"
+                },
+                "SegmentRendererSegmentsItemReflect": {
+                  "name": "SegmentRendererSegmentsItemReflect",
+                  "properties": {
+                    "prompt": {
+                      "name": "prompt",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "type": {
+                      "name": "type",
+                      "required": true,
+                      "type": "string",
+                      "values": [
+                        "reflect"
+                      ]
+                    }
+                  },
+                  "type": "object"
+                },
+                "SegmentRendererSegmentsItemVisualization": {
+                  "name": "SegmentRendererSegmentsItemVisualization",
+                  "properties": {
+                    "description": {
+                      "name": "description",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "type": {
+                      "name": "type",
+                      "required": true,
+                      "type": "string",
+                      "values": [
+                        "visualization"
+                      ]
+                    },
+                    "visualizationType": {
+                      "name": "visualizationType",
+                      "required": true,
+                      "type": "string",
+                      "values": [
+                        "algorithms",
+                        "math",
+                        "physics",
+                        "biology",
+                        "chemistry",
+                        "probability"
+                      ]
+                    }
+                  },
+                  "type": "object"
                 }
               },
-              "type": "object"
+              "type": "union",
+              "values": [
+                "SegmentRendererSegmentsItemMarkdown",
+                "SegmentRendererSegmentsItemCode",
+                "SegmentRendererSegmentsItemQuiz",
+                "SegmentRendererSegmentsItemActivate",
+                "SegmentRendererSegmentsItemConnect",
+                "SegmentRendererSegmentsItemReflect",
+                "SegmentRendererSegmentsItemBloom",
+                "SegmentRendererSegmentsItemVisualization"
+              ]
             }
           },
           {
@@ -370,7 +693,14 @@
         "transitionEvents": [
           "INIT"
         ],
-        "definerKnobs": [],
+        "definerKnobs": [
+          "activationSaveEvent",
+          "annotationEvent",
+          "askEvent",
+          "bloomAnswerEvent",
+          "noteEvent",
+          "reflectionSaveEvent"
+        ],
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
@@ -391,7 +721,14 @@
         "primaryEntity": "SegmentRendererItem"
       }
     ],
-    "emittedEvents": [],
+    "emittedEvents": [
+      "ACTIVATION_SAVE",
+      "ANNOTATION",
+      "ASK",
+      "BLOOM_ANSWER",
+      "NOTE",
+      "REFLECTION_SAVE"
+    ],
     "listenedEvents": [],
     "exposure": "palette",
     "provenance": "generated",

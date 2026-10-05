@@ -91,6 +91,15 @@
         "parent": "trt_01M055GQ61JS78ZEMDZ0VQXK05",
         "renames": []
       },
+      "evt_01M459X4KG7TNJT243FPA66NMW": {
+        "bakedName": "ROSTER_LOADED",
+        "curName": "ROSTER_LOADED",
+        "id": "evt_01M459X4KG7TNJT243FPA66NMW",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M055GQ61JS78ZEMDZ0VQXK05",
+        "renames": []
+      },
       "orb_01M055GQ614BBGQKXAACQ604DE": {
         "bakedName": "LearnTracePlayerOrbital",
         "curName": "LearnTracePlayerOrbital",
@@ -136,6 +145,41 @@
           {
             "name": "title",
             "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "caption": {
+                  "name": "caption",
+                  "required": true,
+                  "type": "string"
+                },
+                "highlights": {
+                  "items": {
+                    "type": "number"
+                  },
+                  "name": "highlights",
+                  "required": true,
+                  "type": "array"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "values": {
+                  "items": {
+                    "type": "number"
+                  },
+                  "name": "values",
+                  "required": true,
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "name": "frames",
+            "type": "array"
           },
           {
             "default": 0.0,
@@ -392,6 +436,17 @@
               "tier": "presentation",
               "type": "string"
             },
+            "rosterSource": {
+              "default": "config",
+              "description": "Where the frame roster comes from: config reads the frames knob at INIT; event waits for ROSTER_LOADED and takes the roster from its payload.",
+              "label": "Roster Source",
+              "tier": "domain",
+              "type": "string",
+              "values": [
+                "config",
+                "event"
+              ]
+            },
             "summary": {
               "default": "",
               "description": "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line.",
@@ -492,6 +547,10 @@
             },
             {
               "kind": "set",
+              "resource": "@entity.frames"
+            },
+            {
+              "kind": "set",
               "resource": "@entity.running"
             },
             {
@@ -563,6 +622,7 @@
               "frameCaption",
               "frameIndex",
               "frameLabel",
+              "frames",
               "running",
               "speed",
               "statusNote",
@@ -595,6 +655,47 @@
                   {
                     "name": "mode",
                     "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and frames is the frame roster; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
+                "id": "evt_01M459X4KG7TNJT243FPA66NMW",
+                "key": "ROSTER_LOADED",
+                "name": "Roster Loaded",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "frames",
+                    "properties": [
+                      {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "caption",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "values",
+                        "required": true,
+                        "type": "[number]"
+                      },
+                      {
+                        "name": "highlights",
+                        "required": true,
+                        "type": "[number]"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
                   }
                 ],
                 "tier": "domain"
@@ -694,6 +795,11 @@
                   ],
                   [
                     "set",
+                    "@entity.frames",
+                    "@config.frames"
+                  ],
+                  [
+                    "set",
                     "@entity.frameIndex",
                     0.0
                   ],
@@ -714,7 +820,7 @@
                       "object/get",
                       [
                         "array/nth",
-                        "@config.frames",
+                        "@entity.frames",
                         "@entity.frameIndex"
                       ],
                       "label"
@@ -727,7 +833,7 @@
                       "object/get",
                       [
                         "array/nth",
-                        "@config.frames",
+                        "@entity.frames",
                         "@entity.frameIndex"
                       ],
                       "caption"
@@ -742,7 +848,7 @@
                         "object/get",
                         [
                           "array/nth",
-                          "@config.frames",
+                          "@entity.frames",
                           "@entity.frameIndex"
                         ],
                         "values"
@@ -756,7 +862,7 @@
                               "object/get",
                               [
                                 "array/nth",
-                                "@config.frames",
+                                "@entity.frames",
                                 "@entity.frameIndex"
                               ],
                               "highlights"
@@ -1011,7 +1117,7 @@
                                     " of ",
                                     [
                                       "array/len",
-                                      "@config.frames"
+                                      "@entity.frames"
                                     ]
                                   ],
                                   "type": "typography",
@@ -1026,7 +1132,7 @@
                             {
                               "max": [
                                 "array/len",
-                                "@config.frames"
+                                "@entity.frames"
                               ],
                               "showPercentage": false,
                               "type": "progress-bar",
@@ -1075,9 +1181,17 @@
                 "eventId": "evt_01M055GQ610QS6TW851N356EQ0",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@config.matchMode",
-                  ""
+                  "and",
+                  [
+                    "==",
+                    "@config.matchMode",
+                    ""
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1137,6 +1251,11 @@
                   ],
                   [
                     "set",
+                    "@entity.frames",
+                    "@config.frames"
+                  ],
+                  [
+                    "set",
                     "@entity.frameIndex",
                     0.0
                   ],
@@ -1157,7 +1276,7 @@
                       "object/get",
                       [
                         "array/nth",
-                        "@config.frames",
+                        "@entity.frames",
                         "@entity.frameIndex"
                       ],
                       "label"
@@ -1170,7 +1289,7 @@
                       "object/get",
                       [
                         "array/nth",
-                        "@config.frames",
+                        "@entity.frames",
                         "@entity.frameIndex"
                       ],
                       "caption"
@@ -1185,7 +1304,7 @@
                         "object/get",
                         [
                           "array/nth",
-                          "@config.frames",
+                          "@entity.frames",
                           "@entity.frameIndex"
                         ],
                         "values"
@@ -1199,7 +1318,7 @@
                               "object/get",
                               [
                                 "array/nth",
-                                "@config.frames",
+                                "@entity.frames",
                                 "@entity.frameIndex"
                               ],
                               "highlights"
@@ -1454,7 +1573,7 @@
                                     " of ",
                                     [
                                       "array/len",
-                                      "@config.frames"
+                                      "@entity.frames"
                                     ]
                                   ],
                                   "type": "typography",
@@ -1469,7 +1588,7 @@
                             {
                               "max": [
                                 "array/len",
-                                "@config.frames"
+                                "@entity.frames"
                               ],
                               "showPercentage": false,
                               "type": "progress-bar",
@@ -1518,9 +1637,481 @@
                 "eventId": "evt_01M055GQ62P0G7TCNBQ7WTTSZD",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@payload.mode",
-                  "@config.matchMode"
+                  "and",
+                  [
+                    "==",
+                    "@payload.mode",
+                    "@config.matchMode"
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.frames",
+                    "@payload.frames"
+                  ],
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.frameIndex",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.statusNote",
+                    "Paused"
+                  ],
+                  [
+                    "set",
+                    "@entity.frameLabel",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        "@payload.frames",
+                        "@entity.frameIndex"
+                      ],
+                      "label"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.frameCaption",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        "@payload.frames",
+                        "@entity.frameIndex"
+                      ],
+                      "caption"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.bars",
+                    [
+                      "array/map",
+                      [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@payload.frames",
+                          "@entity.frameIndex"
+                        ],
+                        "values"
+                      ],
+                      {
+                        "color": [
+                          "if",
+                          [
+                            "array/includes",
+                            [
+                              "object/get",
+                              [
+                                "array/nth",
+                                "@payload.frames",
+                                "@entity.frameIndex"
+                              ],
+                              "highlights"
+                            ],
+                            "@index"
+                          ],
+                          "@config.highlightColor",
+                          "@config.baseColor"
+                        ],
+                        "label": [
+                          "str/concat",
+                          "",
+                          "@item"
+                        ],
+                        "value": "@item"
+                      }
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": "@entity.statusNote",
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.statusNote",
+                                      "Finished"
+                                    ],
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.running",
+                                      "primary",
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "Pause",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "disabled": [
+                                      "==",
+                                      "@entity.statusNote",
+                                      "Finished"
+                                    ],
+                                    "icon": "play",
+                                    "label": "Play",
+                                    "type": "button",
+                                    "variant": "primary"
+                                  }
+                                ],
+                                {
+                                  "action": "RESTART",
+                                  "icon": "rotate-ccw",
+                                  "label": "Restart",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "align": "center",
+                                  "aria-label": "Speed",
+                                  "children": [
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 0.5
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          0.5
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "0.5×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          0.5
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 1.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          1.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "1×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          1.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 2.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          2.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "2×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          2.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    },
+                                    {
+                                      "action": "SPEED_SET",
+                                      "actionPayload": {
+                                        "speed": 4.0
+                                      },
+                                      "aria-pressed": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          4.0
+                                        ],
+                                        "true",
+                                        "false"
+                                      ],
+                                      "label": "4×",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.speed",
+                                          4.0
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "role": "group",
+                                  "type": "stack"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Frame ",
+                                    [
+                                      "+",
+                                      "@entity.frameIndex",
+                                      1.0
+                                    ],
+                                    " of ",
+                                    [
+                                      "array/len",
+                                      "@payload.frames"
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
+                              "max": [
+                                "array/len",
+                                "@payload.frames"
+                              ],
+                              "showPercentage": false,
+                              "type": "progress-bar",
+                              "value": [
+                                "+",
+                                "@entity.frameIndex",
+                                1.0
+                              ]
+                            },
+                            {
+                              "backgroundColor": "@config.backgroundColor",
+                              "bars": "@entity.bars",
+                              "height": "@config.height",
+                              "keyMap": {
+                                "KeyR": "RESTART",
+                                "Space": "TOGGLE_RUN"
+                              },
+                              "type": "algorithm-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": "@entity.frameCaption",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "padding": "md",
+                              "title": "@entity.frameLabel",
+                              "type": "card",
+                              "variant": "bordered"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459X4KG7TNJT243FPA66NMW",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "and",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ],
+                    [
+                      ">",
+                      [
+                        "array/len",
+                        "@payload.frames"
+                      ],
+                      0.0
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459X4KG7TNJT243FPA66NMW",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1780,7 +2371,7 @@
                                     " of ",
                                     [
                                       "array/len",
-                                      "@config.frames"
+                                      "@entity.frames"
                                     ]
                                   ],
                                   "type": "typography",
@@ -1795,7 +2386,7 @@
                             {
                               "max": [
                                 "array/len",
-                                "@config.frames"
+                                "@entity.frames"
                               ],
                               "showPercentage": false,
                               "type": "progress-bar",
@@ -2093,7 +2684,7 @@
                                     " of ",
                                     [
                                       "array/len",
-                                      "@config.frames"
+                                      "@entity.frames"
                                     ]
                                   ],
                                   "type": "typography",
@@ -2108,7 +2699,7 @@
                             {
                               "max": [
                                 "array/len",
-                                "@config.frames"
+                                "@entity.frames"
                               ],
                               "showPercentage": false,
                               "type": "progress-bar",
@@ -2411,7 +3002,7 @@
                                     " of ",
                                     [
                                       "array/len",
-                                      "@config.frames"
+                                      "@entity.frames"
                                     ]
                                   ],
                                   "type": "typography",
@@ -2426,7 +3017,7 @@
                             {
                               "max": [
                                 "array/len",
-                                "@config.frames"
+                                "@entity.frames"
                               ],
                               "showPercentage": false,
                               "type": "progress-bar",
@@ -2737,7 +3328,7 @@
                                     " of ",
                                     [
                                       "array/len",
-                                      "@config.frames"
+                                      "@entity.frames"
                                     ]
                                   ],
                                   "type": "typography",
@@ -2752,7 +3343,7 @@
                             {
                               "max": [
                                 "array/len",
-                                "@config.frames"
+                                "@entity.frames"
                               ],
                               "showPercentage": false,
                               "type": "progress-bar",
@@ -2839,7 +3430,7 @@
                       "object/get",
                       [
                         "array/nth",
-                        "@config.frames",
+                        "@entity.frames",
                         "@entity.frameIndex"
                       ],
                       "label"
@@ -2852,7 +3443,7 @@
                       "object/get",
                       [
                         "array/nth",
-                        "@config.frames",
+                        "@entity.frames",
                         "@entity.frameIndex"
                       ],
                       "caption"
@@ -2867,7 +3458,7 @@
                         "object/get",
                         [
                           "array/nth",
-                          "@config.frames",
+                          "@entity.frames",
                           "@entity.frameIndex"
                         ],
                         "values"
@@ -2881,7 +3472,7 @@
                               "object/get",
                               [
                                 "array/nth",
-                                "@config.frames",
+                                "@entity.frames",
                                 "@entity.frameIndex"
                               ],
                               "highlights"
@@ -3136,7 +3727,7 @@
                                     " of ",
                                     [
                                       "array/len",
-                                      "@config.frames"
+                                      "@entity.frames"
                                     ]
                                   ],
                                   "type": "typography",
@@ -3151,7 +3742,7 @@
                             {
                               "max": [
                                 "array/len",
-                                "@config.frames"
+                                "@entity.frames"
                               ],
                               "showPercentage": false,
                               "type": "progress-bar",
@@ -3260,7 +3851,7 @@
                               "-",
                               [
                                 "array/len",
-                                "@config.frames"
+                                "@entity.frames"
                               ],
                               1.0
                             ]
@@ -3286,7 +3877,7 @@
                             "-",
                             [
                               "array/len",
-                              "@config.frames"
+                              "@entity.frames"
                             ],
                             1.0
                           ]
@@ -3311,7 +3902,7 @@
                         "object/get",
                         [
                           "array/nth",
-                          "@config.frames",
+                          "@entity.frames",
                           "@entity.frameIndex"
                         ],
                         "label"
@@ -3324,7 +3915,7 @@
                         "object/get",
                         [
                           "array/nth",
-                          "@config.frames",
+                          "@entity.frames",
                           "@entity.frameIndex"
                         ],
                         "caption"
@@ -3339,7 +3930,7 @@
                           "object/get",
                           [
                             "array/nth",
-                            "@config.frames",
+                            "@entity.frames",
                             "@entity.frameIndex"
                           ],
                           "values"
@@ -3353,7 +3944,7 @@
                                 "object/get",
                                 [
                                   "array/nth",
-                                  "@config.frames",
+                                  "@entity.frames",
                                   "@entity.frameIndex"
                                 ],
                                 "highlights"
@@ -3390,7 +3981,7 @@
                             ],
                             [
                               "array/len",
-                              "@config.frames"
+                              "@entity.frames"
                             ]
                           ],
                           "Finished",
@@ -3634,7 +4225,7 @@
                                       " of ",
                                       [
                                         "array/len",
-                                        "@config.frames"
+                                        "@entity.frames"
                                       ]
                                     ],
                                     "type": "typography",
@@ -3649,7 +4240,7 @@
                               {
                                 "max": [
                                   "array/len",
-                                  "@config.frames"
+                                  "@entity.frames"
                                 ],
                                 "showPercentage": false,
                                 "type": "progress-bar",
@@ -3722,7 +4313,7 @@
                           ],
                           [
                             "array/len",
-                            "@config.frames"
+                            "@entity.frames"
                           ]
                         ]
                       ],
@@ -3732,7 +4323,7 @@
                         {
                           "totalFrames": [
                             "array/len",
-                            "@config.frames"
+                            "@entity.frames"
                           ]
                         }
                       ],

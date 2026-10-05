@@ -31,8 +31,10 @@
         "name": "PageTreat",
         "emittedEvents": [
           "APPLIED",
+          "APPLIED_MANY",
           "APPLY_FAILED",
           "TREATED",
+          "TREATED_MANY",
           "TREAT_FAILED"
         ],
         "listenedEvents": [],
@@ -41,6 +43,12 @@
             "name": "APPLIED",
             "direction": "emit",
             "description": "The page service applied the treatment",
+            "tier": "secondary"
+          },
+          {
+            "name": "APPLIED_MANY",
+            "direction": "emit",
+            "description": "The page service applied a list of treatments",
             "tier": "secondary"
           },
           {
@@ -57,6 +65,13 @@
             "tier": "primary"
           },
           {
+            "name": "TREATED_MANY",
+            "direction": "emit",
+            "description": "Each listed element now shows its treatment; `missing` lists those that had left their page (or whose tab closed)",
+            "synonyms": "hidden, blurred, restored, treated",
+            "tier": "primary"
+          },
+          {
             "name": "TREAT_FAILED",
             "direction": "emit",
             "description": "The treatment could not be applied (the element is gone, or the tab closed)",
@@ -70,6 +85,11 @@
             "name": "TREAT",
             "direction": "listen",
             "description": "Treat one page element; `label` is the text shown with it (for example why it was hidden)"
+          },
+          {
+            "name": "TREAT_MANY",
+            "direction": "listen",
+            "description": "Treat a list of page elements in one call, each with its own treatment and label"
           }
         ],
         "overridableConfigKeys": [
@@ -87,9 +107,11 @@
         "linkedEntity": "PageTreatRecord",
         "transitionEvents": [
           "APPLIED",
+          "APPLIED_MANY",
           "APPLY_FAILED",
           "INIT",
-          "TREAT"
+          "TREAT",
+          "TREAT_MANY"
         ],
         "definerKnobs": [],
         "effectRow": [
@@ -98,8 +120,16 @@
             "resource": "page.apply"
           },
           {
+            "kind": "call-service",
+            "resource": "page.applyMany"
+          },
+          {
             "kind": "emit",
             "resource": "TREATED"
+          },
+          {
+            "kind": "emit",
+            "resource": "TREATED_MANY"
           },
           {
             "kind": "emit",
@@ -130,8 +160,10 @@
     ],
     "emittedEvents": [
       "APPLIED",
+      "APPLIED_MANY",
       "APPLY_FAILED",
       "TREATED",
+      "TREATED_MANY",
       "TREAT_FAILED"
     ],
     "listenedEvents": [],

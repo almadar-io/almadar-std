@@ -30,7 +30,7 @@ const ALIAS = 'LearnTree';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnTreeEventKey = 'DELETE_VALUE' | 'INIT' | 'INSERT_VALUE' | 'MODE_SELECTED' | 'RESET' | 'RUN_TRAVERSAL' | 'TOGGLE_RUN' | 'TREE_UPDATED';
+export type StdLearnTreeEventKey = 'DELETE_VALUE' | 'INIT' | 'INSERT_VALUE' | 'MODE_SELECTED' | 'RESET' | 'ROSTER_LOADED' | 'RUN_TRAVERSAL' | 'TOGGLE_RUN' | 'TREE_UPDATED';
 
 /**
  * Payload shape for the `TREE_UPDATED` event.
@@ -59,6 +59,8 @@ export interface StdLearnTreeConfig {
   height?: number;
   /** Default: `""` */
   matchMode?: string;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
   /** Default: `true` */
   showComparisons?: boolean;
   /** Default: `""` */

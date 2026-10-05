@@ -19,6 +19,33 @@
         "parent": "trt_01KXG04PWQ74N9XG84K2YH2H0J",
         "renames": []
       },
+      "evt_01M458N6J94S4HDCK66NZQRAMN": {
+        "bakedName": "@config.askEvent",
+        "curName": "@config.askEvent",
+        "id": "evt_01M458N6J94S4HDCK66NZQRAMN",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04PWQ74N9XG84K2YH2H0J",
+        "renames": []
+      },
+      "evt_01M458N6J965TTVE1DQTCG1ZG3": {
+        "bakedName": "@config.noteEvent",
+        "curName": "@config.noteEvent",
+        "id": "evt_01M458N6J965TTVE1DQTCG1ZG3",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04PWQ74N9XG84K2YH2H0J",
+        "renames": []
+      },
+      "evt_01M458N6J9QW36G4K8ANZMPGXN": {
+        "bakedName": "@config.annotationEvent",
+        "curName": "@config.annotationEvent",
+        "id": "evt_01M458N6J9QW36G4K8ANZMPGXN",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04PWQ74N9XG84K2YH2H0J",
+        "renames": []
+      },
       "orb_01KXG04PWQJ79HPJCEJP94NCFB": {
         "bakedName": "MarkdownContentOrbital",
         "curName": "MarkdownContentOrbital",
@@ -80,6 +107,44 @@
         {
           "category": "interaction",
           "config": {
+            "annotationEvent": {
+              "default": "ANNOTATION",
+              "description": "Event emitted when a highlighted passage is clicked (as `UI:<annotationEvent>`)",
+              "label": "Annotation Event",
+              "tier": "presentation",
+              "type": "event"
+            },
+            "annotations": {
+              "default": [],
+              "description": "Passages to highlight. Each `text` is matched exactly, first occurrence in document order inside a single rendered text node (outside code); a passage that spans formatting boundaries is not highlighted.",
+              "items": {
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "kind": {
+                    "name": "kind",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "question",
+                      "note"
+                    ]
+                  },
+                  "text": {
+                    "name": "text",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Annotations",
+              "tier": "presentation",
+              "type": "[MarkdownContentAnnotationsItem]"
+            },
             "ariaBusy": {
               "description": "This region is updating; assistive technology waits before announcing it.",
               "label": "Aria-busy",
@@ -169,6 +234,19 @@
               "tier": "presentation",
               "type": "boolean"
             },
+            "askEvent": {
+              "default": "ASK",
+              "description": "Event emitted when the reader picks Ask on selected text (as `UI:<askEvent>`)",
+              "label": "Ask Event",
+              "tier": "presentation",
+              "type": "event"
+            },
+            "askLabel": {
+              "description": "Ask action label (default: translated)",
+              "label": "Ask Label",
+              "tier": "presentation",
+              "type": "string"
+            },
             "className": {
               "description": "Additional CSS classes",
               "label": "Class Name",
@@ -226,6 +304,19 @@
             "lang": {
               "description": "Language of this element's content (BCP 47, e.g. ar, sl, en).",
               "label": "Lang",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "noteEvent": {
+              "default": "NOTE",
+              "description": "Event emitted when the reader picks Note on selected text (as `UI:<noteEvent>`)",
+              "label": "Note Event",
+              "tier": "presentation",
+              "type": "event"
+            },
+            "noteLabel": {
+              "description": "Note action label (default: translated)",
+              "label": "Note Label",
               "tier": "presentation",
               "type": "string"
             },
@@ -349,6 +440,52 @@
               "resource": "main"
             }
           ],
+          "emits": [
+            {
+              "definerKnob": "askEvent",
+              "description": "Event emitted when the reader picks Ask on selected text (as `UI:<askEvent>`)",
+              "event": "@config.askEvent",
+              "eventId": "evt_01M458N6J94S4HDCK66NZQRAMN",
+              "payloadSchema": [
+                {
+                  "name": "selectedText",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "definerKnob": "noteEvent",
+              "description": "Event emitted when the reader picks Note on selected text (as `UI:<noteEvent>`)",
+              "event": "@config.noteEvent",
+              "eventId": "evt_01M458N6J965TTVE1DQTCG1ZG3",
+              "payloadSchema": [
+                {
+                  "name": "selectedText",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "definerKnob": "annotationEvent",
+              "description": "Event emitted when a highlighted passage is clicked (as `UI:<annotationEvent>`)",
+              "event": "@config.annotationEvent",
+              "eventId": "evt_01M458N6J9QW36G4K8ANZMPGXN",
+              "payloadSchema": [
+                {
+                  "name": "annotationId",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
           "entityContract": {
             "provides": [],
             "requires": []
@@ -368,6 +505,47 @@
                 "id": "evt_01KXG04PWQT32T9JX3XDQ277VJ",
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "Event emitted when the reader picks Ask on selected text (as `UI:<askEvent>`)",
+                "id": "evt_01M458N6J94S4HDCK66NZQRAMN",
+                "key": "@config.askEvent",
+                "name": "@config.ask event",
+                "payloadSchema": [
+                  {
+                    "name": "selectedText",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Event emitted when the reader picks Note on selected text (as `UI:<noteEvent>`)",
+                "id": "evt_01M458N6J965TTVE1DQTCG1ZG3",
+                "key": "@config.noteEvent",
+                "name": "@config.note event",
+                "payloadSchema": [
+                  {
+                    "name": "selectedText",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Event emitted when a highlighted passage is clicked (as `UI:<annotationEvent>`)",
+                "id": "evt_01M458N6J9QW36G4K8ANZMPGXN",
+                "key": "@config.annotationEvent",
+                "name": "@config.annotation event",
+                "payloadSchema": [
+                  {
+                    "name": "annotationId",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
               }
             ],
             "states": [
@@ -383,6 +561,8 @@
                     "render-ui",
                     "main",
                     {
+                      "annotationEvent": "@config.annotationEvent",
+                      "annotations": "@config.annotations",
                       "aria-busy": "@config.ariaBusy",
                       "aria-current": "@config.ariaCurrent",
                       "aria-describedby": "@config.ariaDescribedby",
@@ -393,6 +573,8 @@
                       "aria-live": "@config.ariaLive",
                       "aria-pressed": "@config.ariaPressed",
                       "aria-selected": "@config.ariaSelected",
+                      "askEvent": "@config.askEvent",
+                      "askLabel": "@config.askLabel",
                       "className": "@config.className",
                       "content": "@config.content",
                       "dir": "@config.dir",
@@ -400,6 +582,8 @@
                       "enter": "@config.enter",
                       "enterDelay": "@config.enterDelay",
                       "lang": "@config.lang",
+                      "noteEvent": "@config.noteEvent",
+                      "noteLabel": "@config.noteLabel",
                       "role": "@config.role",
                       "skeleton": "@config.skeleton",
                       "tabIndex": "@config.tabIndex",
@@ -415,7 +599,26 @@
             ]
           }
         }
-      ]
+      ],
+      "types": {
+        "MarkdownContentAnnotationsItem": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "text",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
     }
   ],
   "schemaVersion": 1,

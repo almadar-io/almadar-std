@@ -82,6 +82,15 @@
         "parent": "trt_01KZEFWYXP5EK4MMGJG1PAGTNG",
         "renames": []
       },
+      "evt_01M459W76TQEW5K292QJWH96EB": {
+        "bakedName": "ROSTER_LOADED",
+        "curName": "ROSTER_LOADED",
+        "id": "evt_01M459W76TQEW5K292QJWH96EB",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEFWYXP5EK4MMGJG1PAGTNG",
+        "renames": []
+      },
       "orb_01KZEFWYXPQ981SKZVC2A5E2Q9": {
         "bakedName": "LearnClassifyOrbital",
         "curName": "LearnClassifyOrbital",
@@ -123,6 +132,79 @@
             "default": false,
             "name": "active",
             "type": "boolean"
+          },
+          {
+            "items": {
+              "properties": {
+                "category": {
+                  "name": "category",
+                  "required": true,
+                  "type": "string"
+                },
+                "explanation": {
+                  "name": "explanation",
+                  "required": false,
+                  "type": "string"
+                },
+                "hint": {
+                  "name": "hint",
+                  "required": false,
+                  "type": "string"
+                },
+                "options": {
+                  "items": {
+                    "properties": {
+                      "category": {
+                        "name": "category",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "options",
+                  "required": false,
+                  "type": "array"
+                },
+                "text": {
+                  "name": "text",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "items",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "categories",
+            "type": "array"
           },
           {
             "name": "title",
@@ -663,6 +745,17 @@
               "tier": "presentation",
               "type": "string"
             },
+            "rosterSource": {
+              "default": "config",
+              "description": "Where the roster comes from: config reads the items/categories knob(s) at INIT; event waits for ROSTER_LOADED and takes the roster from its payload.",
+              "label": "Roster Source",
+              "tier": "domain",
+              "type": "string",
+              "values": [
+                "config",
+                "event"
+              ]
+            },
             "scoreCap": {
               "default": 0.0,
               "description": "Upper bound on the rubric score; 0 means uncapped.",
@@ -738,6 +831,10 @@
             },
             {
               "kind": "set",
+              "resource": "@entity.categories"
+            },
+            {
+              "kind": "set",
               "resource": "@entity.categoryStats"
             },
             {
@@ -776,6 +873,10 @@
             {
               "kind": "set",
               "resource": "@entity.itemText"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.items"
             },
             {
               "kind": "set",
@@ -873,6 +974,7 @@
               "active",
               "attemptedCount",
               "backdropShapes",
+              "categories",
               "categoryStats",
               "correctCategory",
               "correctCount",
@@ -882,6 +984,7 @@
               "itemHint",
               "itemIndex",
               "itemText",
+              "items",
               "roundComplete",
               "roundView",
               "running",
@@ -918,6 +1021,83 @@
                   {
                     "name": "mode",
                     "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone), items is the roster to classify and categories the category buckets; a matching instrument re-initialises from them exactly as INIT does from config, any other instrument hides.",
+                "id": "evt_01M459W76TQEW5K292QJWH96EB",
+                "key": "ROSTER_LOADED",
+                "name": "Roster Loaded",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "items",
+                    "properties": [
+                      {
+                        "name": "text",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "category",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "hint",
+                        "type": "string"
+                      },
+                      {
+                        "name": "explanation",
+                        "type": "string"
+                      },
+                      {
+                        "name": "options",
+                        "properties": [
+                          {
+                            "name": "category",
+                            "required": true,
+                            "type": "string"
+                          },
+                          {
+                            "name": "label",
+                            "required": true,
+                            "type": "string"
+                          }
+                        ],
+                        "type": "[object]"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
+                  },
+                  {
+                    "name": "categories",
+                    "properties": [
+                      {
+                        "name": "value",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "color",
+                        "required": true,
+                        "type": "string"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
                   }
                 ],
                 "tier": "domain"
@@ -1020,6 +1200,16 @@
                 "effects": [
                   [
                     "set",
+                    "@entity.items",
+                    "@config.items"
+                  ],
+                  [
+                    "set",
+                    "@entity.categories",
+                    "@config.categories"
+                  ],
+                  [
+                    "set",
                     "@entity.active",
                     true
                   ],
@@ -1083,7 +1273,7 @@
                     "@entity.totalItems",
                     [
                       "array/len",
-                      "@config.items"
+                      "@entity.items"
                     ]
                   ],
                   [
@@ -1091,7 +1281,7 @@
                     "@entity.categoryStats",
                     [
                       "array/map",
-                      "@config.categories",
+                      "@entity.categories",
                       [
                         "fn",
                         "c",
@@ -1119,7 +1309,7 @@
                         "item",
                         [
                           "array/nth",
-                          "@config.items",
+                          "@entity.items",
                           0.0
                         ]
                       ]
@@ -1173,7 +1363,7 @@
                         "categoryCount",
                         [
                           "array/len",
-                          "@config.categories"
+                          "@entity.categories"
                         ]
                       ],
                       [
@@ -1308,7 +1498,7 @@
                                     "category",
                                     [
                                       "array/nth",
-                                      "@config.categories",
+                                      "@entity.categories",
                                       "@i"
                                     ]
                                   ],
@@ -1474,7 +1664,7 @@
                                   "category",
                                   [
                                     "array/nth",
-                                    "@config.categories",
+                                    "@entity.categories",
                                     "@i"
                                   ]
                                 ],
@@ -1667,7 +1857,7 @@
                                     "object/get",
                                     [
                                       "array/nth",
-                                      "@config.items",
+                                      "@entity.items",
                                       "@entity.itemIndex"
                                     ],
                                     "options",
@@ -1758,7 +1948,7 @@
                                   "array/map",
                                   [
                                     "array/reverse",
-                                    "@config.categories"
+                                    "@entity.categories"
                                   ],
                                   [
                                     "fn",
@@ -2103,9 +2293,17 @@
                 "eventId": "evt_01KZEFWYXP1NHSN9QKG27M098G",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@config.matchMode",
-                  ""
+                  "and",
+                  [
+                    "==",
+                    "@config.matchMode",
+                    ""
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
                 ],
                 "to": "idle"
               },
@@ -2153,6 +2351,16 @@
               },
               {
                 "effects": [
+                  [
+                    "set",
+                    "@entity.items",
+                    "@config.items"
+                  ],
+                  [
+                    "set",
+                    "@entity.categories",
+                    "@config.categories"
+                  ],
                   [
                     "set",
                     "@entity.active",
@@ -2218,7 +2426,7 @@
                     "@entity.totalItems",
                     [
                       "array/len",
-                      "@config.items"
+                      "@entity.items"
                     ]
                   ],
                   [
@@ -2226,7 +2434,7 @@
                     "@entity.categoryStats",
                     [
                       "array/map",
-                      "@config.categories",
+                      "@entity.categories",
                       [
                         "fn",
                         "c",
@@ -2254,7 +2462,7 @@
                         "item",
                         [
                           "array/nth",
-                          "@config.items",
+                          "@entity.items",
                           0.0
                         ]
                       ]
@@ -2308,7 +2516,7 @@
                         "categoryCount",
                         [
                           "array/len",
-                          "@config.categories"
+                          "@entity.categories"
                         ]
                       ],
                       [
@@ -2443,7 +2651,7 @@
                                     "category",
                                     [
                                       "array/nth",
-                                      "@config.categories",
+                                      "@entity.categories",
                                       "@i"
                                     ]
                                   ],
@@ -2609,7 +2817,7 @@
                                   "category",
                                   [
                                     "array/nth",
-                                    "@config.categories",
+                                    "@entity.categories",
                                     "@i"
                                   ]
                                 ],
@@ -2802,7 +3010,7 @@
                                     "object/get",
                                     [
                                       "array/nth",
-                                      "@config.items",
+                                      "@entity.items",
                                       "@entity.itemIndex"
                                     ],
                                     "options",
@@ -2863,7 +3071,7 @@
                                   "array/map",
                                   [
                                     "array/reverse",
-                                    "@config.categories"
+                                    "@entity.categories"
                                   ],
                                   [
                                     "fn",
@@ -3231,9 +3439,1189 @@
                 "eventId": "evt_01KZEFWYXQWVDTDPHMGJ8KGQN8",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@payload.mode",
-                  "@config.matchMode"
+                  "and",
+                  [
+                    "==",
+                    "@payload.mode",
+                    "@config.matchMode"
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.items",
+                    "@payload.items"
+                  ],
+                  [
+                    "set",
+                    "@entity.categories",
+                    "@payload.categories"
+                  ],
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.itemIndex",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.correctCount",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.attemptedCount",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedCategory",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.feedback",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.verdict",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.roundComplete",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.autoRun"
+                  ],
+                  [
+                    "set",
+                    "@entity.elapsedMs",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.totalItems",
+                    [
+                      "array/len",
+                      "@entity.items"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.categoryStats",
+                    [
+                      "array/map",
+                      "@entity.categories",
+                      [
+                        "fn",
+                        "c",
+                        {
+                          "attempted": 0.0,
+                          "category": [
+                            "object/get",
+                            "@c",
+                            "value"
+                          ],
+                          "correct": 0.0,
+                          "label": [
+                            "object/get",
+                            "@c",
+                            "label"
+                          ]
+                        }
+                      ]
+                    ]
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "item",
+                        [
+                          "array/nth",
+                          "@entity.items",
+                          0.0
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.itemText",
+                        [
+                          "object/get",
+                          "@item",
+                          "text"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.itemHint",
+                        [
+                          "object/get",
+                          "@item",
+                          "hint",
+                          ""
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.itemExplanation",
+                        [
+                          "object/get",
+                          "@item",
+                          "explanation",
+                          ""
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.correctCategory",
+                        [
+                          "object/get",
+                          "@item",
+                          "category"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "categoryCount",
+                        [
+                          "array/len",
+                          "@entity.categories"
+                        ]
+                      ],
+                      [
+                        "marginX",
+                        30.0
+                      ],
+                      [
+                        "marginY",
+                        20.0
+                      ],
+                      [
+                        "plotWidth",
+                        [
+                          "-",
+                          "@config.width",
+                          [
+                            "*",
+                            "@marginX",
+                            2.0
+                          ]
+                        ]
+                      ],
+                      [
+                        "plotHeight",
+                        [
+                          "-",
+                          "@config.height",
+                          [
+                            "*",
+                            "@marginY",
+                            2.0
+                          ]
+                        ]
+                      ],
+                      [
+                        "plotBottom",
+                        [
+                          "-",
+                          "@config.height",
+                          "@marginY"
+                        ]
+                      ],
+                      [
+                        "tierHeight",
+                        [
+                          "/",
+                          "@plotHeight",
+                          "@categoryCount"
+                        ]
+                      ],
+                      [
+                        "maxWidth",
+                        [
+                          "*",
+                          "@plotWidth",
+                          0.95
+                        ]
+                      ],
+                      [
+                        "minWidth",
+                        [
+                          "-",
+                          "@maxWidth",
+                          [
+                            "*",
+                            "@config.taper",
+                            [
+                              "-",
+                              "@maxWidth",
+                              [
+                                "*",
+                                "@plotWidth",
+                                0.3
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "widthStep",
+                        [
+                          "/",
+                          [
+                            "-",
+                            "@maxWidth",
+                            "@minWidth"
+                          ],
+                          [
+                            "math/max",
+                            1.0,
+                            [
+                              "-",
+                              "@categoryCount",
+                              1.0
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "centerX",
+                        [
+                          "/",
+                          "@config.width",
+                          2.0
+                        ]
+                      ],
+                      [
+                        "revealed",
+                        [
+                          "!=",
+                          "@entity.selectedCategory",
+                          ""
+                        ]
+                      ],
+                      [
+                        "rects",
+                        [
+                          "array/flatten",
+                          [
+                            "array/map",
+                            [
+                              "array/range",
+                              "@categoryCount"
+                            ],
+                            [
+                              "fn",
+                              "i",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "category",
+                                    [
+                                      "array/nth",
+                                      "@entity.categories",
+                                      "@i"
+                                    ]
+                                  ],
+                                  [
+                                    "categoryValue",
+                                    [
+                                      "object/get",
+                                      "@category",
+                                      "value"
+                                    ]
+                                  ],
+                                  [
+                                    "w",
+                                    [
+                                      "-",
+                                      "@maxWidth",
+                                      [
+                                        "*",
+                                        "@i",
+                                        "@widthStep"
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "yTop",
+                                    [
+                                      "-",
+                                      "@plotBottom",
+                                      [
+                                        "*",
+                                        [
+                                          "+",
+                                          "@i",
+                                          1.0
+                                        ],
+                                        "@tierHeight"
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "x",
+                                    [
+                                      "-",
+                                      "@centerX",
+                                      [
+                                        "/",
+                                        "@w",
+                                        2.0
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "isCorrectCategory",
+                                    [
+                                      "==",
+                                      "@categoryValue",
+                                      "@entity.correctCategory"
+                                    ]
+                                  ],
+                                  [
+                                    "isSelectedCategory",
+                                    [
+                                      "==",
+                                      "@categoryValue",
+                                      "@entity.selectedCategory"
+                                    ]
+                                  ],
+                                  [
+                                    "fillColor",
+                                    [
+                                      "if",
+                                      [
+                                        "and",
+                                        "@revealed",
+                                        "@isCorrectCategory"
+                                      ],
+                                      "@config.correctColor",
+                                      [
+                                        "if",
+                                        [
+                                          "and",
+                                          "@revealed",
+                                          "@isSelectedCategory"
+                                        ],
+                                        "@config.incorrectColor",
+                                        [
+                                          "object/get",
+                                          "@category",
+                                          "color"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "baseRect",
+                                    {
+                                      "fillStyle": "tint",
+                                      "fillTone": "@fillColor",
+                                      "height": "@tierHeight",
+                                      "id": [
+                                        "str/concat",
+                                        "category-",
+                                        "@i"
+                                      ],
+                                      "tone": "@fillColor",
+                                      "type": "rect",
+                                      "width": "@w",
+                                      "x": "@x",
+                                      "y": "@yTop"
+                                    }
+                                  ]
+                                ],
+                                [
+                                  "if",
+                                  [
+                                    "and",
+                                    "@revealed",
+                                    "@isSelectedCategory"
+                                  ],
+                                  [
+                                    "@baseRect",
+                                    {
+                                      "fillStyle": "outline",
+                                      "height": "@tierHeight",
+                                      "id": [
+                                        "str/concat",
+                                        "category-pick-ring-",
+                                        "@i"
+                                      ],
+                                      "opacity": 1.0,
+                                      "stroke": "bold",
+                                      "tone": "ink",
+                                      "type": "rect",
+                                      "width": "@w",
+                                      "x": "@x",
+                                      "y": "@yTop"
+                                    }
+                                  ],
+                                  [
+                                    "@baseRect"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "labels",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@categoryCount"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "let",
+                              [
+                                [
+                                  "category",
+                                  [
+                                    "array/nth",
+                                    "@entity.categories",
+                                    "@i"
+                                  ]
+                                ],
+                                [
+                                  "yTop",
+                                  [
+                                    "-",
+                                    "@plotBottom",
+                                    [
+                                      "*",
+                                      [
+                                        "+",
+                                        "@i",
+                                        1.0
+                                      ],
+                                      "@tierHeight"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              {
+                                "align": "center",
+                                "id": [
+                                  "str/concat",
+                                  "category-label-",
+                                  "@i"
+                                ],
+                                "text": [
+                                  "object/get",
+                                  "@category",
+                                  "label"
+                                ],
+                                "textSize": "sm",
+                                "tone": "label",
+                                "type": "text",
+                                "x": "@centerX",
+                                "y": [
+                                  "+",
+                                  "@yTop",
+                                  [
+                                    "/",
+                                    "@tierHeight",
+                                    2.0
+                                  ],
+                                  5.0
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "backdropShapes",
+                        [
+                          "array/concat",
+                          "@rects",
+                          "@labels"
+                        ]
+                      ],
+                      [
+                        "summaryView",
+                        [
+                          {
+                            "content": "Round Complete",
+                            "type": "typography",
+                            "variant": "h4"
+                          },
+                          {
+                            "label": "Final Score",
+                            "max": "@entity.attemptedCount",
+                            "type": "stat-display",
+                            "value": "@entity.correctCount"
+                          },
+                          {
+                            "children": [
+                              "array/map",
+                              "@entity.categoryStats",
+                              [
+                                "fn",
+                                "s",
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    [
+                                      "object/get",
+                                      "@s",
+                                      "label"
+                                    ],
+                                    ": ",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      [
+                                        "object/get",
+                                        "@s",
+                                        "correct"
+                                      ]
+                                    ],
+                                    "/",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      [
+                                        "object/get",
+                                        "@s",
+                                        "attempted"
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ]
+                            ],
+                            "direction": "vertical",
+                            "gap": "xs",
+                            "type": "stack"
+                          },
+                          {
+                            "action": "RETRY",
+                            "icon": "rotate-ccw",
+                            "label": "@config.retryLabel",
+                            "type": "button",
+                            "variant": "primary"
+                          }
+                        ]
+                      ],
+                      [
+                        "itemView",
+                        [
+                          {
+                            "children": [
+                              "array/concat",
+                              [
+                                {
+                                  "content": "@entity.itemText",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              [
+                                "if",
+                                [
+                                  "and",
+                                  "@config.showHint",
+                                  [
+                                    "!=",
+                                    "@entity.itemHint",
+                                    ""
+                                  ]
+                                ],
+                                [
+                                  {
+                                    "color": "muted",
+                                    "content": "@entity.itemHint",
+                                    "type": "typography",
+                                    "variant": "caption"
+                                  }
+                                ],
+                                []
+                              ]
+                            ],
+                            "padding": "md",
+                            "type": "card",
+                            "variant": "bordered"
+                          },
+                          {
+                            "animate": "@config.animate",
+                            "backgroundColor": "@config.backgroundColor",
+                            "edges": [],
+                            "height": "@config.height",
+                            "interactive": "@config.interactive",
+                            "keyMap": {
+                              "ArrowRight": "ADVANCE",
+                              "KeyR": "RETRY",
+                              "Space": "TOGGLE_RUN"
+                            },
+                            "nodes": [],
+                            "shapes": "@backdropShapes",
+                            "type": "biology-canvas",
+                            "width": "@config.width"
+                          },
+                          {
+                            "children": [
+                              "let",
+                              [
+                                [
+                                  "itemOptions",
+                                  [
+                                    "object/get",
+                                    [
+                                      "array/nth",
+                                      "@entity.items",
+                                      "@entity.itemIndex"
+                                    ],
+                                    "options",
+                                    []
+                                  ]
+                                ],
+                                [
+                                  "locked",
+                                  [
+                                    "!=",
+                                    "@entity.selectedCategory",
+                                    ""
+                                  ]
+                                ]
+                              ],
+                              [
+                                "if",
+                                [
+                                  ">",
+                                  [
+                                    "array/len",
+                                    "@itemOptions"
+                                  ],
+                                  0.0
+                                ],
+                                [
+                                  "array/map",
+                                  "@itemOptions",
+                                  [
+                                    "fn",
+                                    "o",
+                                    {
+                                      "action": "PICK",
+                                      "actionPayload": {
+                                        "category": [
+                                          "object/get",
+                                          "@o",
+                                          "category"
+                                        ]
+                                      },
+                                      "disabled": "@locked",
+                                      "label": [
+                                        "object/get",
+                                        "@o",
+                                        "label"
+                                      ],
+                                      "size": "lg",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "not",
+                                          "@locked"
+                                        ],
+                                        "secondary",
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            [
+                                              "object/get",
+                                              "@o",
+                                              "category"
+                                            ],
+                                            "@entity.correctCategory"
+                                          ],
+                                          "success",
+                                          [
+                                            "if",
+                                            [
+                                              "==",
+                                              [
+                                                "object/get",
+                                                "@o",
+                                                "category"
+                                              ],
+                                              "@entity.selectedCategory"
+                                            ],
+                                            "danger",
+                                            "ghost"
+                                          ]
+                                        ]
+                                      ]
+                                    }
+                                  ]
+                                ],
+                                [
+                                  "array/map",
+                                  [
+                                    "array/reverse",
+                                    "@entity.categories"
+                                  ],
+                                  [
+                                    "fn",
+                                    "c",
+                                    {
+                                      "action": "PICK",
+                                      "actionPayload": {
+                                        "category": [
+                                          "object/get",
+                                          "@c",
+                                          "value"
+                                        ]
+                                      },
+                                      "disabled": "@locked",
+                                      "label": [
+                                        "object/get",
+                                        "@c",
+                                        "label"
+                                      ],
+                                      "size": "lg",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "not",
+                                          "@locked"
+                                        ],
+                                        "secondary",
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            [
+                                              "object/get",
+                                              "@c",
+                                              "value"
+                                            ],
+                                            "@entity.correctCategory"
+                                          ],
+                                          "success",
+                                          [
+                                            "if",
+                                            [
+                                              "==",
+                                              [
+                                                "object/get",
+                                                "@c",
+                                                "value"
+                                              ],
+                                              "@entity.selectedCategory"
+                                            ],
+                                            "danger",
+                                            "ghost"
+                                          ]
+                                        ]
+                                      ]
+                                    }
+                                  ]
+                                ]
+                              ]
+                            ],
+                            "direction": "vertical",
+                            "gap": "sm",
+                            "type": "stack"
+                          },
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@entity.verdict",
+                              ""
+                            ],
+                            null,
+                            {
+                              "children": [
+                                {
+                                  "label": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.verdict",
+                                      "correct"
+                                    ],
+                                    "Correct",
+                                    "Incorrect"
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.verdict",
+                                      "correct"
+                                    ],
+                                    "success",
+                                    "error"
+                                  ]
+                                },
+                                {
+                                  "content": "@entity.feedback",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            }
+                          ],
+                          {
+                            "align": "center",
+                            "children": [
+                              {
+                                "action": "ADVANCE",
+                                "disabled": [
+                                  "==",
+                                  "@entity.selectedCategory",
+                                  ""
+                                ],
+                                "icon": "chevron-right",
+                                "label": "@config.advanceLabel",
+                                "type": "button",
+                                "variant": "primary"
+                              },
+                              [
+                                "if",
+                                "@entity.running",
+                                {
+                                  "action": "TOGGLE_RUN",
+                                  "aria-pressed": "true",
+                                  "icon": "pause",
+                                  "label": "Pause",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "action": "TOGGLE_RUN",
+                                  "aria-pressed": "false",
+                                  "icon": "play",
+                                  "label": "Auto",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              [
+                                "if",
+                                [
+                                  ">",
+                                  "@config.passScore",
+                                  0.0
+                                ],
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Pass at ",
+                                    "@config.passScore"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                null
+                              ]
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack",
+                            "wrap": true
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.backdropShapes",
+                        "@backdropShapes"
+                      ],
+                      [
+                        "set",
+                        "@entity.roundView",
+                        [
+                          "if",
+                          "@entity.roundComplete",
+                          "@summaryView",
+                          "@itemView"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.roundComplete",
+                                    "Round complete",
+                                    [
+                                      "if",
+                                      [
+                                        "or",
+                                        [
+                                          "!=",
+                                          "@config.pointsPerCorrect",
+                                          1.0
+                                        ],
+                                        [
+                                          ">",
+                                          "@config.penaltyPerMiss",
+                                          0.0
+                                        ]
+                                      ],
+                                      [
+                                        "str/concat",
+                                        "Score ",
+                                        "@entity.score"
+                                      ],
+                                      [
+                                        "str/concat",
+                                        "@entity.correctCount",
+                                        " / ",
+                                        "@entity.attemptedCount",
+                                        " correct"
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.roundComplete",
+                                    "primary",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.verdict",
+                                        "correct"
+                                      ],
+                                      "success",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.verdict",
+                                          "incorrect"
+                                        ],
+                                        "error",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "label": [
+                                "str/concat",
+                                "Item ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  [
+                                    "+",
+                                    "@entity.itemIndex",
+                                    1.0
+                                  ]
+                                ],
+                                " of ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  "@entity.totalItems"
+                                ]
+                              ],
+                              "max": "@entity.totalItems",
+                              "showPercentage": false,
+                              "type": "progress-bar",
+                              "value": [
+                                "+",
+                                "@entity.itemIndex",
+                                1.0
+                              ]
+                            },
+                            {
+                              "children": "@entity.roundView",
+                              "direction": "vertical",
+                              "gap": "md",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459W76TQEW5K292QJWH96EB",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "and",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ],
+                    [
+                      "and",
+                      [
+                        ">",
+                        [
+                          "array/len",
+                          "@payload.items"
+                        ],
+                        0.0
+                      ],
+                      [
+                        ">",
+                        [
+                          "array/len",
+                          "@payload.categories"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459W76TQEW5K292QJWH96EB",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -3261,7 +4649,7 @@
                           "array/first",
                           [
                             "array/filter",
-                            "@config.categories",
+                            "@entity.categories",
                             [
                               "fn",
                               "c",
@@ -3470,7 +4858,7 @@
                         "categoryCount",
                         [
                           "array/len",
-                          "@config.categories"
+                          "@entity.categories"
                         ]
                       ],
                       [
@@ -3605,7 +4993,7 @@
                                     "category",
                                     [
                                       "array/nth",
-                                      "@config.categories",
+                                      "@entity.categories",
                                       "@i"
                                     ]
                                   ],
@@ -3771,7 +5159,7 @@
                                   "category",
                                   [
                                     "array/nth",
-                                    "@config.categories",
+                                    "@entity.categories",
                                     "@i"
                                   ]
                                 ],
@@ -3964,7 +5352,7 @@
                                     "object/get",
                                     [
                                       "array/nth",
-                                      "@config.items",
+                                      "@entity.items",
                                       "@entity.itemIndex"
                                     ],
                                     "options",
@@ -4025,7 +5413,7 @@
                                   "array/map",
                                   [
                                     "array/reverse",
-                                    "@config.categories"
+                                    "@entity.categories"
                                   ],
                                   [
                                     "fn",
@@ -4526,7 +5914,7 @@
                             "item",
                             [
                               "array/nth",
-                              "@config.items",
+                              "@entity.items",
                               "@nextIndex"
                             ]
                           ]
@@ -4602,7 +5990,7 @@
                         "categoryCount",
                         [
                           "array/len",
-                          "@config.categories"
+                          "@entity.categories"
                         ]
                       ],
                       [
@@ -4737,7 +6125,7 @@
                                     "category",
                                     [
                                       "array/nth",
-                                      "@config.categories",
+                                      "@entity.categories",
                                       "@i"
                                     ]
                                   ],
@@ -4903,7 +6291,7 @@
                                   "category",
                                   [
                                     "array/nth",
-                                    "@config.categories",
+                                    "@entity.categories",
                                     "@i"
                                   ]
                                 ],
@@ -5096,7 +6484,7 @@
                                     "object/get",
                                     [
                                       "array/nth",
-                                      "@config.items",
+                                      "@entity.items",
                                       "@entity.itemIndex"
                                     ],
                                     "options",
@@ -5157,7 +6545,7 @@
                                   "array/map",
                                   [
                                     "array/reverse",
-                                    "@config.categories"
+                                    "@entity.categories"
                                   ],
                                   [
                                     "fn",
@@ -5613,7 +7001,7 @@
                     "@entity.categoryStats",
                     [
                       "array/map",
-                      "@config.categories",
+                      "@entity.categories",
                       [
                         "fn",
                         "c",
@@ -5641,7 +7029,7 @@
                         "item",
                         [
                           "array/nth",
-                          "@config.items",
+                          "@entity.items",
                           0.0
                         ]
                       ]
@@ -5695,7 +7083,7 @@
                         "categoryCount",
                         [
                           "array/len",
-                          "@config.categories"
+                          "@entity.categories"
                         ]
                       ],
                       [
@@ -5830,7 +7218,7 @@
                                     "category",
                                     [
                                       "array/nth",
-                                      "@config.categories",
+                                      "@entity.categories",
                                       "@i"
                                     ]
                                   ],
@@ -5996,7 +7384,7 @@
                                   "category",
                                   [
                                     "array/nth",
-                                    "@config.categories",
+                                    "@entity.categories",
                                     "@i"
                                   ]
                                 ],
@@ -6189,7 +7577,7 @@
                                     "object/get",
                                     [
                                       "array/nth",
-                                      "@config.items",
+                                      "@entity.items",
                                       "@entity.itemIndex"
                                     ],
                                     "options",
@@ -6250,7 +7638,7 @@
                                   "array/map",
                                   [
                                     "array/reverse",
-                                    "@config.categories"
+                                    "@entity.categories"
                                   ],
                                   [
                                     "fn",

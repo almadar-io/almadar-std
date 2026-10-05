@@ -1,0 +1,550 @@
+app std-agent-proposal "1.0.0"
+"std-agent-proposal — an agent that reads what the person hands over, works out a structured proposal, and commits nothing until they approve it. The app starts it with PROPOSAL_REQUESTED { input, context } (any trait emitting it, or the person typing into the start form when `showInputForm` is on). A second std-agent-tool-loop answers with `instructions`, `prompt` and `tools` as the signed-in person — `quiet`, its reply and failure renamed PROPOSAL_LOOP_REPLIED / PROPOSAL_LOOP_FAILED so they never reach the assistant's chat — and submits its proposal through one declared input, PROPOSE (its @description is the tool text): a summary and a list of items, each a flat map of scalar values the app names. The person reviews it (the summary, the items drawn with `itemPattern` and `itemFields`) and chooses: Approve emits PROPOSAL_APPROVED { proposal } for the app to commit (the app owns the commit; this atom writes nothing); Revise sends their written feedback back to the agent, which proposes again; Discard emits PROPOSAL_DISCARDED. Cancel while the agent works aborts its model call and emits PROPOSAL_CANCELLED. A run that fails, or ends without proposing, shows its error with Retry and Discard. The panel renders into `panelSlot`. Import the orbital once per app: `orbital Proposal = Proposal.orbitals.AgentProposalOrbital { config { instructions: \"…\", prompt: \"…\", itemFields: […] } }`, restating `tools` with PROPOSE addressed by its local orbital name (`{ event: Proposal.AgentProposalWorkflow.PROPOSE }`). Instructions, prompts, item fields and labels are the app's vocabulary, declared in config."
+;; @capabilities "agent proposal, review before commit, human approval of agent output, approve or revise agent suggestions, structured proposal review, ai drafts for approval, extract then confirm"
+
+type AgentTool = {
+  event : event
+  read : string
+  scope : "declared"
+}
+type AgentChatMessage = {
+  role : "user" | "assistant"
+  content : string!
+}
+type ProposalField = {
+  name : string!
+  label : string
+  variant : string
+}
+type ProposalPayload = {
+  summary : string
+  items : [Map string scalar]
+}
+
+orbital AgentProposalOrbital {
+  uses Loop from "std/behaviors/std-agent-tool-loop"
+
+  config {
+    instructions : string = "You turn what the person hands over into one structured proposal. Look things up with the tools if you need to, then call the proposal tool exactly once with a short summary and the list of items. Do not call it again unless asked to revise."
+      @label "How should the agent behave?"
+      @description "Standing instructions sent with every run."
+      @synonyms "system prompt, persona, guidance"
+      @tier "domain"
+    prompt : string = "Work out a proposal from the following."
+      @label "What is the agent asked to do?"
+      @description "The request that precedes the person's input in every run."
+      @synonyms "task, goal, brief, question"
+      @tier "domain"
+    tools : [AgentTool] = [{ event: AgentProposalWorkflow.PROPOSE }]
+      @label "What may the agent do?"
+      @description "The declared inputs it may fire and the entities it may read, as the signed-in person. An importing app restates the list with PROPOSE addressed by its local orbital name, which the agent can never propose without."
+      @synonyms "allowlist, abilities, permissions"
+      @tier "domain"
+    maxSteps : number = 8
+      @label "Model round-trips per run"
+      @tier "policy"
+    itemPattern : pattern = data-list
+      @label "How are the proposed items drawn?"
+      @description "The pattern the review renders the items with; it receives `entity` (the items) and `fields`."
+      @synonyms "item layout, list pattern, table"
+      @tier "presentation"
+    itemFields : [ProposalField] = []
+      @label "Which item values are shown?"
+      @description "The item keys to show, each `{ name, label, variant }`."
+      @synonyms "columns, fields, attributes"
+      @tier "domain"
+    showInputForm : boolean = true
+      @label "Show a start form?"
+      @description "On, the idle panel lets the person type what the agent works from. Off, the panel renders nothing until the app starts it with PROPOSAL_REQUESTED."
+      @synonyms "start form, input box, manual start"
+      @tier "presentation"
+    title : string = "Proposal"
+      @label "Panel heading"
+      @tier "presentation"
+    icon : string = sparkles
+      @label "Panel icon"
+      @tier "presentation"
+    inputLabel : string = "What should the agent work from?"
+      @label "Start form label"
+      @tier "presentation"
+    startLabel : string = "Propose"
+      @label "Start button"
+      @tier "presentation"
+    workingLabel : string = "Working out a proposal…"
+      @label "While the agent works"
+      @tier "presentation"
+    summaryHeading : string = Summary
+      @label "Summary heading"
+      @tier "presentation"
+    itemsHeading : string = Items
+      @label "Items heading"
+      @tier "presentation"
+    feedbackLabel : string = "What should change?"
+      @label "Revision feedback label"
+      @tier "presentation"
+    approveLabel : string = Approve
+      @label "Approve button"
+      @tier "presentation"
+    reviseLabel : string = Revise
+      @label "Revise button"
+      @tier "presentation"
+    discardLabel : string = Discard
+      @label "Discard button"
+      @tier "presentation"
+    cancelLabel : string = Cancel
+      @label "Cancel button"
+      @tier "presentation"
+    retryLabel : string = Retry
+      @label "Retry button"
+      @tier "presentation"
+    panelSlot : slot = main
+      @label "Where the panel renders"
+      @description "`main` for the content of a page or launcher; `modal` or `drawer` for an overlay."
+      @tier "presentation"
+  }
+
+  entity AgentProposalRun [runtime] {
+    id : string!
+    input : string @description "What the person handed over." = ""
+    context : string @description "Extra background the app handed over." = ""
+    request : string @description "The request the agent is answering, with any revision feedback." = ""
+    feedback : string @description "What the person asked to change." = ""
+    summary : string @description "The proposal in a few lines." = ""
+    items : [Map string scalar] @description "The proposed items." = []
+    error : string @description "Why the last run failed." = ""
+  }
+
+  trait AgentProposalWorkflow -> AgentProposalRun [interaction] {
+    config {
+      heading : string = @config.title
+        @label "Panel heading"
+        @tier "presentation"
+      headingIcon : string = @config.icon
+        @label "Panel icon"
+        @tier "presentation"
+      framing : string = @config.prompt
+        @label "What is the agent asked to do?"
+        @description "The request that precedes the person's input."
+        @synonyms "task, goal, brief"
+        @tier "domain"
+      slot : slot = @config.panelSlot
+        @label "Where the panel renders"
+        @tier "internal"
+      withInputForm : boolean = @config.showInputForm
+        @label "Show a start form?"
+        @tier "presentation"
+      patternForItems : pattern = @config.itemPattern
+        @label "How are the proposed items drawn?"
+        @tier "presentation"
+      fieldsForItems : [ProposalField] = @config.itemFields
+        @label "Which item values are shown?"
+        @tier "domain"
+      inputText : string = @config.inputLabel
+        @label "Start form label"
+        @tier "presentation"
+      startButton : string = @config.startLabel
+        @label "Start button"
+        @tier "presentation"
+      workingText : string = @config.workingLabel
+        @label "While the agent works"
+        @tier "presentation"
+      summaryTitle : string = @config.summaryHeading
+        @label "Summary heading"
+        @tier "presentation"
+      itemsTitle : string = @config.itemsHeading
+        @label "Items heading"
+        @tier "presentation"
+      feedbackText : string = @config.feedbackLabel
+        @label "Revision feedback label"
+        @tier "presentation"
+      approveButton : string = @config.approveLabel
+        @label "Approve button"
+        @tier "presentation"
+      reviseButton : string = @config.reviseLabel
+        @label "Revise button"
+        @tier "presentation"
+      discardButton : string = @config.discardLabel
+        @label "Discard button"
+        @tier "presentation"
+      cancelButton : string = @config.cancelLabel
+        @label "Cancel button"
+        @tier "presentation"
+      retryButton : string = @config.retryLabel
+        @label "Retry button"
+        @tier "presentation"
+    }
+    initial: idle
+
+    state idle {
+      PROPOSE -> idle
+      INIT -> idle when @config.withInputForm
+        (render-ui @config.slot {
+          children: [{
+            align: center
+            children: [{ name: @config.headingIcon, size: lg, type: icon }, {
+              content: @config.heading
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            label: @config.inputText
+            onChange: INPUT_CHANGED
+            rows: 6
+            type: textarea
+          }, {
+            action: START_TYPED
+            icon: sparkles
+            label: @config.startButton
+            type: button
+            variant: primary
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      INIT -> idle when (not @config.withInputForm)
+      INPUT_CHANGED -> idle
+        (set @entity.input ?value)
+      CLOSE -> idle
+        (render-ui @config.slot null)
+      START_TYPED -> working when (!= (str/default @entity.input "") "")
+        (set @entity.context "")
+        (set @entity.request (str/concat @config.framing "\n\n" @entity.input))
+        (set @entity.feedback "")
+        (emit PROPOSAL_RUN_REQUESTED { messages: [{ role: user, content: @entity.request }] })
+        (render-ui @config.slot {
+          children: [{
+            align: center
+            children: [{ size: sm, type: spinner }, {
+              color: muted
+              content: @config.workingText
+              type: typography
+              variant: caption
+            }]
+            direction: horizontal
+            gap: sm
+            role: status
+            type: stack
+          }, {
+            action: CANCEL
+            icon: x
+            label: @config.cancelButton
+            type: button
+            variant: ghost
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      PROPOSAL_REQUESTED -> working
+        (set @entity.input ?input)
+        (set @entity.context (str/default ?context ""))
+        (set @entity.request (if ["=", (str/default ?context ""), ""] (str/concat @config.framing "\n\n" ?input) (str/concat @config.framing "\n\n" ?input "\n\nBackground:\n" ?context)))
+        (set @entity.feedback "")
+        (emit PROPOSAL_RUN_REQUESTED { messages: [{ role: user, content: @entity.request }] })
+        (render-ui @config.slot {
+          children: [{
+            align: center
+            children: [{ size: sm, type: spinner }, {
+              color: muted
+              content: @config.workingText
+              type: typography
+              variant: caption
+            }]
+            direction: horizontal
+            gap: sm
+            role: status
+            type: stack
+          }, {
+            action: CANCEL
+            icon: x
+            label: @config.cancelButton
+            type: button
+            variant: ghost
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
+    state working {
+      PROPOSE -> review
+        (set @entity.summary (str/default ?summary ""))
+        (set @entity.items ?items)
+        (render-ui @config.slot {
+          children: [{
+            align: center
+            children: [{ name: @config.headingIcon, size: lg, type: icon }, {
+              content: @config.heading
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            content: @config.summaryTitle
+            type: typography
+            variant: h4
+          }, {
+            content: @entity.summary
+            type: typography
+            variant: body
+          }, {
+            content: @config.itemsTitle
+            type: typography
+            variant: h4
+          }, {
+            entity: @entity.items
+            fields: @config.fieldsForItems
+            gap: sm
+            type: @config.patternForItems
+          }, { type: divider }, {
+            label: @config.feedbackText
+            onChange: FEEDBACK_CHANGED
+            rows: 3
+            type: textarea
+          }, {
+            align: center
+            children: [{
+              action: APPROVE
+              icon: check
+              label: @config.approveButton
+              type: button
+              variant: primary
+            }, {
+              action: REVISE
+              icon: refresh-cw
+              label: @config.reviseButton
+              type: button
+              variant: secondary
+            }, {
+              action: DISCARD
+              icon: x
+              label: @config.discardButton
+              type: button
+              variant: ghost
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+            wrap: true
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      PROPOSAL_LOOP_REPLIED -> failed
+        (set @entity.error "The agent finished without making a proposal.")
+        (render-ui @config.slot {
+          children: [{
+            message: @entity.error
+            type: alert
+            variant: error
+          }, {
+            align: center
+            children: [{
+              action: RETRY
+              icon: refresh-cw
+              label: @config.retryButton
+              type: button
+              variant: primary
+            }, {
+              action: DISCARD
+              icon: x
+              label: @config.discardButton
+              type: button
+              variant: ghost
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      PROPOSAL_LOOP_FAILED -> failed
+        (set @entity.error ?error)
+        (render-ui @config.slot {
+          children: [{
+            message: @entity.error
+            type: alert
+            variant: error
+          }, {
+            align: center
+            children: [{
+              action: RETRY
+              icon: refresh-cw
+              label: @config.retryButton
+              type: button
+              variant: primary
+            }, {
+              action: DISCARD
+              icon: x
+              label: @config.discardButton
+              type: button
+              variant: ghost
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      CANCEL -> idle when (== @config.slot main)
+        (emit PROPOSAL_CANCELLED {})
+      CANCEL -> idle when (!= @config.slot main)
+        (emit PROPOSAL_CANCELLED {})
+        (render-ui @config.slot null)
+      CLOSE -> idle
+        (emit PROPOSAL_CANCELLED {})
+        (render-ui @config.slot null)
+    }
+
+    state review {
+      FEEDBACK_CHANGED -> review
+        (set @entity.feedback ?value)
+      PROPOSE -> review
+        (set @entity.summary (str/default ?summary ""))
+        (set @entity.items ?items)
+      APPROVE -> idle when (== @config.slot main)
+        (emit PROPOSAL_APPROVED { proposal: { summary: @entity.summary, items: @entity.items } })
+      APPROVE -> idle when (!= @config.slot main)
+        (emit PROPOSAL_APPROVED { proposal: { summary: @entity.summary, items: @entity.items } })
+        (render-ui @config.slot null)
+      REVISE -> working when (!= (str/default @entity.feedback "") "")
+        (set @entity.request (str/concat @entity.request "\n\nYour earlier proposal:\n" (json/stringify { summary: @entity.summary, items: @entity.items }) "\n\nRevise it: " @entity.feedback))
+        (emit PROPOSAL_RUN_REQUESTED { messages: [{ role: user, content: @entity.request }] })
+        (set @entity.feedback "")
+      REVISE -> review when (= (str/default @entity.feedback "") "")
+        (notify warning "Say what should change before asking for a revision.")
+      DISCARD -> idle when (== @config.slot main)
+        (emit PROPOSAL_DISCARDED {})
+      DISCARD -> idle when (!= @config.slot main)
+        (emit PROPOSAL_DISCARDED {})
+        (render-ui @config.slot null)
+      CLOSE -> idle
+        (emit PROPOSAL_DISCARDED {})
+        (render-ui @config.slot null)
+    }
+
+    state failed {
+      RETRY -> working
+        (emit PROPOSAL_RUN_REQUESTED { messages: [{ role: user, content: @entity.request }] })
+      DISCARD -> idle when (== @config.slot main)
+        (emit PROPOSAL_DISCARDED {})
+      DISCARD -> idle when (!= @config.slot main)
+        (emit PROPOSAL_DISCARDED {})
+        (render-ui @config.slot null)
+      CLOSE -> idle
+        (emit PROPOSAL_DISCARDED {})
+        (render-ui @config.slot null)
+    }
+
+    emits {
+      PROPOSAL_APPROVED -> external {
+        proposal : ProposalPayload!
+      }
+        @description "The person approved the proposal as it stands. The app commits it; nothing has been written."
+        @synonyms "approved, accepted, confirmed, go ahead, commit"
+        @tier "domain"
+      PROPOSAL_DISCARDED -> external {
+      }
+        @description "The person discarded the proposal (or a failed run); nothing was committed."
+        @synonyms "rejected, dismissed, thrown away"
+        @tier "domain"
+      PROPOSAL_CANCELLED -> external {
+      }
+        @description "The person cancelled while the agent was still working; its model call was aborted."
+        @synonyms "stopped, aborted"
+        @tier "domain"
+      PROPOSAL_RUN_REQUESTED -> external {
+        messages : [AgentChatMessage]!
+      }
+        @description "The agent was asked to work out (or revise) a proposal."
+        @synonyms "run started, working"
+        @tier "domain"
+    }
+
+    listens {
+      PROPOSAL_REQUESTED {
+        input : string!
+        context : string
+      }
+        @description "Work out a proposal from this: the documents or text the person handed over, and optional background."
+        @synonyms "start, propose, analyze, extract, begin"
+      PROPOSE -> external {
+        summary : string
+        items : [Map string scalar]!
+      }
+        @description "Submit the proposal for the person to review: a short summary and the list of proposed items, each a flat map of values. Call it once with everything; the person approves, asks for a revision, or discards it."
+        @synonyms "propose, submit proposal, draft"
+      INPUT_CHANGED {
+        value : string
+      }
+        @description "The start form's text changed."
+      FEEDBACK_CHANGED {
+        value : string
+      }
+        @description "The revision feedback changed."
+      AgentProposalLoop.PROPOSAL_LOOP_REPLIED -> PROPOSAL_LOOP_REPLIED
+      AgentProposalLoop.PROPOSAL_LOOP_FAILED -> PROPOSAL_LOOP_FAILED
+      PROPOSAL_LOOP_REPLIED {
+        reply : string
+      }
+        @description "The agent's run ended."
+      PROPOSAL_LOOP_FAILED {
+        error : string
+      }
+        @description "The agent's run failed."
+      CANCEL {
+      }
+        @description "Cancel the agent's work."
+      CLOSE {
+      }
+        @description "The overlay's own close control was used: cancels the agent's work while it runs, discards the proposal otherwise."
+      APPROVE {
+      }
+        @description "Approve the proposal."
+      REVISE {
+      }
+        @description "Ask for a revision with the written feedback."
+      DISCARD {
+      }
+        @description "Discard the proposal."
+      RETRY {
+      }
+        @description "Run the agent again."
+      START_TYPED {
+      }
+        @description "Start from the text typed into the start form."
+    }
+  }
+
+  trait AgentProposalLoop = Loop.traits.AgentToolLoop {
+    config {
+      tools: @config.tools
+      instructions: @config.instructions
+      maxSteps: @config.maxSteps
+      quiet: true
+      cancelKey: "agent-proposal"
+    }
+    events {
+      ASSISTANT_REPLIED: PROPOSAL_LOOP_REPLIED
+      ASSISTANT_REPLY_FAILED: PROPOSAL_LOOP_FAILED
+    }
+    listens {
+      AgentProposalWorkflow.PROPOSAL_RUN_REQUESTED -> CONVERSE
+      AgentProposalWorkflow.PROPOSAL_CANCELLED -> CANCEL
+    }
+  }
+
+  page "/agent-proposal" as AgentProposalPage -> AgentProposalWorkflow, AgentProposalLoop
+}

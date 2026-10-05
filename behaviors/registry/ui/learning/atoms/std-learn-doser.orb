@@ -100,6 +100,15 @@
         "parent": "trt_01M0CGZ8SPD6WYV3H0J6SV7NBD",
         "renames": []
       },
+      "evt_01M459WM1T8AZZEB24MTT1XDT1": {
+        "bakedName": "ROSTER_LOADED",
+        "curName": "ROSTER_LOADED",
+        "id": "evt_01M459WM1T8AZZEB24MTT1XDT1",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0CGZ8SPD6WYV3H0J6SV7NBD",
+        "renames": []
+      },
       "orb_01M0CGZ8SPVWFV0VMERY7EXKM3": {
         "bakedName": "LearnDoserOrbital",
         "curName": "LearnDoserOrbital",
@@ -270,6 +279,35 @@
             },
             "name": "doseSeries",
             "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "terminal": {
+                  "name": "terminal",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "upperBound": {
+                  "name": "upperBound",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "bands",
+            "type": "array"
           }
         ],
         "id": "ent_01M0CGZ8SP7WAX9ZZT3E63FRWT",
@@ -407,6 +445,17 @@
               "tier": "presentation",
               "type": "string"
             },
+            "rosterSource": {
+              "default": "config",
+              "description": "Where the band roster comes from: config reads the bands knob at INIT; event waits for ROSTER_LOADED and takes the roster from its payload.",
+              "label": "Roster Source",
+              "tier": "domain",
+              "type": "string",
+              "values": [
+                "config",
+                "event"
+              ]
+            },
             "series": {
               "default": [],
               "description": "Overrides the theme's categorical palette on the canvas (series-1…N) — a subject's real-world color convention, such as indicator colors. Empty uses the theme's palette.",
@@ -526,6 +575,10 @@
             {
               "kind": "set",
               "resource": "@entity.bandLabel"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.bands"
             },
             {
               "kind": "set",
@@ -658,6 +711,7 @@
               "active",
               "bandColor",
               "bandLabel",
+              "bands",
               "containers",
               "done",
               "dose",
@@ -695,6 +749,46 @@
                   {
                     "name": "mode",
                     "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and bands is the band roster; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
+                "id": "evt_01M459WM1T8AZZEB24MTT1XDT1",
+                "key": "ROSTER_LOADED",
+                "name": "Roster Loaded",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "bands",
+                    "properties": [
+                      {
+                        "name": "upperBound",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "color",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "terminal",
+                        "type": "boolean"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
                   }
                 ],
                 "tier": "domain"
@@ -819,6 +913,11 @@
                   ],
                   [
                     "set",
+                    "@entity.bands",
+                    "@config.bands"
+                  ],
+                  [
+                    "set",
                     "@entity.dose",
                     0.0
                   ],
@@ -844,7 +943,7 @@
                         "matched",
                         [
                           "array/filter",
-                          "@config.bands",
+                          "@entity.bands",
                           [
                             "fn",
                             "b",
@@ -878,12 +977,12 @@
                           ],
                           [
                             "array/nth",
-                            "@config.bands",
+                            "@entity.bands",
                             [
                               "-",
                               [
                                 "array/len",
-                                "@config.bands"
+                                "@entity.bands"
                               ],
                               1.0
                             ]
@@ -1582,9 +1681,17 @@
                 "eventId": "evt_01M0CGZ8SPH5C42ESXGKNMKQMQ",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@config.matchMode",
-                  ""
+                  "and",
+                  [
+                    "==",
+                    "@config.matchMode",
+                    ""
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1644,6 +1751,11 @@
                   ],
                   [
                     "set",
+                    "@entity.bands",
+                    "@config.bands"
+                  ],
+                  [
+                    "set",
                     "@entity.dose",
                     0.0
                   ],
@@ -1669,7 +1781,7 @@
                         "matched",
                         [
                           "array/filter",
-                          "@config.bands",
+                          "@entity.bands",
                           [
                             "fn",
                             "b",
@@ -1703,12 +1815,12 @@
                           ],
                           [
                             "array/nth",
-                            "@config.bands",
+                            "@entity.bands",
                             [
                               "-",
                               [
                                 "array/len",
-                                "@config.bands"
+                                "@entity.bands"
                               ],
                               1.0
                             ]
@@ -2407,9 +2519,17 @@
                 "eventId": "evt_01M0CGZ8SPCJWD38ZCMJGGA4EF",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@payload.mode",
-                  "@config.matchMode"
+                  "and",
+                  [
+                    "==",
+                    "@payload.mode",
+                    "@config.matchMode"
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
                 ],
                 "to": "idle"
               },
@@ -2417,16 +2537,38 @@
                 "effects": [
                   [
                     "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.bands",
+                    "@payload.bands"
+                  ],
+                  [
+                    "set",
                     "@entity.dose",
-                    [
-                      "math/min",
-                      [
-                        "+",
-                        "@entity.dose",
-                        "@config.stepSmall"
-                      ],
-                      "@config.capacity"
-                    ]
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.done",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.autoDrip"
+                  ],
+                  [
+                    "set",
+                    "@entity.elapsedMs",
+                    0.0
                   ],
                   [
                     "let",
@@ -2435,7 +2577,7 @@
                         "matched",
                         [
                           "array/filter",
-                          "@config.bands",
+                          "@entity.bands",
                           [
                             "fn",
                             "b",
@@ -2469,12 +2611,836 @@
                           ],
                           [
                             "array/nth",
-                            "@config.bands",
+                            "@entity.bands",
                             [
                               "-",
                               [
                                 "array/len",
-                                "@config.bands"
+                                "@entity.bands"
+                              ],
+                              1.0
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.bandLabel",
+                        [
+                          "object/get",
+                          "@band",
+                          "label"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.bandColor",
+                        [
+                          "object/get",
+                          "@band",
+                          "color"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.done",
+                        [
+                          "if",
+                          [
+                            "object/get",
+                            "@band",
+                            "terminal",
+                            false
+                          ],
+                          true,
+                          "@entity.done"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.containers",
+                    [
+                      {
+                        "divider": "none",
+                        "height": [
+                          "*",
+                          "@config.height",
+                          0.6
+                        ],
+                        "label": "@config.reservoirLabel",
+                        "level": [
+                          "math/clamp",
+                          [
+                            "/",
+                            "@entity.dose",
+                            "@config.capacity"
+                          ],
+                          0.0,
+                          1.0
+                        ],
+                        "levelColor": "@entity.bandColor",
+                        "width": [
+                          "*",
+                          "@config.width",
+                          0.28
+                        ],
+                        "x": [
+                          "*",
+                          "@config.width",
+                          0.12
+                        ],
+                        "y": [
+                          "*",
+                          "@config.height",
+                          0.3
+                        ]
+                      },
+                      {
+                        "divider": "none",
+                        "height": [
+                          "*",
+                          "@config.height",
+                          0.55
+                        ],
+                        "label": "@config.sourceLabel",
+                        "level": [
+                          "math/clamp",
+                          [
+                            "/",
+                            [
+                              "-",
+                              "@config.capacity",
+                              "@entity.dose"
+                            ],
+                            "@config.capacity"
+                          ],
+                          0.0,
+                          1.0
+                        ],
+                        "levelColor": "@config.sourceColor",
+                        "width": [
+                          "*",
+                          "@config.width",
+                          0.06
+                        ],
+                        "x": [
+                          "*",
+                          "@config.width",
+                          0.58
+                        ],
+                        "y": [
+                          "*",
+                          "@config.height",
+                          0.05
+                        ]
+                      }
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.readouts",
+                    [
+                      {
+                        "label": "@config.quantityLabel",
+                        "value": [
+                          "str/concat",
+                          "",
+                          [
+                            "math/round",
+                            "@entity.dose",
+                            2.0
+                          ]
+                        ]
+                      },
+                      {
+                        "label": "@config.zoneReadoutLabel",
+                        "value": "@entity.bandLabel"
+                      }
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.doseSeries",
+                    [
+                      {
+                        "x": 0.0,
+                        "y": "@entity.dose"
+                      }
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.narration",
+                    [
+                      "str/concat",
+                      "@config.quantityLabel",
+                      [
+                        "str/concat",
+                        " at ",
+                        [
+                          "str/concat",
+                          [
+                            "str/concat",
+                            "",
+                            [
+                              "math/round",
+                              "@entity.dose",
+                              2.0
+                            ]
+                          ],
+                          [
+                            "str/concat",
+                            " — ",
+                            "@entity.bandLabel"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "if",
+                    "@config.showCanvas",
+                    [
+                      "render-ui",
+                      "main",
+                      {
+                        "children": [
+                          {
+                            "children": [
+                              {
+                                "align": "start",
+                                "children": [
+                                  {
+                                    "children": [
+                                      {
+                                        "content": "@entity.title",
+                                        "type": "typography",
+                                        "variant": "h4"
+                                      },
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@config.summary",
+                                          ""
+                                        ],
+                                        null,
+                                        {
+                                          "color": "muted",
+                                          "content": "@config.summary",
+                                          "type": "typography",
+                                          "variant": "body2"
+                                        }
+                                      ]
+                                    ],
+                                    "direction": "vertical",
+                                    "gap": "xs",
+                                    "type": "stack"
+                                  },
+                                  {
+                                    "label": [
+                                      "if",
+                                      "@entity.done",
+                                      "Locked",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "Auto-dosing",
+                                        "Ready"
+                                      ]
+                                    ],
+                                    "type": "badge",
+                                    "variant": [
+                                      "if",
+                                      "@entity.done",
+                                      "warning",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "primary",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  }
+                                ],
+                                "direction": "horizontal",
+                                "gap": "md",
+                                "justify": "between",
+                                "type": "stack"
+                              },
+                              {
+                                "align": "center",
+                                "children": [
+                                  {
+                                    "action": "ADD_SMALL",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
+                                    "label": [
+                                      "str/concat",
+                                      "Add ",
+                                      [
+                                        "str/concat",
+                                        [
+                                          "str/concat",
+                                          "",
+                                          "@config.stepSmall"
+                                        ],
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@config.unit",
+                                            ""
+                                          ],
+                                          "",
+                                          [
+                                            "str/concat",
+                                            " ",
+                                            "@config.unit"
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    "type": "button",
+                                    "variant": "primary"
+                                  },
+                                  {
+                                    "action": "ADD_LARGE",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
+                                    "label": [
+                                      "str/concat",
+                                      "Add ",
+                                      [
+                                        "str/concat",
+                                        [
+                                          "str/concat",
+                                          "",
+                                          "@config.stepLarge"
+                                        ],
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@config.unit",
+                                            ""
+                                          ],
+                                          "",
+                                          [
+                                            "str/concat",
+                                            " ",
+                                            "@config.unit"
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  },
+                                  [
+                                    "if",
+                                    "@entity.running",
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "true",
+                                      "icon": "pause",
+                                      "label": "Pause",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    },
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "false",
+                                      "disabled": "@entity.done",
+                                      "icon": "play",
+                                      "label": "Auto-dose",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    }
+                                  ],
+                                  {
+                                    "action": "RESET",
+                                    "icon": "rotate-ccw",
+                                    "label": "Reset",
+                                    "type": "button",
+                                    "variant": "ghost"
+                                  },
+                                  {
+                                    "color": "muted",
+                                    "content": [
+                                      "str/concat",
+                                      "@config.quantityLabel",
+                                      [
+                                        "str/concat",
+                                        " ",
+                                        [
+                                          "str/concat",
+                                          [
+                                            "str/concat",
+                                            "",
+                                            [
+                                              "math/round",
+                                              "@entity.dose",
+                                              2.0
+                                            ]
+                                          ],
+                                          [
+                                            "str/concat",
+                                            " of ",
+                                            [
+                                              "str/concat",
+                                              [
+                                                "str/concat",
+                                                "",
+                                                "@config.capacity"
+                                              ],
+                                              [
+                                                "if",
+                                                [
+                                                  "==",
+                                                  "@config.unit",
+                                                  ""
+                                                ],
+                                                "",
+                                                [
+                                                  "str/concat",
+                                                  " ",
+                                                  "@config.unit"
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    "type": "typography",
+                                    "variant": "caption"
+                                  }
+                                ],
+                                "direction": "horizontal",
+                                "gap": "sm",
+                                "type": "stack",
+                                "wrap": true
+                              },
+                              {
+                                "backgroundColor": "@config.backgroundColor",
+                                "containers": "@entity.containers",
+                                "height": "@config.height",
+                                "keyMap": {
+                                  "KeyR": "RESET",
+                                  "Space": "TOGGLE_DRIP"
+                                },
+                                "readouts": "@entity.readouts",
+                                "series": "@config.series",
+                                "traces": [
+                                  {
+                                    "series": [
+                                      {
+                                        "label": "@config.quantityLabel",
+                                        "samples": "@entity.doseSeries"
+                                      }
+                                    ],
+                                    "xLabel": "step",
+                                    "yLabel": "@config.quantityLabel"
+                                  }
+                                ],
+                                "type": "chemistry-canvas",
+                                "width": "@config.width"
+                              },
+                              {
+                                "content": "@entity.narration",
+                                "type": "typography",
+                                "variant": "body"
+                              }
+                            ],
+                            "direction": "vertical",
+                            "gap": "md",
+                            "type": "stack"
+                          }
+                        ],
+                        "padding": "md",
+                        "type": "box"
+                      }
+                    ],
+                    [
+                      "render-ui",
+                      "main",
+                      {
+                        "children": [
+                          {
+                            "children": [
+                              {
+                                "align": "start",
+                                "children": [
+                                  {
+                                    "children": [
+                                      {
+                                        "content": "@entity.title",
+                                        "type": "typography",
+                                        "variant": "h4"
+                                      },
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@config.summary",
+                                          ""
+                                        ],
+                                        null,
+                                        {
+                                          "color": "muted",
+                                          "content": "@config.summary",
+                                          "type": "typography",
+                                          "variant": "body2"
+                                        }
+                                      ]
+                                    ],
+                                    "direction": "vertical",
+                                    "gap": "xs",
+                                    "type": "stack"
+                                  },
+                                  {
+                                    "label": [
+                                      "if",
+                                      "@entity.done",
+                                      "Locked",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "Auto-dosing",
+                                        "Ready"
+                                      ]
+                                    ],
+                                    "type": "badge",
+                                    "variant": [
+                                      "if",
+                                      "@entity.done",
+                                      "warning",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "primary",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  }
+                                ],
+                                "direction": "horizontal",
+                                "gap": "md",
+                                "justify": "between",
+                                "type": "stack"
+                              },
+                              {
+                                "align": "center",
+                                "children": [
+                                  {
+                                    "action": "ADD_SMALL",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
+                                    "label": [
+                                      "str/concat",
+                                      "Add ",
+                                      [
+                                        "str/concat",
+                                        [
+                                          "str/concat",
+                                          "",
+                                          "@config.stepSmall"
+                                        ],
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@config.unit",
+                                            ""
+                                          ],
+                                          "",
+                                          [
+                                            "str/concat",
+                                            " ",
+                                            "@config.unit"
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    "type": "button",
+                                    "variant": "primary"
+                                  },
+                                  {
+                                    "action": "ADD_LARGE",
+                                    "disabled": "@entity.done",
+                                    "icon": "plus",
+                                    "label": [
+                                      "str/concat",
+                                      "Add ",
+                                      [
+                                        "str/concat",
+                                        [
+                                          "str/concat",
+                                          "",
+                                          "@config.stepLarge"
+                                        ],
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@config.unit",
+                                            ""
+                                          ],
+                                          "",
+                                          [
+                                            "str/concat",
+                                            " ",
+                                            "@config.unit"
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  },
+                                  [
+                                    "if",
+                                    "@entity.running",
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "true",
+                                      "icon": "pause",
+                                      "label": "Pause",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    },
+                                    {
+                                      "action": "TOGGLE_DRIP",
+                                      "aria-pressed": "false",
+                                      "disabled": "@entity.done",
+                                      "icon": "play",
+                                      "label": "Auto-dose",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    }
+                                  ],
+                                  {
+                                    "action": "RESET",
+                                    "icon": "rotate-ccw",
+                                    "label": "Reset",
+                                    "type": "button",
+                                    "variant": "ghost"
+                                  },
+                                  {
+                                    "color": "muted",
+                                    "content": [
+                                      "str/concat",
+                                      "@config.quantityLabel",
+                                      [
+                                        "str/concat",
+                                        " ",
+                                        [
+                                          "str/concat",
+                                          [
+                                            "str/concat",
+                                            "",
+                                            [
+                                              "math/round",
+                                              "@entity.dose",
+                                              2.0
+                                            ]
+                                          ],
+                                          [
+                                            "str/concat",
+                                            " of ",
+                                            [
+                                              "str/concat",
+                                              [
+                                                "str/concat",
+                                                "",
+                                                "@config.capacity"
+                                              ],
+                                              [
+                                                "if",
+                                                [
+                                                  "==",
+                                                  "@config.unit",
+                                                  ""
+                                                ],
+                                                "",
+                                                [
+                                                  "str/concat",
+                                                  " ",
+                                                  "@config.unit"
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    "type": "typography",
+                                    "variant": "caption"
+                                  }
+                                ],
+                                "direction": "horizontal",
+                                "gap": "sm",
+                                "type": "stack",
+                                "wrap": true
+                              }
+                            ],
+                            "direction": "vertical",
+                            "gap": "md",
+                            "type": "stack"
+                          }
+                        ],
+                        "padding": "md",
+                        "type": "box"
+                      }
+                    ]
+                  ],
+                  [
+                    "emit",
+                    "DOSER_UPDATED",
+                    {
+                      "bandLabel": "@entity.bandLabel",
+                      "done": "@entity.done",
+                      "dose": "@entity.dose",
+                      "running": "@entity.running"
+                    }
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459WM1T8AZZEB24MTT1XDT1",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "and",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ],
+                    [
+                      ">",
+                      [
+                        "array/len",
+                        "@payload.bands"
+                      ],
+                      0.0
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459WM1T8AZZEB24MTT1XDT1",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.dose",
+                    [
+                      "math/min",
+                      [
+                        "+",
+                        "@entity.dose",
+                        "@config.stepSmall"
+                      ],
+                      "@config.capacity"
+                    ]
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "matched",
+                        [
+                          "array/filter",
+                          "@entity.bands",
+                          [
+                            "fn",
+                            "b",
+                            [
+                              "<=",
+                              "@entity.dose",
+                              [
+                                "object/get",
+                                "@b",
+                                "upperBound"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "band",
+                        [
+                          "if",
+                          [
+                            ">",
+                            [
+                              "array/len",
+                              "@matched"
+                            ],
+                            0.0
+                          ],
+                          [
+                            "array/first",
+                            "@matched"
+                          ],
+                          [
+                            "array/nth",
+                            "@entity.bands",
+                            [
+                              "-",
+                              [
+                                "array/len",
+                                "@entity.bands"
                               ],
                               1.0
                             ]
@@ -3245,7 +4211,7 @@
                         "matched",
                         [
                           "array/filter",
-                          "@config.bands",
+                          "@entity.bands",
                           [
                             "fn",
                             "b",
@@ -3279,12 +4245,12 @@
                           ],
                           [
                             "array/nth",
-                            "@config.bands",
+                            "@entity.bands",
                             [
                               "-",
                               [
                                 "array/len",
-                                "@config.bands"
+                                "@entity.bands"
                               ],
                               1.0
                             ]
@@ -4601,7 +5567,7 @@
                         "matched",
                         [
                           "array/filter",
-                          "@config.bands",
+                          "@entity.bands",
                           [
                             "fn",
                             "b",
@@ -4635,12 +5601,12 @@
                           ],
                           [
                             "array/nth",
-                            "@config.bands",
+                            "@entity.bands",
                             [
                               "-",
                               [
                                 "array/len",
-                                "@config.bands"
+                                "@entity.bands"
                               ],
                               1.0
                             ]

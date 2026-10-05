@@ -492,6 +492,59 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
             'name': 'working',
             'type': 'boolean',
           },
+          {
+            'default': '',
+            'description': 'The ephemeral conversation\'s own instructions (empty: the assistant\'s configured ones).',
+            'name': 'chatInstructions',
+            'type': 'string',
+          },
+          {
+            'default': [],
+            'description': 'The ephemeral conversation\'s own tools (empty: none).',
+            'items': {
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'event',
+                },
+                'read': {
+                  'name': 'read',
+                  'required': false,
+                  'type': 'string',
+                },
+                'scope': {
+                  'name': 'scope',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'declared',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'chatTools',
+            'type': 'array',
+          },
+          {
+            'default': '',
+            'description': 'The ephemeral conversation\'s header title.',
+            'name': 'chatTitle',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'The ephemeral conversation\'s header subtitle.',
+            'name': 'chatSubtitle',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'The ephemeral conversation\'s header avatar image.',
+            'name': 'chatAvatar',
+            'type': 'string',
+          },
         ],
         'name': 'AgentConversationView',
         'persistence': 'runtime',
@@ -1257,6 +1310,14 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
             'tier': 'presentation',
             'type': 'string',
           },
+          'ephemeral': {
+            'default': false,
+            'description': 'A self-contained conversation: it runs under the instructions, tools, greeting and header the app starts it with (ASSISTANT_CHAT_START), is never stored among the person\'s conversations or remembered, shows no conversation, past-chat or memory buttons, and ignores the assistant\'s own replies.',
+            'label': 'Ephemeral conversation?',
+            'synonyms': 'private, one-off, scoped chat, own persona, not saved',
+            'tier': 'domain',
+            'type': 'boolean',
+          },
           'links': {
             'default': [
               {
@@ -1328,6 +1389,10 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
           },
           {
             'kind': 'emit',
+            'resource': 'ASSISTANT_EPHEMERAL_SEND',
+          },
+          {
+            'kind': 'emit',
             'resource': 'ASSISTANT_HISTORY_REQUESTED',
           },
           {
@@ -1345,6 +1410,26 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
           {
             'kind': 'render-ui',
             'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.chatAvatar',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.chatInstructions',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.chatSubtitle',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.chatTitle',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.chatTools',
           },
           {
             'kind': 'set',
@@ -1375,6 +1460,61 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
             'event': 'NEW_CHAT_CLICKED',
             'synonyms': 'new chat, start over, clear',
             'tier': 'presentation',
+          },
+          {
+            'description': 'An ephemeral conversation asked something: the whole conversation so far (greeting included), and its own `instructions` and `tools`. Nothing is stored or remembered; the assistant answers under exactly these.',
+            'event': 'ASSISTANT_EPHEMERAL_SEND',
+            'payloadSchema': [
+              {
+                'entity': 'AgentChatMessage',
+                'name': 'messages',
+                'properties': [
+                  {
+                    'name': 'role',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'content',
+                    'required': true,
+                    'type': 'string',
+                  },
+                ],
+                'required': true,
+                'type': '[object]',
+              },
+              {
+                'name': 'instructions',
+                'type': 'string',
+              },
+              {
+                'entity': 'AgentTool',
+                'name': 'tools',
+                'properties': [
+                  {
+                    'name': 'event',
+                    'type': 'event',
+                  },
+                  {
+                    'name': 'read',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'scope',
+                    'type': 'string',
+                  },
+                ],
+                'type': '[object]',
+              },
+              {
+                'name': 'ephemeral',
+                'required': true,
+                'type': 'boolean',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'ask privately, scoped ask',
+            'tier': 'domain',
           },
           {
             'description': 'The user asked something; AgentThread stores it and asks the assistant.',
@@ -1475,6 +1615,11 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
         ],
         'entityContract': {
           'provides': [
+            'chatAvatar',
+            'chatInstructions',
+            'chatSubtitle',
+            'chatTitle',
+            'chatTools',
             'entries',
             'working',
           ],
@@ -1532,6 +1677,13 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
             },
             'triggers': 'MEMORIES_LISTED',
           },
+          {
+            'event': 'ASSISTANT_CHAT_START',
+            'source': {
+              'kind': 'any',
+            },
+            'triggers': 'START_CHAT',
+          },
         ],
         'name': 'AgentConversation',
         'scope': 'instance',
@@ -1583,6 +1735,52 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
               'tier': 'presentation',
             },
             {
+              'description': 'Start an ephemeral conversation (only on an AgentConversation whose `ephemeral` knob is on): it opens with `greeting` as the assistant\'s first message under a header of `title`, `subtitle` and `avatar` (an image URL), and every ask runs under `instructions` (empty: the assistant\'s configured ones) and exactly `tools` (absent or `[]`: none). Ignored while it is answering.',
+              'key': 'START_CHAT',
+              'name': 'Start Chat',
+              'payloadSchema': [
+                {
+                  'name': 'greeting',
+                  'type': 'string',
+                },
+                {
+                  'name': 'instructions',
+                  'type': 'string',
+                },
+                {
+                  'name': 'tools',
+                  'properties': [
+                    {
+                      'name': 'event',
+                      'type': 'event',
+                    },
+                    {
+                      'name': 'read',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'scope',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': '[object]',
+                },
+                {
+                  'name': 'title',
+                  'type': 'string',
+                },
+                {
+                  'name': 'subtitle',
+                  'type': 'string',
+                },
+                {
+                  'name': 'avatar',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'open private chat, begin scoped conversation',
+            },
+            {
               'description': 'One step the assistant just took, shown as it happens.',
               'key': 'STEP',
               'name': 'Step',
@@ -1604,6 +1802,10 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'name': 'reply',
                   'required': true,
                   'type': 'string',
+                },
+                {
+                  'name': 'ephemeral',
+                  'type': 'boolean',
                 },
               ],
             },
@@ -1726,6 +1928,10 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'required': true,
                   'type': 'string',
                 },
+                {
+                  'name': 'ephemeral',
+                  'type': 'boolean',
+                },
               ],
             },
             {
@@ -1740,6 +1946,61 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
               'key': 'ASSISTANT_NEW_CHAT',
               'name': 'Assistant New Chat',
               'synonyms': 'new chat, new conversation, start over',
+              'tier': 'domain',
+            },
+            {
+              'description': 'An ephemeral conversation asked something: the whole conversation so far (greeting included), and its own `instructions` and `tools`. Nothing is stored or remembered; the assistant answers under exactly these.',
+              'key': 'ASSISTANT_EPHEMERAL_SEND',
+              'name': 'Assistant Ephemeral Send',
+              'payloadSchema': [
+                {
+                  'entity': 'AgentChatMessage',
+                  'name': 'messages',
+                  'properties': [
+                    {
+                      'name': 'role',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'content',
+                      'required': true,
+                      'type': 'string',
+                    },
+                  ],
+                  'required': true,
+                  'type': '[object]',
+                },
+                {
+                  'name': 'instructions',
+                  'type': 'string',
+                },
+                {
+                  'entity': 'AgentTool',
+                  'name': 'tools',
+                  'properties': [
+                    {
+                      'name': 'event',
+                      'type': 'event',
+                    },
+                    {
+                      'name': 'read',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'scope',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': '[object]',
+                },
+                {
+                  'name': 'ephemeral',
+                  'required': true,
+                  'type': 'boolean',
+                },
+              ],
+              'synonyms': 'ask privately, scoped ask',
               'tier': 'domain',
             },
             {
@@ -1804,71 +2065,122 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'main',
                   {
                     'children': [
-                      {
-                        'align': 'center',
-                        'children': [
-                          {
-                            'action': 'NEW_CHAT_CLICKED',
-                            'aria-label': '@config.newChatLabel',
-                            'icon': 'message-square-plus',
-                            'label': '@config.newChatLabel',
-                            'size': 'sm',
-                            'type': 'button',
-                            'variant': 'secondary',
-                          },
-                          {
-                            'align': 'center',
-                            'children': [
-                              {
-                                'action': 'OPEN_CHATS_CLICKED',
-                                'aria-label': '@config.chatsLabel',
-                                'label': '@config.chatsLabel',
-                                'size': 'sm',
-                                'type': 'button',
-                                'variant': 'ghost',
-                              },
-                              {
-                                'action': 'OPEN_MEMORY_CLICKED',
-                                'aria-label': '@config.memoryLabel',
-                                'label': '@config.memoryLabel',
-                                'size': 'sm',
-                                'type': 'button',
-                                'variant': 'ghost',
-                              },
-                              {
-                                'children': [
-                                  'array/map',
-                                  '@config.links',
-                                  [
-                                    'fn',
-                                    'item',
-                                    {
-                                      'href': '@item.href',
-                                      'label': '@item.label',
-                                      'size': 'sm',
-                                      'type': 'button',
-                                      'variant': 'ghost',
-                                    },
-                                  ],
+                      [
+                        'if',
+                        '@config.ephemeral',
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'className': [
+                                'if',
+                                [
+                                  '=',
+                                  '@entity.chatAvatar',
+                                  '',
                                 ],
-                                'direction': 'horizontal',
-                                'gap': 'xs',
-                                'type': 'stack',
-                              },
-                            ],
-                            'className': 'shrink-0',
-                            'direction': 'horizontal',
-                            'gap': 'none',
-                            'type': 'stack',
-                          },
-                        ],
-                        'className': 'shrink-0',
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'justify': 'between',
-                        'type': 'stack',
-                        'wrap': true,
-                      },
+                                'hidden',
+                                '',
+                              ],
+                              'name': '@entity.chatTitle',
+                              'size': 'md',
+                              'src': [
+                                'object/get',
+                                '@entity',
+                                'chatAvatar',
+                                '',
+                              ],
+                              'type': 'avatar',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'content': '@entity.chatTitle',
+                                  'type': 'typography',
+                                  'variant': 'h4',
+                                },
+                                {
+                                  'content': '@entity.chatSubtitle',
+                                  'type': 'typography',
+                                  'variant': 'caption',
+                                },
+                              ],
+                              'direction': 'vertical',
+                              'gap': 'none',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'action': 'NEW_CHAT_CLICKED',
+                              'aria-label': '@config.newChatLabel',
+                              'icon': 'message-square-plus',
+                              'label': '@config.newChatLabel',
+                              'size': 'sm',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                            {
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'action': 'OPEN_CHATS_CLICKED',
+                                  'aria-label': '@config.chatsLabel',
+                                  'label': '@config.chatsLabel',
+                                  'size': 'sm',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'action': 'OPEN_MEMORY_CLICKED',
+                                  'aria-label': '@config.memoryLabel',
+                                  'label': '@config.memoryLabel',
+                                  'size': 'sm',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'children': [
+                                    'array/map',
+                                    '@config.links',
+                                    [
+                                      'fn',
+                                      'item',
+                                      {
+                                        'href': '@item.href',
+                                        'label': '@item.label',
+                                        'size': 'sm',
+                                        'type': 'button',
+                                        'variant': 'ghost',
+                                      },
+                                    ],
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'xs',
+                                  'type': 'stack',
+                                },
+                              ],
+                              'className': 'shrink-0',
+                              'direction': 'horizontal',
+                              'gap': 'none',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'justify': 'between',
+                          'type': 'stack',
+                          'wrap': true,
+                        },
+                      ],
                       {
                         'activities': '@entity.entries',
                         'className': 'flex-1',
@@ -1893,6 +2205,160 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
               ],
               'event': 'INIT',
               'from': 'idle',
+              'guard': [
+                'not',
+                '@config.ephemeral',
+              ],
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      [
+                        'if',
+                        '@config.ephemeral',
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'className': [
+                                'if',
+                                [
+                                  '=',
+                                  '@entity.chatAvatar',
+                                  '',
+                                ],
+                                'hidden',
+                                '',
+                              ],
+                              'name': '@entity.chatTitle',
+                              'size': 'md',
+                              'src': [
+                                'object/get',
+                                '@entity',
+                                'chatAvatar',
+                                '',
+                              ],
+                              'type': 'avatar',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'content': '@entity.chatTitle',
+                                  'type': 'typography',
+                                  'variant': 'h4',
+                                },
+                                {
+                                  'content': '@entity.chatSubtitle',
+                                  'type': 'typography',
+                                  'variant': 'caption',
+                                },
+                              ],
+                              'direction': 'vertical',
+                              'gap': 'none',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'action': 'NEW_CHAT_CLICKED',
+                              'aria-label': '@config.newChatLabel',
+                              'icon': 'message-square-plus',
+                              'label': '@config.newChatLabel',
+                              'size': 'sm',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                            {
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'action': 'OPEN_CHATS_CLICKED',
+                                  'aria-label': '@config.chatsLabel',
+                                  'label': '@config.chatsLabel',
+                                  'size': 'sm',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'action': 'OPEN_MEMORY_CLICKED',
+                                  'aria-label': '@config.memoryLabel',
+                                  'label': '@config.memoryLabel',
+                                  'size': 'sm',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'children': [
+                                    'array/map',
+                                    '@config.links',
+                                    [
+                                      'fn',
+                                      'item',
+                                      {
+                                        'href': '@item.href',
+                                        'label': '@item.label',
+                                        'size': 'sm',
+                                        'type': 'button',
+                                        'variant': 'ghost',
+                                      },
+                                    ],
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'xs',
+                                  'type': 'stack',
+                                },
+                              ],
+                              'className': 'shrink-0',
+                              'direction': 'horizontal',
+                              'gap': 'none',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'justify': 'between',
+                          'type': 'stack',
+                          'wrap': true,
+                        },
+                      ],
+                      {
+                        'activities': '@entity.entries',
+                        'className': 'flex-1',
+                        'emptyTitle': '@config.emptyTitle',
+                        'idPrefix': 'agent-conversation',
+                        'rawLlmPreferenceKey': 'agent-conversation-raw-llm',
+                        'type': 'agent-chat-feed',
+                        'working': '@entity.working',
+                      },
+                      {
+                        'placeholder': '@config.placeholder',
+                        'sendEvent': 'ASK',
+                        'type': 'chat-bar',
+                      },
+                    ],
+                    'className': 'h-full min-h-0 flex-1',
+                    'direction': 'vertical',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'guard': '@config.ephemeral',
               'to': 'idle',
             },
             {
@@ -1925,71 +2391,122 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'main',
                   {
                     'children': [
-                      {
-                        'align': 'center',
-                        'children': [
-                          {
-                            'action': 'NEW_CHAT_CLICKED',
-                            'aria-label': '@config.newChatLabel',
-                            'icon': 'message-square-plus',
-                            'label': '@config.newChatLabel',
-                            'size': 'sm',
-                            'type': 'button',
-                            'variant': 'secondary',
-                          },
-                          {
-                            'align': 'center',
-                            'children': [
-                              {
-                                'action': 'OPEN_CHATS_CLICKED',
-                                'aria-label': '@config.chatsLabel',
-                                'label': '@config.chatsLabel',
-                                'size': 'sm',
-                                'type': 'button',
-                                'variant': 'ghost',
-                              },
-                              {
-                                'action': 'OPEN_MEMORY_CLICKED',
-                                'aria-label': '@config.memoryLabel',
-                                'label': '@config.memoryLabel',
-                                'size': 'sm',
-                                'type': 'button',
-                                'variant': 'ghost',
-                              },
-                              {
-                                'children': [
-                                  'array/map',
-                                  '@config.links',
-                                  [
-                                    'fn',
-                                    'item',
-                                    {
-                                      'href': '@item.href',
-                                      'label': '@item.label',
-                                      'size': 'sm',
-                                      'type': 'button',
-                                      'variant': 'ghost',
-                                    },
-                                  ],
+                      [
+                        'if',
+                        '@config.ephemeral',
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'className': [
+                                'if',
+                                [
+                                  '=',
+                                  '@entity.chatAvatar',
+                                  '',
                                 ],
-                                'direction': 'horizontal',
-                                'gap': 'xs',
-                                'type': 'stack',
-                              },
-                            ],
-                            'className': 'shrink-0',
-                            'direction': 'horizontal',
-                            'gap': 'none',
-                            'type': 'stack',
-                          },
-                        ],
-                        'className': 'shrink-0',
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'justify': 'between',
-                        'type': 'stack',
-                        'wrap': true,
-                      },
+                                'hidden',
+                                '',
+                              ],
+                              'name': '@entity.chatTitle',
+                              'size': 'md',
+                              'src': [
+                                'object/get',
+                                '@entity',
+                                'chatAvatar',
+                                '',
+                              ],
+                              'type': 'avatar',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'content': '@entity.chatTitle',
+                                  'type': 'typography',
+                                  'variant': 'h4',
+                                },
+                                {
+                                  'content': '@entity.chatSubtitle',
+                                  'type': 'typography',
+                                  'variant': 'caption',
+                                },
+                              ],
+                              'direction': 'vertical',
+                              'gap': 'none',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'action': 'NEW_CHAT_CLICKED',
+                              'aria-label': '@config.newChatLabel',
+                              'icon': 'message-square-plus',
+                              'label': '@config.newChatLabel',
+                              'size': 'sm',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                            {
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'action': 'OPEN_CHATS_CLICKED',
+                                  'aria-label': '@config.chatsLabel',
+                                  'label': '@config.chatsLabel',
+                                  'size': 'sm',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'action': 'OPEN_MEMORY_CLICKED',
+                                  'aria-label': '@config.memoryLabel',
+                                  'label': '@config.memoryLabel',
+                                  'size': 'sm',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'children': [
+                                    'array/map',
+                                    '@config.links',
+                                    [
+                                      'fn',
+                                      'item',
+                                      {
+                                        'href': '@item.href',
+                                        'label': '@item.label',
+                                        'size': 'sm',
+                                        'type': 'button',
+                                        'variant': 'ghost',
+                                      },
+                                    ],
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'xs',
+                                  'type': 'stack',
+                                },
+                              ],
+                              'className': 'shrink-0',
+                              'direction': 'horizontal',
+                              'gap': 'none',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'justify': 'between',
+                          'type': 'stack',
+                          'wrap': true,
+                        },
+                      ],
                       {
                         'activities': '@entity.entries',
                         'className': 'flex-1',
@@ -2014,6 +2531,10 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
               ],
               'event': 'THREAD_LOADED',
               'from': 'idle',
+              'guard': [
+                'not',
+                '@config.ephemeral',
+              ],
               'to': 'idle',
             },
             {
@@ -2049,71 +2570,122 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'main',
                   {
                     'children': [
-                      {
-                        'align': 'center',
-                        'children': [
-                          {
-                            'action': 'NEW_CHAT_CLICKED',
-                            'aria-label': '@config.newChatLabel',
-                            'icon': 'message-square-plus',
-                            'label': '@config.newChatLabel',
-                            'size': 'sm',
-                            'type': 'button',
-                            'variant': 'secondary',
-                          },
-                          {
-                            'align': 'center',
-                            'children': [
-                              {
-                                'action': 'OPEN_CHATS_CLICKED',
-                                'aria-label': '@config.chatsLabel',
-                                'label': '@config.chatsLabel',
-                                'size': 'sm',
-                                'type': 'button',
-                                'variant': 'ghost',
-                              },
-                              {
-                                'action': 'OPEN_MEMORY_CLICKED',
-                                'aria-label': '@config.memoryLabel',
-                                'label': '@config.memoryLabel',
-                                'size': 'sm',
-                                'type': 'button',
-                                'variant': 'ghost',
-                              },
-                              {
-                                'children': [
-                                  'array/map',
-                                  '@config.links',
-                                  [
-                                    'fn',
-                                    'item',
-                                    {
-                                      'href': '@item.href',
-                                      'label': '@item.label',
-                                      'size': 'sm',
-                                      'type': 'button',
-                                      'variant': 'ghost',
-                                    },
-                                  ],
+                      [
+                        'if',
+                        '@config.ephemeral',
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'className': [
+                                'if',
+                                [
+                                  '=',
+                                  '@entity.chatAvatar',
+                                  '',
                                 ],
-                                'direction': 'horizontal',
-                                'gap': 'xs',
-                                'type': 'stack',
-                              },
-                            ],
-                            'className': 'shrink-0',
-                            'direction': 'horizontal',
-                            'gap': 'none',
-                            'type': 'stack',
-                          },
-                        ],
-                        'className': 'shrink-0',
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'justify': 'between',
-                        'type': 'stack',
-                        'wrap': true,
-                      },
+                                'hidden',
+                                '',
+                              ],
+                              'name': '@entity.chatTitle',
+                              'size': 'md',
+                              'src': [
+                                'object/get',
+                                '@entity',
+                                'chatAvatar',
+                                '',
+                              ],
+                              'type': 'avatar',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'content': '@entity.chatTitle',
+                                  'type': 'typography',
+                                  'variant': 'h4',
+                                },
+                                {
+                                  'content': '@entity.chatSubtitle',
+                                  'type': 'typography',
+                                  'variant': 'caption',
+                                },
+                              ],
+                              'direction': 'vertical',
+                              'gap': 'none',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'action': 'NEW_CHAT_CLICKED',
+                              'aria-label': '@config.newChatLabel',
+                              'icon': 'message-square-plus',
+                              'label': '@config.newChatLabel',
+                              'size': 'sm',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                            {
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'action': 'OPEN_CHATS_CLICKED',
+                                  'aria-label': '@config.chatsLabel',
+                                  'label': '@config.chatsLabel',
+                                  'size': 'sm',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'action': 'OPEN_MEMORY_CLICKED',
+                                  'aria-label': '@config.memoryLabel',
+                                  'label': '@config.memoryLabel',
+                                  'size': 'sm',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'children': [
+                                    'array/map',
+                                    '@config.links',
+                                    [
+                                      'fn',
+                                      'item',
+                                      {
+                                        'href': '@item.href',
+                                        'label': '@item.label',
+                                        'size': 'sm',
+                                        'type': 'button',
+                                        'variant': 'ghost',
+                                      },
+                                    ],
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'xs',
+                                  'type': 'stack',
+                                },
+                              ],
+                              'className': 'shrink-0',
+                              'direction': 'horizontal',
+                              'gap': 'none',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'justify': 'between',
+                          'type': 'stack',
+                          'wrap': true,
+                        },
+                      ],
                       {
                         'activities': '@entity.entries',
                         'className': 'flex-1',
@@ -2142,6 +2714,10 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                 'and',
                 [
                   'not',
+                  '@config.ephemeral',
+                ],
+                [
+                  'not',
                   '@entity.working',
                 ],
                 [
@@ -2167,6 +2743,455 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   [
                     'array/append',
                     '@entity.entries',
+                    {
+                      'content': '@payload.message',
+                      'role': 'user',
+                      'timestamp': '@now',
+                      'type': 'message',
+                    },
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.working',
+                  true,
+                ],
+                [
+                  'emit',
+                  'ASSISTANT_EPHEMERAL_SEND',
+                  {
+                    'ephemeral': true,
+                    'instructions': '@entity.chatInstructions',
+                    'messages': [
+                      'array/map',
+                      [
+                        'array/filter',
+                        '@entity.entries',
+                        [
+                          'fn',
+                          'item',
+                          [
+                            '=',
+                            '@item.type',
+                            'message',
+                          ],
+                        ],
+                      ],
+                      [
+                        'fn',
+                        'item',
+                        {
+                          'content': '@item.content',
+                          'role': '@item.role',
+                        },
+                      ],
+                    ],
+                    'tools': '@entity.chatTools',
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      [
+                        'if',
+                        '@config.ephemeral',
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'className': [
+                                'if',
+                                [
+                                  '=',
+                                  '@entity.chatAvatar',
+                                  '',
+                                ],
+                                'hidden',
+                                '',
+                              ],
+                              'name': '@entity.chatTitle',
+                              'size': 'md',
+                              'src': [
+                                'object/get',
+                                '@entity',
+                                'chatAvatar',
+                                '',
+                              ],
+                              'type': 'avatar',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'content': '@entity.chatTitle',
+                                  'type': 'typography',
+                                  'variant': 'h4',
+                                },
+                                {
+                                  'content': '@entity.chatSubtitle',
+                                  'type': 'typography',
+                                  'variant': 'caption',
+                                },
+                              ],
+                              'direction': 'vertical',
+                              'gap': 'none',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'action': 'NEW_CHAT_CLICKED',
+                              'aria-label': '@config.newChatLabel',
+                              'icon': 'message-square-plus',
+                              'label': '@config.newChatLabel',
+                              'size': 'sm',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                            {
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'action': 'OPEN_CHATS_CLICKED',
+                                  'aria-label': '@config.chatsLabel',
+                                  'label': '@config.chatsLabel',
+                                  'size': 'sm',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'action': 'OPEN_MEMORY_CLICKED',
+                                  'aria-label': '@config.memoryLabel',
+                                  'label': '@config.memoryLabel',
+                                  'size': 'sm',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'children': [
+                                    'array/map',
+                                    '@config.links',
+                                    [
+                                      'fn',
+                                      'item',
+                                      {
+                                        'href': '@item.href',
+                                        'label': '@item.label',
+                                        'size': 'sm',
+                                        'type': 'button',
+                                        'variant': 'ghost',
+                                      },
+                                    ],
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'xs',
+                                  'type': 'stack',
+                                },
+                              ],
+                              'className': 'shrink-0',
+                              'direction': 'horizontal',
+                              'gap': 'none',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'justify': 'between',
+                          'type': 'stack',
+                          'wrap': true,
+                        },
+                      ],
+                      {
+                        'activities': '@entity.entries',
+                        'className': 'flex-1',
+                        'emptyTitle': '@config.emptyTitle',
+                        'idPrefix': 'agent-conversation',
+                        'rawLlmPreferenceKey': 'agent-conversation-raw-llm',
+                        'type': 'agent-chat-feed',
+                        'working': '@entity.working',
+                      },
+                      {
+                        'placeholder': '@config.placeholder',
+                        'sendEvent': 'ASK',
+                        'type': 'chat-bar',
+                      },
+                    ],
+                    'className': 'h-full min-h-0 flex-1',
+                    'direction': 'vertical',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'ASK',
+              'from': 'idle',
+              'guard': [
+                'and',
+                '@config.ephemeral',
+                [
+                  'not',
+                  '@entity.working',
+                ],
+                [
+                  'not',
+                  [
+                    '=',
+                    [
+                      'str/default',
+                      '@payload.message',
+                      '',
+                    ],
+                    '',
+                  ],
+                ],
+              ],
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.entries',
+                  [
+                    'if',
+                    [
+                      '=',
+                      [
+                        'str/default',
+                        '@payload.greeting',
+                        '',
+                      ],
+                      '',
+                    ],
+                    [],
+                    [
+                      {
+                        'content': '@payload.greeting',
+                        'role': 'assistant',
+                        'timestamp': '@now',
+                        'type': 'message',
+                      },
+                    ],
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.chatInstructions',
+                  [
+                    'str/default',
+                    '@payload.instructions',
+                    '',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.chatTools',
+                  [
+                    'object/get',
+                    '@payload',
+                    'tools',
+                    [],
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.chatTitle',
+                  [
+                    'str/default',
+                    '@payload.title',
+                    '',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.chatSubtitle',
+                  [
+                    'str/default',
+                    '@payload.subtitle',
+                    '',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.chatAvatar',
+                  [
+                    'str/default',
+                    '@payload.avatar',
+                    '',
+                  ],
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      [
+                        'if',
+                        '@config.ephemeral',
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'className': [
+                                'if',
+                                [
+                                  '=',
+                                  '@entity.chatAvatar',
+                                  '',
+                                ],
+                                'hidden',
+                                '',
+                              ],
+                              'name': '@entity.chatTitle',
+                              'size': 'md',
+                              'src': [
+                                'object/get',
+                                '@entity',
+                                'chatAvatar',
+                                '',
+                              ],
+                              'type': 'avatar',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'content': '@entity.chatTitle',
+                                  'type': 'typography',
+                                  'variant': 'h4',
+                                },
+                                {
+                                  'content': '@entity.chatSubtitle',
+                                  'type': 'typography',
+                                  'variant': 'caption',
+                                },
+                              ],
+                              'direction': 'vertical',
+                              'gap': 'none',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'action': 'NEW_CHAT_CLICKED',
+                              'aria-label': '@config.newChatLabel',
+                              'icon': 'message-square-plus',
+                              'label': '@config.newChatLabel',
+                              'size': 'sm',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                            {
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'action': 'OPEN_CHATS_CLICKED',
+                                  'aria-label': '@config.chatsLabel',
+                                  'label': '@config.chatsLabel',
+                                  'size': 'sm',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'action': 'OPEN_MEMORY_CLICKED',
+                                  'aria-label': '@config.memoryLabel',
+                                  'label': '@config.memoryLabel',
+                                  'size': 'sm',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'children': [
+                                    'array/map',
+                                    '@config.links',
+                                    [
+                                      'fn',
+                                      'item',
+                                      {
+                                        'href': '@item.href',
+                                        'label': '@item.label',
+                                        'size': 'sm',
+                                        'type': 'button',
+                                        'variant': 'ghost',
+                                      },
+                                    ],
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'xs',
+                                  'type': 'stack',
+                                },
+                              ],
+                              'className': 'shrink-0',
+                              'direction': 'horizontal',
+                              'gap': 'none',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'justify': 'between',
+                          'type': 'stack',
+                          'wrap': true,
+                        },
+                      ],
+                      {
+                        'activities': '@entity.entries',
+                        'className': 'flex-1',
+                        'emptyTitle': '@config.emptyTitle',
+                        'idPrefix': 'agent-conversation',
+                        'rawLlmPreferenceKey': 'agent-conversation-raw-llm',
+                        'type': 'agent-chat-feed',
+                        'working': '@entity.working',
+                      },
+                      {
+                        'placeholder': '@config.placeholder',
+                        'sendEvent': 'ASK',
+                        'type': 'chat-bar',
+                      },
+                    ],
+                    'className': 'h-full min-h-0 flex-1',
+                    'direction': 'vertical',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'START_CHAT',
+              'from': 'idle',
+              'guard': [
+                'and',
+                '@config.ephemeral',
+                [
+                  'not',
+                  '@entity.working',
+                ],
+              ],
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.entries',
+                  [
+                    'array/append',
+                    '@entity.entries',
                     '@payload.activity',
                   ],
                 ],
@@ -2175,71 +3200,122 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'main',
                   {
                     'children': [
-                      {
-                        'align': 'center',
-                        'children': [
-                          {
-                            'action': 'NEW_CHAT_CLICKED',
-                            'aria-label': '@config.newChatLabel',
-                            'icon': 'message-square-plus',
-                            'label': '@config.newChatLabel',
-                            'size': 'sm',
-                            'type': 'button',
-                            'variant': 'secondary',
-                          },
-                          {
-                            'align': 'center',
-                            'children': [
-                              {
-                                'action': 'OPEN_CHATS_CLICKED',
-                                'aria-label': '@config.chatsLabel',
-                                'label': '@config.chatsLabel',
-                                'size': 'sm',
-                                'type': 'button',
-                                'variant': 'ghost',
-                              },
-                              {
-                                'action': 'OPEN_MEMORY_CLICKED',
-                                'aria-label': '@config.memoryLabel',
-                                'label': '@config.memoryLabel',
-                                'size': 'sm',
-                                'type': 'button',
-                                'variant': 'ghost',
-                              },
-                              {
-                                'children': [
-                                  'array/map',
-                                  '@config.links',
-                                  [
-                                    'fn',
-                                    'item',
-                                    {
-                                      'href': '@item.href',
-                                      'label': '@item.label',
-                                      'size': 'sm',
-                                      'type': 'button',
-                                      'variant': 'ghost',
-                                    },
-                                  ],
+                      [
+                        'if',
+                        '@config.ephemeral',
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'className': [
+                                'if',
+                                [
+                                  '=',
+                                  '@entity.chatAvatar',
+                                  '',
                                 ],
-                                'direction': 'horizontal',
-                                'gap': 'xs',
-                                'type': 'stack',
-                              },
-                            ],
-                            'className': 'shrink-0',
-                            'direction': 'horizontal',
-                            'gap': 'none',
-                            'type': 'stack',
-                          },
-                        ],
-                        'className': 'shrink-0',
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'justify': 'between',
-                        'type': 'stack',
-                        'wrap': true,
-                      },
+                                'hidden',
+                                '',
+                              ],
+                              'name': '@entity.chatTitle',
+                              'size': 'md',
+                              'src': [
+                                'object/get',
+                                '@entity',
+                                'chatAvatar',
+                                '',
+                              ],
+                              'type': 'avatar',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'content': '@entity.chatTitle',
+                                  'type': 'typography',
+                                  'variant': 'h4',
+                                },
+                                {
+                                  'content': '@entity.chatSubtitle',
+                                  'type': 'typography',
+                                  'variant': 'caption',
+                                },
+                              ],
+                              'direction': 'vertical',
+                              'gap': 'none',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'action': 'NEW_CHAT_CLICKED',
+                              'aria-label': '@config.newChatLabel',
+                              'icon': 'message-square-plus',
+                              'label': '@config.newChatLabel',
+                              'size': 'sm',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                            {
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'action': 'OPEN_CHATS_CLICKED',
+                                  'aria-label': '@config.chatsLabel',
+                                  'label': '@config.chatsLabel',
+                                  'size': 'sm',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'action': 'OPEN_MEMORY_CLICKED',
+                                  'aria-label': '@config.memoryLabel',
+                                  'label': '@config.memoryLabel',
+                                  'size': 'sm',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'children': [
+                                    'array/map',
+                                    '@config.links',
+                                    [
+                                      'fn',
+                                      'item',
+                                      {
+                                        'href': '@item.href',
+                                        'label': '@item.label',
+                                        'size': 'sm',
+                                        'type': 'button',
+                                        'variant': 'ghost',
+                                      },
+                                    ],
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'xs',
+                                  'type': 'stack',
+                                },
+                              ],
+                              'className': 'shrink-0',
+                              'direction': 'horizontal',
+                              'gap': 'none',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'justify': 'between',
+                          'type': 'stack',
+                          'wrap': true,
+                        },
+                      ],
                       {
                         'activities': '@entity.entries',
                         'className': 'flex-1',
@@ -2264,6 +3340,10 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
               ],
               'event': 'STEP',
               'from': 'idle',
+              'guard': [
+                'not',
+                '@config.ephemeral',
+              ],
               'to': 'idle',
             },
             {
@@ -2292,71 +3372,122 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'main',
                   {
                     'children': [
-                      {
-                        'align': 'center',
-                        'children': [
-                          {
-                            'action': 'NEW_CHAT_CLICKED',
-                            'aria-label': '@config.newChatLabel',
-                            'icon': 'message-square-plus',
-                            'label': '@config.newChatLabel',
-                            'size': 'sm',
-                            'type': 'button',
-                            'variant': 'secondary',
-                          },
-                          {
-                            'align': 'center',
-                            'children': [
-                              {
-                                'action': 'OPEN_CHATS_CLICKED',
-                                'aria-label': '@config.chatsLabel',
-                                'label': '@config.chatsLabel',
-                                'size': 'sm',
-                                'type': 'button',
-                                'variant': 'ghost',
-                              },
-                              {
-                                'action': 'OPEN_MEMORY_CLICKED',
-                                'aria-label': '@config.memoryLabel',
-                                'label': '@config.memoryLabel',
-                                'size': 'sm',
-                                'type': 'button',
-                                'variant': 'ghost',
-                              },
-                              {
-                                'children': [
-                                  'array/map',
-                                  '@config.links',
-                                  [
-                                    'fn',
-                                    'item',
-                                    {
-                                      'href': '@item.href',
-                                      'label': '@item.label',
-                                      'size': 'sm',
-                                      'type': 'button',
-                                      'variant': 'ghost',
-                                    },
-                                  ],
+                      [
+                        'if',
+                        '@config.ephemeral',
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'className': [
+                                'if',
+                                [
+                                  '=',
+                                  '@entity.chatAvatar',
+                                  '',
                                 ],
-                                'direction': 'horizontal',
-                                'gap': 'xs',
-                                'type': 'stack',
-                              },
-                            ],
-                            'className': 'shrink-0',
-                            'direction': 'horizontal',
-                            'gap': 'none',
-                            'type': 'stack',
-                          },
-                        ],
-                        'className': 'shrink-0',
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'justify': 'between',
-                        'type': 'stack',
-                        'wrap': true,
-                      },
+                                'hidden',
+                                '',
+                              ],
+                              'name': '@entity.chatTitle',
+                              'size': 'md',
+                              'src': [
+                                'object/get',
+                                '@entity',
+                                'chatAvatar',
+                                '',
+                              ],
+                              'type': 'avatar',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'content': '@entity.chatTitle',
+                                  'type': 'typography',
+                                  'variant': 'h4',
+                                },
+                                {
+                                  'content': '@entity.chatSubtitle',
+                                  'type': 'typography',
+                                  'variant': 'caption',
+                                },
+                              ],
+                              'direction': 'vertical',
+                              'gap': 'none',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'action': 'NEW_CHAT_CLICKED',
+                              'aria-label': '@config.newChatLabel',
+                              'icon': 'message-square-plus',
+                              'label': '@config.newChatLabel',
+                              'size': 'sm',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                            {
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'action': 'OPEN_CHATS_CLICKED',
+                                  'aria-label': '@config.chatsLabel',
+                                  'label': '@config.chatsLabel',
+                                  'size': 'sm',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'action': 'OPEN_MEMORY_CLICKED',
+                                  'aria-label': '@config.memoryLabel',
+                                  'label': '@config.memoryLabel',
+                                  'size': 'sm',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'children': [
+                                    'array/map',
+                                    '@config.links',
+                                    [
+                                      'fn',
+                                      'item',
+                                      {
+                                        'href': '@item.href',
+                                        'label': '@item.label',
+                                        'size': 'sm',
+                                        'type': 'button',
+                                        'variant': 'ghost',
+                                      },
+                                    ],
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'xs',
+                                  'type': 'stack',
+                                },
+                              ],
+                              'className': 'shrink-0',
+                              'direction': 'horizontal',
+                              'gap': 'none',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'justify': 'between',
+                          'type': 'stack',
+                          'wrap': true,
+                        },
+                      ],
                       {
                         'activities': '@entity.entries',
                         'className': 'flex-1',
@@ -2381,6 +3512,16 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
               ],
               'event': 'REPLIED',
               'from': 'idle',
+              'guard': [
+                '=',
+                [
+                  'if',
+                  '@payload.ephemeral',
+                  true,
+                  false,
+                ],
+                '@config.ephemeral',
+              ],
               'to': 'idle',
             },
             {
@@ -2400,71 +3541,122 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'main',
                   {
                     'children': [
-                      {
-                        'align': 'center',
-                        'children': [
-                          {
-                            'action': 'NEW_CHAT_CLICKED',
-                            'aria-label': '@config.newChatLabel',
-                            'icon': 'message-square-plus',
-                            'label': '@config.newChatLabel',
-                            'size': 'sm',
-                            'type': 'button',
-                            'variant': 'secondary',
-                          },
-                          {
-                            'align': 'center',
-                            'children': [
-                              {
-                                'action': 'OPEN_CHATS_CLICKED',
-                                'aria-label': '@config.chatsLabel',
-                                'label': '@config.chatsLabel',
-                                'size': 'sm',
-                                'type': 'button',
-                                'variant': 'ghost',
-                              },
-                              {
-                                'action': 'OPEN_MEMORY_CLICKED',
-                                'aria-label': '@config.memoryLabel',
-                                'label': '@config.memoryLabel',
-                                'size': 'sm',
-                                'type': 'button',
-                                'variant': 'ghost',
-                              },
-                              {
-                                'children': [
-                                  'array/map',
-                                  '@config.links',
-                                  [
-                                    'fn',
-                                    'item',
-                                    {
-                                      'href': '@item.href',
-                                      'label': '@item.label',
-                                      'size': 'sm',
-                                      'type': 'button',
-                                      'variant': 'ghost',
-                                    },
-                                  ],
+                      [
+                        'if',
+                        '@config.ephemeral',
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'className': [
+                                'if',
+                                [
+                                  '=',
+                                  '@entity.chatAvatar',
+                                  '',
                                 ],
-                                'direction': 'horizontal',
-                                'gap': 'xs',
-                                'type': 'stack',
-                              },
-                            ],
-                            'className': 'shrink-0',
-                            'direction': 'horizontal',
-                            'gap': 'none',
-                            'type': 'stack',
-                          },
-                        ],
-                        'className': 'shrink-0',
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'justify': 'between',
-                        'type': 'stack',
-                        'wrap': true,
-                      },
+                                'hidden',
+                                '',
+                              ],
+                              'name': '@entity.chatTitle',
+                              'size': 'md',
+                              'src': [
+                                'object/get',
+                                '@entity',
+                                'chatAvatar',
+                                '',
+                              ],
+                              'type': 'avatar',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'content': '@entity.chatTitle',
+                                  'type': 'typography',
+                                  'variant': 'h4',
+                                },
+                                {
+                                  'content': '@entity.chatSubtitle',
+                                  'type': 'typography',
+                                  'variant': 'caption',
+                                },
+                              ],
+                              'direction': 'vertical',
+                              'gap': 'none',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'action': 'NEW_CHAT_CLICKED',
+                              'aria-label': '@config.newChatLabel',
+                              'icon': 'message-square-plus',
+                              'label': '@config.newChatLabel',
+                              'size': 'sm',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                            {
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'action': 'OPEN_CHATS_CLICKED',
+                                  'aria-label': '@config.chatsLabel',
+                                  'label': '@config.chatsLabel',
+                                  'size': 'sm',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'action': 'OPEN_MEMORY_CLICKED',
+                                  'aria-label': '@config.memoryLabel',
+                                  'label': '@config.memoryLabel',
+                                  'size': 'sm',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'children': [
+                                    'array/map',
+                                    '@config.links',
+                                    [
+                                      'fn',
+                                      'item',
+                                      {
+                                        'href': '@item.href',
+                                        'label': '@item.label',
+                                        'size': 'sm',
+                                        'type': 'button',
+                                        'variant': 'ghost',
+                                      },
+                                    ],
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'xs',
+                                  'type': 'stack',
+                                },
+                              ],
+                              'className': 'shrink-0',
+                              'direction': 'horizontal',
+                              'gap': 'none',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'justify': 'between',
+                          'type': 'stack',
+                          'wrap': true,
+                        },
+                      ],
                       {
                         'activities': '@entity.entries',
                         'className': 'flex-1',
@@ -2593,6 +3785,10 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
               ],
               'event': 'CHATS_LISTED',
               'from': 'idle',
+              'guard': [
+                'not',
+                '@config.ephemeral',
+              ],
               'to': 'idle',
             },
             {
@@ -2609,71 +3805,122 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'main',
                   {
                     'children': [
-                      {
-                        'align': 'center',
-                        'children': [
-                          {
-                            'action': 'NEW_CHAT_CLICKED',
-                            'aria-label': '@config.newChatLabel',
-                            'icon': 'message-square-plus',
-                            'label': '@config.newChatLabel',
-                            'size': 'sm',
-                            'type': 'button',
-                            'variant': 'secondary',
-                          },
-                          {
-                            'align': 'center',
-                            'children': [
-                              {
-                                'action': 'OPEN_CHATS_CLICKED',
-                                'aria-label': '@config.chatsLabel',
-                                'label': '@config.chatsLabel',
-                                'size': 'sm',
-                                'type': 'button',
-                                'variant': 'ghost',
-                              },
-                              {
-                                'action': 'OPEN_MEMORY_CLICKED',
-                                'aria-label': '@config.memoryLabel',
-                                'label': '@config.memoryLabel',
-                                'size': 'sm',
-                                'type': 'button',
-                                'variant': 'ghost',
-                              },
-                              {
-                                'children': [
-                                  'array/map',
-                                  '@config.links',
-                                  [
-                                    'fn',
-                                    'item',
-                                    {
-                                      'href': '@item.href',
-                                      'label': '@item.label',
-                                      'size': 'sm',
-                                      'type': 'button',
-                                      'variant': 'ghost',
-                                    },
-                                  ],
+                      [
+                        'if',
+                        '@config.ephemeral',
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'className': [
+                                'if',
+                                [
+                                  '=',
+                                  '@entity.chatAvatar',
+                                  '',
                                 ],
-                                'direction': 'horizontal',
-                                'gap': 'xs',
-                                'type': 'stack',
-                              },
-                            ],
-                            'className': 'shrink-0',
-                            'direction': 'horizontal',
-                            'gap': 'none',
-                            'type': 'stack',
-                          },
-                        ],
-                        'className': 'shrink-0',
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'justify': 'between',
-                        'type': 'stack',
-                        'wrap': true,
-                      },
+                                'hidden',
+                                '',
+                              ],
+                              'name': '@entity.chatTitle',
+                              'size': 'md',
+                              'src': [
+                                'object/get',
+                                '@entity',
+                                'chatAvatar',
+                                '',
+                              ],
+                              'type': 'avatar',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'content': '@entity.chatTitle',
+                                  'type': 'typography',
+                                  'variant': 'h4',
+                                },
+                                {
+                                  'content': '@entity.chatSubtitle',
+                                  'type': 'typography',
+                                  'variant': 'caption',
+                                },
+                              ],
+                              'direction': 'vertical',
+                              'gap': 'none',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'action': 'NEW_CHAT_CLICKED',
+                              'aria-label': '@config.newChatLabel',
+                              'icon': 'message-square-plus',
+                              'label': '@config.newChatLabel',
+                              'size': 'sm',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                            {
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'action': 'OPEN_CHATS_CLICKED',
+                                  'aria-label': '@config.chatsLabel',
+                                  'label': '@config.chatsLabel',
+                                  'size': 'sm',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'action': 'OPEN_MEMORY_CLICKED',
+                                  'aria-label': '@config.memoryLabel',
+                                  'label': '@config.memoryLabel',
+                                  'size': 'sm',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'children': [
+                                    'array/map',
+                                    '@config.links',
+                                    [
+                                      'fn',
+                                      'item',
+                                      {
+                                        'href': '@item.href',
+                                        'label': '@item.label',
+                                        'size': 'sm',
+                                        'type': 'button',
+                                        'variant': 'ghost',
+                                      },
+                                    ],
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'xs',
+                                  'type': 'stack',
+                                },
+                              ],
+                              'className': 'shrink-0',
+                              'direction': 'horizontal',
+                              'gap': 'none',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'justify': 'between',
+                          'type': 'stack',
+                          'wrap': true,
+                        },
+                      ],
                       {
                         'activities': '@entity.entries',
                         'className': 'flex-1',
@@ -2786,6 +4033,10 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
               ],
               'event': 'MEMORIES_LISTED',
               'from': 'idle',
+              'guard': [
+                'not',
+                '@config.ephemeral',
+              ],
               'to': 'idle',
             },
             {
@@ -2795,71 +4046,122 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'main',
                   {
                     'children': [
-                      {
-                        'align': 'center',
-                        'children': [
-                          {
-                            'action': 'NEW_CHAT_CLICKED',
-                            'aria-label': '@config.newChatLabel',
-                            'icon': 'message-square-plus',
-                            'label': '@config.newChatLabel',
-                            'size': 'sm',
-                            'type': 'button',
-                            'variant': 'secondary',
-                          },
-                          {
-                            'align': 'center',
-                            'children': [
-                              {
-                                'action': 'OPEN_CHATS_CLICKED',
-                                'aria-label': '@config.chatsLabel',
-                                'label': '@config.chatsLabel',
-                                'size': 'sm',
-                                'type': 'button',
-                                'variant': 'ghost',
-                              },
-                              {
-                                'action': 'OPEN_MEMORY_CLICKED',
-                                'aria-label': '@config.memoryLabel',
-                                'label': '@config.memoryLabel',
-                                'size': 'sm',
-                                'type': 'button',
-                                'variant': 'ghost',
-                              },
-                              {
-                                'children': [
-                                  'array/map',
-                                  '@config.links',
-                                  [
-                                    'fn',
-                                    'item',
-                                    {
-                                      'href': '@item.href',
-                                      'label': '@item.label',
-                                      'size': 'sm',
-                                      'type': 'button',
-                                      'variant': 'ghost',
-                                    },
-                                  ],
+                      [
+                        'if',
+                        '@config.ephemeral',
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'className': [
+                                'if',
+                                [
+                                  '=',
+                                  '@entity.chatAvatar',
+                                  '',
                                 ],
-                                'direction': 'horizontal',
-                                'gap': 'xs',
-                                'type': 'stack',
-                              },
-                            ],
-                            'className': 'shrink-0',
-                            'direction': 'horizontal',
-                            'gap': 'none',
-                            'type': 'stack',
-                          },
-                        ],
-                        'className': 'shrink-0',
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'justify': 'between',
-                        'type': 'stack',
-                        'wrap': true,
-                      },
+                                'hidden',
+                                '',
+                              ],
+                              'name': '@entity.chatTitle',
+                              'size': 'md',
+                              'src': [
+                                'object/get',
+                                '@entity',
+                                'chatAvatar',
+                                '',
+                              ],
+                              'type': 'avatar',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'content': '@entity.chatTitle',
+                                  'type': 'typography',
+                                  'variant': 'h4',
+                                },
+                                {
+                                  'content': '@entity.chatSubtitle',
+                                  'type': 'typography',
+                                  'variant': 'caption',
+                                },
+                              ],
+                              'direction': 'vertical',
+                              'gap': 'none',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'action': 'NEW_CHAT_CLICKED',
+                              'aria-label': '@config.newChatLabel',
+                              'icon': 'message-square-plus',
+                              'label': '@config.newChatLabel',
+                              'size': 'sm',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                            {
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'action': 'OPEN_CHATS_CLICKED',
+                                  'aria-label': '@config.chatsLabel',
+                                  'label': '@config.chatsLabel',
+                                  'size': 'sm',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'action': 'OPEN_MEMORY_CLICKED',
+                                  'aria-label': '@config.memoryLabel',
+                                  'label': '@config.memoryLabel',
+                                  'size': 'sm',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'children': [
+                                    'array/map',
+                                    '@config.links',
+                                    [
+                                      'fn',
+                                      'item',
+                                      {
+                                        'href': '@item.href',
+                                        'label': '@item.label',
+                                        'size': 'sm',
+                                        'type': 'button',
+                                        'variant': 'ghost',
+                                      },
+                                    ],
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'xs',
+                                  'type': 'stack',
+                                },
+                              ],
+                              'className': 'shrink-0',
+                              'direction': 'horizontal',
+                              'gap': 'none',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'justify': 'between',
+                          'type': 'stack',
+                          'wrap': true,
+                        },
+                      ],
                       {
                         'activities': '@entity.entries',
                         'className': 'flex-1',
@@ -2911,71 +4213,122 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'main',
                   {
                     'children': [
-                      {
-                        'align': 'center',
-                        'children': [
-                          {
-                            'action': 'NEW_CHAT_CLICKED',
-                            'aria-label': '@config.newChatLabel',
-                            'icon': 'message-square-plus',
-                            'label': '@config.newChatLabel',
-                            'size': 'sm',
-                            'type': 'button',
-                            'variant': 'secondary',
-                          },
-                          {
-                            'align': 'center',
-                            'children': [
-                              {
-                                'action': 'OPEN_CHATS_CLICKED',
-                                'aria-label': '@config.chatsLabel',
-                                'label': '@config.chatsLabel',
-                                'size': 'sm',
-                                'type': 'button',
-                                'variant': 'ghost',
-                              },
-                              {
-                                'action': 'OPEN_MEMORY_CLICKED',
-                                'aria-label': '@config.memoryLabel',
-                                'label': '@config.memoryLabel',
-                                'size': 'sm',
-                                'type': 'button',
-                                'variant': 'ghost',
-                              },
-                              {
-                                'children': [
-                                  'array/map',
-                                  '@config.links',
-                                  [
-                                    'fn',
-                                    'item',
-                                    {
-                                      'href': '@item.href',
-                                      'label': '@item.label',
-                                      'size': 'sm',
-                                      'type': 'button',
-                                      'variant': 'ghost',
-                                    },
-                                  ],
+                      [
+                        'if',
+                        '@config.ephemeral',
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'className': [
+                                'if',
+                                [
+                                  '=',
+                                  '@entity.chatAvatar',
+                                  '',
                                 ],
-                                'direction': 'horizontal',
-                                'gap': 'xs',
-                                'type': 'stack',
-                              },
-                            ],
-                            'className': 'shrink-0',
-                            'direction': 'horizontal',
-                            'gap': 'none',
-                            'type': 'stack',
-                          },
-                        ],
-                        'className': 'shrink-0',
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'justify': 'between',
-                        'type': 'stack',
-                        'wrap': true,
-                      },
+                                'hidden',
+                                '',
+                              ],
+                              'name': '@entity.chatTitle',
+                              'size': 'md',
+                              'src': [
+                                'object/get',
+                                '@entity',
+                                'chatAvatar',
+                                '',
+                              ],
+                              'type': 'avatar',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'content': '@entity.chatTitle',
+                                  'type': 'typography',
+                                  'variant': 'h4',
+                                },
+                                {
+                                  'content': '@entity.chatSubtitle',
+                                  'type': 'typography',
+                                  'variant': 'caption',
+                                },
+                              ],
+                              'direction': 'vertical',
+                              'gap': 'none',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'action': 'NEW_CHAT_CLICKED',
+                              'aria-label': '@config.newChatLabel',
+                              'icon': 'message-square-plus',
+                              'label': '@config.newChatLabel',
+                              'size': 'sm',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                            {
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'action': 'OPEN_CHATS_CLICKED',
+                                  'aria-label': '@config.chatsLabel',
+                                  'label': '@config.chatsLabel',
+                                  'size': 'sm',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'action': 'OPEN_MEMORY_CLICKED',
+                                  'aria-label': '@config.memoryLabel',
+                                  'label': '@config.memoryLabel',
+                                  'size': 'sm',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'children': [
+                                    'array/map',
+                                    '@config.links',
+                                    [
+                                      'fn',
+                                      'item',
+                                      {
+                                        'href': '@item.href',
+                                        'label': '@item.label',
+                                        'size': 'sm',
+                                        'type': 'button',
+                                        'variant': 'ghost',
+                                      },
+                                    ],
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'xs',
+                                  'type': 'stack',
+                                },
+                              ],
+                              'className': 'shrink-0',
+                              'direction': 'horizontal',
+                              'gap': 'none',
+                              'type': 'stack',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'justify': 'between',
+                          'type': 'stack',
+                          'wrap': true,
+                        },
+                      ],
                       {
                         'activities': '@entity.entries',
                         'className': 'flex-1',
@@ -3000,6 +4353,16 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
               ],
               'event': 'REPLY_FAILED',
               'from': 'idle',
+              'guard': [
+                '=',
+                [
+                  'if',
+                  '@payload.ephemeral',
+                  true,
+                  false,
+                ],
+                '@config.ephemeral',
+              ],
               'to': 'idle',
             },
           ],
@@ -3952,6 +5315,10 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                   'required': true,
                   'type': 'string',
                 },
+                {
+                  'name': 'ephemeral',
+                  'type': 'boolean',
+                },
               ],
             },
             {
@@ -4578,6 +5945,10 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
               ],
               'event': 'REPLIED',
               'from': 'ready',
+              'guard': [
+                'not',
+                '@payload.ephemeral',
+              ],
               'to': 'ready',
             },
             {

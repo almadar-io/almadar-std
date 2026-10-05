@@ -55,6 +55,11 @@ import {
   isStdAgentPlannerAgentPlannerOrbitalParams,
 } from './agent/atoms/std-agent-planner.js';
 import {
+  stdAgentProposalAgentProposalOrbital,
+  StdAgentProposalAgentProposalOrbitalManifest,
+  isStdAgentProposalAgentProposalOrbitalParams,
+} from './agent/atoms/std-agent-proposal.js';
+import {
   stdAgentSessionAgentSessionOrbital,
   StdAgentSessionAgentSessionOrbitalManifest,
   isStdAgentSessionAgentSessionOrbitalParams,
@@ -62,6 +67,14 @@ import {
   StdAgentSessionAgentChatsOrbitalManifest,
   isStdAgentSessionAgentChatsOrbitalParams,
 } from './agent/atoms/std-agent-session.js';
+import {
+  stdAgentSuggestionsAgentSuggestionsOrbital,
+  StdAgentSuggestionsAgentSuggestionsOrbitalManifest,
+  isStdAgentSuggestionsAgentSuggestionsOrbitalParams,
+  stdAgentSuggestionsAgentSuggestionRecordsOrbital,
+  StdAgentSuggestionsAgentSuggestionRecordsOrbitalManifest,
+  isStdAgentSuggestionsAgentSuggestionRecordsOrbitalParams,
+} from './agent/atoms/std-agent-suggestions.js';
 import {
   stdAgentToolCallAgentToolCallOrbital,
   StdAgentToolCallAgentToolCallOrbitalManifest,
@@ -743,6 +756,15 @@ REGISTRY_MUT.set('std-agent-planner::AgentPlannerOrbital', {
   },
   manifest: StdAgentPlannerAgentPlannerOrbitalManifest,
 });
+REGISTRY_MUT.set('std-agent-proposal::AgentProposalOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdAgentProposalAgentProposalOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-agent-proposal::AgentProposalOrbital');
+    }
+    return stdAgentProposalAgentProposalOrbital(p);
+  },
+  manifest: StdAgentProposalAgentProposalOrbitalManifest,
+});
 REGISTRY_MUT.set('std-agent-session::AgentSessionOrbital', {
   factory: (p: object): OrbitalDefinition => {
     if (!isStdAgentSessionAgentSessionOrbitalParams(p)) {
@@ -760,6 +782,24 @@ REGISTRY_MUT.set('std-agent-session::AgentChatsOrbital', {
     return stdAgentSessionAgentChatsOrbital(p);
   },
   manifest: StdAgentSessionAgentChatsOrbitalManifest,
+});
+REGISTRY_MUT.set('std-agent-suggestions::AgentSuggestionsOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdAgentSuggestionsAgentSuggestionsOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-agent-suggestions::AgentSuggestionsOrbital');
+    }
+    return stdAgentSuggestionsAgentSuggestionsOrbital(p);
+  },
+  manifest: StdAgentSuggestionsAgentSuggestionsOrbitalManifest,
+});
+REGISTRY_MUT.set('std-agent-suggestions::AgentSuggestionRecordsOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdAgentSuggestionsAgentSuggestionRecordsOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-agent-suggestions::AgentSuggestionRecordsOrbital');
+    }
+    return stdAgentSuggestionsAgentSuggestionRecordsOrbital(p);
+  },
+  manifest: StdAgentSuggestionsAgentSuggestionRecordsOrbitalManifest,
 });
 REGISTRY_MUT.set('std-agent-tool-call::AgentToolCallOrbital', {
   factory: (p: object): OrbitalDefinition => {

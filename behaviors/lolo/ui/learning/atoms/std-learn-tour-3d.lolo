@@ -74,7 +74,7 @@ orbital LearnTour3DOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle when (== @config.matchMode "")
+      INIT -> idle when (and (== @config.matchMode "") (== @config.rosterSource "config"))
         (set @entity.active true)
         (set @entity.title @config.title)
         (set @entity.stations @config.stations)
@@ -123,7 +123,7 @@ orbital LearnTour3DOrbital {
         (set @entity.active false)
         (render-ui main null)
 
-      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+      MODE_SELECTED -> idle when (and (== ?mode @config.matchMode) (== @config.rosterSource "config"))
         (set @entity.active true)
         (set @entity.title @config.title)
         (set @entity.stations @config.stations)
@@ -167,6 +167,55 @@ orbital LearnTour3DOrbital {
           ]
         })
         (emit TOUR_3D_UPDATED { id: @entity.selectedId, name: (object/get (array/nth @entity.stations 0) name), caption: (object/get (array/nth @entity.stations 0) caption), visited: (array/len @entity.visitedIds), total: (array/len @entity.stations), tourComplete: false })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (and (== ?mode @config.matchMode) (> (array/len ?stations) 0)))
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.stations ?stations)
+        (set @entity.backdrop ?backdrop)
+        (set @entity.edges ?edges)
+        (set @entity.selectedIndex 0)
+        (set @entity.selectedId (object/get (array/nth @entity.stations 0) id))
+        (set @entity.visitedIds [(object/get (array/nth @entity.stations 0) id)])
+        (set @entity.tourComplete false)
+        (set @entity.narration (str/concat (object/get (array/nth @entity.stations 0) name) " — " (object/get (array/nth @entity.stations 0) caption)))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.tourComplete "Complete" (str/concat "Station " (str/concat "" (+ @entity.selectedIndex 1)) " of " (str/concat "" (array/len @entity.stations)))), variant: (if @entity.tourComplete "success" "neutral") }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: TOUR, label: @config.tourLabel, icon: "chevron-right", variant: primary },
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Explored " (str/concat "" (array/len @entity.visitedIds)) " of " (str/concat "" (array/len @entity.stations)) (if @entity.tourComplete " — tour complete!" "")) }
+                  ] },
+                { type: biology-canvas, keyMap: { Space: TOUR, ArrowRight: TOUR, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                  mode: "3d",
+                  camera: { mode: "perspective", zoom: @config.zoom, fov: @config.fov, azimuth: @config.azimuth,
+                    target: { x: (object/get (array/nth @entity.stations @entity.selectedIndex) x), y: (object/get (array/nth @entity.stations @entity.selectedIndex) y), z: (object/get (array/nth @entity.stations @entity.selectedIndex) z) } },
+                  lighting: @config.lighting,
+                  post: @config.post,
+                  nodes: (array/map (array/concat @entity.backdrop @entity.stations) (fn n { id: (object/get @n id), x: (object/get @n x), y: (object/get @n y), z: (object/get @n z), radius: (if (== (object/get @n id) @entity.selectedId) (* (object/get @n radius) 1.4) (object/get @n radius)), color: (object/get @n color), label: (object/get @n name), shape: (object/get @n shape), opacity: (object/get @n opacity) })),
+                  edges: @entity.edges,
+                  interactive: true,
+                  onShapeClick: "SELECT_STATION"
+                },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit TOUR_3D_UPDATED { id: @entity.selectedId, name: (object/get (array/nth @entity.stations 0) name), caption: (object/get (array/nth @entity.stations 0) caption), visited: (array/len @entity.visitedIds), total: (array/len @entity.stations), tourComplete: false })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (render-ui main null)
 
       TOUR -> idle when (== @entity.active true)
         (if (and (not @entity.tourComplete) (== (if (array/includes @entity.visitedIds (object/get (array/nth @entity.stations (math/mod (+ @entity.selectedIndex 1) (array/len @entity.stations))) id)) (array/len @entity.visitedIds) (+ (array/len @entity.visitedIds) 1)) (array/len @entity.stations))) (emit LEARN_ROUND_COMPLETE { score: (array/len @entity.stations), total: (array/len @entity.stations) }) null)
@@ -348,6 +397,14 @@ orbital LearnTour3DOrbital {
       }
         @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
         @tier "domain"
+      ROSTER_LOADED {
+        mode : string!
+        stations : [Learn3DStation]!
+        edges : [Learn3DEdge]!
+        backdrop : [Learn3DStation]!
+      }
+        @description "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and stations, edges and backdrop are the scene roster; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides."
+        @tier "domain"
       SELECT_STATION {
         payload : Learn3DClick
       }
@@ -388,6 +445,10 @@ orbital LearnTour3DOrbital {
         @label "Match Mode"
         @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
         @tier "presentation"
+      rosterSource : "config" | "event" = "config"
+        @label "Roster Source"
+        @description "Where the stations, edges and backdrop come from: config reads those knobs at INIT; event waits for ROSTER_LOADED and takes them from its payload."
+        @tier "domain"
       title : string = "3D Guided Tour"
         @label "Title"
         @description "Title shown above the canvas."

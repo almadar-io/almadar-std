@@ -288,6 +288,13 @@ export function stdAgentAssistantAgentAssistantOrbital(params: StdAgentAssistant
             },
             'triggers': 'COMPACT',
           },
+          {
+            'event': 'ASSISTANT_EPHEMERAL_SEND',
+            'source': {
+              'kind': 'any',
+            },
+            'triggers': 'COMPACT',
+          },
         ],
         'name': 'AssistantContext',
         'ref': ('Context.traits.AgentContextCompactor' satisfies _StdAgentAssistantAgentAssistantOrbitalUsesRef),

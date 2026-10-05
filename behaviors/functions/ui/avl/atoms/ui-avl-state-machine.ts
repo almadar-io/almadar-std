@@ -59,6 +59,8 @@ export interface StdUiAvlStateMachineTransitionClickPayload {
 export interface StdUiAvlStateMachineConfig {
   activeState?: string;
   activeTransition?: number;
+  /** Default: `{"effects":{"persist":{"body":"Saves the order."}},"states":{"pending":{"body":"Every order starts here.","title":"Unpaid"}},"transitions":{"PAY":{"body":"Only fires when the amount is positive."}}}` */
+  annotations?: EntityRow;
   ariaBusy?: boolean;
   ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
   ariaDescribedby?: string;

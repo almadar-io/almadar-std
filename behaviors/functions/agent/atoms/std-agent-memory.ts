@@ -44,6 +44,9 @@ export type StdAgentMemoryListenKey = 'ASSISTANT_MEMORIES_REQUESTED';
 export interface StdAgentMemoryRecalledPayload {
   messages: EntityRow[];
   context?: string;
+  instructions?: string;
+  tools?: EntityRow[];
+  ephemeral?: boolean;
 }
 
 /**
@@ -416,7 +419,7 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
         ],
         'emits': [
           {
-            'description': 'The conversation, with what the assistant remembers that is closest to its last turn.',
+            'description': 'The conversation, with what the assistant remembers that is closest to its last turn. An ephemeral conversation is never recalled for: empty `context`, its own `instructions`, `tools` and `ephemeral` flag pass through.',
             'event': 'RECALLED',
             'payloadSchema': [
               {
@@ -439,6 +442,33 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
               {
                 'name': 'context',
                 'type': 'string',
+              },
+              {
+                'name': 'instructions',
+                'type': 'string',
+              },
+              {
+                'entity': 'AgentTool',
+                'name': 'tools',
+                'properties': [
+                  {
+                    'name': 'event',
+                    'type': 'event',
+                  },
+                  {
+                    'name': 'read',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'scope',
+                    'type': 'string',
+                  },
+                ],
+                'type': '[object]',
+              },
+              {
+                'name': 'ephemeral',
+                'type': 'boolean',
               },
             ],
             'scope': 'external',
@@ -783,7 +813,7 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
               'tier': 'internal',
             },
             {
-              'description': 'Recall what is relevant to this conversation\'s last turn.',
+              'description': 'Recall what is relevant to this conversation\'s last turn. An ephemeral conversation skips the recall.',
               'key': 'RECALL',
               'name': 'Recall',
               'payloadSchema': [
@@ -803,10 +833,36 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   'required': true,
                   'type': '[object]',
                 },
+                {
+                  'name': 'instructions',
+                  'type': 'string',
+                },
+                {
+                  'name': 'tools',
+                  'properties': [
+                    {
+                      'name': 'event',
+                      'type': 'event',
+                    },
+                    {
+                      'name': 'read',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'scope',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': '[object]',
+                },
+                {
+                  'name': 'ephemeral',
+                  'type': 'boolean',
+                },
               ],
             },
             {
-              'description': 'Remember the exchange just answered.',
+              'description': 'Remember the exchange just answered. An ephemeral conversation is never remembered.',
               'key': 'REMEMBER',
               'name': 'Remember',
               'payloadSchema': [
@@ -814,6 +870,10 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   'name': 'reply',
                   'required': true,
                   'type': 'string',
+                },
+                {
+                  'name': 'ephemeral',
+                  'type': 'boolean',
                 },
               ],
             },
@@ -919,7 +979,7 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
               'tier': 'internal',
             },
             {
-              'description': 'The conversation, with what the assistant remembers that is closest to its last turn.',
+              'description': 'The conversation, with what the assistant remembers that is closest to its last turn. An ephemeral conversation is never recalled for: empty `context`, its own `instructions`, `tools` and `ephemeral` flag pass through.',
               'key': 'RECALLED',
               'name': 'Recalled',
               'payloadSchema': [
@@ -943,6 +1003,33 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                 {
                   'name': 'context',
                   'type': 'string',
+                },
+                {
+                  'name': 'instructions',
+                  'type': 'string',
+                },
+                {
+                  'entity': 'AgentTool',
+                  'name': 'tools',
+                  'properties': [
+                    {
+                      'name': 'event',
+                      'type': 'event',
+                    },
+                    {
+                      'name': 'read',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'scope',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': '[object]',
+                },
+                {
+                  'name': 'ephemeral',
+                  'type': 'boolean',
                 },
               ],
               'synonyms': 'recalled, remembered, context ready',
@@ -1091,6 +1178,34 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
             {
               'effects': [
                 [
+                  'emit',
+                  'RECALLED',
+                  {
+                    'context': '',
+                    'ephemeral': true,
+                    'instructions': [
+                      'str/default',
+                      '@payload.instructions',
+                      '',
+                    ],
+                    'messages': '@payload.messages',
+                    'tools': [
+                      'object/get',
+                      '@payload',
+                      'tools',
+                      [],
+                    ],
+                  },
+                ],
+              ],
+              'event': 'RECALL',
+              'from': 'ready',
+              'guard': '@payload.ephemeral',
+              'to': 'ready',
+            },
+            {
+              'effects': [
+                [
                   'set',
                   '@entity.pendingMessages',
                   '@payload.messages',
@@ -1133,7 +1248,17 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
               ],
               'event': 'RECALL',
               'from': 'ready',
+              'guard': [
+                'not',
+                '@payload.ephemeral',
+              ],
               'to': 'recalling',
+            },
+            {
+              'event': 'REMEMBER',
+              'from': 'ready',
+              'guard': '@payload.ephemeral',
+              'to': 'ready',
             },
             {
               'effects': [
@@ -1173,6 +1298,10 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
               ],
               'event': 'REMEMBER',
               'from': 'ready',
+              'guard': [
+                'not',
+                '@payload.ephemeral',
+              ],
               'to': 'remembering',
             },
             {

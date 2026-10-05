@@ -1,5 +1,5 @@
 {
-  "description": "std-agent-tool-loop — answers a conversation by operating the running app as the caller, through `call-service llm call-tools`. Its `tools` are `{ scope: declared }` (every declared external input plus a read over every persisted entity), or named declared inputs (addressed like a listens source: `Trait.EVENT`, `Orbital.Trait.EVENT`) and entities to read; each input fires as the signed-in user through the ordinary dispatch (guards and entity policies apply) and each read returns only the rows the caller may read. Headless: the conversation UI (std-agent-session) shows the reply; a failure shows as a toast. CONVERSE carries the conversation (and optionally what std-agent-memory recalled); ASSISTANT_STEP carries each step live while it works (a model call, a tool it used, what the app answered) to the asking tab; ASSISTANT_REPLIED carries the reply, every step and the token usage; ASSISTANT_REPLY_FAILED carries the error. These names are the assistant contract std-agent-session's conversation hears from any orbital. Compose with std-agent-session (the conversation) and std-agent-trace (the step record).",
+  "description": "std-agent-tool-loop — answers a conversation by operating the running app as the caller, through `call-service llm call-tools`. Its `tools` are `{ scope: declared }` (every declared external input plus a read over every persisted entity), or named declared inputs (addressed like a listens source: `Trait.EVENT`, `Orbital.Trait.EVENT`) and entities to read; each input fires as the signed-in user through the ordinary dispatch (guards and entity policies apply) and each read returns only the rows the caller may read. Headless: the conversation UI (std-agent-session) shows the reply; a failure shows as a toast, unless `quiet` is on (a background run nobody is watching: no live steps and no toast). CONVERSE carries the conversation (and optionally what std-agent-memory recalled); ASSISTANT_STEP carries each step live while it works (a model call, a tool it used, what the app answered) to the asking tab; ASSISTANT_REPLIED carries the reply, every step and the token usage; ASSISTANT_REPLY_FAILED carries the error. These names are the assistant contract std-agent-session's conversation hears from any orbital. Compose with std-agent-session (the conversation) and std-agent-trace (the step record).",
   "ledger": {
     "entries": {
       "ent_01M3TYMQFVS7RJC2HPKXYEF2VR": {
@@ -73,6 +73,15 @@
         "parent": "trt_01M3TYMQFVRCVPTPEX7MQ97HQP",
         "renames": []
       },
+      "evt_01M45S9TCWRDG4SHXGWDDV9AAC": {
+        "bakedName": "CANCEL",
+        "curName": "CANCEL",
+        "id": "evt_01M45S9TCWRDG4SHXGWDDV9AAC",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3TYMQFVRCVPTPEX7MQ97HQP",
+        "renames": []
+      },
       "orb_01M055GH3FETNDFWVCTDYA1Z10": {
         "bakedName": "AgentToolLoopOrbital",
         "curName": "AgentToolLoopOrbital",
@@ -133,6 +142,12 @@
             "description": "Why the last turn failed.",
             "name": "error",
             "type": "string"
+          },
+          {
+            "default": false,
+            "description": "The current turn belongs to an ephemeral conversation.",
+            "name": "ephemeral",
+            "type": "boolean"
           }
         ],
         "id": "ent_01M3TYMQFVS7RJC2HPKXYEF2VR",
@@ -158,6 +173,14 @@
         {
           "category": "interaction",
           "config": {
+            "cancelKey": {
+              "default": "agent-tool-loop",
+              "description": "The key this instance's model call runs under, so CANCEL aborts it. Give each instance of the loop in one app its own.",
+              "label": "Cancel key",
+              "synonyms": "call key, abort key",
+              "tier": "internal",
+              "type": "string"
+            },
             "instructions": {
               "default": "You operate this app for the signed-in user. Use the tools to act and to look things up; when a tool reports that something was refused or denied, say so plainly.",
               "description": "Standing instructions sent with every conversation.",
@@ -172,6 +195,14 @@
               "label": "Model round-trips per request",
               "tier": "policy",
               "type": "number"
+            },
+            "quiet": {
+              "default": false,
+              "description": "No live ASSISTANT_STEP stream and no failure toast: the request is reported only through ASSISTANT_REPLIED and ASSISTANT_REPLY_FAILED. For a run nobody is watching, such as one the app starts on its own.",
+              "label": "Run in the background?",
+              "synonyms": "silent, background, no toast, suppress errors, headless run",
+              "tier": "policy",
+              "type": "boolean"
             },
             "tools": {
               "default": [],
@@ -211,6 +242,9 @@
               "resource": "llm.call-tools"
             },
             {
+              "kind": "cancel-call"
+            },
+            {
               "kind": "emit",
               "resource": "ASSISTANT_REPLIED"
             },
@@ -221,6 +255,10 @@
             {
               "kind": "render-ui",
               "resource": "toast"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.ephemeral"
             },
             {
               "kind": "set",
@@ -412,7 +450,7 @@
               "tier": "domain"
             },
             {
-              "description": "The assistant answered; carries every tool step it took and the tokens it used.",
+              "description": "The assistant answered; carries every tool step it took and the tokens it used. `ephemeral` echoes the conversation's: an ephemeral reply is not stored or remembered, and only an ephemeral conversation shows it.",
               "event": "ASSISTANT_REPLIED",
               "eventId": "evt_01M41HQTKHH12EZ3SPKY3ZWJC6",
               "payloadSchema": [
@@ -452,6 +490,10 @@
                   ],
                   "required": true,
                   "type": "object"
+                },
+                {
+                  "name": "ephemeral",
+                  "type": "boolean"
                 }
               ],
               "scope": "external",
@@ -467,6 +509,10 @@
                   "name": "error",
                   "required": true,
                   "type": "string"
+                },
+                {
+                  "name": "ephemeral",
+                  "type": "boolean"
                 }
               ],
               "scope": "external",
@@ -548,7 +594,7 @@
                 "name": "Initialize"
               },
               {
-                "description": "Answer this conversation; the last turn is the request. `context` is what the assistant remembers that may be relevant.",
+                "description": "Answer this conversation; the last turn is the request. `context` is what the assistant remembers that may be relevant. An `ephemeral` conversation runs under its own `instructions` (empty: the configured ones) and exactly its own `tools` (absent or `[]`: none, never the configured ones), streams no live steps and shows no failure toast.",
                 "id": "evt_01M3TYMQFVAN072R0C2Z5X5NPQ",
                 "key": "CONVERSE",
                 "name": "Converse",
@@ -572,9 +618,42 @@
                   {
                     "name": "context",
                     "type": "string"
+                  },
+                  {
+                    "name": "instructions",
+                    "type": "string"
+                  },
+                  {
+                    "name": "tools",
+                    "properties": [
+                      {
+                        "name": "event",
+                        "type": "event"
+                      },
+                      {
+                        "name": "read",
+                        "type": "string"
+                      },
+                      {
+                        "name": "scope",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  },
+                  {
+                    "name": "ephemeral",
+                    "type": "boolean"
                   }
                 ],
                 "synonyms": "ask, chat, request"
+              },
+              {
+                "description": "Abort the request in flight; nothing is replied and no failure is reported.",
+                "id": "evt_01M45S9TCWRDG4SHXGWDDV9AAC",
+                "key": "CANCEL",
+                "name": "Cancel",
+                "synonyms": "stop, abort, cancel"
               },
               {
                 "id": "evt_01M3TYMQFVCJWHGK649HS8W7NA",
@@ -810,7 +889,7 @@
                 "tier": "domain"
               },
               {
-                "description": "The assistant answered; carries every tool step it took and the tokens it used.",
+                "description": "The assistant answered; carries every tool step it took and the tokens it used. `ephemeral` echoes the conversation's: an ephemeral reply is not stored or remembered, and only an ephemeral conversation shows it.",
                 "id": "evt_01M41HQTKHH12EZ3SPKY3ZWJC6",
                 "key": "ASSISTANT_REPLIED",
                 "name": "Assistant Replied",
@@ -851,6 +930,10 @@
                     ],
                     "required": true,
                     "type": "object"
+                  },
+                  {
+                    "name": "ephemeral",
+                    "type": "boolean"
                   }
                 ],
                 "synonyms": "answered, responded, done",
@@ -866,6 +949,10 @@
                     "name": "error",
                     "required": true,
                     "type": "string"
+                  },
+                  {
+                    "name": "ephemeral",
+                    "type": "boolean"
                   }
                 ],
                 "synonyms": "failed, error, gave up",
@@ -903,6 +990,11 @@
                     "thinking"
                   ],
                   [
+                    "set",
+                    "@entity.ephemeral",
+                    false
+                  ],
+                  [
                     "call-service",
                     "llm",
                     "call-tools",
@@ -935,14 +1027,160 @@
                         "failure": "ASK_FAILED",
                         "onMessage": "ASSISTANT_STEP",
                         "success": "ANSWERED"
-                      }
+                      },
+                      "key": "@config.cancelKey"
                     }
                   ]
                 ],
                 "event": "CONVERSE",
                 "eventId": "evt_01M3TYMQFVAN072R0C2Z5X5NPQ",
                 "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "not",
+                    "@config.quiet"
+                  ],
+                  [
+                    "not",
+                    "@payload.ephemeral"
+                  ]
+                ],
                 "to": "thinking"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "thinking"
+                  ],
+                  [
+                    "set",
+                    "@entity.ephemeral",
+                    false
+                  ],
+                  [
+                    "call-service",
+                    "llm",
+                    "call-tools",
+                    {
+                      "instructions": [
+                        "if",
+                        [
+                          "=",
+                          [
+                            "str/default",
+                            "@payload.context",
+                            ""
+                          ],
+                          ""
+                        ],
+                        "@config.instructions",
+                        [
+                          "str/concat",
+                          "@config.instructions",
+                          "\n\nWhat you remember that may be relevant:\n",
+                          "@payload.context"
+                        ]
+                      ],
+                      "maxSteps": "@config.maxSteps",
+                      "messages": "@payload.messages",
+                      "tools": "@config.tools"
+                    },
+                    {
+                      "emit": {
+                        "failure": "ASK_FAILED",
+                        "success": "ANSWERED"
+                      },
+                      "key": "@config.cancelKey"
+                    }
+                  ]
+                ],
+                "event": "CONVERSE",
+                "eventId": "evt_01M3TYMQFVAN072R0C2Z5X5NPQ",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  "@config.quiet",
+                  [
+                    "not",
+                    "@payload.ephemeral"
+                  ]
+                ],
+                "to": "thinking"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "thinking"
+                  ],
+                  [
+                    "set",
+                    "@entity.ephemeral",
+                    true
+                  ],
+                  [
+                    "call-service",
+                    "llm",
+                    "call-tools",
+                    {
+                      "instructions": [
+                        "if",
+                        [
+                          "=",
+                          [
+                            "str/default",
+                            "@payload.instructions",
+                            ""
+                          ],
+                          ""
+                        ],
+                        "@config.instructions",
+                        "@payload.instructions"
+                      ],
+                      "maxSteps": "@config.maxSteps",
+                      "messages": "@payload.messages",
+                      "tools": [
+                        "object/get",
+                        "@payload",
+                        "tools",
+                        []
+                      ]
+                    },
+                    {
+                      "emit": {
+                        "failure": "ASK_FAILED",
+                        "success": "ANSWERED"
+                      },
+                      "key": "@config.cancelKey"
+                    }
+                  ]
+                ],
+                "event": "CONVERSE",
+                "eventId": "evt_01M3TYMQFVAN072R0C2Z5X5NPQ",
+                "from": "idle",
+                "guard": "@payload.ephemeral",
+                "to": "thinking"
+              },
+              {
+                "effects": [
+                  [
+                    "cancel-call",
+                    "@config.cancelKey"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ]
+                ],
+                "event": "CANCEL",
+                "eventId": "evt_01M45S9TCWRDG4SHXGWDDV9AAC",
+                "from": "thinking",
+                "to": "idle"
               },
               {
                 "effects": [
@@ -960,6 +1198,7 @@
                     "emit",
                     "ASSISTANT_REPLIED",
                     {
+                      "ephemeral": "@entity.ephemeral",
                       "reply": "@payload.reply",
                       "steps": "@payload.steps",
                       "usage": "@payload.usage"
@@ -987,6 +1226,38 @@
                     "emit",
                     "ASSISTANT_REPLY_FAILED",
                     {
+                      "ephemeral": "@entity.ephemeral",
+                      "error": "@payload.error"
+                    }
+                  ]
+                ],
+                "event": "ASK_FAILED",
+                "eventId": "evt_01M3TYMQFVB6QA7HQ3KR6GGHHX",
+                "from": "thinking",
+                "guard": [
+                  "or",
+                  "@config.quiet",
+                  "@entity.ephemeral"
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "failed"
+                  ],
+                  [
+                    "set",
+                    "@entity.error",
+                    "@payload.error"
+                  ],
+                  [
+                    "emit",
+                    "ASSISTANT_REPLY_FAILED",
+                    {
+                      "ephemeral": "@entity.ephemeral",
                       "error": "@payload.error"
                     }
                   ],
@@ -1003,6 +1274,17 @@
                 "event": "ASK_FAILED",
                 "eventId": "evt_01M3TYMQFVB6QA7HQ3KR6GGHHX",
                 "from": "thinking",
+                "guard": [
+                  "and",
+                  [
+                    "not",
+                    "@config.quiet"
+                  ],
+                  [
+                    "not",
+                    "@entity.ephemeral"
+                  ]
+                ],
                 "to": "idle"
               }
             ]

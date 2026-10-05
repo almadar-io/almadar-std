@@ -24,6 +24,21 @@
             "required": false
           },
           {
+            "name": "goalText",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "targetA",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "targetB",
+            "type": "number",
+            "required": false
+          },
+          {
             "name": "paramA",
             "type": "number",
             "required": false
@@ -140,6 +155,12 @@
             "tier": "domain"
           },
           {
+            "name": "ROSTER_LOADED",
+            "direction": "listen",
+            "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and goalText, curveKind, targetA and targetB define the inverse problem; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
+            "tier": "domain"
+          },
+          {
             "name": "SET_PARAM_A",
             "direction": "listen",
             "description": "Learner dragged the first parameter's slider — value is the new A; the learner curve and its distance to the target recompute immediately.",
@@ -222,7 +243,7 @@
             "type": "string",
             "default": "",
             "label": "Match Mode",
-            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT (or on ROSTER_LOADED when rosterSource is event).",
             "tier": "presentation"
           },
           {
@@ -298,6 +319,18 @@
             "default": 0.1,
             "label": "Parameter B Step",
             "tier": "presentation"
+          },
+          {
+            "key": "rosterSource",
+            "type": "string",
+            "default": "config",
+            "label": "Roster Source",
+            "description": "Where the problem definition (goalText, curveKind, targetA, targetB) comes from: config reads those knobs at INIT; event waits for ROSTER_LOADED and takes them from its payload.",
+            "tier": "domain",
+            "enumValues": [
+              "config",
+              "event"
+            ]
           },
           {
             "key": "showAxes",
@@ -404,6 +437,7 @@
           "INIT",
           "MODE_SELECTED",
           "RESET",
+          "ROSTER_LOADED",
           "SET_PARAM_A",
           "SET_PARAM_B"
         ],
@@ -418,12 +452,15 @@
             "curves",
             "distance",
             "feedback",
+            "goalText",
             "paramA",
             "paramALabel",
             "paramB",
             "paramBLabel",
             "resultRow",
             "solved",
+            "targetA",
+            "targetB",
             "targetSamples",
             "title",
             "yMax",
@@ -477,6 +514,10 @@
           },
           {
             "kind": "set",
+            "resource": "@entity.goalText"
+          },
+          {
+            "kind": "set",
             "resource": "@entity.paramA"
           },
           {
@@ -498,6 +539,14 @@
           {
             "kind": "set",
             "resource": "@entity.solved"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.targetA"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.targetB"
           },
           {
             "kind": "set",

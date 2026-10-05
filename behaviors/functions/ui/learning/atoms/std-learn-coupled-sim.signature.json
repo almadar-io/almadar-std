@@ -19,6 +19,46 @@
             "required": false
           },
           {
+            "name": "taskText",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "kind",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "pLabel",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "qLabel",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "pStart",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "qStart",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "coefALabel",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "coefBLabel",
+            "type": "string",
+            "required": false
+          },
+          {
             "name": "t",
             "type": "number",
             "required": false
@@ -116,6 +156,12 @@
             "name": "MODE_SELECTED",
             "direction": "listen",
             "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "ROSTER_LOADED",
+            "direction": "listen",
+            "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and taskText, kind, pLabel, qLabel, pStart, qStart, coefALabel and coefBLabel define the coupled system; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
             "tier": "domain"
           },
           {
@@ -300,7 +346,7 @@
             "type": "string",
             "default": "",
             "label": "Match Mode",
-            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT (or on ROSTER_LOADED when rosterSource is event).",
             "tier": "presentation"
           },
           {
@@ -346,6 +392,18 @@
             "default": 40,
             "label": "Q Start",
             "tier": "domain"
+          },
+          {
+            "key": "rosterSource",
+            "type": "string",
+            "default": "config",
+            "label": "Roster Source",
+            "description": "Where the system definition (taskText, kind, pLabel, qLabel, pStart, qStart, coefALabel, coefBLabel) comes from: config reads those knobs at INIT; event waits for ROSTER_LOADED and takes them from its payload.",
+            "tier": "domain",
+            "enumValues": [
+              "config",
+              "event"
+            ]
           },
           {
             "key": "shockDownLabel",
@@ -424,6 +482,7 @@
           "MODE_SELECTED",
           "PAUSE",
           "RESET",
+          "ROSTER_LOADED",
           "RUN",
           "SET_A",
           "SET_B",
@@ -438,15 +497,23 @@
           "provides": [
             "active",
             "coefA",
+            "coefALabel",
             "coefB",
+            "coefBLabel",
             "curves",
+            "kind",
             "p",
+            "pLabel",
             "pSamples",
+            "pStart",
             "q",
+            "qLabel",
             "qSamples",
+            "qStart",
             "running",
             "speed",
             "t",
+            "taskText",
             "title"
           ]
         },
@@ -481,7 +548,15 @@
           },
           {
             "kind": "set",
+            "resource": "@entity.coefALabel"
+          },
+          {
+            "kind": "set",
             "resource": "@entity.coefB"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.coefBLabel"
           },
           {
             "kind": "set",
@@ -494,12 +569,20 @@
           },
           {
             "kind": "set",
+            "resource": "@entity.kind"
+          },
+          {
+            "kind": "set",
             "resource": "@entity.p"
           },
           {
             "kind": "set",
             "resource": "@entity.p",
             "site": "tick"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.pLabel"
           },
           {
             "kind": "set",
@@ -512,6 +595,10 @@
           },
           {
             "kind": "set",
+            "resource": "@entity.pStart"
+          },
+          {
+            "kind": "set",
             "resource": "@entity.q"
           },
           {
@@ -521,12 +608,20 @@
           },
           {
             "kind": "set",
+            "resource": "@entity.qLabel"
+          },
+          {
+            "kind": "set",
             "resource": "@entity.qSamples"
           },
           {
             "kind": "set",
             "resource": "@entity.qSamples",
             "site": "tick"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.qStart"
           },
           {
             "kind": "set",
@@ -549,6 +644,10 @@
             "kind": "set",
             "resource": "@entity.t",
             "site": "tick"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.taskText"
           },
           {
             "kind": "set",

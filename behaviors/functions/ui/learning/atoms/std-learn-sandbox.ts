@@ -30,7 +30,7 @@ const ALIAS = 'LearnSandbox';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnSandboxEventKey = 'INIT' | 'MODE_SELECTED' | 'RESET' | 'SANDBOX_RESET' | 'SYSTEM_CHANGED' | 'TOGGLE';
+export type StdLearnSandboxEventKey = 'INIT' | 'MODE_SELECTED' | 'RESET' | 'ROSTER_LOADED' | 'SANDBOX_RESET' | 'SYSTEM_CHANGED' | 'TOGGLE';
 
 /**
  * Payload shape for the `SYSTEM_CHANGED` event.
@@ -75,6 +75,8 @@ export interface StdLearnSandboxConfig {
   outcomeLabel?: string;
   /** Default: `"Reset"` */
   resetLabel?: string;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
   /** Default: `""` */
   summary?: string;
   /** Default: `60` */

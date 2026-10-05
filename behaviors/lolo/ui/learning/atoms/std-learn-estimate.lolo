@@ -12,6 +12,7 @@ orbital EstimateOrbital {
     id : string!
     active : boolean = false
     title : string
+    prompts : [EstimatePrompt]
     promptIndex : number = 0
     totalPrompts : number = 0
     estimate : number = 0
@@ -31,15 +32,16 @@ orbital EstimateOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle when (== @config.matchMode "")
+      INIT -> idle when (and (== @config.matchMode "") (== @config.rosterSource "config"))
+        (set @entity.prompts @config.prompts)
         (let (
-            (first (array/nth @config.prompts 0))
+            (first (array/nth @entity.prompts 0))
           )
           (do
             (set @entity.active true)
             (set @entity.title @config.title)
             (set @entity.promptIndex 0)
-            (set @entity.totalPrompts (array/len @config.prompts))
+            (set @entity.totalPrompts (array/len @entity.prompts))
             (set @entity.estimate @config.sliderDefault)
             (set @entity.locked false)
             (set @entity.band "")
@@ -90,15 +92,16 @@ orbital EstimateOrbital {
         (set @entity.active false)
         (render-ui main null)
 
-      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+      MODE_SELECTED -> idle when (and (== ?mode @config.matchMode) (== @config.rosterSource "config"))
+        (set @entity.prompts @config.prompts)
         (let (
-            (first (array/nth @config.prompts 0))
+            (first (array/nth @entity.prompts 0))
           )
           (do
             (set @entity.active true)
             (set @entity.title @config.title)
             (set @entity.promptIndex 0)
-            (set @entity.totalPrompts (array/len @config.prompts))
+            (set @entity.totalPrompts (array/len @entity.prompts))
             (set @entity.estimate @config.sliderDefault)
             (set @entity.locked false)
             (set @entity.band "")
@@ -144,6 +147,66 @@ orbital EstimateOrbital {
               ] }
           ]
         })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (and (== ?mode @config.matchMode) (> (array/len ?prompts) 0)))
+        (set @entity.prompts ?prompts)
+        (let (
+            (first (array/nth @entity.prompts 0))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.promptIndex 0)
+            (set @entity.totalPrompts (array/len @entity.prompts))
+            (set @entity.estimate @config.sliderDefault)
+            (set @entity.locked false)
+            (set @entity.band "")
+            (set @entity.score 0)
+            (set @entity.done false)
+            (set @entity.promptText (object/get @first prompt))
+            (set @entity.promptHint (object/get @first hint ""))
+            (set @entity.answer (object/get @first answer))
+            (set @entity.unit (object/get @first unit ""))
+            (set @entity.feedback "")
+            (set @entity.view [
+              { type: card, variant: bordered, padding: md, children: [
+                  { type: typography, variant: body, content: @entity.promptText },
+                  { type: typography, variant: caption, color: muted, content: @entity.promptHint }
+                ] },
+              { type: stack, direction: vertical, gap: xs, children: [
+                  { type: typography, variant: caption, content: (str/concat "Your estimate: " (math/round @entity.estimate 2) " " @entity.unit) },
+                  { type: range-slider, min: @config.sliderMin, max: @config.sliderMax, step: @config.sliderStep, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
+                ] },
+              { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                  { type: button, action: LOCK_IN, label: @config.lockLabel, icon: "check", variant: primary, disabled: (if @entity.locked true false) },
+                  { type: button, action: NEXT, label: @config.nextLabel, icon: "chevron-right", variant: secondary, disabled: (if @entity.locked false true) }
+                ] },
+              { type: stack, direction: horizontal, gap: xs, children: [
+                  { type: typography, variant: body, content: @entity.feedback }
+                ] },
+              { type: stat-display, label: "Score", value: @entity.score, max: (* @entity.totalPrompts @config.exactPoints) }
+            ])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Complete" (if (== @entity.band "exact") "Spot on" (if (== @entity.band "close") "Close" (if (== @entity.band "off") "Off" "Estimating")))), variant: (if @entity.done "success" (if (== @entity.band "exact") "success" (if (== @entity.band "close") "warning" (if (== @entity.band "off") "danger" "neutral")))) }
+                  ] },
+                { type: progress-bar, value: (+ @entity.promptIndex 1), max: @entity.totalPrompts, showPercentage: false, label: (str/concat "Prompt " (str/concat "" (+ @entity.promptIndex 1)) " of " (str/concat "" @entity.totalPrompts)) },
+                { type: stack, direction: vertical, gap: md, children: @entity.view }
+              ] }
+          ]
+        })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (render-ui main null)
 
       SET_ESTIMATE -> idle when (and (== @entity.active true) (and (== @entity.locked false) (== @entity.done false)))
         (set @entity.estimate (math/clamp ?value @config.sliderMin @config.sliderMax))
@@ -233,11 +296,11 @@ orbital EstimateOrbital {
         (emit ESTIMATE_JUDGED { band: @entity.band, estimate: @entity.estimate, answer: @entity.answer, score: @entity.score })
 
       NEXT -> idle when (and (== @entity.active true) (and (== @entity.locked true) (== @entity.done false)))
-        (if (>= (+ @entity.promptIndex 1) (array/len @config.prompts)) (emit LEARN_ROUND_COMPLETE { score: @entity.score, total: (array/len @config.prompts) }) null)
+        (if (>= (+ @entity.promptIndex 1) (array/len @entity.prompts)) (emit LEARN_ROUND_COMPLETE { score: @entity.score, total: (array/len @entity.prompts) }) null)
         (let (
             (nextIndex (+ @entity.promptIndex 1))
-            (finished (>= @nextIndex (array/len @config.prompts)))
-            (next (array/nth @config.prompts (math/min @nextIndex (- (array/len @config.prompts) 1))))
+            (finished (>= @nextIndex (array/len @entity.prompts)))
+            (next (array/nth @entity.prompts (math/min @nextIndex (- (array/len @entity.prompts) 1))))
           )
           (do
             (set @entity.promptIndex (if @finished @entity.promptIndex @nextIndex))
@@ -296,7 +359,7 @@ orbital EstimateOrbital {
 
       RETRY -> idle when (and (== @entity.active true) (== @entity.done true))
         (let (
-            (first (array/nth @config.prompts 0))
+            (first (array/nth @entity.prompts 0))
           )
           (do
             (set @entity.promptIndex 0)
@@ -353,6 +416,12 @@ orbital EstimateOrbital {
         mode : string
       }
         @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      ROSTER_LOADED {
+        mode : string!
+        prompts : [EstimatePrompt]!
+      }
+        @description "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and prompts is the prompt list; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides."
         @tier "domain"
       SET_ESTIMATE {
         value : number
@@ -417,6 +486,10 @@ orbital EstimateOrbital {
         @label "Concept"
         @description "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line."
         @tier "presentation"
+      rosterSource : "config" | "event" = "config"
+        @label "Roster Source"
+        @description "Where the prompt roster comes from: config reads the prompts knob at INIT; event waits for ROSTER_LOADED and takes the roster from its payload."
+        @tier "domain"
       prompts : [EstimatePrompt] = [
         { prompt: "How many meters does light travel in one microsecond?", answer: 300, unit: "m", hint: "Light covers 300,000 km every second." },
         { prompt: "What is the boiling point of water at sea level, in Fahrenheit?", answer: 212, unit: "°F", hint: "It is 100 °C." },

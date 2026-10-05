@@ -375,6 +375,21 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["fn", "item", { "type": "typography", "content": "@item.title" }]',
   },
 
+  quote: {
+    visual: { form: 'template' },
+    module: 'core',
+    category: 'control',
+    minArity: 1,
+    maxArity: 1,
+    description: 'Holds an S-expression as data: nothing inside it is evaluated, and its bindings are not resolved (a guard or effect handed to a diagram)',
+    hasSideEffects: false,
+    returnType: 'sexpr',
+    params: [
+      { name: 'body', type: STRING, description: 'The quoted expression as canonical JSON text with every @ written as \\u0040 (the .lolo parser encodes `(quote x)`)' },
+    ],
+    example: '["quote", "[\\">\\",\\"\\\\\\\\u0040payload.amount\\",0]"]',
+  },
+
   // --- effect -----------------------------------------------------------------
 
   set: {
@@ -813,7 +828,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 2,
     maxArity: 4,
     description:
-      'Invoke an external service action. Optional trailing { emit: { success, failure } } options object attaches closed-circuit emit routing (V2 frame contract).',
+      'Invoke an external service action. Optional trailing { key, emit: { success, failure, cancelled } } options object attaches closed-circuit emit routing (V2 frame contract); key names the call for cancel-call.',
     hasSideEffects: true,
     runsOn: 'server',
     returnType: 'void',
@@ -830,7 +845,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
         name: 'options',
         type: { kind: 'object', fields: {}, open: true },
         description:
-          'Optional trailing options object. Set `{ emit: { success: "...", failure: "..." } }` to wire closed-circuit result routing (V2 frame).',
+          'Optional trailing options object. Set `{ emit: { success: "...", failure: "...", cancelled: "..." } }` to wire closed-circuit result routing (V2 frame), and `key` to name the call for `cancel-call`.',
         optional: true,
       },
     ],
@@ -842,6 +857,20 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       // Today the emit.success payload is whatever the service adapter returns.
       produces: ANY,
     },
+  },
+  'cancel-call': {
+    module: 'core',
+    category: 'effect',
+    minArity: 1,
+    maxArity: 1,
+    description:
+      'Abort the in-flight call-service started with this key in the same running app; a no-op when none is in flight. The cancelled call emits its declared emit.cancelled event with { key }, never success or failure.',
+    hasSideEffects: true,
+    runsOn: 'server',
+    returnType: 'void',
+    params: [{ name: 'key', type: STRING, description: 'The key the call-service declared in its options' }],
+    example: '["cancel-call", "@entity.id"]',
+    effect: { kind: 'cancel-call' },
   },
   'render-ui': {
     module: 'core',

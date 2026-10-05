@@ -30,7 +30,7 @@ const ALIAS = 'LearnEstimate';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnEstimateEventKey = 'ESTIMATE_JUDGED' | 'INIT' | 'LEARN_ROUND_COMPLETE' | 'LOCK_IN' | 'MODE_SELECTED' | 'NEXT' | 'PROMPT_ADVANCED' | 'RETRY' | 'ROUND_RESTARTED' | 'SET_ESTIMATE';
+export type StdLearnEstimateEventKey = 'ESTIMATE_JUDGED' | 'INIT' | 'LEARN_ROUND_COMPLETE' | 'LOCK_IN' | 'MODE_SELECTED' | 'NEXT' | 'PROMPT_ADVANCED' | 'RETRY' | 'ROSTER_LOADED' | 'ROUND_RESTARTED' | 'SET_ESTIMATE';
 
 /**
  * Payload shape for the `ESTIMATE_JUDGED` event.
@@ -91,6 +91,8 @@ export interface StdLearnEstimateConfig {
   prompts?: EntityRow[];
   /** Default: `"Try Again"` */
   retryLabel?: string;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
   /** Default: `100` */
   sliderDefault?: number;
   /** Default: `500` */

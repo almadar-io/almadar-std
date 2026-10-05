@@ -30,7 +30,7 @@ const ALIAS = 'LearnLiveSim';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnLiveSimEventKey = 'INIT' | 'MODE_SELECTED' | 'PAUSE' | 'RESET' | 'RUN' | 'RUN_TOGGLED' | 'SET_DAMPING' | 'SET_GRAVITY' | 'SIM_RESET' | 'TOGGLE_RUN';
+export type StdLearnLiveSimEventKey = 'INIT' | 'MODE_SELECTED' | 'PAUSE' | 'RESET' | 'ROSTER_LOADED' | 'RUN' | 'RUN_TOGGLED' | 'SET_DAMPING' | 'SET_GRAVITY' | 'SIM_RESET' | 'TOGGLE_RUN';
 
 /**
  * Payload shape for the `RUN_TOGGLED` event.
@@ -67,6 +67,8 @@ export interface StdLearnLiveSimConfig {
   matchMode?: string;
   /** Default: `0.78` */
   restitution?: number;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
   /** Default: `false` */
   running?: boolean;
   /** Default: `true` */

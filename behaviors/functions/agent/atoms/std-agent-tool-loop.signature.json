@@ -25,6 +25,12 @@
             "type": "string",
             "required": false,
             "description": "Why the last turn failed."
+          },
+          {
+            "name": "ephemeral",
+            "type": "boolean",
+            "required": false,
+            "description": "The current turn belongs to an ephemeral conversation."
           }
         ],
         "persistence": "runtime"
@@ -52,7 +58,7 @@
           {
             "name": "ASSISTANT_REPLIED",
             "direction": "emit",
-            "description": "The assistant answered; carries every tool step it took and the tokens it used.",
+            "description": "The assistant answered; carries every tool step it took and the tokens it used. `ephemeral` echoes the conversation's: an ephemeral reply is not stored or remembered, and only an ephemeral conversation shows it.",
             "synonyms": "answered, responded, done",
             "tier": "domain"
           },
@@ -80,11 +86,26 @@
           {
             "name": "CONVERSE",
             "direction": "listen",
-            "description": "Answer this conversation; the last turn is the request. `context` is what the assistant remembers that may be relevant.",
+            "description": "Answer this conversation; the last turn is the request. `context` is what the assistant remembers that may be relevant. An `ephemeral` conversation runs under its own `instructions` (empty: the configured ones) and exactly its own `tools` (absent or `[]`: none, never the configured ones), streams no live steps and shows no failure toast.",
             "synonyms": "ask, chat, request"
+          },
+          {
+            "name": "CANCEL",
+            "direction": "listen",
+            "description": "Abort the request in flight; nothing is replied and no failure is reported.",
+            "synonyms": "stop, abort, cancel"
           }
         ],
         "overridableConfigKeys": [
+          {
+            "key": "cancelKey",
+            "type": "string",
+            "default": "agent-tool-loop",
+            "label": "Cancel key",
+            "description": "The key this instance's model call runs under, so CANCEL aborts it. Give each instance of the loop in one app its own.",
+            "synonyms": "call key, abort key",
+            "tier": "internal"
+          },
           {
             "key": "instructions",
             "type": "string",
@@ -100,6 +121,15 @@
             "default": 8,
             "label": "Model round-trips per request",
             "description": "How many model calls one request may take before it fails.",
+            "tier": "policy"
+          },
+          {
+            "key": "quiet",
+            "type": "boolean",
+            "default": false,
+            "label": "Run in the background?",
+            "description": "No live ASSISTANT_STEP stream and no failure toast: the request is reported only through ASSISTANT_REPLIED and ASSISTANT_REPLY_FAILED. For a run nobody is watching, such as one the app starts on its own.",
+            "synonyms": "silent, background, no toast, suppress errors, headless run",
             "tier": "policy"
           },
           {
@@ -140,6 +170,7 @@
         "transitionEvents": [
           "ANSWERED",
           "ASK_FAILED",
+          "CANCEL",
           "CONVERSE",
           "INIT"
         ],
@@ -148,6 +179,9 @@
           {
             "kind": "call-service",
             "resource": "llm.call-tools"
+          },
+          {
+            "kind": "cancel-call"
           },
           {
             "kind": "emit",
@@ -160,6 +194,10 @@
           {
             "kind": "render-ui",
             "resource": "toast"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.ephemeral"
           },
           {
             "kind": "set",

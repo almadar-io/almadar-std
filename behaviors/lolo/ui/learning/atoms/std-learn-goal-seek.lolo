@@ -16,6 +16,9 @@ orbital GoalSeekOrbital {
     active : boolean = false
     title : string
     curveKind : string
+    goalText : string
+    targetA : number
+    targetB : number
     paramA : number
     paramB : number
     paramALabel : string
@@ -35,7 +38,7 @@ orbital GoalSeekOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle when (== @config.matchMode "")
+      INIT -> idle when (and (== @config.matchMode "") (== @config.rosterSource "config"))
         (let (
             (kind @config.curveKind)
             (span (- @config.xMax @config.xMin))
@@ -77,6 +80,9 @@ orbital GoalSeekOrbital {
             (set @entity.active true)
             (set @entity.title @config.title)
             (set @entity.curveKind @kind)
+            (set @entity.goalText @config.goalText)
+            (set @entity.targetA @tA)
+            (set @entity.targetB @tB)
             (set @entity.paramA @A)
             (set @entity.paramB @B)
             (set @entity.paramALabel @config.paramALabel)
@@ -121,7 +127,7 @@ orbital GoalSeekOrbital {
                       { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
                     ] }
                   ] },
-                { type: typography, variant: body, content: @config.goalText },
+                { type: typography, variant: body, content: @entity.goalText },
                 { type: typography, variant: caption, color: muted, content: @entity.feedback }
               ] }
           ]
@@ -131,7 +137,7 @@ orbital GoalSeekOrbital {
         (set @entity.active false)
         (render-ui main null)
 
-      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+      MODE_SELECTED -> idle when (and (== ?mode @config.matchMode) (== @config.rosterSource "config"))
         (let (
             (kind @config.curveKind)
             (span (- @config.xMax @config.xMin))
@@ -173,6 +179,9 @@ orbital GoalSeekOrbital {
             (set @entity.active true)
             (set @entity.title @config.title)
             (set @entity.curveKind @kind)
+            (set @entity.goalText @config.goalText)
+            (set @entity.targetA @tA)
+            (set @entity.targetB @tB)
             (set @entity.paramA @A)
             (set @entity.paramB @B)
             (set @entity.paramALabel @config.paramALabel)
@@ -217,11 +226,110 @@ orbital GoalSeekOrbital {
                       { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
                     ] }
                   ] },
-                { type: typography, variant: body, content: @config.goalText },
+                { type: typography, variant: body, content: @entity.goalText },
                 { type: typography, variant: caption, color: muted, content: @entity.feedback }
               ] }
           ]
         })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (and (== ?mode @config.matchMode) (!= ?curveKind "")))
+        (let (
+            (kind ?curveKind)
+            (span (- @config.xMax @config.xMin))
+            (tA ?targetA)
+            (tB ?targetB)
+            (A @config.paramADefault)
+            (B @config.paramBDefault)
+            (targetSamples (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (x (+ @config.xMin (* @i (/ @span 80))))
+                  (yVal (if (== @kind "power")
+                          (* @tA (math/pow @x @tB))
+                          (if (== @kind "linear")
+                            (+ @tA (* @tB @x))
+                            (* @tA (math/sin (* @tB @x))))))
+                )
+                { x: @x, y: @yVal }))))
+            (samples (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (x (+ @config.xMin (* @i (/ @span 80))))
+                  (yVal (if (== @kind "power")
+                          (* @A (math/pow @x @B))
+                          (if (== @kind "linear")
+                            (+ @A (* @B @x))
+                            (* @A (math/sin (* @B @x))))))
+                )
+                { x: @x, y: @yVal }))))
+            (dist (math/sqrt (/ (array/sum (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (dY (- (object/get (array/nth @samples @i) y) (object/get (array/nth @targetSamples @i) y)))
+                )
+                (* @dY @dY))))) 81)))
+            (allSamples (array/concat @samples @targetSamples))
+            (yMinRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
+            (yMaxRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+            (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.curveKind @kind)
+            (set @entity.goalText ?goalText)
+            (set @entity.targetA ?targetA)
+            (set @entity.targetB ?targetB)
+            (set @entity.paramA @A)
+            (set @entity.paramB @B)
+            (set @entity.paramALabel @config.paramALabel)
+            (set @entity.paramBLabel @config.paramBLabel)
+            (set @entity.targetSamples @targetSamples)
+            (set @entity.distance @dist)
+            (set @entity.attempts 0)
+            (set @entity.solved false)
+            (set @entity.feedback "")
+            (set @entity.yMin (- @yMinRaw @yPad))
+            (set @entity.yMax (+ @yMaxRaw @yPad))
+            (set @entity.curves [
+              { label: @config.targetLabel, color: @config.targetColor, samples: @targetSamples },
+              { label: @config.learnerLabel, color: @config.learnerColor, samples: @samples }
+            ])))
+        (set @entity.resultRow (array/concat (if @entity.solved [ { type: badge, variant: success, label: "Solved" } ] []) [ { type: typography, variant: caption, content: @entity.feedback } ]))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.solved "Solved" (if (> @entity.attempts 0) "Try again" "Tuning")), variant: (if @entity.solved "success" (if (> @entity.attempts 0) "warning" "neutral")) }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if @entity.solved true false) },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) }
+                  ] },
+                { type: math-canvas, keyMap: { Space: CHECK, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: vertical, gap: sm, children: [
+                { type: stack, direction: vertical, gap: xs, children: [
+                      { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
+                      { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
+                    ] },
+                  { type: stack, direction: vertical, gap: xs, children: [
+                      { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
+                      { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                    ] }
+                  ] },
+                { type: typography, variant: body, content: @entity.goalText },
+                { type: typography, variant: caption, color: muted, content: @entity.feedback }
+              ] }
+          ]
+        })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (render-ui main null)
 
       SET_PARAM_A -> idle when (and (== @entity.active true) (== @entity.solved false))
         (let (
@@ -287,7 +395,7 @@ orbital GoalSeekOrbital {
                       { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
                     ] }
                   ] },
-                { type: typography, variant: body, content: @config.goalText },
+                { type: typography, variant: body, content: @entity.goalText },
                 { type: typography, variant: caption, color: muted, content: @entity.feedback }
               ] }
           ]
@@ -358,7 +466,7 @@ orbital GoalSeekOrbital {
                       { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
                     ] }
                   ] },
-                { type: typography, variant: body, content: @config.goalText },
+                { type: typography, variant: body, content: @entity.goalText },
                 { type: typography, variant: caption, color: muted, content: @entity.feedback }
               ] }
           ]
@@ -400,7 +508,7 @@ orbital GoalSeekOrbital {
                       { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
                     ] }
                   ] },
-                { type: typography, variant: body, content: @config.goalText },
+                { type: typography, variant: body, content: @entity.goalText },
                 { type: typography, variant: caption, color: muted, content: @entity.feedback }
               ] }
           ]
@@ -476,7 +584,7 @@ orbital GoalSeekOrbital {
                       { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
                     ] }
                   ] },
-                { type: typography, variant: body, content: @config.goalText },
+                { type: typography, variant: body, content: @entity.goalText },
                 { type: typography, variant: caption, color: muted, content: @entity.feedback }
               ] }
           ]
@@ -489,6 +597,15 @@ orbital GoalSeekOrbital {
         mode : string
       }
         @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      ROSTER_LOADED {
+        mode : string!
+        goalText : string!
+        curveKind : string!
+        targetA : number!
+        targetB : number!
+      }
+        @description "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and goalText, curveKind, targetA and targetB define the inverse problem; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides."
         @tier "domain"
       SET_PARAM_A {
         value : number
@@ -543,8 +660,12 @@ orbital GoalSeekOrbital {
     config {
       matchMode : string = ""
         @label "Match Mode"
-        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT (or on ROSTER_LOADED when rosterSource is event)."
         @tier "presentation"
+      rosterSource : "config" | "event" = "config"
+        @label "Roster Source"
+        @description "Where the problem definition (goalText, curveKind, targetA, targetB) comes from: config reads those knobs at INIT; event waits for ROSTER_LOADED and takes them from its payload."
+        @tier "domain"
       title : string = "Goal Seek"
         @label "Title"
         @description "Title shown above the canvas."

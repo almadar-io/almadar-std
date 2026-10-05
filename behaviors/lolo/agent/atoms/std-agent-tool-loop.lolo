@@ -1,5 +1,5 @@
 app std-agent-tool-loop "2.0.0"
-"std-agent-tool-loop — answers a conversation by operating the running app as the caller, through `call-service llm call-tools`. Its `tools` are `{ scope: declared }` (every declared external input plus a read over every persisted entity), or named declared inputs (addressed like a listens source: `Trait.EVENT`, `Orbital.Trait.EVENT`) and entities to read; each input fires as the signed-in user through the ordinary dispatch (guards and entity policies apply) and each read returns only the rows the caller may read. Headless: the conversation UI (std-agent-session) shows the reply; a failure shows as a toast. CONVERSE carries the conversation (and optionally what std-agent-memory recalled); ASSISTANT_STEP carries each step live while it works (a model call, a tool it used, what the app answered) to the asking tab; ASSISTANT_REPLIED carries the reply, every step and the token usage; ASSISTANT_REPLY_FAILED carries the error. These names are the assistant contract std-agent-session's conversation hears from any orbital. Compose with std-agent-session (the conversation) and std-agent-trace (the step record)."
+"std-agent-tool-loop — answers a conversation by operating the running app as the caller, through `call-service llm call-tools`. Its `tools` are `{ scope: declared }` (every declared external input plus a read over every persisted entity), or named declared inputs (addressed like a listens source: `Trait.EVENT`, `Orbital.Trait.EVENT`) and entities to read; each input fires as the signed-in user through the ordinary dispatch (guards and entity policies apply) and each read returns only the rows the caller may read. Headless: the conversation UI (std-agent-session) shows the reply; a failure shows as a toast, unless `quiet` is on (a background run nobody is watching: no live steps and no toast). CONVERSE carries the conversation (and optionally what std-agent-memory recalled); ASSISTANT_STEP carries each step live while it works (a model call, a tool it used, what the app answered) to the asking tab; ASSISTANT_REPLIED carries the reply, every step and the token usage; ASSISTANT_REPLY_FAILED carries the error. These names are the assistant contract std-agent-session's conversation hears from any orbital. Compose with std-agent-session (the conversation) and std-agent-trace (the step record)."
 
 type AgentTool = {
   event : event
@@ -63,6 +63,7 @@ orbital AgentToolLoopOrbital {
     status : "idle" | "thinking" | "answered" | "failed" @description "Where the current turn is." = idle
     reply : string @description "The last reply." = ""
     error : string @description "Why the last turn failed." = ""
+    ephemeral : boolean @description "The current turn belongs to an ephemeral conversation." = false
   }
 
   trait AgentToolLoop -> AgentTurn [interaction] {
@@ -81,33 +82,73 @@ orbital AgentToolLoopOrbital {
         @label "Model round-trips per request"
         @description "How many model calls one request may take before it fails."
         @tier "policy"
+      quiet : boolean = false
+        @label "Run in the background?"
+        @description "No live ASSISTANT_STEP stream and no failure toast: the request is reported only through ASSISTANT_REPLIED and ASSISTANT_REPLY_FAILED. For a run nobody is watching, such as one the app starts on its own."
+        @synonyms "silent, background, no toast, suppress errors, headless run"
+        @tier "policy"
+      cancelKey : string = "agent-tool-loop"
+        @label "Cancel key"
+        @description "The key this instance's model call runs under, so CANCEL aborts it. Give each instance of the loop in one app its own."
+        @synonyms "call key, abort key"
+        @tier "internal"
     }
     initial: idle
 
     state idle {
       INIT -> idle
         (set @entity.status idle)
-      CONVERSE -> thinking
+      CONVERSE -> thinking when (and (not @config.quiet) (not ?ephemeral))
         (set @entity.status thinking)
+        (set @entity.ephemeral false)
         (call-service llm call-tools {
           messages: ?messages
           tools: @config.tools
           instructions: (if ["=", (str/default ?context ""), ""] @config.instructions (str/concat @config.instructions "\n\nWhat you remember that may be relevant:\n" ?context))
           maxSteps: @config.maxSteps
         } {
-          emit: { failure: ASK_FAILED, success: ANSWERED, onMessage: ASSISTANT_STEP }
+          key: @config.cancelKey, emit: { failure: ASK_FAILED, success: ANSWERED, onMessage: ASSISTANT_STEP }
+        })
+      CONVERSE -> thinking when (and @config.quiet (not ?ephemeral))
+        (set @entity.status thinking)
+        (set @entity.ephemeral false)
+        (call-service llm call-tools {
+          messages: ?messages
+          tools: @config.tools
+          instructions: (if ["=", (str/default ?context ""), ""] @config.instructions (str/concat @config.instructions "\n\nWhat you remember that may be relevant:\n" ?context))
+          maxSteps: @config.maxSteps
+        } {
+          key: @config.cancelKey, emit: { failure: ASK_FAILED, success: ANSWERED }
+        })
+      CONVERSE -> thinking when ?ephemeral
+        (set @entity.status thinking)
+        (set @entity.ephemeral true)
+        (call-service llm call-tools {
+          messages: ?messages
+          tools: (object/get ? tools [])
+          instructions: (if ["=", (str/default ?instructions ""), ""] @config.instructions ?instructions)
+          maxSteps: @config.maxSteps
+        } {
+          key: @config.cancelKey, emit: { failure: ASK_FAILED, success: ANSWERED }
         })
     }
 
     state thinking {
+      CANCEL -> idle
+        (cancel-call @config.cancelKey)
+        (set @entity.status idle)
       ANSWERED -> idle
         (set @entity.status answered)
         (set @entity.reply ?reply)
-        (emit ASSISTANT_REPLIED { reply: ?reply, steps: ?steps, usage: ?usage })
-      ASK_FAILED -> idle
+        (emit ASSISTANT_REPLIED { reply: ?reply, steps: ?steps, usage: ?usage, ephemeral: @entity.ephemeral })
+      ASK_FAILED -> idle when (or @config.quiet @entity.ephemeral)
         (set @entity.status failed)
         (set @entity.error ?error)
-        (emit ASSISTANT_REPLY_FAILED { error: ?error })
+        (emit ASSISTANT_REPLY_FAILED { error: ?error, ephemeral: @entity.ephemeral })
+      ASK_FAILED -> idle when (and (not @config.quiet) (not @entity.ephemeral))
+        (set @entity.status failed)
+        (set @entity.error ?error)
+        (emit ASSISTANT_REPLY_FAILED { error: ?error, ephemeral: @entity.ephemeral })
         (render-ui toast {
           message: ?error
           type: alert
@@ -126,12 +167,14 @@ orbital AgentToolLoopOrbital {
         reply : string!
         steps : [AgentActivity]!
         usage : AgentUsage!
+        ephemeral : boolean
       }
-        @description "The assistant answered; carries every tool step it took and the tokens it used."
+        @description "The assistant answered; carries every tool step it took and the tokens it used. `ephemeral` echoes the conversation's: an ephemeral reply is not stored or remembered, and only an ephemeral conversation shows it."
         @synonyms "answered, responded, done"
         @tier "domain"
       ASSISTANT_REPLY_FAILED -> external {
         error : string!
+        ephemeral : boolean
       }
         @description "The assistant could not answer (model unavailable, or out of steps)."
         @synonyms "failed, error, gave up"
@@ -149,11 +192,18 @@ orbital AgentToolLoopOrbital {
     }
 
     listens {
+      CANCEL {
+      }
+        @description "Abort the request in flight; nothing is replied and no failure is reported."
+        @synonyms "stop, abort, cancel"
       CONVERSE {
         messages : [AgentChatMessage]!
         context : string
+        instructions : string
+        tools : [AgentTool]
+        ephemeral : boolean
       }
-        @description "Answer this conversation; the last turn is the request. `context` is what the assistant remembers that may be relevant."
+        @description "Answer this conversation; the last turn is the request. `context` is what the assistant remembers that may be relevant. An `ephemeral` conversation runs under its own `instructions` (empty: the configured ones) and exactly its own `tools` (absent or `[]`: none, never the configured ones), streams no live steps and shows no failure toast."
         @synonyms "ask, chat, request"
     }
   }

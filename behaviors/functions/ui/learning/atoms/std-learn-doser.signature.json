@@ -67,6 +67,11 @@
             "name": "doseSeries",
             "type": "array",
             "required": false
+          },
+          {
+            "name": "bands",
+            "type": "array",
+            "required": false
           }
         ],
         "persistence": "runtime"
@@ -119,6 +124,12 @@
             "name": "MODE_SELECTED",
             "direction": "listen",
             "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "ROSTER_LOADED",
+            "direction": "listen",
+            "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and bands is the band roster; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
             "tier": "domain"
           },
           {
@@ -261,6 +272,18 @@
             "tier": "presentation"
           },
           {
+            "key": "rosterSource",
+            "type": "string",
+            "default": "config",
+            "label": "Roster Source",
+            "description": "Where the band roster comes from: config reads the bands knob at INIT; event waits for ROSTER_LOADED and takes the roster from its payload.",
+            "tier": "domain",
+            "enumValues": [
+              "config",
+              "event"
+            ]
+          },
+          {
             "key": "series",
             "type": "[string]",
             "default": [],
@@ -361,6 +384,7 @@
           "INIT",
           "MODE_SELECTED",
           "RESET",
+          "ROSTER_LOADED",
           "TOGGLE_DRIP"
         ],
         "definerKnobs": [],
@@ -371,6 +395,7 @@
             "active",
             "bandColor",
             "bandLabel",
+            "bands",
             "containers",
             "done",
             "dose",
@@ -419,6 +444,10 @@
           {
             "kind": "set",
             "resource": "@entity.bandLabel"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.bands"
           },
           {
             "kind": "set",

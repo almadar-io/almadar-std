@@ -64,6 +64,15 @@
         "parent": "trt_01M07581G7AY0MGAMJFPDR2Z8Z",
         "renames": []
       },
+      "evt_01M459WQST1QVEH3HQFBJCAQF7": {
+        "bakedName": "ROSTER_LOADED",
+        "curName": "ROSTER_LOADED",
+        "id": "evt_01M459WQST1QVEH3HQFBJCAQF7",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M07581G7AY0MGAMJFPDR2Z8Z",
+        "renames": []
+      },
       "orb_01M07581G7P81XQJK08WFMYKGA": {
         "bakedName": "ScenarioOrbital",
         "curName": "ScenarioOrbital",
@@ -108,6 +117,64 @@
           },
           {
             "name": "title",
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "choices": {
+                  "items": {
+                    "properties": {
+                      "deltaA": {
+                        "name": "deltaA",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "deltaB": {
+                        "name": "deltaB",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "next": {
+                        "name": "next",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "note": {
+                        "name": "note",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "choices",
+                  "required": false,
+                  "type": "array"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "situation": {
+                  "name": "situation",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "nodes",
+            "type": "array"
+          },
+          {
+            "name": "startId",
             "type": "string"
           },
           {
@@ -216,7 +283,7 @@
           "config": {
             "matchMode": {
               "default": "",
-              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT, or on ROSTER_LOADED when rosterSource is event.",
               "label": "Match Mode",
               "tier": "presentation",
               "type": "string"
@@ -391,6 +458,17 @@
               "tier": "presentation",
               "type": "string"
             },
+            "rosterSource": {
+              "default": "config",
+              "description": "Where the roster comes from: config reads nodes and startId knobs at INIT; event waits for ROSTER_LOADED and takes the roster from its payload.",
+              "label": "Roster Source",
+              "tier": "domain",
+              "type": "string",
+              "values": [
+                "config",
+                "event"
+              ]
+            },
             "startId": {
               "default": "start",
               "description": "Id of the node the scenario opens on.",
@@ -456,11 +534,19 @@
             },
             {
               "kind": "set",
+              "resource": "@entity.nodes"
+            },
+            {
+              "kind": "set",
               "resource": "@entity.path"
             },
             {
               "kind": "set",
               "resource": "@entity.situation"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.startId"
             },
             {
               "kind": "set",
@@ -525,8 +611,10 @@
               "feedback",
               "metricA",
               "metricB",
+              "nodes",
               "path",
               "situation",
+              "startId",
               "stepCount",
               "title",
               "view"
@@ -557,6 +645,70 @@
                 "payloadSchema": [
                   {
                     "name": "mode",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and nodes is the decision graph and startId the node it opens on; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
+                "id": "evt_01M459WQST1QVEH3HQFBJCAQF7",
+                "key": "ROSTER_LOADED",
+                "name": "Roster Loaded",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "nodes",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "situation",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "choices",
+                        "properties": [
+                          {
+                            "name": "label",
+                            "required": true,
+                            "type": "string"
+                          },
+                          {
+                            "name": "next",
+                            "required": true,
+                            "type": "string"
+                          },
+                          {
+                            "name": "deltaA",
+                            "type": "number"
+                          },
+                          {
+                            "name": "deltaB",
+                            "type": "number"
+                          },
+                          {
+                            "name": "note",
+                            "type": "string"
+                          }
+                        ],
+                        "type": "[object]"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
+                  },
+                  {
+                    "name": "startId",
+                    "required": true,
                     "type": "string"
                   }
                 ],
@@ -631,6 +783,16 @@
             "transitions": [
               {
                 "effects": [
+                  [
+                    "set",
+                    "@entity.nodes",
+                    "@config.nodes"
+                  ],
+                  [
+                    "set",
+                    "@entity.startId",
+                    "@config.startId"
+                  ],
                   [
                     "let",
                     [
@@ -959,9 +1121,17 @@
                 "eventId": "evt_01M07581G765VPJBCN6TX03WE3",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@config.matchMode",
-                  ""
+                  "and",
+                  [
+                    "==",
+                    "@config.matchMode",
+                    ""
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1004,6 +1174,16 @@
               },
               {
                 "effects": [
+                  [
+                    "set",
+                    "@entity.nodes",
+                    "@config.nodes"
+                  ],
+                  [
+                    "set",
+                    "@entity.startId",
+                    "@config.startId"
+                  ],
                   [
                     "let",
                     [
@@ -1332,9 +1512,416 @@
                 "eventId": "evt_01M07581GASKSPTBR0AKY9KB4B",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@payload.mode",
-                  "@config.matchMode"
+                  "and",
+                  [
+                    "==",
+                    "@payload.mode",
+                    "@config.matchMode"
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.nodes",
+                    "@payload.nodes"
+                  ],
+                  [
+                    "set",
+                    "@entity.startId",
+                    "@payload.startId"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "start",
+                        [
+                          "array/find",
+                          "@payload.nodes",
+                          [
+                            "fn",
+                            "n",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "@n",
+                                "id"
+                              ],
+                              "@payload.startId"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.active",
+                        true
+                      ],
+                      [
+                        "set",
+                        "@entity.title",
+                        "@config.title"
+                      ],
+                      [
+                        "set",
+                        "@entity.currentId",
+                        "@payload.startId"
+                      ],
+                      [
+                        "set",
+                        "@entity.situation",
+                        [
+                          "object/get",
+                          "@start",
+                          "situation"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.choices",
+                        [
+                          "object/get",
+                          "@start",
+                          "choices",
+                          []
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.metricA",
+                        "@config.metricAStart"
+                      ],
+                      [
+                        "set",
+                        "@entity.metricB",
+                        "@config.metricBStart"
+                      ],
+                      [
+                        "set",
+                        "@entity.stepCount",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.path",
+                        []
+                      ],
+                      [
+                        "set",
+                        "@entity.done",
+                        false
+                      ],
+                      [
+                        "set",
+                        "@entity.feedback",
+                        ""
+                      ],
+                      [
+                        "set",
+                        "@entity.view",
+                        [
+                          {
+                            "children": [
+                              {
+                                "content": "@entity.situation",
+                                "type": "typography",
+                                "variant": "body"
+                              }
+                            ],
+                            "padding": "md",
+                            "type": "card",
+                            "variant": "bordered"
+                          }
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.done",
+                                    "Ended",
+                                    [
+                                      "str/concat",
+                                      "Decision ",
+                                      [
+                                        "+",
+                                        "@entity.stepCount",
+                                        1.0
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.done",
+                                    "primary",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "label": "@config.metricALabel",
+                                  "type": "stat-display",
+                                  "value": [
+                                    "math/round",
+                                    "@entity.metricA",
+                                    0.0
+                                  ]
+                                },
+                                {
+                                  "label": "@config.metricBLabel",
+                                  "type": "stat-display",
+                                  "value": [
+                                    "math/round",
+                                    "@entity.metricB",
+                                    0.0
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
+                              "children": "@entity.view",
+                              "direction": "vertical",
+                              "gap": "md",
+                              "type": "stack"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                [
+                                  "array/range",
+                                  0.0,
+                                  [
+                                    "array/len",
+                                    "@entity.choices"
+                                  ]
+                                ],
+                                [
+                                  "fn",
+                                  [
+                                    "i"
+                                  ],
+                                  {
+                                    "action": "CHOOSE",
+                                    "actionPayload": {
+                                      "index": "@i"
+                                    },
+                                    "disabled": [
+                                      "if",
+                                      "@entity.done",
+                                      true,
+                                      false
+                                    ],
+                                    "label": [
+                                      "object/get",
+                                      [
+                                        "array/nth",
+                                        "@entity.choices",
+                                        "@i"
+                                      ],
+                                      "label"
+                                    ],
+                                    "size": "lg",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  }
+                                ]
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": "@entity.feedback",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                "@entity.path",
+                                [
+                                  "fn",
+                                  [
+                                    "line"
+                                  ],
+                                  {
+                                    "color": "muted",
+                                    "content": "@line",
+                                    "type": "typography",
+                                    "variant": "caption"
+                                  }
+                                ]
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "RESTART",
+                                  "disabled": [
+                                    "if",
+                                    "@entity.done",
+                                    false,
+                                    true
+                                  ],
+                                  "icon": "rotate-ccw",
+                                  "label": "@config.restartLabel",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Decisions ",
+                                    "@entity.stepCount"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459WQST1QVEH3HQFBJCAQF7",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "and",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ],
+                    [
+                      ">",
+                      [
+                        "array/len",
+                        "@payload.nodes"
+                      ],
+                      0.0
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459WQST1QVEH3HQFBJCAQF7",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1363,7 +1950,7 @@
                         "nextNode",
                         [
                           "array/find",
-                          "@config.nodes",
+                          "@entity.nodes",
                           [
                             "fn",
                             "n",
@@ -1859,7 +2446,7 @@
                         "start",
                         [
                           "array/find",
-                          "@config.nodes",
+                          "@entity.nodes",
                           [
                             "fn",
                             "n",
@@ -1870,7 +2457,7 @@
                                 "@n",
                                 "id"
                               ],
-                              "@config.startId"
+                              "@entity.startId"
                             ]
                           ]
                         ]
@@ -1891,7 +2478,7 @@
                       [
                         "set",
                         "@entity.currentId",
-                        "@config.startId"
+                        "@entity.startId"
                       ],
                       [
                         "set",
@@ -2179,7 +2766,7 @@
                     "emit",
                     "SCENARIO_RESTARTED",
                     {
-                      "startId": "@config.startId"
+                      "startId": "@entity.startId"
                     }
                   ]
                 ],

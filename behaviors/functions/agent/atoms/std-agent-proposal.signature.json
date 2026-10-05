@@ -1,0 +1,679 @@
+[
+  {
+    "organism": "std-agent-proposal",
+    "orbital": "AgentProposalOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/agent/atoms/std-agent-proposal.ts",
+    "entities": [
+      {
+        "name": "AgentProposalRun",
+        "fields": [
+          {
+            "name": "input",
+            "type": "string",
+            "required": false,
+            "description": "What the person handed over."
+          },
+          {
+            "name": "context",
+            "type": "string",
+            "required": false,
+            "description": "Extra background the app handed over."
+          },
+          {
+            "name": "request",
+            "type": "string",
+            "required": false,
+            "description": "The request the agent is answering, with any revision feedback."
+          },
+          {
+            "name": "feedback",
+            "type": "string",
+            "required": false,
+            "description": "What the person asked to change."
+          },
+          {
+            "name": "summary",
+            "type": "string",
+            "required": false,
+            "description": "The proposal in a few lines."
+          },
+          {
+            "name": "items",
+            "type": "array",
+            "required": false,
+            "description": "The proposed items."
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "required": false,
+            "description": "Why the last run failed."
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "AgentProposalWorkflow",
+        "emittedEvents": [
+          "PROPOSAL_APPROVED",
+          "PROPOSAL_DISCARDED",
+          "PROPOSAL_CANCELLED",
+          "PROPOSAL_RUN_REQUESTED"
+        ],
+        "listenedEvents": [
+          "PROPOSAL_LOOP_REPLIED",
+          "PROPOSAL_LOOP_FAILED"
+        ],
+        "events": [
+          {
+            "name": "PROPOSAL_APPROVED",
+            "direction": "emit",
+            "description": "The person approved the proposal as it stands. The app commits it; nothing has been written.",
+            "synonyms": "approved, accepted, confirmed, go ahead, commit",
+            "tier": "domain"
+          },
+          {
+            "name": "PROPOSAL_DISCARDED",
+            "direction": "emit",
+            "description": "The person discarded the proposal (or a failed run); nothing was committed.",
+            "synonyms": "rejected, dismissed, thrown away",
+            "tier": "domain"
+          },
+          {
+            "name": "PROPOSAL_CANCELLED",
+            "direction": "emit",
+            "description": "The person cancelled while the agent was still working; its model call was aborted.",
+            "synonyms": "stopped, aborted",
+            "tier": "domain"
+          },
+          {
+            "name": "PROPOSAL_RUN_REQUESTED",
+            "direction": "emit",
+            "description": "The agent was asked to work out (or revise) a proposal.",
+            "synonyms": "run started, working",
+            "tier": "domain"
+          },
+          {
+            "name": "PROPOSE",
+            "direction": "listen",
+            "description": "Submit the proposal for the person to review: a short summary and the list of proposed items, each a flat map of values. Call it once with everything; the person approves, asks for a revision, or discards it.",
+            "synonyms": "propose, submit proposal, draft"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "INPUT_CHANGED",
+            "direction": "listen",
+            "description": "The start form's text changed."
+          },
+          {
+            "name": "CLOSE",
+            "direction": "listen",
+            "description": "The overlay's own close control was used: cancels the agent's work while it runs, discards the proposal otherwise."
+          },
+          {
+            "name": "START_TYPED",
+            "direction": "listen",
+            "description": "Start from the text typed into the start form."
+          },
+          {
+            "name": "PROPOSAL_REQUESTED",
+            "direction": "listen",
+            "description": "Work out a proposal from this: the documents or text the person handed over, and optional background.",
+            "synonyms": "start, propose, analyze, extract, begin"
+          },
+          {
+            "name": "PROPOSAL_LOOP_REPLIED",
+            "direction": "listen",
+            "description": "The agent's run ended."
+          },
+          {
+            "name": "PROPOSAL_LOOP_FAILED",
+            "direction": "listen",
+            "description": "The agent's run failed."
+          },
+          {
+            "name": "CANCEL",
+            "direction": "listen",
+            "description": "Cancel the agent's work."
+          },
+          {
+            "name": "FEEDBACK_CHANGED",
+            "direction": "listen",
+            "description": "The revision feedback changed."
+          },
+          {
+            "name": "APPROVE",
+            "direction": "listen",
+            "description": "Approve the proposal."
+          },
+          {
+            "name": "REVISE",
+            "direction": "listen",
+            "description": "Ask for a revision with the written feedback."
+          },
+          {
+            "name": "DISCARD",
+            "direction": "listen",
+            "description": "Discard the proposal."
+          },
+          {
+            "name": "RETRY",
+            "direction": "listen",
+            "description": "Run the agent again."
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "approveButton",
+            "type": "string",
+            "default": "@config.approveLabel",
+            "label": "Approve button",
+            "tier": "presentation"
+          },
+          {
+            "key": "cancelButton",
+            "type": "string",
+            "default": "@config.cancelLabel",
+            "label": "Cancel button",
+            "tier": "presentation"
+          },
+          {
+            "key": "discardButton",
+            "type": "string",
+            "default": "@config.discardLabel",
+            "label": "Discard button",
+            "tier": "presentation"
+          },
+          {
+            "key": "feedbackText",
+            "type": "string",
+            "default": "@config.feedbackLabel",
+            "label": "Revision feedback label",
+            "tier": "presentation"
+          },
+          {
+            "key": "fieldsForItems",
+            "type": "[ProposalField]",
+            "default": "@config.itemFields",
+            "label": "Which item values are shown?",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "framing",
+            "type": "string",
+            "default": "@config.prompt",
+            "label": "What is the agent asked to do?",
+            "description": "The request that precedes the person's input.",
+            "synonyms": "task, goal, brief",
+            "tier": "domain"
+          },
+          {
+            "key": "heading",
+            "type": "string",
+            "default": "@config.title",
+            "label": "Panel heading",
+            "tier": "presentation"
+          },
+          {
+            "key": "headingIcon",
+            "type": "string",
+            "default": "@config.icon",
+            "label": "Panel icon",
+            "tier": "presentation"
+          },
+          {
+            "key": "inputText",
+            "type": "string",
+            "default": "@config.inputLabel",
+            "label": "Start form label",
+            "tier": "presentation"
+          },
+          {
+            "key": "itemsTitle",
+            "type": "string",
+            "default": "@config.itemsHeading",
+            "label": "Items heading",
+            "tier": "presentation"
+          },
+          {
+            "key": "patternForItems",
+            "type": "pattern",
+            "default": "@config.itemPattern",
+            "label": "How are the proposed items drawn?",
+            "tier": "presentation"
+          },
+          {
+            "key": "retryButton",
+            "type": "string",
+            "default": "@config.retryLabel",
+            "label": "Retry button",
+            "tier": "presentation"
+          },
+          {
+            "key": "reviseButton",
+            "type": "string",
+            "default": "@config.reviseLabel",
+            "label": "Revise button",
+            "tier": "presentation"
+          },
+          {
+            "key": "slot",
+            "type": "slot",
+            "default": "@config.panelSlot",
+            "label": "Where the panel renders",
+            "tier": "internal"
+          },
+          {
+            "key": "startButton",
+            "type": "string",
+            "default": "@config.startLabel",
+            "label": "Start button",
+            "tier": "presentation"
+          },
+          {
+            "key": "summaryTitle",
+            "type": "string",
+            "default": "@config.summaryHeading",
+            "label": "Summary heading",
+            "tier": "presentation"
+          },
+          {
+            "key": "withInputForm",
+            "type": "boolean",
+            "default": "@config.showInputForm",
+            "label": "Show a start form?",
+            "tier": "presentation"
+          },
+          {
+            "key": "workingText",
+            "type": "string",
+            "default": "@config.workingLabel",
+            "label": "While the agent works",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "AgentProposalRun",
+        "transitionEvents": [
+          "APPROVE",
+          "CANCEL",
+          "CLOSE",
+          "DISCARD",
+          "FEEDBACK_CHANGED",
+          "INIT",
+          "INPUT_CHANGED",
+          "PROPOSAL_LOOP_FAILED",
+          "PROPOSAL_LOOP_REPLIED",
+          "PROPOSAL_REQUESTED",
+          "PROPOSE",
+          "RETRY",
+          "REVISE",
+          "START_TYPED"
+        ],
+        "definerKnobs": [],
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "PROPOSAL_APPROVED"
+          },
+          {
+            "kind": "emit",
+            "resource": "PROPOSAL_CANCELLED"
+          },
+          {
+            "kind": "emit",
+            "resource": "PROPOSAL_DISCARDED"
+          },
+          {
+            "kind": "emit",
+            "resource": "PROPOSAL_RUN_REQUESTED"
+          },
+          {
+            "kind": "render-ui",
+            "resolved": false,
+            "resource": "@config.slot"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "toast"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.context"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.error"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.feedback"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.input"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.items"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.request"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.summary"
+          }
+        ]
+      },
+      {
+        "name": "AgentProposalLoop",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "PROPOSAL_RUN_REQUESTED",
+          "PROPOSAL_CANCELLED"
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "cancelKey",
+            "type": "unknown",
+            "default": "agent-proposal"
+          },
+          {
+            "key": "instructions",
+            "type": "unknown",
+            "default": "@config.instructions"
+          },
+          {
+            "key": "maxSteps",
+            "type": "unknown",
+            "default": "@config.maxSteps"
+          },
+          {
+            "key": "quiet",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "tools",
+            "type": "unknown",
+            "default": "@config.tools"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Loop.traits.AgentToolLoop",
+        "eventRenames": {
+          "ASSISTANT_REPLIED": "PROPOSAL_LOOP_REPLIED",
+          "ASSISTANT_REPLY_FAILED": "PROPOSAL_LOOP_FAILED"
+        },
+        "transitionEvents": [
+          "ANSWERED",
+          "ASK_FAILED",
+          "CANCEL",
+          "CONVERSE",
+          "INIT"
+        ],
+        "definerKnobs": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "AgentProposalPage",
+        "defaultPath": "/agent-proposal",
+        "primaryEntity": "AgentProposalRun"
+      }
+    ],
+    "emittedEvents": [
+      "PROPOSAL_APPROVED",
+      "PROPOSAL_CANCELLED",
+      "PROPOSAL_DISCARDED",
+      "PROPOSAL_RUN_REQUESTED"
+    ],
+    "listenedEvents": [
+      "PROPOSAL_CANCELLED",
+      "PROPOSAL_LOOP_FAILED",
+      "PROPOSAL_LOOP_REPLIED",
+      "PROPOSAL_RUN_REQUESTED"
+    ],
+    "config": [
+      {
+        "key": "approveLabel",
+        "type": "string",
+        "default": "Approve",
+        "label": "Approve button",
+        "tier": "presentation"
+      },
+      {
+        "key": "cancelLabel",
+        "type": "string",
+        "default": "Cancel",
+        "label": "Cancel button",
+        "tier": "presentation"
+      },
+      {
+        "key": "discardLabel",
+        "type": "string",
+        "default": "Discard",
+        "label": "Discard button",
+        "tier": "presentation"
+      },
+      {
+        "key": "feedbackLabel",
+        "type": "string",
+        "default": "What should change?",
+        "label": "Revision feedback label",
+        "tier": "presentation"
+      },
+      {
+        "key": "icon",
+        "type": "string",
+        "default": "sparkles",
+        "label": "Panel icon",
+        "tier": "presentation"
+      },
+      {
+        "key": "inputLabel",
+        "type": "string",
+        "default": "What should the agent work from?",
+        "label": "Start form label",
+        "tier": "presentation"
+      },
+      {
+        "key": "instructions",
+        "type": "string",
+        "default": "You turn what the person hands over into one structured proposal. Look things up with the tools if you need to, then call the proposal tool exactly once with a short summary and the list of items. Do not call it again unless asked to revise.",
+        "label": "How should the agent behave?",
+        "description": "Standing instructions sent with every run.",
+        "synonyms": "system prompt, persona, guidance",
+        "tier": "domain"
+      },
+      {
+        "key": "itemFields",
+        "type": "[ProposalField]",
+        "default": [],
+        "label": "Which item values are shown?",
+        "description": "The item keys to show, each `{ name, label, variant }`.",
+        "synonyms": "columns, fields, attributes",
+        "tier": "domain",
+        "items": {
+          "properties": {
+            "label": {
+              "name": "label",
+              "required": false,
+              "type": "string"
+            },
+            "name": {
+              "name": "name",
+              "required": true,
+              "type": "string"
+            },
+            "variant": {
+              "name": "variant",
+              "required": false,
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      },
+      {
+        "key": "itemPattern",
+        "type": "pattern",
+        "default": "data-list",
+        "label": "How are the proposed items drawn?",
+        "description": "The pattern the review renders the items with; it receives `entity` (the items) and `fields`.",
+        "synonyms": "item layout, list pattern, table",
+        "tier": "presentation"
+      },
+      {
+        "key": "itemsHeading",
+        "type": "string",
+        "default": "Items",
+        "label": "Items heading",
+        "tier": "presentation"
+      },
+      {
+        "key": "maxSteps",
+        "type": "number",
+        "default": 8,
+        "label": "Model round-trips per run",
+        "tier": "policy"
+      },
+      {
+        "key": "panelSlot",
+        "type": "slot",
+        "default": "main",
+        "label": "Where the panel renders",
+        "description": "`main` for the content of a page or launcher; `modal` or `drawer` for an overlay.",
+        "tier": "presentation"
+      },
+      {
+        "key": "prompt",
+        "type": "string",
+        "default": "Work out a proposal from the following.",
+        "label": "What is the agent asked to do?",
+        "description": "The request that precedes the person's input in every run.",
+        "synonyms": "task, goal, brief, question",
+        "tier": "domain"
+      },
+      {
+        "key": "retryLabel",
+        "type": "string",
+        "default": "Retry",
+        "label": "Retry button",
+        "tier": "presentation"
+      },
+      {
+        "key": "reviseLabel",
+        "type": "string",
+        "default": "Revise",
+        "label": "Revise button",
+        "tier": "presentation"
+      },
+      {
+        "key": "showInputForm",
+        "type": "boolean",
+        "default": true,
+        "label": "Show a start form?",
+        "description": "On, the idle panel lets the person type what the agent works from. Off, the panel renders nothing until the app starts it with PROPOSAL_REQUESTED.",
+        "synonyms": "start form, input box, manual start",
+        "tier": "presentation"
+      },
+      {
+        "key": "startLabel",
+        "type": "string",
+        "default": "Propose",
+        "label": "Start button",
+        "tier": "presentation"
+      },
+      {
+        "key": "summaryHeading",
+        "type": "string",
+        "default": "Summary",
+        "label": "Summary heading",
+        "tier": "presentation"
+      },
+      {
+        "key": "title",
+        "type": "string",
+        "default": "Proposal",
+        "label": "Panel heading",
+        "tier": "presentation"
+      },
+      {
+        "key": "tools",
+        "type": "[AgentTool]",
+        "default": [
+          {
+            "event": "AgentProposalWorkflow.PROPOSE"
+          }
+        ],
+        "label": "What may the agent do?",
+        "description": "The declared inputs it may fire and the entities it may read, as the signed-in person. An importing app restates the list with PROPOSE addressed by its local orbital name, which the agent can never propose without.",
+        "synonyms": "allowlist, abilities, permissions",
+        "tier": "domain",
+        "items": {
+          "properties": {
+            "event": {
+              "name": "event",
+              "required": false,
+              "type": "event"
+            },
+            "read": {
+              "name": "read",
+              "required": false,
+              "type": "string"
+            },
+            "scope": {
+              "name": "scope",
+              "required": false,
+              "type": "string",
+              "values": [
+                "declared"
+              ]
+            }
+          },
+          "type": "object"
+        }
+      },
+      {
+        "key": "workingLabel",
+        "type": "string",
+        "default": "Working out a proposal…",
+        "label": "While the agent works",
+        "tier": "presentation"
+      }
+    ],
+    "exposure": "both",
+    "provenance": "authored",
+    "capabilities": "agent proposal, review before commit, human approval of agent output, approve or revise agent suggestions, structured proposal review, ai drafts for approval, extract then confirm",
+    "sourceValid": true
+  }
+]

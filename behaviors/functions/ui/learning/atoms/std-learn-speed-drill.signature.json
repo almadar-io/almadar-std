@@ -19,6 +19,11 @@
             "required": false
           },
           {
+            "name": "items",
+            "type": "array",
+            "required": false
+          },
+          {
             "name": "itemIndex",
             "type": "number",
             "required": false
@@ -145,6 +150,12 @@
             "tier": "domain"
           },
           {
+            "name": "ROSTER_LOADED",
+            "direction": "listen",
+            "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and items is the drill roster; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
+            "tier": "domain"
+          },
+          {
             "name": "ANSWER",
             "direction": "listen",
             "description": "Learner picked an option while the clock was running — index is the chosen option; it is judged immediately and scored with a speed bonus.",
@@ -239,7 +250,7 @@
             "type": "string",
             "default": "",
             "label": "Match Mode",
-            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT, or on ROSTER_LOADED when rosterSource is event.",
             "tier": "presentation"
           },
           {
@@ -255,6 +266,18 @@
             "default": "Try Again",
             "label": "Retry Label",
             "tier": "presentation"
+          },
+          {
+            "key": "rosterSource",
+            "type": "string",
+            "default": "config",
+            "label": "Roster Source",
+            "description": "Where the roster comes from: config reads items knob at INIT; event waits for ROSTER_LOADED and takes the roster from its payload.",
+            "tier": "domain",
+            "enumValues": [
+              "config",
+              "event"
+            ]
           },
           {
             "key": "speedBonus",
@@ -296,7 +319,8 @@
           "INIT",
           "MODE_SELECTED",
           "NEXT",
-          "RETRY"
+          "RETRY",
+          "ROSTER_LOADED"
         ],
         "definerKnobs": [],
         "entityRebindable": true,
@@ -309,6 +333,7 @@
             "done",
             "feedback",
             "itemIndex",
+            "items",
             "options",
             "pickedIndex",
             "promptText",
@@ -371,6 +396,10 @@
           {
             "kind": "set",
             "resource": "@entity.itemIndex"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.items"
           },
           {
             "kind": "set",

@@ -24,6 +24,7 @@ orbital LearnScatterFitOrbital {
     id : string!
     active : boolean = false
     title : string
+    initialPoints : [LearnScatterFitPoint]
     points : [LearnScatterFitPoint]
     slope : number
     intercept : number
@@ -43,7 +44,8 @@ orbital LearnScatterFitOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle when (== @config.matchMode "")
+      INIT -> idle when (and (== @config.matchMode "") (== @config.rosterSource "config"))
+        (set @entity.initialPoints @config.initialPoints)
         (set @entity.active true)
         (set @entity.title @config.title)
         (set @entity.points @config.initialPoints)
@@ -123,7 +125,8 @@ orbital LearnScatterFitOrbital {
         (set @entity.running false)
         (render-ui main null)
 
-      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+      MODE_SELECTED -> idle when (and (== ?mode @config.matchMode) (== @config.rosterSource "config"))
+        (set @entity.initialPoints @config.initialPoints)
         (set @entity.active true)
         (set @entity.title @config.title)
         (set @entity.points @config.initialPoints)
@@ -197,6 +200,87 @@ orbital LearnScatterFitOrbital {
           ]
         })
         (emit LEARN_SCATTER_FIT_UPDATED { slope: @entity.slope, intercept: @entity.intercept, r: @entity.r, rSquared: @entity.rSquared, pointCount: (array/len @entity.points), narration: @entity.narration })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (== ?mode @config.matchMode))
+        (set @entity.initialPoints ?initialPoints)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.points ?initialPoints)
+        (set @entity.guessSlope 0)
+        (set @entity.guessIntercept (/ (+ @config.axisYMin @config.axisYMax) 2))
+        (set @entity.revealed false)
+        (set @entity.running @config.autoRun)
+        (let (
+            (pts ?initialPoints)
+            (n (array/len @pts))
+            (meanX (if (> @n 0) (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p x)))) @n) 0))
+            (meanY (if (> @n 0) (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p y)))) @n) 0))
+            (sxx (array/reduce @pts 0 (fn (acc p) (let ((dx (- (object/get @p x) @meanX))) (+ @acc (* @dx @dx))))))
+            (syy (array/reduce @pts 0 (fn (acc p) (let ((dy (- (object/get @p y) @meanY))) (+ @acc (* @dy @dy))))))
+            (sxy (array/reduce @pts 0 (fn (acc p) (+ @acc (* (- (object/get @p x) @meanX) (- (object/get @p y) @meanY))))))
+            (newSlope (if (> @sxx 0) (/ @sxy @sxx) 0))
+            (newIntercept (- @meanY (* @newSlope @meanX)))
+            (newR (if (and (> @sxx 0) (> @syy 0)) (/ @sxy (math/sqrt (* @sxx @syy))) 0))
+            (fitCurve { label: @config.fitLabel, color: @config.fitColor, samples: [
+              { x: @config.axisXMin, y: (math/clamp @newIntercept @config.axisYMin @config.axisYMax) },
+              { x: @config.axisXMax, y: (math/clamp (+ (* @newSlope @config.axisXMax) @newIntercept) @config.axisYMin @config.axisYMax) }
+            ]})
+            (residualCurves (if @config.showResiduals
+              (array/map @pts (fn p { label: "", color: @config.residualColor, dash: @config.residualDash, samples: [ { x: (object/get @p x), y: (object/get @p y) }, { x: (object/get @p x), y: (+ (* @newSlope (object/get @p x)) @newIntercept) } ] }))
+              []))
+          )
+          (do
+            (set @entity.slope @newSlope)
+            (set @entity.intercept @newIntercept)
+            (set @entity.r @newR)
+            (set @entity.rSquared (* @newR @newR))
+            (set @entity.guessScore 0)
+            (set @entity.curves (array/concat (array/append [] @fitCurve) @residualCurves))
+            (set @entity.done (>= @n @config.maxPoints))
+            (set @entity.narration (str/concat (str/concat "" @n) " " @config.narrationLoadedTemplate " — r = " (str/concat "" (math/round @newR 3)) ", R² = " (str/concat "" (math/round (* @newR @newR) 3))))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.revealed "Revealed" (if @entity.done "Max points" (if @entity.running "Adding points" (if @config.guessMode "Guessing" "Fitted")))), variant: (if @entity.revealed "success" (if @entity.done "neutral" (if @entity.running "primary" "neutral"))) }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: ADD_POINT, label: @config.addPointLabel, icon: "plus", variant: primary, disabled: @entity.done },
+                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, icon: "eye", variant: secondary },
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: @config.pauseLabel, icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: @config.runLabel, icon: "play", variant: secondary, aria-pressed: "false", disabled: @entity.done }),
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat (str/concat "" (array/len @entity.points)) (str/concat " of " (str/concat "" @config.maxPoints))) }
+                  ] },
+                { type: math-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: ADD_POINT, KeyR: RESET }, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
+                        { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
+                        { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } }
+                      ] }
+                  ] },
+                { type: typography, variant: caption, color: muted, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit LEARN_SCATTER_FIT_UPDATED { slope: @entity.slope, intercept: @entity.intercept, r: @entity.r, rSquared: @entity.rSquared, pointCount: (array/len @entity.points), narration: @entity.narration })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (set @entity.running false)
+        (render-ui main null)
 
       ADD_POINT -> idle when (and @entity.active (not @entity.done))
         (let (
@@ -531,13 +615,13 @@ orbital LearnScatterFitOrbital {
         (emit LEARN_SCATTER_FIT_UPDATED { slope: @entity.slope, intercept: @entity.intercept, r: @entity.r, rSquared: @entity.rSquared, pointCount: (array/len @entity.points), narration: @entity.narration })
 
       RESET -> idle when (== @entity.active true)
-        (set @entity.points @config.initialPoints)
+        (set @entity.points @entity.initialPoints)
         (set @entity.guessSlope 0)
         (set @entity.guessIntercept (/ (+ @config.axisYMin @config.axisYMax) 2))
         (set @entity.revealed false)
         (set @entity.running @config.autoRun)
         (let (
-            (pts @config.initialPoints)
+            (pts @entity.initialPoints)
             (n (array/len @pts))
             (meanX (if (> @n 0) (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p x)))) @n) 0))
             (meanY (if (> @n 0) (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p y)))) @n) 0))
@@ -697,6 +781,12 @@ orbital LearnScatterFitOrbital {
       }
         @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
         @tier "domain"
+      ROSTER_LOADED {
+        mode : string!
+        initialPoints : [LearnScatterFitPoint]!
+      }
+        @description "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and initialPoints is the starting point set; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides."
+        @tier "domain"
       DRAG_POINT {
         id : string
         x : number
@@ -736,7 +826,7 @@ orbital LearnScatterFitOrbital {
     config {
       matchMode : string = ""
         @label "Match Mode"
-        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT, or on ROSTER_LOADED when rosterSource is event."
         @tier "presentation"
       autoRun : boolean = false
         @label "Auto Run"
@@ -750,6 +840,10 @@ orbital LearnScatterFitOrbital {
         @label "Concept"
         @description "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line."
         @tier "presentation"
+      rosterSource : "config" | "event" = "config"
+        @label "Roster Source"
+        @description "Where the roster comes from: config reads initialPoints knob at INIT; event waits for ROSTER_LOADED and takes the roster from its payload."
+        @tier "domain"
       initialPoints : [LearnScatterFitPoint] = [
         { id: "p0", x: 15, y: 25, label: "", color: "ink", radius: 5 },
         { id: "p1", x: 32, y: 40, label: "", color: "ink", radius: 5 },

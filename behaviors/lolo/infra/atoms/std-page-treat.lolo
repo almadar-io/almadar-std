@@ -1,7 +1,19 @@
 app std-page-treat "1.0.0"
-"std-page-treat — applies a declared visual treatment to one element of a browser tab (hide, blur, highlight, or label it with text) or restores it, and reports which element it treated. TREAT takes the tab and element id std-page-watch reports. The treatments are a fixed, declared set: no arbitrary styles or scripts. Needs a host with the `page` service (a browser extension)."
+"std-page-treat — applies a declared visual treatment to one element of a browser tab (hide, blur, highlight, or label it with text) or restores it, and reports which element it treated. TREAT takes the tab and element id std-page-watch reports; TREAT_MANY treats a whole list at once and reports which elements were treated and which had already left their page. The treatments are a fixed, declared set: no arbitrary styles or scripts. Needs a host with the `page` service (a browser extension)."
 
 orbital PageTreatOrbital {
+  type PageTreatment = {
+    tab : number!
+    elementId : string!
+    treatment : "hide" | "blur" | "highlight" | "label" | "restore"
+    label : string
+  }
+
+  type PageElementRef = {
+    tab : number!
+    elementId : string!
+  }
+
   entity PageTreatRecord [runtime] {
     treated : number @description "How many treatments were applied" @synonyms "count, applied" = 0
     errorMessage : string @description "Why the last treatment failed; blank = none" @synonyms "error, failure reason" = ""
@@ -27,6 +39,12 @@ orbital PageTreatOrbital {
       APPLIED -> ready
         (set @entity.treated (+ @entity.treated 1))
         (emit TREATED { tab: ?tab, elementId: ?elementId, treatment: ?treatment })
+      TREAT_MANY -> ready
+        (call-service "page" "applyMany" { items: ?items }
+          { emit: { success: APPLIED_MANY, failure: APPLY_FAILED } })
+      APPLIED_MANY -> ready
+        (set @entity.treated (+ @entity.treated (array/len ?applied)))
+        (emit TREATED_MANY { applied: ?applied, missing: ?missing })
       APPLY_FAILED -> ready
         (set @entity.errorMessage ?error)
         (emit TREAT_FAILED { error: ?error })
@@ -37,12 +55,19 @@ orbital PageTreatOrbital {
       APPLIED { applied : boolean!, tab : number!, elementId : string!, treatment : "hide" | "blur" | "highlight" | "label" | "restore" }
         @description "The page service applied the treatment"
         @tier "secondary"
+      APPLIED_MANY { applied : [PageElementRef], missing : [PageElementRef] }
+        @description "The page service applied a list of treatments"
+        @tier "secondary"
       APPLY_FAILED { error : string! }
         @description "The page service could not apply the treatment"
         @tier "secondary"
       TREATED -> external { tab : number!, elementId : string!, treatment : "hide" | "blur" | "highlight" | "label" | "restore" }
         @description "The element now shows the treatment (or, for restore, is back as it was)"
         @synonyms "hidden, blurred, highlighted, labelled, restored"
+        @tier "primary"
+      TREATED_MANY -> external { applied : [PageElementRef], missing : [PageElementRef] }
+        @description "Each listed element now shows its treatment; `missing` lists those that had left their page (or whose tab closed)"
+        @synonyms "hidden, blurred, restored, treated"
         @tier "primary"
       TREAT_FAILED -> external { error : string! }
         @description "The treatment could not be applied (the element is gone, or the tab closed)"
@@ -52,6 +77,8 @@ orbital PageTreatOrbital {
     listens {
       TREAT -> external { tab : number!, elementId : string!, treatment : "hide" | "blur" | "highlight" | "label" | "restore", label : string }
         @description "Treat one page element; `label` is the text shown with it (for example why it was hidden)"
+      TREAT_MANY -> external { items : [PageTreatment] }
+        @description "Treat a list of page elements in one call, each with its own treatment and label"
     }
   }
 

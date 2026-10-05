@@ -14,15 +14,77 @@
     "traits": [
       {
         "name": "MarkdownContentRender",
-        "emittedEvents": [],
+        "emittedEvents": [
+          "ASK",
+          "NOTE",
+          "ANNOTATION"
+        ],
         "listenedEvents": [],
         "events": [
+          {
+            "name": "ASK",
+            "direction": "emit",
+            "description": "Event emitted when the reader picks Ask on selected text (as `UI:<askEvent>`)",
+            "tier": "essential"
+          },
+          {
+            "name": "NOTE",
+            "direction": "emit",
+            "description": "Event emitted when the reader picks Note on selected text (as `UI:<noteEvent>`)",
+            "tier": "essential"
+          },
+          {
+            "name": "ANNOTATION",
+            "direction": "emit",
+            "description": "Event emitted when a highlighted passage is clicked (as `UI:<annotationEvent>`)",
+            "tier": "essential"
+          },
           {
             "name": "INIT",
             "direction": "listen"
           }
         ],
         "overridableConfigKeys": [
+          {
+            "key": "annotationEvent",
+            "type": "event",
+            "default": "ANNOTATION",
+            "label": "Annotation Event",
+            "description": "Event emitted when a highlighted passage is clicked (as `UI:<annotationEvent>`)",
+            "tier": "presentation"
+          },
+          {
+            "key": "annotations",
+            "type": "[MarkdownContentAnnotationsItem]",
+            "default": [],
+            "label": "Annotations",
+            "description": "Passages to highlight. Each `text` is matched exactly, first occurrence in document order inside a single rendered text node (outside code); a passage that spans formatting boundaries is not highlighted.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "question",
+                    "note"
+                  ]
+                },
+                "text": {
+                  "name": "text",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
           {
             "key": "ariaBusy",
             "type": "boolean",
@@ -123,6 +185,21 @@
             "tier": "presentation"
           },
           {
+            "key": "askEvent",
+            "type": "event",
+            "default": "ASK",
+            "label": "Ask Event",
+            "description": "Event emitted when the reader picks Ask on selected text (as `UI:<askEvent>`)",
+            "tier": "presentation"
+          },
+          {
+            "key": "askLabel",
+            "type": "string",
+            "label": "Ask Label",
+            "description": "Ask action label (default: translated)",
+            "tier": "presentation"
+          },
+          {
             "key": "className",
             "type": "string",
             "label": "Class Name",
@@ -187,6 +264,21 @@
             "type": "string",
             "label": "Lang",
             "description": "Language of this element's content (BCP 47, e.g. ar, sl, en).",
+            "tier": "presentation"
+          },
+          {
+            "key": "noteEvent",
+            "type": "event",
+            "default": "NOTE",
+            "label": "Note Event",
+            "description": "Event emitted when the reader picks Note on selected text (as `UI:<noteEvent>`)",
+            "tier": "presentation"
+          },
+          {
+            "key": "noteLabel",
+            "type": "string",
+            "label": "Note Label",
+            "description": "Note action label (default: translated)",
             "tier": "presentation"
           },
           {
@@ -311,7 +403,11 @@
         "transitionEvents": [
           "INIT"
         ],
-        "definerKnobs": [],
+        "definerKnobs": [
+          "annotationEvent",
+          "askEvent",
+          "noteEvent"
+        ],
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
@@ -332,7 +428,11 @@
         "primaryEntity": "MarkdownContentItem"
       }
     ],
-    "emittedEvents": [],
+    "emittedEvents": [
+      "ANNOTATION",
+      "ASK",
+      "NOTE"
+    ],
     "listenedEvents": [],
     "exposure": "palette",
     "provenance": "generated",

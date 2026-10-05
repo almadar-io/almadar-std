@@ -37,6 +37,9 @@ export type StdAgentContextEventKey = 'COMPACT' | 'COMPACTED' | 'ContextSummariz
  */
 export interface StdAgentContextCompactedPayload {
   messages: EntityRow[];
+  instructions?: string;
+  tools?: EntityRow[];
+  ephemeral?: boolean;
 }
 
 /**
@@ -229,6 +232,47 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
             'synonyms': 'size, length',
             'type': 'number',
           },
+          {
+            'default': '',
+            'description': 'The ephemeral conversation\'s own instructions, carried through a summarizing.',
+            'name': 'pendingInstructions',
+            'type': 'string',
+          },
+          {
+            'default': [],
+            'description': 'The ephemeral conversation\'s own tools, carried through a summarizing.',
+            'items': {
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'event',
+                },
+                'read': {
+                  'name': 'read',
+                  'required': false,
+                  'type': 'string',
+                },
+                'scope': {
+                  'name': 'scope',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'declared',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'pendingTools',
+            'type': 'array',
+          },
+          {
+            'default': false,
+            'description': 'The conversation being compacted is ephemeral.',
+            'name': 'pendingEphemeral',
+            'type': 'boolean',
+          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -268,12 +312,24 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
           },
           {
             'kind': 'set',
+            'resource': '@entity.pendingEphemeral',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.pendingInstructions',
+          },
+          {
+            'kind': 'set',
             'resource': '@entity.pendingMessages',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.pendingTools',
           },
         ],
         'emits': [
           {
-            'description': 'The conversation, bounded: recent turns verbatim, older turns as one summary note.',
+            'description': 'The conversation, bounded: recent turns verbatim, older turns as one summary note. An ephemeral conversation\'s own `instructions`, `tools` and `ephemeral` flag pass through untouched.',
             'event': 'COMPACTED',
             'payloadSchema': [
               {
@@ -292,6 +348,33 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                 ],
                 'required': true,
                 'type': '[object]',
+              },
+              {
+                'name': 'instructions',
+                'type': 'string',
+              },
+              {
+                'entity': 'AgentTool',
+                'name': 'tools',
+                'properties': [
+                  {
+                    'name': 'event',
+                    'type': 'event',
+                  },
+                  {
+                    'name': 'read',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'scope',
+                    'type': 'string',
+                  },
+                ],
+                'type': '[object]',
+              },
+              {
+                'name': 'ephemeral',
+                'type': 'boolean',
               },
             ],
             'scope': 'external',
@@ -335,7 +418,7 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
               'name': 'Initialize',
             },
             {
-              'description': 'Bound this conversation for the model.',
+              'description': 'Bound this conversation for the model. An ephemeral conversation\'s own `instructions`, `tools` and `ephemeral` flag ride along.',
               'key': 'COMPACT',
               'name': 'Compact',
               'payloadSchema': [
@@ -354,6 +437,32 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                   ],
                   'required': true,
                   'type': '[object]',
+                },
+                {
+                  'name': 'instructions',
+                  'type': 'string',
+                },
+                {
+                  'name': 'tools',
+                  'properties': [
+                    {
+                      'name': 'event',
+                      'type': 'event',
+                    },
+                    {
+                      'name': 'read',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'scope',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': '[object]',
+                },
+                {
+                  'name': 'ephemeral',
+                  'type': 'boolean',
                 },
               ],
             },
@@ -384,7 +493,7 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
               'tier': 'internal',
             },
             {
-              'description': 'The conversation, bounded: recent turns verbatim, older turns as one summary note.',
+              'description': 'The conversation, bounded: recent turns verbatim, older turns as one summary note. An ephemeral conversation\'s own `instructions`, `tools` and `ephemeral` flag pass through untouched.',
               'key': 'COMPACTED',
               'name': 'Compacted',
               'payloadSchema': [
@@ -404,6 +513,33 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                   ],
                   'required': true,
                   'type': '[object]',
+                },
+                {
+                  'name': 'instructions',
+                  'type': 'string',
+                },
+                {
+                  'entity': 'AgentTool',
+                  'name': 'tools',
+                  'properties': [
+                    {
+                      'name': 'event',
+                      'type': 'event',
+                    },
+                    {
+                      'name': 'read',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'scope',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': '[object]',
+                },
+                {
+                  'name': 'ephemeral',
+                  'type': 'boolean',
                 },
               ],
               'synonyms': 'compacted, trimmed, bounded',
@@ -446,7 +582,24 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                   'emit',
                   'COMPACTED',
                   {
+                    'ephemeral': [
+                      'if',
+                      '@payload.ephemeral',
+                      true,
+                      false,
+                    ],
+                    'instructions': [
+                      'str/default',
+                      '@payload.instructions',
+                      '',
+                    ],
                     'messages': '@payload.messages',
+                    'tools': [
+                      'object/get',
+                      '@payload',
+                      'tools',
+                      [],
+                    ],
                   },
                 ],
               ],
@@ -476,6 +629,35 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                   'set',
                   '@entity.pendingMessages',
                   '@payload.messages',
+                ],
+                [
+                  'set',
+                  '@entity.pendingInstructions',
+                  [
+                    'str/default',
+                    '@payload.instructions',
+                    '',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.pendingTools',
+                  [
+                    'object/get',
+                    '@payload',
+                    'tools',
+                    [],
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.pendingEphemeral',
+                  [
+                    'if',
+                    '@payload.ephemeral',
+                    true,
+                    false,
+                  ],
                 ],
                 [
                   'call-service',
@@ -531,6 +713,8 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                   'emit',
                   'COMPACTED',
                   {
+                    'ephemeral': '@entity.pendingEphemeral',
+                    'instructions': '@entity.pendingInstructions',
                     'messages': [
                       'array/prepend',
                       [
@@ -547,6 +731,7 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                         'role': 'assistant',
                       },
                     ],
+                    'tools': '@entity.pendingTools',
                   },
                 ],
               ],
@@ -560,11 +745,14 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                   'emit',
                   'COMPACTED',
                   {
+                    'ephemeral': '@entity.pendingEphemeral',
+                    'instructions': '@entity.pendingInstructions',
                     'messages': [
                       'array/takeLast',
                       '@entity.pendingMessages',
                       '@config.keepMessages',
                     ],
+                    'tools': '@entity.pendingTools',
                   },
                 ],
                 [

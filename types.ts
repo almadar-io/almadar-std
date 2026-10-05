@@ -315,6 +315,7 @@ export interface OperatorEffectMeta {
     | 'despawn'
     | 'set'
     | 'call-service'
+    | 'cancel-call'
     | 'log'
     | 'send-server'
     | 'custom';

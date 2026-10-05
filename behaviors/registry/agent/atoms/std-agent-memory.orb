@@ -369,7 +369,7 @@
           ],
           "emits": [
             {
-              "description": "The conversation, with what the assistant remembers that is closest to its last turn.",
+              "description": "The conversation, with what the assistant remembers that is closest to its last turn. An ephemeral conversation is never recalled for: empty `context`, its own `instructions`, `tools` and `ephemeral` flag pass through.",
               "event": "RECALLED",
               "eventId": "evt_01M3TYMQKZGPZ3GDV9SZ5ZSC80",
               "payloadSchema": [
@@ -393,6 +393,33 @@
                 {
                   "name": "context",
                   "type": "string"
+                },
+                {
+                  "name": "instructions",
+                  "type": "string"
+                },
+                {
+                  "entity": "AgentTool",
+                  "name": "tools",
+                  "properties": [
+                    {
+                      "name": "event",
+                      "type": "event"
+                    },
+                    {
+                      "name": "read",
+                      "type": "string"
+                    },
+                    {
+                      "name": "scope",
+                      "type": "string"
+                    }
+                  ],
+                  "type": "[object]"
+                },
+                {
+                  "name": "ephemeral",
+                  "type": "boolean"
                 }
               ],
               "scope": "external",
@@ -756,7 +783,7 @@
                 "tier": "internal"
               },
               {
-                "description": "Recall what is relevant to this conversation's last turn.",
+                "description": "Recall what is relevant to this conversation's last turn. An ephemeral conversation skips the recall.",
                 "id": "evt_01M3TYMQKZXAVRV1YVNJS591F0",
                 "key": "RECALL",
                 "name": "Recall",
@@ -776,11 +803,37 @@
                     ],
                     "required": true,
                     "type": "[object]"
+                  },
+                  {
+                    "name": "instructions",
+                    "type": "string"
+                  },
+                  {
+                    "name": "tools",
+                    "properties": [
+                      {
+                        "name": "event",
+                        "type": "event"
+                      },
+                      {
+                        "name": "read",
+                        "type": "string"
+                      },
+                      {
+                        "name": "scope",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  },
+                  {
+                    "name": "ephemeral",
+                    "type": "boolean"
                   }
                 ]
               },
               {
-                "description": "Remember the exchange just answered.",
+                "description": "Remember the exchange just answered. An ephemeral conversation is never remembered.",
                 "id": "evt_01M3TYMQKZQ5TXMDMH5X7V7VQ4",
                 "key": "REMEMBER",
                 "name": "Remember",
@@ -789,6 +842,10 @@
                     "name": "reply",
                     "required": true,
                     "type": "string"
+                  },
+                  {
+                    "name": "ephemeral",
+                    "type": "boolean"
                   }
                 ]
               },
@@ -898,7 +955,7 @@
                 "tier": "internal"
               },
               {
-                "description": "The conversation, with what the assistant remembers that is closest to its last turn.",
+                "description": "The conversation, with what the assistant remembers that is closest to its last turn. An ephemeral conversation is never recalled for: empty `context`, its own `instructions`, `tools` and `ephemeral` flag pass through.",
                 "id": "evt_01M3TYMQKZGPZ3GDV9SZ5ZSC80",
                 "key": "RECALLED",
                 "name": "Recalled",
@@ -923,6 +980,33 @@
                   {
                     "name": "context",
                     "type": "string"
+                  },
+                  {
+                    "name": "instructions",
+                    "type": "string"
+                  },
+                  {
+                    "entity": "AgentTool",
+                    "name": "tools",
+                    "properties": [
+                      {
+                        "name": "event",
+                        "type": "event"
+                      },
+                      {
+                        "name": "read",
+                        "type": "string"
+                      },
+                      {
+                        "name": "scope",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  },
+                  {
+                    "name": "ephemeral",
+                    "type": "boolean"
                   }
                 ],
                 "synonyms": "recalled, remembered, context ready",
@@ -1077,6 +1161,35 @@
               {
                 "effects": [
                   [
+                    "emit",
+                    "RECALLED",
+                    {
+                      "context": "",
+                      "ephemeral": true,
+                      "instructions": [
+                        "str/default",
+                        "@payload.instructions",
+                        ""
+                      ],
+                      "messages": "@payload.messages",
+                      "tools": [
+                        "object/get",
+                        "@payload",
+                        "tools",
+                        []
+                      ]
+                    }
+                  ]
+                ],
+                "event": "RECALL",
+                "eventId": "evt_01M3TYMQKZXAVRV1YVNJS591F0",
+                "from": "ready",
+                "guard": "@payload.ephemeral",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
                     "set",
                     "@entity.pendingMessages",
                     "@payload.messages"
@@ -1120,7 +1233,18 @@
                 "event": "RECALL",
                 "eventId": "evt_01M3TYMQKZXAVRV1YVNJS591F0",
                 "from": "ready",
+                "guard": [
+                  "not",
+                  "@payload.ephemeral"
+                ],
                 "to": "recalling"
+              },
+              {
+                "event": "REMEMBER",
+                "eventId": "evt_01M3TYMQKZQ5TXMDMH5X7V7VQ4",
+                "from": "ready",
+                "guard": "@payload.ephemeral",
+                "to": "ready"
               },
               {
                 "effects": [
@@ -1161,6 +1285,10 @@
                 "event": "REMEMBER",
                 "eventId": "evt_01M3TYMQKZQ5TXMDMH5X7V7VQ4",
                 "from": "ready",
+                "guard": [
+                  "not",
+                  "@payload.ephemeral"
+                ],
                 "to": "remembering"
               },
               {
@@ -1715,6 +1843,20 @@
           {
             "name": "createdAt",
             "type": "number"
+          }
+        ],
+        "AgentTool": [
+          {
+            "name": "event",
+            "type": "event"
+          },
+          {
+            "name": "read",
+            "type": "string"
+          },
+          {
+            "name": "scope",
+            "type": "string"
           }
         ]
       }

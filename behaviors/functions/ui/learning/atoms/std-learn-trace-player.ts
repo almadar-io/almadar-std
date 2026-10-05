@@ -30,7 +30,7 @@ const ALIAS = 'LearnTracePlayer';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnTracePlayerEventKey = 'FRAME_ADVANCED' | 'INIT' | 'MODE_SELECTED' | 'PAUSE' | 'PLAY' | 'RESTART' | 'SPEED_SET' | 'TOGGLE_RUN' | 'TRACE_DONE';
+export type StdLearnTracePlayerEventKey = 'FRAME_ADVANCED' | 'INIT' | 'MODE_SELECTED' | 'PAUSE' | 'PLAY' | 'RESTART' | 'ROSTER_LOADED' | 'SPEED_SET' | 'TOGGLE_RUN' | 'TRACE_DONE';
 
 /**
  * Payload shape for the `FRAME_ADVANCED` event.
@@ -68,6 +68,8 @@ export interface StdLearnTracePlayerConfig {
   loop?: boolean;
   /** Default: `""` */
   matchMode?: string;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
   /** Default: `""` */
   summary?: string;
   /** Default: `500` */

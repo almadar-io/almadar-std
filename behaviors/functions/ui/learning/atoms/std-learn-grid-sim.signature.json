@@ -19,6 +19,31 @@
             "required": false
           },
           {
+            "name": "taskText",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "rule",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "rows",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "cols",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "seeds",
+            "type": "array",
+            "required": false
+          },
+          {
             "name": "cells",
             "type": "array",
             "required": false
@@ -101,6 +126,12 @@
             "name": "MODE_SELECTED",
             "direction": "listen",
             "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "ROSTER_LOADED",
+            "direction": "listen",
+            "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and taskText, rule, rows, cols and seeds define the world; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
             "tier": "domain"
           },
           {
@@ -212,7 +243,7 @@
             "type": "string",
             "default": "",
             "label": "Match Mode",
-            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT (or on ROSTER_LOADED when rosterSource is event).",
             "tier": "presentation"
           },
           {
@@ -235,6 +266,18 @@
             "default": "series-2",
             "label": "On Color",
             "tier": "presentation"
+          },
+          {
+            "key": "rosterSource",
+            "type": "string",
+            "default": "config",
+            "label": "Roster Source",
+            "description": "Where the world definition (taskText, rule, rows, cols, seeds) comes from: config reads those knobs at INIT; event waits for ROSTER_LOADED and takes them from its payload.",
+            "tier": "domain",
+            "enumValues": [
+              "config",
+              "event"
+            ]
           },
           {
             "key": "rows",
@@ -318,6 +361,7 @@
           "MODE_SELECTED",
           "PAUSE",
           "RESET",
+          "ROSTER_LOADED",
           "RUN",
           "SPEED_SET",
           "STEP",
@@ -333,10 +377,15 @@
             "aliveCount",
             "cellShapes",
             "cells",
+            "cols",
             "elapsedMs",
             "generation",
+            "rows",
+            "rule",
             "running",
+            "seeds",
             "speed",
+            "taskText",
             "title"
           ]
         },
@@ -394,6 +443,10 @@
           },
           {
             "kind": "set",
+            "resource": "@entity.cols"
+          },
+          {
+            "kind": "set",
             "resource": "@entity.elapsedMs",
             "site": "tick"
           },
@@ -408,11 +461,27 @@
           },
           {
             "kind": "set",
+            "resource": "@entity.rows"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.rule"
+          },
+          {
+            "kind": "set",
             "resource": "@entity.running"
           },
           {
             "kind": "set",
+            "resource": "@entity.seeds"
+          },
+          {
+            "kind": "set",
             "resource": "@entity.speed"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.taskText"
           },
           {
             "kind": "set",

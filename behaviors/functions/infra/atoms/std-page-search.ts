@@ -267,13 +267,18 @@ export function stdPageSearchPageSearchOrbital(params: StdPageSearchPageSearchOr
         'config': {
           'fields': {
             'default': {},
-            'description': 'Field name to how to read it from each result: `selector` (a descendant; absent reads the result itself), `attr` (an attribute; absent reads the text) and `resolve` (the attribute is a URL: return it absolute)',
+            'description': 'Field name to how to read it from each result: `selector` (a descendant; absent reads the result itself), `attr` (an attribute; absent reads the text) , `resolve` (the value is a URL: return it absolute), `template` (compose the value from other fields, `{name}` per field; empty when any is empty) and `required` (leave the result out until this field reads non-empty)',
             'items': {
               'properties': {
                 'attr': {
                   'name': 'attr',
                   'required': false,
                   'type': 'string',
+                },
+                'required': {
+                  'name': 'required',
+                  'required': false,
+                  'type': 'boolean',
                 },
                 'resolve': {
                   'name': 'resolve',
@@ -282,6 +287,11 @@ export function stdPageSearchPageSearchOrbital(params: StdPageSearchPageSearchOr
                 },
                 'selector': {
                   'name': 'selector',
+                  'required': false,
+                  'type': 'string',
+                },
+                'template': {
+                  'name': 'template',
                   'required': false,
                   'type': 'string',
                 },

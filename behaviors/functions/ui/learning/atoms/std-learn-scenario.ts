@@ -30,7 +30,7 @@ const ALIAS = 'LearnScenario';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnScenarioEventKey = 'CHOICE_MADE' | 'CHOOSE' | 'INIT' | 'MODE_SELECTED' | 'RESTART' | 'SCENARIO_RESTARTED';
+export type StdLearnScenarioEventKey = 'CHOICE_MADE' | 'CHOOSE' | 'INIT' | 'MODE_SELECTED' | 'RESTART' | 'ROSTER_LOADED' | 'SCENARIO_RESTARTED';
 
 /**
  * Payload shape for the `CHOICE_MADE` event.
@@ -70,6 +70,8 @@ export interface StdLearnScenarioConfig {
   nodes?: EntityRow[];
   /** Default: `"Play Again"` */
   restartLabel?: string;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
   /** Default: `"start"` */
   startId?: string;
   /** Default: `""` */

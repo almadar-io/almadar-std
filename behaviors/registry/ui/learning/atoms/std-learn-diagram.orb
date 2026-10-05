@@ -64,6 +64,15 @@
         "parent": "trt_01M055GQ278WFQWA2HDXD2H6S0",
         "renames": []
       },
+      "evt_01M459WKZN8ERJM0RME41HC1BZ": {
+        "bakedName": "ROSTER_LOADED",
+        "curName": "ROSTER_LOADED",
+        "id": "evt_01M459WKZN8ERJM0RME41HC1BZ",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M055GQ278WFQWA2HDXD2H6S0",
+        "renames": []
+      },
       "orb_01M055GQ27TBFTG48242QH1H13": {
         "bakedName": "LearnDiagramOrbital",
         "curName": "LearnDiagramOrbital",
@@ -433,6 +442,17 @@
               "tier": "domain",
               "type": "[LearnDiagramPart]"
             },
+            "rosterSource": {
+              "default": "config",
+              "description": "Where the parts and links roster comes from: config reads the parts and links knobs at INIT; event waits for ROSTER_LOADED and takes the roster from its payload.",
+              "label": "Roster Source",
+              "tier": "domain",
+              "type": "string",
+              "values": [
+                "config",
+                "event"
+              ]
+            },
             "summary": {
               "default": "",
               "description": "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line.",
@@ -573,6 +593,84 @@
                   {
                     "name": "mode",
                     "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone), parts is the labeled-part roster and links the connector list; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
+                "id": "evt_01M459WKZN8ERJM0RME41HC1BZ",
+                "key": "ROSTER_LOADED",
+                "name": "Roster Loaded",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "parts",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "description",
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "radius",
+                        "type": "number"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
+                  },
+                  {
+                    "name": "links",
+                    "properties": [
+                      {
+                        "name": "from",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "to",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      },
+                      {
+                        "name": "label",
+                        "type": "string"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
                   }
                 ],
                 "tier": "domain"
@@ -1001,9 +1099,17 @@
                 "eventId": "evt_01M055GQ2773AEMFWKNAW2N8P0",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@config.matchMode",
-                  ""
+                  "and",
+                  [
+                    "==",
+                    "@config.matchMode",
+                    ""
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1418,9 +1524,450 @@
                 "eventId": "evt_01M055GQ281Y3NWPNNPD786Z1S",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@payload.mode",
-                  "@config.matchMode"
+                  "and",
+                  [
+                    "==",
+                    "@payload.mode",
+                    "@config.matchMode"
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.parts",
+                    "@payload.parts"
+                  ],
+                  [
+                    "set",
+                    "@entity.links",
+                    "@payload.links"
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedIndex",
+                    -1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.captionText",
+                    "@config.overviewText"
+                  ],
+                  [
+                    "set",
+                    "@entity.readoutText",
+                    ""
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "buttons",
+                        [
+                          "array/map",
+                          "@entity.parts",
+                          [
+                            "fn",
+                            "p",
+                            {
+                              "action": "SELECT_PART",
+                              "actionPayload": {
+                                "partId": [
+                                  "object/get",
+                                  "@p",
+                                  "id"
+                                ]
+                              },
+                              "label": [
+                                "object/get",
+                                "@p",
+                                "label"
+                              ],
+                              "size": "sm",
+                              "type": "button",
+                              "variant": [
+                                "if",
+                                [
+                                  "==",
+                                  "@entity.selectedId",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "id"
+                                  ]
+                                ],
+                                "primary",
+                                "secondary"
+                              ]
+                            }
+                          ]
+                        ]
+                      ],
+                      [
+                        "clearButton",
+                        {
+                          "action": "CLEAR_PART",
+                          "label": "@config.clearLabel",
+                          "size": "sm",
+                          "type": "button",
+                          "variant": "ghost"
+                        }
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.partButtons",
+                        [
+                          "array/append",
+                          "@buttons",
+                          "@clearButton"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.captionChildren",
+                        [
+                          "if",
+                          [
+                            "!=",
+                            "@entity.readoutText",
+                            ""
+                          ],
+                          [
+                            {
+                              "color": "muted",
+                              "content": "@entity.readoutText",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "content": "@entity.captionText",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          [
+                            {
+                              "content": "@entity.captionText",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.selectedId",
+                                      ""
+                                    ],
+                                    "Overview",
+                                    [
+                                      "str/concat",
+                                      "Part ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "+",
+                                          "@entity.selectedIndex",
+                                          1.0
+                                        ]
+                                      ],
+                                      " of ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "array/len",
+                                          "@entity.parts"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.selectedId",
+                                      ""
+                                    ],
+                                    "neutral",
+                                    "primary"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": "@entity.partButtons",
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
+                              "backgroundColor": "@config.backgroundColor",
+                              "edges": "@entity.links",
+                              "height": "@config.height",
+                              "nodes": [
+                                "array/map",
+                                "@entity.parts",
+                                [
+                                  "fn",
+                                  "p",
+                                  {
+                                    "color": [
+                                      "object/get",
+                                      "@p",
+                                      "color"
+                                    ],
+                                    "id": [
+                                      "object/get",
+                                      "@p",
+                                      "id"
+                                    ],
+                                    "label": [
+                                      "object/get",
+                                      "@p",
+                                      "label"
+                                    ],
+                                    "radius": [
+                                      "if",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "@p",
+                                          "id"
+                                        ],
+                                        "@entity.selectedId"
+                                      ],
+                                      [
+                                        "*",
+                                        [
+                                          "object/get",
+                                          "@p",
+                                          "radius"
+                                        ],
+                                        1.4
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@p",
+                                        "radius"
+                                      ]
+                                    ],
+                                    "x": [
+                                      "object/get",
+                                      "@p",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@p",
+                                      "y"
+                                    ]
+                                  }
+                                ]
+                              ],
+                              "shapes": [
+                                "if",
+                                [
+                                  "==",
+                                  "@entity.selectedId",
+                                  ""
+                                ],
+                                [],
+                                [
+                                  {
+                                    "color": "@config.highlightColor",
+                                    "radius": [
+                                      "+",
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@entity.parts",
+                                          "@entity.selectedIndex"
+                                        ],
+                                        "radius"
+                                      ],
+                                      10.0
+                                    ],
+                                    "stroke": "bold",
+                                    "type": "circle",
+                                    "x": [
+                                      "object/get",
+                                      [
+                                        "array/nth",
+                                        "@entity.parts",
+                                        "@entity.selectedIndex"
+                                      ],
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      [
+                                        "array/nth",
+                                        "@entity.parts",
+                                        "@entity.selectedIndex"
+                                      ],
+                                      "y"
+                                    ]
+                                  }
+                                ]
+                              ],
+                              "type": "biology-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "children": "@entity.captionChildren",
+                              "padding": "md",
+                              "type": "card",
+                              "variant": "bordered"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459WKZN8ERJM0RME41HC1BZ",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "and",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ],
+                    [
+                      ">",
+                      [
+                        "array/len",
+                        "@payload.parts"
+                      ],
+                      0.0
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459WKZN8ERJM0RME41HC1BZ",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },

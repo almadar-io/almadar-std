@@ -1,5 +1,5 @@
 app std-hero "1.0.0"
-"std-hero — the headline block at the top of a page, or a call-to-action banner further down. Optional eyebrow badge, headline, supporting text, up to two link actions, an optional copyable command, and optional media below or beside the copy. `look: banner` turns it into a contained call-to-action card. Links follow `href` (in-app path, #anchor, or absolute URL); each click also emits CTA_PRIMARY / CTA_SECONDARY with the href. Pick for landing, product, pricing and campaign pages."
+"std-hero — the headline block at the top of a page, or a call-to-action banner further down. Optional eyebrow badge, headline, supporting text, up to two link actions, an optional copyable command, optional media below or beside the copy, and an optional backdrop scene behind it all. `look: banner` turns it into a contained call-to-action card. Links follow `href` (in-app path, #anchor, or absolute URL); each click also emits CTA_PRIMARY / CTA_SECONDARY with the href. Pick for landing, product, pricing and campaign pages."
 orbital HeroOrbital {
   entity HeroView [runtime] {
     id : string!
@@ -109,6 +109,17 @@ orbital HeroOrbital {
         @label "Surface"
         @description "Background behind the block"
         @tier "presentation"
+      height : "auto" | "tall" = auto
+        @label "Height"
+        @description "auto fits the copy; tall fills most of the screen with the copy centred, for a hero over a backdrop scene"
+        @tier "presentation"
+      backdropContent : render-ui = {
+        type: box
+        className: "hidden"
+      }
+        @label "Backdrop"
+        @description "A scene behind the whole block, such as an animated canvas; it fills the block, never takes clicks, and the copy stays on top. Empty by default."
+        @tier "presentation"
       copyContent : render-ui = {
         type: stack
         direction: vertical
@@ -189,24 +200,38 @@ orbital HeroOrbital {
         paddingY: (if (== @config.look banner) xl "2xl")
         bg: (if (== @config.surface muted) muted transparent)
         fullWidth: true
+        position: relative
+        overflow: hidden
+        className: (if (== @config.height tall) "flex min-h-[80vh] items-center" "")
         children: [{
-          type: container
-          size: xl
-          maxWidth: xl
-          padding: lg
+          type: box
+          position: absolute
+          className: "inset-0 pointer-events-none"
+          aria-hidden: true
+          children: [@config.backdropContent]
+        }, {
+          type: box
+          position: relative
+          fullWidth: true
           children: [{
-            type: box
-            padding: (if (== @config.look banner) xl none)
-            rounded: (if (== @config.look banner) "2xl" none)
-            border: (== @config.look banner)
-            bg: (if (== @config.look banner) muted transparent)
-            children: [{
-              type: stack
-              direction: vertical
-              gap: "2xl"
-              align: (if (== @config.alignment center) center stretch)
-              children: [@config.copyContent, @config.mediaContent]
-            }]
+              type: container
+              size: xl
+              maxWidth: xl
+              padding: lg
+              children: [{
+                type: box
+                padding: (if (== @config.look banner) xl none)
+                rounded: (if (== @config.look banner) "2xl" none)
+                border: (== @config.look banner)
+                bg: (if (== @config.look banner) muted transparent)
+                children: [{
+                  type: stack
+                  direction: vertical
+                  gap: "2xl"
+                  align: (if (== @config.alignment center) center stretch)
+                  children: [@config.copyContent, @config.mediaContent]
+                }]
+              }]
           }]
         }]
       }
@@ -217,24 +242,38 @@ orbital HeroOrbital {
         paddingY: (if (== @config.look banner) xl "2xl")
         bg: (if (== @config.surface muted) muted transparent)
         fullWidth: true
+        position: relative
+        overflow: hidden
+        className: (if (== @config.height tall) "flex min-h-[80vh] items-center" "")
         children: [{
-          type: container
-          size: xl
-          maxWidth: xl
-          padding: lg
+          type: box
+          position: absolute
+          className: "inset-0 pointer-events-none"
+          aria-hidden: true
+          children: [@config.backdropContent]
+        }, {
+          type: box
+          position: relative
+          fullWidth: true
           children: [{
-            type: box
-            padding: (if (== @config.look banner) xl none)
-            rounded: (if (== @config.look banner) "2xl" none)
-            border: (== @config.look banner)
-            bg: (if (== @config.look banner) muted transparent)
-            children: [{
-              type: split
-              ratio: "1:1"
-              gap: xl
-              align: center
-              children: [@config.copyContent, @config.mediaContent]
-            }]
+              type: container
+              size: xl
+              maxWidth: xl
+              padding: lg
+              children: [{
+                type: box
+                padding: (if (== @config.look banner) xl none)
+                rounded: (if (== @config.look banner) "2xl" none)
+                border: (== @config.look banner)
+                bg: (if (== @config.look banner) muted transparent)
+                children: [{
+                  type: split
+                  ratio: "1:1"
+                  gap: xl
+                  align: center
+                  children: [@config.copyContent, @config.mediaContent]
+                }]
+              }]
           }]
         }]
       }

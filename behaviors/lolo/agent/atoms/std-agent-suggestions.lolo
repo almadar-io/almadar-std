@@ -1,0 +1,841 @@
+app std-agent-suggestions "1.0.0"
+"std-agent-suggestions — an agent that proactively proposes things to the signed-in person, who accepts or dismisses each one. The agent proposes through one declared input, PROPOSE_SUGGESTION (its @description is the tool text): a kind, a title, a body that gives its reasoning, an optional action (a name the app routes) with a payload, an optional href, and a subject (what it is about). A suggestion's signature is kind:action:subject; a signature that was ever proposed to this person, accepted or dismissed included, is never stored again (SUGGESTION_DUPLICATE), and no more than `maxPending` wait at once (SUGGESTION_LIMIT_REACHED). `kinds` and `actions`, when listed, are the only values accepted (SUGGESTION_REJECTED). The agent runs on its own: any trait emitting SUGGESTIONS_TRIGGERED (or an app event routed into AgentSuggestionTrigger's TRIGGERED by re-binding that trait in the import body with `omit { AgentSuggestionTrigger }` and its own `listens`) asks for a run, and once `cooldownMinutes` have passed since this person's last run a second std-agent-tool-loop answers `prompt` with `tools` as the signed-in person — `quiet`, so it streams no live steps and toasts no failure, and its reply and failure are renamed PROACTIVE_REPLIED / PROACTIVE_FAILED so they never reach the assistant's chat. AgentSuggestionInbox lists the pending suggestions with Accept and Dismiss and an empty state that offers to look again (SUGGESTIONS_ANALYZE_REQUESTED). Accept stores accepted, emits SUGGESTION_ACCEPTED { action, payload, href, … } for the app to route (and navigates to `href` when the suggestion has one); Dismiss stores dismissed and emits SUGGESTION_DISMISSED. The inbox renders into `panelSlot`: `main` inline (the content of a std-panel-launcher), or `modal`/`drawer` opened with OPEN and closed with CLOSE (set std-app-layout's notificationClickEvent, or a topBarActions event, to SUGGESTIONS_OPEN_REQUESTED). Import the orbital once per app: `orbital Suggestions = Suggest.orbitals.AgentSuggestionsOrbital { entity MySuggestion  entities { AgentSuggestionRun: MySuggestionRun } config { … } }`, retargeting the records onto owner-scoped entities (`ownerId` a relation to your [identity] roster, with @read/@create/@update); a suggestion's proposer, inbox and trigger read only the rows whose ownerId is the signed-in person. PROPOSE_SUGGESTION's refusals (SUGGESTION_DUPLICATE, SUGGESTION_LIMIT_REACHED, SUGGESTION_REJECTED) are the agent's tool response; no trait listens to them. Suggestion kinds, actions and prompts are the app's vocabulary, declared in config."
+;; @capabilities "proactive suggestions, agent recommendations, suggestion inbox, next best action, accept or dismiss suggestions, notification bell suggestions, agent proposals"
+
+type AgentTool = {
+  event : event
+  read : string
+  scope : "declared"
+}
+type AgentChatMessage = {
+  role : "user" | "assistant"
+  content : string!
+}
+type SuggestionProposal = {
+  kind : string
+  title : string
+  body : string
+  action : string
+  href : string
+  subject : string
+  signature : string
+  payload : Map string scalar
+}
+
+type SuggestionRow = {
+  id : string!
+  ownerId : string!
+  kind : string
+  title : string
+  body : string
+  action : string
+  href : string
+  payload : Map string scalar
+  subject : string
+  signature : string
+  status : "pending" | "accepted" | "dismissed"
+  createdAt : number
+  resolvedAt : number
+}
+type RunRow = {
+  id : string!
+  ownerId : string!
+  ranAt : number
+}
+
+orbital AgentSuggestionsOrbital {
+  uses Loop from "std/behaviors/std-agent-tool-loop"
+
+  type SuggestionsLoaded = Event { data : [SuggestionRow] } "Fired when the person's suggestions finish loading"
+  type SuggestionsLoadFailed = Event { error : string, code : string } "Fired when the suggestions fail to load"
+  type SuggestionResolveFailed = Event { error : string, code : string } "Fired when a suggestion cannot be accepted or dismissed"
+  type SuggestionsForPropose = Event { data : [SuggestionRow] } "Fired when the person's suggestions are loaded for a proposal's duplicate check"
+  type SuggestionCheckFailed = Event { error : string, code : string } "Fired when a proposal's duplicate check cannot load the person's suggestions"
+  type SuggestionSaveFailed = Event { error : string, code : string } "Fired when a proposed suggestion cannot be stored"
+  type SuggestionForAccept = Event { data : [SuggestionRow] } "Fired when the suggestion being accepted is loaded"
+  type SuggestionForDismiss = Event { data : [SuggestionRow] } "Fired when the suggestion being dismissed is loaded"
+  type SuggestionAccepted = Event SuggestionRow "Fired after a suggestion is stored as accepted"
+  type SuggestionDismissed = Event SuggestionRow "Fired after a suggestion is stored as dismissed"
+  type RunsForTrigger = Event { data : [RunRow] } "Fired when the person's earlier runs are loaded for the cooldown check"
+  type RunsLoadFailed = Event { error : string, code : string } "Fired when the earlier runs cannot be loaded"
+  type RunRecorded = Event RunRow "Fired after a run is recorded"
+  type RunRecordFailed = Event { error : string, code : string } "Fired when a run cannot be recorded"
+
+  config {
+    maxPending : number = 5
+      @label "How many suggestions may wait at once?"
+      @description "A proposal is refused (SUGGESTION_LIMIT_REACHED) while this many are pending. 0 refuses every proposal."
+      @tier "policy"
+    kinds : [string] = []
+      @label "Which kinds may be proposed?"
+      @description "When listed, a proposal of any other kind is refused (SUGGESTION_REJECTED). Empty accepts any kind."
+      @tier "domain"
+    actions : [string] = []
+      @label "Which actions may a suggestion carry?"
+      @description "When listed, a proposal carrying any other action, or none, is refused (SUGGESTION_REJECTED). Empty accepts any action."
+      @tier "domain"
+    cooldownMinutes : number = 60
+      @label "Minutes between proactive runs"
+      @description "A trigger starts a run only when this long has passed since the person's last run. 0 runs on every trigger."
+      @tier "policy"
+    prompt : string = "Look at what I have been doing and propose what I could do next, one suggestion at a time."
+      @label "What does the agent look into?"
+      @description "The request each proactive run answers."
+      @tier "domain"
+    instructions : string = "You propose next steps to the signed-in person. Look things up with the tools, then call the proposal tool once for each suggestion worth making, with the reason in its body. When a proposal is refused as a duplicate or the pending limit is reached, do not propose again. Propose nothing when nothing is worth suggesting."
+      @label "How should the agent behave?"
+      @description "Standing instructions sent with every proactive run."
+      @tier "domain"
+    tools : [AgentTool] = [{ event: AgentSuggestionProposer.PROPOSE_SUGGESTION }]
+      @label "What may the agent do?"
+      @description "The declared inputs it may fire and the entities it may read, as the signed-in person. An importing app restates the list with the proposal input addressed by its local orbital name (`{ event: Suggestions.AgentSuggestionProposer.PROPOSE_SUGGESTION }`), which the agent can never propose without."
+      @tier "domain"
+    maxSteps : number = 8
+      @label "Model round-trips per run"
+      @tier "policy"
+    title : string = "Suggestions"
+      @label "Inbox heading"
+      @tier "presentation"
+    icon : string = lightbulb
+      @label "Inbox icon"
+      @tier "presentation"
+    emptyTitle : string = "No suggestions right now"
+      @label "Empty inbox title"
+      @tier "presentation"
+    emptyDescription : string = ""
+      @label "Empty inbox hint"
+      @tier "presentation"
+    analyzeLabel : string = "Look for suggestions"
+      @label "Look-again button"
+      @description "Shown in the empty inbox; asks the agent to look again."
+      @tier "presentation"
+    acceptLabel : string = Accept
+      @label "Accept button"
+      @tier "presentation"
+    dismissLabel : string = Dismiss
+      @label "Dismiss button"
+      @tier "presentation"
+    closeLabel : string = Close
+      @label "Close button"
+      @tier "presentation"
+    historyLabel : string = "Past suggestions"
+      @label "Past-suggestions link"
+      @tier "presentation"
+    historyHref : string = "/agent-suggestions/history"
+      @label "Where past suggestions are listed"
+      @description "The page the inbox links to for accepted and dismissed suggestions; empty hides the link. The history page of an app that imports this orbital is its own page over its retargeted entity."
+      @tier "presentation"
+    panelSlot : slot = main
+      @label "Where the inbox renders"
+      @description "`main` for the content of a launcher or page; `modal` or `drawer` for an overlay opened with OPEN (a notification bell)."
+      @tier "presentation"
+    startOpen : boolean = true
+      @label "Show the inbox as soon as it mounts?"
+      @description "Off for an overlay that waits for OPEN."
+      @tier "presentation"
+  }
+
+  entity AgentSuggestionsHost [runtime] {
+    id : string!
+  }
+
+  trait AgentSuggestionProposer -> @rebindable AgentSuggestion [lifecycle] {
+    config {
+      pendingLimit : number = @config.maxPending
+        @label "How many suggestions may wait at once?"
+        @description "A proposal is refused (SUGGESTION_LIMIT_REACHED) while this many are pending."
+        @synonyms "limit, cap, queue size"
+        @tier "policy"
+      allowedKinds : [string] = @config.kinds
+        @label "Which kinds may be proposed?"
+        @description "When listed, any other kind is refused. Empty accepts any."
+        @synonyms "types, categories, allowed kinds"
+        @tier "domain"
+      allowedActions : [string] = @config.actions
+        @label "Which actions may a suggestion carry?"
+        @description "When listed, any other action is refused. Empty accepts any."
+        @synonyms "allowed actions, commands, events"
+        @tier "domain"
+    }
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      PROPOSE_SUGGESTION -> ready when (and (> (array/len @config.allowedKinds) 0) (not (array/includes @config.allowedKinds ?kind)))
+        (emit SUGGESTION_REJECTED { reason: (str/concat "Unknown kind \"" ?kind "\". Allowed kinds: " (str/join @config.allowedKinds ", ")) })
+      PROPOSE_SUGGESTION -> ready when (and (or (= (array/len @config.allowedKinds) 0) (array/includes @config.allowedKinds ?kind)) (> (array/len @config.allowedActions) 0) (not (array/includes @config.allowedActions (str/default ?action ""))))
+        (emit SUGGESTION_REJECTED { reason: (str/concat "Unknown action \"" (str/default ?action "") "\". Allowed actions: " (str/join @config.allowedActions ", ")) })
+      PROPOSE_SUGGESTION -> ready when (and (or (= (array/len @config.allowedKinds) 0) (array/includes @config.allowedKinds ?kind)) (or (= (array/len @config.allowedActions) 0) (array/includes @config.allowedActions (str/default ?action ""))))
+        (set @entity.pendingProposal {
+          kind: ?kind
+          title: ?title
+          body: (str/default ?body "")
+          action: (str/default ?action "")
+          href: (str/default ?href "")
+          subject: ?subject
+          signature: (str/concat ?kind ":" (str/default ?action "") ":" ?subject)
+          payload: (if ?payload ?payload {})
+        })
+        (fetch AgentSuggestion {
+          filter: ["=", (object/get @entity ownerId), @user.id]
+          emit: { failure: SuggestionCheckFailed, success: SuggestionsForPropose }
+        })
+      SuggestionsForPropose -> ready when (array/some ?data (fn item (= @item.signature @entity.pendingProposal.signature)))
+        (emit SUGGESTION_DUPLICATE { signature: @entity.pendingProposal.signature })
+      SuggestionsForPropose -> ready when (and (not (array/some ?data (fn item (= @item.signature @entity.pendingProposal.signature)))) (>= (array/count ?data (fn item (= @item.status "pending"))) @config.pendingLimit))
+        (emit SUGGESTION_LIMIT_REACHED { maxPending: @config.pendingLimit })
+      SuggestionsForPropose -> ready when (and (not (array/some ?data (fn item (= @item.signature @entity.pendingProposal.signature)))) (< (array/count ?data (fn item (= @item.status "pending"))) @config.pendingLimit))
+        (persist create AgentSuggestion {
+          ownerId: @user.id
+          kind: @entity.pendingProposal.kind
+          title: @entity.pendingProposal.title
+          body: @entity.pendingProposal.body
+          action: @entity.pendingProposal.action
+          href: @entity.pendingProposal.href
+          payload: @entity.pendingProposal.payload
+          subject: @entity.pendingProposal.subject
+          signature: @entity.pendingProposal.signature
+          status: pending
+          createdAt: @now
+        } {
+          emit: { failure: SuggestionSaveFailed, success: SUGGESTION_ADDED }
+        })
+      SuggestionCheckFailed -> ready
+        (emit SUGGESTION_REJECTED { reason: (str/concat "Could not check earlier suggestions: " ?error) })
+        (render-ui toast {
+          message: ?error
+          type: alert
+          variant: warning
+        })
+      SuggestionSaveFailed -> ready
+        (emit SUGGESTION_REJECTED { reason: (str/concat "Could not store the suggestion: " ?error) })
+        (render-ui toast {
+          message: ?error
+          type: alert
+          variant: warning
+        })
+    }
+
+    emits {
+      SUGGESTION_ADDED -> external
+        @description "A suggestion was stored for the person — payload is the created AgentSuggestion row itself."
+        @synonyms "proposed, suggested, new suggestion"
+        @tier "domain"
+      SUGGESTION_DUPLICATE -> external {
+        signature : string!
+      }
+        @description "This signature was already proposed to the person (pending, accepted or dismissed), so nothing was stored."
+        @synonyms "already proposed, repeat, seen before"
+        @tier "domain"
+      SUGGESTION_LIMIT_REACHED -> external {
+        maxPending : number!
+      }
+        @description "The person already has the most pending suggestions allowed, so nothing was stored."
+        @synonyms "too many, queue full, cap"
+        @tier "domain"
+      SUGGESTION_REJECTED -> external {
+        reason : string!
+      }
+        @description "The proposal was refused (a kind or action not allowed, or it could not be checked or stored); the reason says why."
+        @synonyms "refused, invalid, not allowed"
+        @tier "domain"
+      SuggestionsForPropose -> internal {
+        data : [SuggestionRow]
+      }
+        @tier "internal"
+      SuggestionCheckFailed -> internal {
+        error : string
+        code : string
+      }
+        @tier "internal"
+      SuggestionSaveFailed -> internal {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      PROPOSE_SUGGESTION -> external {
+        kind : string!
+        title : string!
+        body : string
+        action : string
+        href : string
+        subject : string!
+        payload : Map string scalar
+      }
+        @description "Propose something to the signed-in person: a kind, a title, a body that gives the reason, an optional action with its payload, an optional href, and the subject it is about (an id or slug). A proposal whose kind, action and subject were already proposed to this person is refused, whatever became of the first; so is one past the pending limit."
+        @synonyms "suggest, recommend, propose, offer"
+    }
+  }
+
+  trait AgentSuggestionInbox -> @rebindable AgentSuggestion [interaction, collection] {
+    config {
+      heading : string = @config.title
+        @label "Inbox heading"
+        @description "Heading at the top of the inbox."
+        @synonyms "panel title, suggestions title"
+        @tier "presentation"
+      headingIcon : string = @config.icon
+        @label "Inbox icon"
+        @description "Lucide icon name shown beside the heading."
+        @synonyms "header icon"
+        @tier "presentation"
+      emptyHeading : string = @config.emptyTitle
+        @label "What shows when nothing is pending?"
+        @synonyms "empty state, no suggestions"
+        @tier "presentation"
+      emptyHint : string = @config.emptyDescription
+        @label "Hint under the empty heading"
+        @tier "presentation"
+      lookAgainLabel : string = @config.analyzeLabel
+        @label "Look-again button label"
+        @description "The empty inbox's button, which asks the agent to look again."
+        @synonyms "refresh, find suggestions, analyze"
+        @tier "presentation"
+      approveLabel : string = @config.acceptLabel
+        @label "Accept button label"
+        @synonyms "approve, yes, do it"
+        @tier "presentation"
+      declineLabel : string = @config.dismissLabel
+        @label "Dismiss button label"
+        @synonyms "reject, no thanks, hide"
+        @tier "presentation"
+      closeButtonLabel : string = @config.closeLabel
+        @label "Close button label"
+        @synonyms "back, hide"
+        @tier "presentation"
+      historyLinkLabel : string = @config.historyLabel
+        @label "Past-suggestions link label"
+        @synonyms "history, archive, earlier suggestions"
+        @tier "presentation"
+      historyLink : string = @config.historyHref
+        @label "Past-suggestions page"
+        @description "Where accepted and dismissed suggestions are listed; empty hides the link."
+        @tier "presentation"
+      inboxSlot : slot = @config.panelSlot
+        @label "Where the inbox renders"
+        @description "`main` inline; `modal` or `drawer` for an overlay opened with OPEN."
+        @tier "internal"
+      showOnMount : boolean = @config.startOpen
+        @label "Show the inbox as soon as it mounts?"
+        @description "Off for an overlay that waits for OPEN."
+        @tier "presentation"
+    }
+    initial: closed
+
+    state closed {
+      INIT -> open when @config.showOnMount
+        (fetch AgentSuggestion {
+          filter: ["=", (object/get @entity ownerId), @user.id]
+          emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
+        })
+      INIT -> closed when (not @config.showOnMount)
+        (render-ui @config.inboxSlot null)
+      OPEN -> open
+        (fetch AgentSuggestion {
+          filter: ["=", (object/get @entity ownerId), @user.id]
+          emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
+        })
+    }
+
+    state open {
+      SuggestionsLoaded -> open
+        (render-ui @config.inboxSlot {
+          children: [{
+            align: center
+            children: [{
+              align: center
+              children: [{ name: @config.headingIcon, size: lg, type: icon }, {
+                content: @config.heading
+                type: typography
+                variant: h3
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, (if (not (= @config.inboxSlot "main")) {
+              action: CLOSE
+              icon: x
+              label: @config.closeButtonLabel
+              type: button
+              variant: ghost
+            } null)]
+            direction: horizontal
+            gap: sm
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            emptyAction: { label: @config.lookAgainLabel, event: ANALYZE }
+            emptyDescription: @config.emptyHint
+            emptyTitle: @config.emptyHeading
+            entity: (array/sort (array/filter ?data (fn item (= @item.status "pending"))) createdAt desc)
+            fields: [{
+              label: Kind
+              name: kind
+              variant: badge
+            }, {
+              label: Suggestion
+              name: title
+              variant: h4
+            }, {
+              label: Why
+              name: body
+              variant: body
+            }]
+            gap: sm
+            itemActions: [{
+              event: ACCEPT
+              icon: check
+              label: @config.approveLabel
+              variant: primary
+            }, {
+              event: DISMISS
+              icon: x
+              label: @config.declineLabel
+              variant: ghost
+            }]
+            type: data-list
+            variant: card
+          }, (if (not (= @config.historyLink "")) {
+            href: @config.historyLink
+            label: @config.historyLinkLabel
+            size: sm
+            type: button
+            variant: ghost
+          } null)]
+          className: "max-h-[60vh] overflow-y-auto"
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      SuggestionsLoadFailed -> open
+        (render-ui toast {
+          message: ?error
+          type: alert
+          variant: error
+        })
+      SuggestionResolveFailed -> open
+        (render-ui toast {
+          message: ?error
+          type: alert
+          variant: error
+        })
+      REFRESH -> open
+        (fetch AgentSuggestion {
+          filter: ["=", (object/get @entity ownerId), @user.id]
+          emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
+        })
+      OPEN -> open
+        (fetch AgentSuggestion {
+          filter: ["=", (object/get @entity ownerId), @user.id]
+          emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
+        })
+      ANALYZE -> open
+        (emit SUGGESTIONS_ANALYZE_REQUESTED {})
+      ACCEPT -> open
+        (fetch AgentSuggestion {
+          emit: { failure: SuggestionResolveFailed, success: SuggestionForAccept }
+          filter: ["=", (object/get @entity id), ?id]
+        })
+      SuggestionForAccept -> open when (and (> (array/len ?data) 0) (= (object/get (array/first ?data) status) "pending"))
+        (persist update AgentSuggestion {
+          id: (object/get (array/first ?data) id)
+          ownerId: (object/get (array/first ?data) ownerId)
+          kind: (object/get (array/first ?data) kind)
+          title: (object/get (array/first ?data) title)
+          body: (object/get (array/first ?data) body)
+          action: (object/get (array/first ?data) action)
+          href: (object/get (array/first ?data) href)
+          payload: (object/get (array/first ?data) payload)
+          subject: (object/get (array/first ?data) subject)
+          signature: (object/get (array/first ?data) signature)
+          status: accepted
+          createdAt: (object/get (array/first ?data) createdAt)
+          resolvedAt: @now
+        } {
+          emit: { failure: SuggestionResolveFailed, success: SuggestionAccepted }
+        })
+      SuggestionAccepted -> open when (= (str/default ?href "") "")
+        (emit SUGGESTION_ACCEPTED { id: ?id, kind: ?kind, action: ?action, href: ?href, subject: ?subject, payload: ?payload })
+        (fetch AgentSuggestion {
+          filter: ["=", (object/get @entity ownerId), @user.id]
+          emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
+        })
+      SuggestionAccepted -> open when (not (= (str/default ?href "") ""))
+        (emit SUGGESTION_ACCEPTED { id: ?id, kind: ?kind, action: ?action, href: ?href, subject: ?subject, payload: ?payload })
+        (fetch AgentSuggestion {
+          filter: ["=", (object/get @entity ownerId), @user.id]
+          emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
+        })
+        (navigate ?href)
+      DISMISS -> open
+        (fetch AgentSuggestion {
+          emit: { failure: SuggestionResolveFailed, success: SuggestionForDismiss }
+          filter: ["=", (object/get @entity id), ?id]
+        })
+      SuggestionForDismiss -> open when (and (> (array/len ?data) 0) (= (object/get (array/first ?data) status) "pending"))
+        (persist update AgentSuggestion {
+          id: (object/get (array/first ?data) id)
+          ownerId: (object/get (array/first ?data) ownerId)
+          kind: (object/get (array/first ?data) kind)
+          title: (object/get (array/first ?data) title)
+          body: (object/get (array/first ?data) body)
+          action: (object/get (array/first ?data) action)
+          href: (object/get (array/first ?data) href)
+          payload: (object/get (array/first ?data) payload)
+          subject: (object/get (array/first ?data) subject)
+          signature: (object/get (array/first ?data) signature)
+          status: dismissed
+          createdAt: (object/get (array/first ?data) createdAt)
+          resolvedAt: @now
+        } {
+          emit: { failure: SuggestionResolveFailed, success: SuggestionDismissed }
+        })
+      SuggestionDismissed -> open
+        (emit SUGGESTION_DISMISSED { id: ?id, kind: ?kind, action: ?action, subject: ?subject })
+        (fetch AgentSuggestion {
+          filter: ["=", (object/get @entity ownerId), @user.id]
+          emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
+        })
+      CLOSE -> closed
+        (render-ui @config.inboxSlot null)
+    }
+
+    emits {
+      SUGGESTION_ACCEPTED -> external {
+        id : string!
+        kind : string
+        action : string
+        href : string
+        subject : string
+        payload : Map string scalar
+      }
+        @description "The person accepted a suggestion; the app routes `action` with `payload` (a suggestion with an href has already navigated there)."
+        @synonyms "accepted, approved, taken up, do it"
+        @tier "domain"
+      SUGGESTION_DISMISSED -> external {
+        id : string!
+        kind : string
+        action : string
+        subject : string
+      }
+        @description "The person dismissed a suggestion; its signature is never proposed to them again."
+        @synonyms "dismissed, rejected, declined, no thanks"
+        @tier "domain"
+      SUGGESTIONS_ANALYZE_REQUESTED -> external {
+      }
+        @description "The person asked the agent to look for suggestions again."
+        @synonyms "look again, refresh suggestions, analyze"
+        @tier "domain"
+      SuggestionsLoaded -> internal {
+        data : [SuggestionRow]
+      }
+        @tier "internal"
+      SuggestionsLoadFailed -> internal {
+        error : string
+        code : string
+      }
+        @tier "internal"
+      SuggestionResolveFailed -> internal {
+        error : string
+        code : string
+      }
+        @tier "internal"
+      SuggestionForAccept -> internal {
+        data : [SuggestionRow]
+      }
+        @tier "internal"
+      SuggestionForDismiss -> internal {
+        data : [SuggestionRow]
+      }
+        @tier "internal"
+      SuggestionAccepted -> internal
+        @tier "internal"
+      SuggestionDismissed -> internal
+        @tier "internal"
+    }
+
+    listens {
+      AgentSuggestionProposer.SUGGESTION_ADDED -> REFRESH
+      AgentSuggestionRunner.SUGGESTION_RUN_DONE -> REFRESH
+      AgentSuggestionRunner.SUGGESTION_RUN_FAILED -> REFRESH
+      *.SUGGESTIONS_OPEN_REQUESTED -> OPEN
+      OPEN {
+      }
+        @description "Show the suggestions inbox. SUGGESTIONS_OPEN_REQUESTED from any trait arrives here."
+        @synonyms "show suggestions, open bell, view suggestions"
+        @tier "presentation"
+      CLOSE {
+      }
+        @description "Hide the suggestions inbox."
+        @synonyms "close, hide, dismiss panel"
+        @tier "presentation"
+      REFRESH {
+      }
+        @description "Reload the pending suggestions."
+      ANALYZE {
+      }
+        @description "Ask the agent to look for suggestions again."
+        @tier "presentation"
+      ACCEPT {
+        id : string!
+      }
+        @description "Accept this suggestion."
+        @tier "presentation"
+      DISMISS {
+        id : string!
+      }
+        @description "Dismiss this suggestion."
+        @tier "presentation"
+    }
+  }
+
+  trait AgentSuggestionTrigger -> @rebindable AgentSuggestionRun [lifecycle] {
+    config {
+      gapMinutes : number = @config.cooldownMinutes
+        @label "Minutes between proactive runs"
+        @description "A trigger starts a run only when this long has passed since the person's last run."
+        @synonyms "throttle, rate limit, interval, frequency"
+        @tier "policy"
+    }
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      TRIGGERED -> ready
+        (fetch AgentSuggestionRun {
+          filter: ["=", (object/get @entity ownerId), @user.id]
+          emit: { failure: RunsLoadFailed, success: RunsForTrigger }
+        })
+      RunsForTrigger -> ready when (>= (- @now (if (= (array/len ?data) 0) 0 (array/max ?data ranAt))) (* @config.gapMinutes 60000))
+        (emit SUGGESTION_RUN_ALLOWED {})
+      RunsForTrigger -> ready when (< (- @now (if (= (array/len ?data) 0) 0 (array/max ?data ranAt))) (* @config.gapMinutes 60000))
+      RunsLoadFailed -> ready
+        (render-ui toast {
+          message: ?error
+          type: alert
+          variant: warning
+        })
+    }
+
+    emits {
+      SUGGESTION_RUN_ALLOWED -> external {
+      }
+        @description "A trigger arrived and the cooldown has passed, so the agent is asked to look."
+        @synonyms "run allowed, cooldown passed"
+        @tier "domain"
+      RunsForTrigger -> internal {
+        data : [RunRow]
+      }
+        @tier "internal"
+      RunsLoadFailed -> internal {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      *.SUGGESTIONS_TRIGGERED -> TRIGGERED
+      TRIGGERED {
+      }
+        @description "Something happened that is a reason to look for suggestions. SUGGESTIONS_TRIGGERED from any trait arrives here; an app routes its own events with `listens { Source.EVENT -> TRIGGERED }` on a re-bound AgentSuggestionTrigger."
+        @synonyms "trigger, start analysis, look for suggestions"
+        @tier "domain"
+    }
+  }
+
+  trait AgentSuggestionRunner -> @rebindable AgentSuggestionRun [lifecycle] {
+    config {
+      request : string = @config.prompt
+        @label "What does the agent look into?"
+        @description "The request each proactive run answers."
+        @synonyms "task, goal, question, brief"
+        @tier "domain"
+    }
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      START -> starting
+        (persist create AgentSuggestionRun {
+          ownerId: @user.id
+          ranAt: @now
+        } {
+          emit: { failure: RunRecordFailed, success: RunRecorded }
+        })
+    }
+
+    state starting {
+      RunRecorded -> analyzing
+        (emit SUGGESTION_RUN_STARTED { messages: [{ role: user, content: @config.request }] })
+      RunRecordFailed -> ready
+        (emit SUGGESTION_RUN_FAILED { error: ?error })
+        (render-ui toast {
+          message: ?error
+          type: alert
+          variant: warning
+        })
+    }
+
+    state analyzing {
+      LOOP_REPLIED -> ready
+        (emit SUGGESTION_RUN_DONE {})
+      LOOP_FAILED -> ready
+        (emit SUGGESTION_RUN_FAILED { error: ?error })
+    }
+
+    emits {
+      SUGGESTION_RUN_STARTED -> external {
+        messages : [AgentChatMessage]!
+      }
+        @description "The agent was asked to look for suggestions."
+        @synonyms "analysis started, looking"
+        @tier "domain"
+      SUGGESTION_RUN_DONE -> external {
+      }
+        @description "The agent finished looking; any suggestions it made are in the inbox."
+        @synonyms "analysis done, finished"
+        @tier "domain"
+      SUGGESTION_RUN_FAILED -> external {
+        error : string
+      }
+        @description "The agent could not finish looking (no toast; the inbox simply has nothing new)."
+        @synonyms "analysis failed, error"
+        @tier "domain"
+      RunRecorded -> internal
+        @tier "internal"
+      RunRecordFailed -> internal {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      AgentSuggestionTrigger.SUGGESTION_RUN_ALLOWED -> START
+      AgentSuggestionInbox.SUGGESTIONS_ANALYZE_REQUESTED -> START
+      AgentSuggestionLoop.PROACTIVE_REPLIED -> LOOP_REPLIED
+      AgentSuggestionLoop.PROACTIVE_FAILED -> LOOP_FAILED
+      START {
+      }
+        @description "Ask the agent to look for suggestions now."
+      LOOP_REPLIED {
+        reply : string
+      }
+        @description "The agent answered."
+      LOOP_FAILED {
+        error : string
+      }
+        @description "The agent could not answer."
+    }
+  }
+
+  trait AgentSuggestionLoop = Loop.traits.AgentToolLoop {
+    config {
+      tools: @config.tools
+      instructions: @config.instructions
+      maxSteps: @config.maxSteps
+      quiet: true
+      cancelKey: "agent-suggestions"
+    }
+    events {
+      ASSISTANT_REPLIED: PROACTIVE_REPLIED
+      ASSISTANT_REPLY_FAILED: PROACTIVE_FAILED
+    }
+    listens {
+      AgentSuggestionRunner.SUGGESTION_RUN_STARTED -> CONVERSE
+    }
+  }
+
+  page "/agent-suggestions" as AgentSuggestionsPage -> AgentSuggestionInbox, AgentSuggestionProposer, AgentSuggestionTrigger, AgentSuggestionRunner, AgentSuggestionLoop
+}
+
+;; The suggestions and run records live outside AgentSuggestionsOrbital, so a consumer
+;; importing that orbital retargets them onto its own owner-scoped entities:
+;; `entities { AgentSuggestion: MySuggestion, AgentSuggestionRun: MySuggestionRun }`.
+orbital AgentSuggestionRecordsOrbital {
+  entity AgentSuggestion [persistent: agentSuggestions] {
+    id : string!
+    ownerId : string! @description "Whom this is proposed to (the real @user). The binding organism scopes @read/@create/@update to it." @synonyms "user, owner, account"
+    kind : string @description "What sort of suggestion this is; the app's own vocabulary." @synonyms "type, category" = ""
+    title : string @description "The suggestion in a line." @synonyms "headline, name" = ""
+    body : string @description "Why the agent proposes it." @synonyms "reasoning, reason, description, explanation" = ""
+    action : string @description "What accepting it does: a name the app routes from SUGGESTION_ACCEPTED." @synonyms "event, command" = ""
+    href : string @description "A page accepting it opens; empty for none." @synonyms "link, url, route" = ""
+    payload : Map string scalar @description "What the action needs." @synonyms "params, arguments, data" = {}
+    subject : string @description "What the suggestion is about (an id or slug)." @synonyms "target, topic" = ""
+    signature : string @description "kind:action:subject. One signature is proposed to a person at most once, whatever became of it." @synonyms "dedup key, fingerprint" = ""
+    status : "pending" | "accepted" | "dismissed" @description "Where the suggestion stands." = pending
+    createdAt : number @description "When it was proposed (ms)." @synonyms "time, timestamp" = 0
+    resolvedAt : number @description "When it was accepted or dismissed (ms)." = 0
+    pendingProposal : SuggestionProposal @intrinsic @description "The proposal being checked for a duplicate." = { kind: "", title: "", body: "", action: "", href: "", subject: "", signature: "", payload: {} }
+  }
+
+  entity AgentSuggestionRun [persistent: agentSuggestionRuns] {
+    id : string!
+    ownerId : string! @description "Whose run this was (the real @user). The binding organism scopes @read/@create to it." @synonyms "user, owner, account"
+    ranAt : number @description "When the agent was last asked to look (ms)." @synonyms "time, started" = 0
+  }
+
+  trait AgentSuggestionHistory -> @rebindable AgentSuggestion [interaction, collection] {
+    config {
+      emptyHeading : string = "Nothing suggested yet"
+        @label "What shows when nothing was ever suggested?"
+        @tier "presentation"
+    }
+    initial: browsing
+
+    state browsing {
+      INIT -> browsing
+        (fetch AgentSuggestion {
+          filter: ["=", (object/get @entity ownerId), @user.id]
+          emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
+        })
+        (render-ui main { type: skeleton, variant: list, rows: 6 })
+      SuggestionsLoaded -> browsing
+        (render-ui main {
+          emptyTitle: @config.emptyHeading
+          entity: (array/sort ?data createdAt desc)
+          fields: [{
+            label: Status
+            name: status
+            variant: badge
+          }, {
+            label: Suggestion
+            name: title
+            variant: h4
+          }, {
+            label: Why
+            name: body
+            variant: body
+          }]
+          gap: sm
+          type: data-list
+          variant: card
+        })
+      SuggestionsLoadFailed -> browsing
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+    }
+
+    emits {
+      SuggestionsLoaded -> internal {
+        data : [SuggestionRow]
+      }
+        @tier "internal"
+      SuggestionsLoadFailed -> internal {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+  }
+
+  page "/agent-suggestions/history" as AgentSuggestionHistoryPage -> AgentSuggestionHistory
+}

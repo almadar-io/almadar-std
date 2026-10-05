@@ -128,6 +128,15 @@
             "tier": "presentation"
           },
           {
+            "key": "ephemeral",
+            "type": "boolean",
+            "default": false,
+            "label": "Ephemeral conversation?",
+            "description": "A self-contained conversation: it runs under the instructions, tools, greeting and header the app starts it with (ASSISTANT_CHAT_START), is never stored among the person's conversations or remembered, shows no conversation, past-chat or memory buttons, and ignores the assistant's own replies.",
+            "synonyms": "private, one-off, scoped chat, own persona, not saved",
+            "tier": "domain"
+          },
+          {
             "key": "links",
             "type": "[AgentLink]",
             "default": "@config.links",
@@ -202,6 +211,7 @@
           "OPEN_MEMORY_CLICKED",
           "REPLIED",
           "REPLY_FAILED",
+          "START_CHAT",
           "STEP",
           "THREAD_LOADED"
         ],
@@ -210,6 +220,11 @@
         "entityContract": {
           "requires": [],
           "provides": [
+            "chatAvatar",
+            "chatInstructions",
+            "chatSubtitle",
+            "chatTitle",
+            "chatTools",
             "entries",
             "working"
           ]
@@ -285,14 +300,15 @@
             "type": "string",
             "default": "sidebar",
             "label": "Where should navigation be placed?",
-            "description": "sidebar = left rail; topnav = top bar; bottomnav = mobile tab bar; minimal = no nav.",
+            "description": "sidebar = left rail; topnav = top bar; bottomnav = mobile tab bar; minimal = no nav; drawer = navigation behind a menu button at every width, content full width.",
             "synonyms": "nav position, navigation style, menu placement, layout style",
             "tier": "presentation",
             "enumValues": [
               "sidebar",
               "topnav",
               "bottomnav",
-              "minimal"
+              "minimal",
+              "drawer"
             ]
           },
           {
@@ -302,6 +318,15 @@
             "label": "Layout pattern",
             "description": "UI pattern used to render the application chrome",
             "tier": "internal"
+          },
+          {
+            "key": "logoSrc",
+            "type": "string",
+            "default": "",
+            "label": "Logo image",
+            "description": "Address of the logo shown beside the app name in the chrome header (an image URL or an inline data: SVG); empty shows the name's first letter.",
+            "synonyms": "logo, brand mark, app icon, logo url",
+            "tier": "presentation"
           },
           {
             "key": "navItems",
@@ -400,6 +425,24 @@
             "label": "Search event",
             "description": "Event emitted when the user runs a global search",
             "tier": "internal"
+          },
+          {
+            "key": "showSearch",
+            "type": "boolean",
+            "default": true,
+            "label": "Show the search box?",
+            "description": "The top-bar search box; turn off for apps whose pages carry their own search.",
+            "synonyms": "search bar, top search, hide search",
+            "tier": "presentation"
+          },
+          {
+            "key": "showThemeToggle",
+            "type": "boolean",
+            "default": true,
+            "label": "Show the light/dark toggle?",
+            "description": "The theme toggle in the top bar; turn off when the app offers it elsewhere, such as a settings page.",
+            "synonyms": "dark mode button, theme switch, hide theme toggle",
+            "tier": "presentation"
           },
           {
             "key": "sidebarTrait",
@@ -521,7 +564,8 @@
         "name": "AssistantContext",
         "emittedEvents": [],
         "listenedEvents": [
-          "REQUEST_CONTEXT"
+          "REQUEST_CONTEXT",
+          "ASSISTANT_EPHEMERAL_SEND"
         ],
         "overridableConfigKeys": [
           {
@@ -601,6 +645,15 @@
         ],
         "overridableConfigKeys": [
           {
+            "key": "cancelKey",
+            "type": "string",
+            "default": "agent-tool-loop",
+            "label": "Cancel key",
+            "description": "The key this instance's model call runs under, so CANCEL aborts it. Give each instance of the loop in one app its own.",
+            "synonyms": "call key, abort key",
+            "tier": "internal"
+          },
+          {
             "key": "instructions",
             "type": "string",
             "default": "@config.instructions",
@@ -615,6 +668,15 @@
             "default": "@config.maxSteps",
             "label": "Model round-trips per request",
             "description": "How many model calls one request may take before it fails.",
+            "tier": "policy"
+          },
+          {
+            "key": "quiet",
+            "type": "boolean",
+            "default": false,
+            "label": "Run in the background?",
+            "description": "No live ASSISTANT_STEP stream and no failure toast: the request is reported only through ASSISTANT_REPLIED and ASSISTANT_REPLY_FAILED. For a run nobody is watching, such as one the app starts on its own.",
+            "synonyms": "silent, background, no toast, suppress errors, headless run",
             "tier": "policy"
           },
           {
@@ -655,6 +717,7 @@
         "transitionEvents": [
           "ANSWERED",
           "ASK_FAILED",
+          "CANCEL",
           "CONVERSE",
           "INIT"
         ],
@@ -702,6 +765,7 @@
       "ASSISTANT_CHATS_REQUESTED",
       "ASSISTANT_CHAT_OPENED",
       "ASSISTANT_CHAT_SELECTED",
+      "ASSISTANT_EPHEMERAL_SEND",
       "ASSISTANT_HISTORY_REQUESTED",
       "ASSISTANT_MEMORIES_REQUESTED",
       "ASSISTANT_NEW_CHAT",

@@ -91,6 +91,15 @@
         "parent": "trt_01M07581DD9V8TRJYWFKW9AG1R",
         "renames": []
       },
+      "evt_01M459R7SVACRB9XP6KAK5M3YT": {
+        "bakedName": "ROSTER_LOADED",
+        "curName": "ROSTER_LOADED",
+        "id": "evt_01M459R7SVACRB9XP6KAK5M3YT",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M07581DD9V8TRJYWFKW9AG1R",
+        "renames": []
+      },
       "orb_01M07581DDJA8E66K21HQZ2YNH": {
         "bakedName": "PredictOrbital",
         "curName": "PredictOrbital",
@@ -136,6 +145,63 @@
           {
             "name": "title",
             "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "correctIndex": {
+                  "name": "correctIndex",
+                  "required": true,
+                  "type": "number"
+                },
+                "explanation": {
+                  "name": "explanation",
+                  "required": false,
+                  "type": "string"
+                },
+                "frames": {
+                  "items": {
+                    "properties": {
+                      "caption": {
+                        "name": "caption",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "value": {
+                        "name": "value",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "frames",
+                  "required": true,
+                  "type": "array"
+                },
+                "options": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "options",
+                  "required": true,
+                  "type": "array"
+                },
+                "question": {
+                  "name": "question",
+                  "required": true,
+                  "type": "string"
+                },
+                "setup": {
+                  "name": "setup",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "scenarios",
+            "type": "array"
           },
           {
             "default": 0.0,
@@ -358,6 +424,17 @@
               "label": "Reveal Label",
               "tier": "presentation",
               "type": "string"
+            },
+            "rosterSource": {
+              "default": "config",
+              "description": "Where the scenario roster comes from: config reads the scenarios knob at INIT; event waits for ROSTER_LOADED and takes the roster from its payload.",
+              "label": "Roster Source",
+              "tier": "domain",
+              "type": "string",
+              "values": [
+                "config",
+                "event"
+              ]
             },
             "scenarios": {
               "default": [
@@ -647,6 +724,10 @@
             },
             {
               "kind": "set",
+              "resource": "@entity.scenarios"
+            },
+            {
+              "kind": "set",
               "resource": "@entity.score"
             },
             {
@@ -765,6 +846,7 @@
               "revealCurves",
               "revealSamples",
               "scenarioIndex",
+              "scenarios",
               "score",
               "setupText",
               "title",
@@ -798,6 +880,68 @@
                   {
                     "name": "mode",
                     "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and scenarios is the scenario list; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
+                "id": "evt_01M459R7SVACRB9XP6KAK5M3YT",
+                "key": "ROSTER_LOADED",
+                "name": "Roster Loaded",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "scenarios",
+                    "properties": [
+                      {
+                        "name": "setup",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "question",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "options",
+                        "required": true,
+                        "type": "[string]"
+                      },
+                      {
+                        "name": "correctIndex",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "explanation",
+                        "type": "string"
+                      },
+                      {
+                        "name": "frames",
+                        "properties": [
+                          {
+                            "name": "caption",
+                            "required": true,
+                            "type": "string"
+                          },
+                          {
+                            "name": "value",
+                            "required": true,
+                            "type": "number"
+                          }
+                        ],
+                        "required": true,
+                        "type": "[object]"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
                   }
                 ],
                 "tier": "domain"
@@ -937,6 +1081,11 @@
                         "set",
                         "@entity.scenarioIndex",
                         0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.scenarios",
+                        "@config.scenarios"
                       ],
                       [
                         "set",
@@ -1424,9 +1573,17 @@
                 "eventId": "evt_01M07581DDEAH9VG9CYTH1VJE7",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@config.matchMode",
-                  ""
+                  "and",
+                  [
+                    "==",
+                    "@config.matchMode",
+                    ""
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1497,6 +1654,11 @@
                         "set",
                         "@entity.scenarioIndex",
                         0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.scenarios",
+                        "@config.scenarios"
                       ],
                       [
                         "set",
@@ -1984,9 +2146,598 @@
                 "eventId": "evt_01M07581DK61J8ARTARPY4MNHW",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@payload.mode",
-                  "@config.matchMode"
+                  "and",
+                  [
+                    "==",
+                    "@payload.mode",
+                    "@config.matchMode"
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "first",
+                        [
+                          "array/nth",
+                          "@payload.scenarios",
+                          0.0
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.active",
+                        true
+                      ],
+                      [
+                        "set",
+                        "@entity.title",
+                        "@config.title"
+                      ],
+                      [
+                        "set",
+                        "@entity.scenarioIndex",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.scenarios",
+                        "@payload.scenarios"
+                      ],
+                      [
+                        "set",
+                        "@entity.totalScenarios",
+                        [
+                          "array/len",
+                          "@payload.scenarios"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.phase",
+                        "commit"
+                      ],
+                      [
+                        "set",
+                        "@entity.chosenIndex",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.frames",
+                        [
+                          "object/get",
+                          "@first",
+                          "frames"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.frameIndex",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.frameCaption",
+                        ""
+                      ],
+                      [
+                        "set",
+                        "@entity.frameValue",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.revealSamples",
+                        []
+                      ],
+                      [
+                        "set",
+                        "@entity.revealCurves",
+                        []
+                      ],
+                      [
+                        "set",
+                        "@entity.score",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.done",
+                        false
+                      ],
+                      [
+                        "set",
+                        "@entity.setupText",
+                        [
+                          "object/get",
+                          "@first",
+                          "setup"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.question",
+                        [
+                          "object/get",
+                          "@first",
+                          "question"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.options",
+                        [
+                          "object/get",
+                          "@first",
+                          "options"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.correctIndex",
+                        [
+                          "object/get",
+                          "@first",
+                          "correctIndex"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.explanation",
+                        [
+                          "object/get",
+                          "@first",
+                          "explanation",
+                          ""
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.feedback",
+                        ""
+                      ],
+                      [
+                        "set",
+                        "@entity.view",
+                        [
+                          {
+                            "children": [
+                              {
+                                "content": "@entity.setupText",
+                                "type": "typography",
+                                "variant": "body"
+                              },
+                              {
+                                "content": "@entity.question",
+                                "type": "typography",
+                                "variant": "h4"
+                              }
+                            ],
+                            "padding": "md",
+                            "type": "card",
+                            "variant": "bordered"
+                          }
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.done",
+                                    [
+                                      "str/concat",
+                                      "@entity.score",
+                                      " / ",
+                                      "@entity.totalScenarios",
+                                      " correct"
+                                    ],
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.phase",
+                                        "commit"
+                                      ],
+                                      "Predict",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.phase",
+                                          "reveal"
+                                        ],
+                                        "Revealing",
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.chosenIndex",
+                                            "@entity.correctIndex"
+                                          ],
+                                          "Correct",
+                                          "Incorrect"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.done",
+                                    "primary",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.phase",
+                                        "judged"
+                                      ],
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.chosenIndex",
+                                          "@entity.correctIndex"
+                                        ],
+                                        "success",
+                                        "error"
+                                      ],
+                                      "neutral"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "label": [
+                                "str/concat",
+                                "Scenario ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  [
+                                    "+",
+                                    "@entity.scenarioIndex",
+                                    1.0
+                                  ]
+                                ],
+                                " of ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  "@entity.totalScenarios"
+                                ]
+                              ],
+                              "max": "@entity.totalScenarios",
+                              "showPercentage": false,
+                              "type": "progress-bar",
+                              "value": [
+                                "+",
+                                "@entity.scenarioIndex",
+                                1.0
+                              ]
+                            },
+                            {
+                              "children": "@entity.view",
+                              "direction": "vertical",
+                              "gap": "md",
+                              "type": "stack"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                [
+                                  "array/range",
+                                  0.0,
+                                  [
+                                    "array/len",
+                                    "@entity.options"
+                                  ]
+                                ],
+                                [
+                                  "fn",
+                                  [
+                                    "i"
+                                  ],
+                                  {
+                                    "action": "PREDICT",
+                                    "actionPayload": {
+                                      "index": "@i"
+                                    },
+                                    "disabled": [
+                                      "!=",
+                                      "@entity.phase",
+                                      "commit"
+                                    ],
+                                    "label": [
+                                      "array/nth",
+                                      "@entity.options",
+                                      "@i"
+                                    ],
+                                    "size": "lg",
+                                    "type": "button",
+                                    "variant": [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.phase",
+                                        "commit"
+                                      ],
+                                      "secondary",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.phase",
+                                          "reveal"
+                                        ],
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@entity.chosenIndex",
+                                            "@i"
+                                          ],
+                                          "primary",
+                                          "ghost"
+                                        ],
+                                        [
+                                          "if",
+                                          [
+                                            "==",
+                                            "@i",
+                                            "@entity.correctIndex"
+                                          ],
+                                          "success",
+                                          [
+                                            "if",
+                                            [
+                                              "==",
+                                              "@entity.chosenIndex",
+                                              "@i"
+                                            ],
+                                            "danger",
+                                            "ghost"
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  }
+                                ]
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": false,
+                              "curves": "@entity.revealCurves",
+                              "gridStep": "@config.gridStep",
+                              "height": "@config.height",
+                              "interactive": false,
+                              "keyMap": {
+                                "ArrowRight": "NEXT",
+                                "KeyR": "RETRY"
+                              },
+                              "points": [],
+                              "shapes": [],
+                              "showAxes": true,
+                              "showGrid": true,
+                              "title": "",
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": [
+                                "math/max",
+                                1.0,
+                                [
+                                  "-",
+                                  [
+                                    "array/len",
+                                    "@entity.frames"
+                                  ],
+                                  1.0
+                                ]
+                              ],
+                              "xMin": 0.0,
+                              "yMax": "@config.valueMax",
+                              "yMin": "@config.valueMin"
+                            },
+                            {
+                              "content": "@entity.frameCaption",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": "@entity.feedback",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "NEXT",
+                                  "disabled": [
+                                    "if",
+                                    [
+                                      "and",
+                                      [
+                                        "==",
+                                        "@entity.phase",
+                                        "judged"
+                                      ],
+                                      [
+                                        "==",
+                                        "@entity.done",
+                                        false
+                                      ]
+                                    ],
+                                    false,
+                                    true
+                                  ],
+                                  "icon": "chevron-right",
+                                  "label": "@config.nextLabel",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RETRY",
+                                  "disabled": [
+                                    "if",
+                                    "@entity.done",
+                                    false,
+                                    true
+                                  ],
+                                  "icon": "rotate-ccw",
+                                  "label": "@config.retryLabel",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Correct ",
+                                    "@entity.score",
+                                    " of ",
+                                    "@entity.totalScenarios"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459R7SVACRB9XP6KAK5M3YT",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "and",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ],
+                    [
+                      ">",
+                      [
+                        "array/len",
+                        "@payload.scenarios"
+                      ],
+                      0.0
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459R7SVACRB9XP6KAK5M3YT",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -2128,7 +2879,7 @@
                       ],
                       [
                         "array/len",
-                        "@config.scenarios"
+                        "@entity.scenarios"
                       ]
                     ],
                     [
@@ -2138,7 +2889,7 @@
                         "score": "@entity.score",
                         "total": [
                           "array/len",
-                          "@config.scenarios"
+                          "@entity.scenarios"
                         ]
                       }
                     ],
@@ -2162,7 +2913,7 @@
                           "@nextIndex",
                           [
                             "array/len",
-                            "@config.scenarios"
+                            "@entity.scenarios"
                           ]
                         ]
                       ],
@@ -2170,7 +2921,7 @@
                         "next",
                         [
                           "array/nth",
-                          "@config.scenarios",
+                          "@entity.scenarios",
                           [
                             "math/min",
                             "@nextIndex",
@@ -2178,7 +2929,7 @@
                               "-",
                               [
                                 "array/len",
-                                "@config.scenarios"
+                                "@entity.scenarios"
                               ],
                               1.0
                             ]
@@ -2788,7 +3539,7 @@
                         "first",
                         [
                           "array/nth",
-                          "@config.scenarios",
+                          "@entity.scenarios",
                           0.0
                         ]
                       ]

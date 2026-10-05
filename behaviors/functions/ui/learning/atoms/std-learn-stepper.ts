@@ -30,7 +30,7 @@ const ALIAS = 'LearnStepper';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnStepperEventKey = 'FILTER_CATEGORY' | 'INIT' | 'MODE_SELECTED' | 'NEXT' | 'PREV' | 'RESET_STEPPER' | 'STEPPER_ADVANCED';
+export type StdLearnStepperEventKey = 'FILTER_CATEGORY' | 'INIT' | 'MODE_SELECTED' | 'NEXT' | 'PREV' | 'RESET_STEPPER' | 'ROSTER_LOADED' | 'STEPPER_ADVANCED';
 
 /**
  * Payload shape for the `STEPPER_ADVANCED` event.
@@ -82,6 +82,8 @@ export interface StdLearnStepperConfig {
   maxPosition?: number;
   /** Default: `0` */
   minPosition?: number;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
   /** Default: `[{"category":"a","description":"First stage in the sequence.","id":"stage-1","label":"Stage One","position":1},{"category":"b","description":"Second stage in the sequence.","id":"stage-2","label":"Stage Two","position":2},{"category":"a","description":"Third stage in the sequence.","id":"stage-3","label":"Stage Three","position":3}]` */
   stages?: EntityRow[];
   /** Default: `"Press Next to begin."` */

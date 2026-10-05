@@ -11,6 +11,7 @@ orbital SpeedDrillOrbital {
     id : string!
     active : boolean = false
     title : string
+    items : [SpeedDrillItem]
     itemIndex : number = 0
     totalItems : number = 0
     remaining : number = 0
@@ -32,7 +33,8 @@ orbital SpeedDrillOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle when (== @config.matchMode "")
+      INIT -> idle when (and (== @config.matchMode "") (== @config.rosterSource "config"))
+        (set @entity.items @config.items)
         (let (
             (first (array/nth @config.items 0))
           )
@@ -94,7 +96,8 @@ orbital SpeedDrillOrbital {
         (set @entity.running false)
         (render-ui main null)
 
-      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+      MODE_SELECTED -> idle when (and (== ?mode @config.matchMode) (== @config.rosterSource "config"))
+        (set @entity.items @config.items)
         (let (
             (first (array/nth @config.items 0))
           )
@@ -151,6 +154,69 @@ orbital SpeedDrillOrbital {
           ]
         })
 
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (and (== ?mode @config.matchMode) (> (array/len ?items) 0)))
+        (set @entity.items ?items)
+        (let (
+            (first (array/nth ?items 0))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.itemIndex 0)
+            (set @entity.totalItems (array/len ?items))
+            (set @entity.remaining (* @config.timeLimit 10))
+            (set @entity.running true)
+            (set @entity.verdict "")
+            (set @entity.pickedIndex -1)
+            (set @entity.score 0)
+            (set @entity.streak 0)
+            (set @entity.bestStreak 0)
+            (set @entity.done false)
+            (set @entity.promptText (object/get @first prompt))
+            (set @entity.options (object/get @first options))
+            (set @entity.correctIndex (object/get @first correctIndex))
+            (set @entity.feedback "")
+            (set @entity.view [
+              { type: card, variant: bordered, padding: md, children: [
+                  { type: typography, variant: h4, content: @entity.promptText }
+                ] }
+            ])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Round complete" (str/concat @entity.score " pts · streak " @entity.streak)), variant: (if @entity.done "primary" (if (== @entity.verdict "correct") "success" (if (== @entity.verdict "") "neutral" "error"))) }
+                  ] },
+                { type: progress-bar, value: (+ @entity.itemIndex 1), max: @entity.totalItems, showPercentage: false, label: (str/concat "Item " (str/concat "" (+ @entity.itemIndex 1)) " of " (str/concat "" @entity.totalItems)) },
+                { type: progress-bar, value: @entity.remaining, max: (* @config.timeLimit 10), variant: (if (< @entity.remaining (* @config.timeLimit 3)) "warning" "primary"), showPercentage: false, label: (str/concat "Time left: " (math/round (/ @entity.remaining 10) 1) "s") },
+                { type: stack, direction: vertical, gap: md, children: @entity.view },
+                { type: stack, direction: vertical, gap: sm, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
+                    { type: button, action: ANSWER, actionPayload: { index: @i }, label: (array/nth @entity.options @i), size: lg, disabled: (not @entity.running), variant: (if @entity.running "secondary" (if (== @i @entity.correctIndex) "success" (if (== @i @entity.pickedIndex) "danger" "ghost"))) })) },
+                (if (or (== @entity.feedback "") @entity.done) null { type: stack, direction: vertical, gap: xs, children: [
+                    { type: badge, variant: (if (== @entity.verdict "correct") "success" "error"), label: (if (== @entity.verdict "correct") "Correct" (if (== @entity.verdict "timeout") "Time's up" "Incorrect")) },
+                    { type: typography, variant: body, content: @entity.feedback }
+                  ] }),
+                (if @entity.done { type: typography, variant: body, content: @entity.feedback } null),
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: NEXT, label: @config.nextLabel, icon: "chevron-right", variant: primary, disabled: (if (and (== @entity.running false) (and (!= @entity.verdict "") (== @entity.done false))) false true) },
+                    { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: ghost, disabled: (if @entity.done false true) },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Best streak " @entity.bestStreak) }
+                  ] }
+              ] }
+          ]
+        })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (set @entity.running false)
+        (render-ui main null)
+
       ANSWER -> idle when (and (== @entity.active true) (and (== @entity.running true) (== @entity.done false)))
         (let (
             (correct (== ?index @entity.correctIndex))
@@ -171,11 +237,11 @@ orbital SpeedDrillOrbital {
         (emit ANSWER_JUDGED { correct: (== @entity.verdict "correct"), timeLeftTenths: @entity.remaining, score: @entity.score, streak: @entity.streak })
 
       NEXT -> idle when (and (== @entity.active true) (and (== @entity.running false) (and (!= @entity.verdict "") (== @entity.done false))))
-        (if (>= (+ @entity.itemIndex 1) (array/len @config.items)) (emit LEARN_ROUND_COMPLETE { score: @entity.score, total: (array/len @config.items) }) null)
+        (if (>= (+ @entity.itemIndex 1) (array/len @entity.items)) (emit LEARN_ROUND_COMPLETE { score: @entity.score, total: (array/len @entity.items) }) null)
         (let (
             (nextIndex (+ @entity.itemIndex 1))
-            (finished (>= @nextIndex (array/len @config.items)))
-            (next (array/nth @config.items (math/min @nextIndex (- (array/len @config.items) 1))))
+            (finished (>= @nextIndex (array/len @entity.items)))
+            (next (array/nth @entity.items (math/min @nextIndex (- (array/len @entity.items) 1))))
           )
           (do
             (set @entity.itemIndex (if @finished @entity.itemIndex @nextIndex))
@@ -233,7 +299,7 @@ orbital SpeedDrillOrbital {
 
       RETRY -> idle when (and (== @entity.active true) (== @entity.done true))
         (let (
-            (first (array/nth @config.items 0))
+            (first (array/nth @entity.items 0))
           )
           (do
             (set @entity.itemIndex 0)
@@ -303,6 +369,12 @@ orbital SpeedDrillOrbital {
       }
         @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
         @tier "domain"
+      ROSTER_LOADED {
+        mode : string!
+        items : [SpeedDrillItem]!
+      }
+        @description "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and items is the drill roster; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides."
+        @tier "domain"
       ANSWER {
         index : number
       }
@@ -352,7 +424,7 @@ orbital SpeedDrillOrbital {
     config {
       matchMode : string = ""
         @label "Match Mode"
-        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT, or on ROSTER_LOADED when rosterSource is event."
         @tier "presentation"
       title : string = "Speed Drill"
         @label "Title"
@@ -362,6 +434,10 @@ orbital SpeedDrillOrbital {
         @label "Concept"
         @description "One line under the title saying what is being drilled (keep it under ~65 characters). Empty shows no line."
         @tier "presentation"
+      rosterSource : "config" | "event" = "config"
+        @label "Roster Source"
+        @description "Where the roster comes from: config reads items knob at INIT; event waits for ROSTER_LOADED and takes the roster from its payload."
+        @tier "domain"
       items : [SpeedDrillItem] = [
         { prompt: "7 × 8", options: ["54", "56", "63", "48"], correctIndex: 1 },
         { prompt: "9 × 6", options: ["54", "56", "45", "63"], correctIndex: 0 },

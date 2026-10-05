@@ -82,6 +82,15 @@
         "parent": "trt_01M07RCKW0YDADRTWKMBVKDWW3",
         "renames": []
       },
+      "evt_01M459X4HCG3DKD94CCJGYT5FQ": {
+        "bakedName": "ROSTER_LOADED",
+        "curName": "ROSTER_LOADED",
+        "id": "evt_01M459X4HCG3DKD94CCJGYT5FQ",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M07RCKW0YDADRTWKMBVKDWW3",
+        "renames": []
+      },
       "orb_01M07RCKW09E3TNXAZ8BMJS742": {
         "bakedName": "LearnTour3DOrbital",
         "curName": "LearnTour3DOrbital",
@@ -651,6 +660,17 @@
               "tier": "presentation",
               "type": "string"
             },
+            "rosterSource": {
+              "default": "config",
+              "description": "Where the stations, edges and backdrop come from: config reads those knobs at INIT; event waits for ROSTER_LOADED and takes them from its payload.",
+              "label": "Roster Source",
+              "tier": "domain",
+              "type": "string",
+              "values": [
+                "config",
+                "event"
+              ]
+            },
             "stations": {
               "default": [
                 {
@@ -935,6 +955,149 @@
                   {
                     "name": "mode",
                     "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and stations, edges and backdrop are the scene roster; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
+                "id": "evt_01M459X4HCG3DKD94CCJGYT5FQ",
+                "key": "ROSTER_LOADED",
+                "name": "Roster Loaded",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "stations",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "name",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "caption",
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "z",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "radius",
+                        "type": "number"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      },
+                      {
+                        "name": "shape",
+                        "type": "string"
+                      },
+                      {
+                        "name": "opacity",
+                        "type": "number"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
+                  },
+                  {
+                    "name": "edges",
+                    "properties": [
+                      {
+                        "name": "from",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "to",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      },
+                      {
+                        "name": "label",
+                        "type": "string"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
+                  },
+                  {
+                    "name": "backdrop",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "name",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "caption",
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "z",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "radius",
+                        "type": "number"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      },
+                      {
+                        "name": "shape",
+                        "type": "string"
+                      },
+                      {
+                        "name": "opacity",
+                        "type": "number"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
                   }
                 ],
                 "tier": "domain"
@@ -1583,9 +1746,17 @@
                 "eventId": "evt_01M07RCKW0YARJ2BYJ1MZGFTRD",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@config.matchMode",
-                  ""
+                  "and",
+                  [
+                    "==",
+                    "@config.matchMode",
+                    ""
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
                 ],
                 "to": "idle"
               },
@@ -2037,9 +2208,487 @@
                 "eventId": "evt_01M07RCKW2FDQK2QD7WX4GTRMJ",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@payload.mode",
-                  "@config.matchMode"
+                  "and",
+                  [
+                    "==",
+                    "@payload.mode",
+                    "@config.matchMode"
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.stations",
+                    "@payload.stations"
+                  ],
+                  [
+                    "set",
+                    "@entity.backdrop",
+                    "@payload.backdrop"
+                  ],
+                  [
+                    "set",
+                    "@entity.edges",
+                    "@payload.edges"
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedIndex",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedId",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        "@entity.stations",
+                        0.0
+                      ],
+                      "id"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.visitedIds",
+                    [
+                      [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.stations",
+                          0.0
+                        ],
+                        "id"
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.tourComplete",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.narration",
+                    [
+                      "str/concat",
+                      [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.stations",
+                          0.0
+                        ],
+                        "name"
+                      ],
+                      " — ",
+                      [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.stations",
+                          0.0
+                        ],
+                        "caption"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.tourComplete",
+                                    "Complete",
+                                    [
+                                      "str/concat",
+                                      "Station ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "+",
+                                          "@entity.selectedIndex",
+                                          1.0
+                                        ]
+                                      ],
+                                      " of ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "array/len",
+                                          "@entity.stations"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.tourComplete",
+                                    "success",
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "TOUR",
+                                  "icon": "chevron-right",
+                                  "label": "@config.tourLabel",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "icon": "rotate-ccw",
+                                  "label": "@config.resetLabel",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Explored ",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      [
+                                        "array/len",
+                                        "@entity.visitedIds"
+                                      ]
+                                    ],
+                                    " of ",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      [
+                                        "array/len",
+                                        "@entity.stations"
+                                      ]
+                                    ],
+                                    [
+                                      "if",
+                                      "@entity.tourComplete",
+                                      " — tour complete!",
+                                      ""
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
+                              "backgroundColor": "@config.backgroundColor",
+                              "camera": {
+                                "azimuth": "@config.azimuth",
+                                "fov": "@config.fov",
+                                "mode": "perspective",
+                                "target": {
+                                  "x": [
+                                    "object/get",
+                                    [
+                                      "array/nth",
+                                      "@entity.stations",
+                                      "@entity.selectedIndex"
+                                    ],
+                                    "x"
+                                  ],
+                                  "y": [
+                                    "object/get",
+                                    [
+                                      "array/nth",
+                                      "@entity.stations",
+                                      "@entity.selectedIndex"
+                                    ],
+                                    "y"
+                                  ],
+                                  "z": [
+                                    "object/get",
+                                    [
+                                      "array/nth",
+                                      "@entity.stations",
+                                      "@entity.selectedIndex"
+                                    ],
+                                    "z"
+                                  ]
+                                },
+                                "zoom": "@config.zoom"
+                              },
+                              "edges": "@entity.edges",
+                              "height": "@config.height",
+                              "interactive": true,
+                              "keyMap": {
+                                "ArrowRight": "TOUR",
+                                "KeyR": "RESET",
+                                "Space": "TOUR"
+                              },
+                              "lighting": "@config.lighting",
+                              "mode": "3d",
+                              "nodes": [
+                                "array/map",
+                                [
+                                  "array/concat",
+                                  "@entity.backdrop",
+                                  "@entity.stations"
+                                ],
+                                [
+                                  "fn",
+                                  "n",
+                                  {
+                                    "color": [
+                                      "object/get",
+                                      "@n",
+                                      "color"
+                                    ],
+                                    "id": [
+                                      "object/get",
+                                      "@n",
+                                      "id"
+                                    ],
+                                    "label": [
+                                      "object/get",
+                                      "@n",
+                                      "name"
+                                    ],
+                                    "opacity": [
+                                      "object/get",
+                                      "@n",
+                                      "opacity"
+                                    ],
+                                    "radius": [
+                                      "if",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "@n",
+                                          "id"
+                                        ],
+                                        "@entity.selectedId"
+                                      ],
+                                      [
+                                        "*",
+                                        [
+                                          "object/get",
+                                          "@n",
+                                          "radius"
+                                        ],
+                                        1.4
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@n",
+                                        "radius"
+                                      ]
+                                    ],
+                                    "shape": [
+                                      "object/get",
+                                      "@n",
+                                      "shape"
+                                    ],
+                                    "x": [
+                                      "object/get",
+                                      "@n",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@n",
+                                      "y"
+                                    ],
+                                    "z": [
+                                      "object/get",
+                                      "@n",
+                                      "z"
+                                    ]
+                                  }
+                                ]
+                              ],
+                              "onShapeClick": "SELECT_STATION",
+                              "post": "@config.post",
+                              "type": "biology-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "content": "@entity.narration",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "TOUR_3D_UPDATED",
+                    {
+                      "caption": [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.stations",
+                          0.0
+                        ],
+                        "caption"
+                      ],
+                      "id": "@entity.selectedId",
+                      "name": [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.stations",
+                          0.0
+                        ],
+                        "name"
+                      ],
+                      "total": [
+                        "array/len",
+                        "@entity.stations"
+                      ],
+                      "tourComplete": false,
+                      "visited": [
+                        "array/len",
+                        "@entity.visitedIds"
+                      ]
+                    }
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459X4HCG3DKD94CCJGYT5FQ",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "and",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ],
+                    [
+                      ">",
+                      [
+                        "array/len",
+                        "@payload.stations"
+                      ],
+                      0.0
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459X4HCG3DKD94CCJGYT5FQ",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },

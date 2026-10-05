@@ -61,6 +61,23 @@ orbital ModuleCardOrbital {
     direction : string!
     traitName : string!
   }
+  type ModuleCardAnnotationsValue = {
+    states : Map string ModuleCardAnnotationsValueStatesValue
+    transitions : Map string ModuleCardAnnotationsValueTransitionsValue
+    effects : Map string ModuleCardAnnotationsValueEffectsValue
+  }
+  type ModuleCardAnnotationsValueStatesValue = {
+    title : string
+    body : string!
+  }
+  type ModuleCardAnnotationsValueTransitionsValue = {
+    title : string
+    body : string!
+  }
+  type ModuleCardAnnotationsValueEffectsValue = {
+    title : string
+    body : string!
+  }
 
   entity ModuleCardItem [runtime] {
     id : string!
@@ -73,6 +90,7 @@ orbital ModuleCardOrbital {
       INIT -> idle
         (render-ui main {
           data: @config.data
+          annotations: @config.annotations
           aria-label: @config.ariaLabel
           aria-labelledby: @config.ariaLabelledby
           aria-describedby: @config.ariaDescribedby
@@ -95,6 +113,10 @@ orbital ModuleCardOrbital {
       data : ModuleCardData = { orbitalName: "OrderOrbital", entityName: "Order", persistence: "persistent", fields: [{ name: "customer", type: "string", required: true, hasDefault: false }, { name: "qty", type: "number", required: true, hasDefault: true }, { name: "status", type: "string", required: false, hasDefault: true }], traits: [{ name: "OrderFlow", stateCount: 5, eventCount: 7, transitionCount: 7, emits: ["ORDER_SAVED"], listens: ["PAYMENT_OK"] }], pages: [{ name: "Orders", route: "/orders" }], traitDetails: { OrderFlow: { name: "OrderFlow", linkedEntity: "Order", states: [{ name: "browsing", isInitial: true, isTerminal: false }, { name: "editing", isInitial: false, isTerminal: false }, { name: "saving", isInitial: false, isTerminal: false }, { name: "confirmed", isInitial: false, isTerminal: true }, { name: "failed", isInitial: false, isTerminal: false }], transitions: [{ from: "browsing", to: "editing", event: "EDIT", effects: [{ type: "render-ui", args: [] }], index: 0 }, { from: "editing", to: "saving", event: "SAVE", effects: [{ type: "persist", args: [] }, { type: "notify", args: [] }], index: 1 }, { from: "saving", to: "confirmed", event: "SAVED", effects: [{ type: "emit", args: [] }, { type: "render-ui", args: [] }], index: 2 }, { from: "saving", to: "failed", event: "SAVE_FAILED", effects: [{ type: "notify", args: [] }], index: 3 }, { from: "failed", to: "editing", event: "RETRY", effects: [], index: 4 }, { from: "editing", to: "browsing", event: "CANCEL", effects: [{ type: "render-ui", args: [] }], index: 5 }, { from: "confirmed", to: "browsing", event: "DONE", effects: [{ type: "navigate", args: [] }], index: 6 }], emittedEvents: ["ORDER_SAVED"], listenedEvents: ["PAYMENT_OK"] } }, externalLinks: [{ targetOrbital: "PaymentOrbital", eventName: "PAYMENT_OK", direction: "in", traitName: "OrderFlow" }] }
         @label "Data"
         @description "The orbital to summarize."
+        @tier "presentation"
+      annotations : Map string ModuleCardAnnotationsValue = { item: {} }
+        @label "Annotations"
+        @description "Author explanations per trait name (states, transition events, effect types), shown in a popover on hover."
         @tier "presentation"
       ariaLabel : string
         @label "Aria-label"

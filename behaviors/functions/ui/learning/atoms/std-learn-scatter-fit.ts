@@ -30,7 +30,7 @@ const ALIAS = 'LearnScatterFit';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnScatterFitEventKey = 'ADD_POINT' | 'DRAG_POINT' | 'GUESS_LINE' | 'INIT' | 'LEARN_ROUND_COMPLETE' | 'LEARN_SCATTER_FIT_UPDATED' | 'MODE_SELECTED' | 'RESET' | 'REVEAL_FIT' | 'TOGGLE_RUN';
+export type StdLearnScatterFitEventKey = 'ADD_POINT' | 'DRAG_POINT' | 'GUESS_LINE' | 'INIT' | 'LEARN_ROUND_COMPLETE' | 'LEARN_SCATTER_FIT_UPDATED' | 'MODE_SELECTED' | 'RESET' | 'REVEAL_FIT' | 'ROSTER_LOADED' | 'TOGGLE_RUN';
 
 /**
  * Payload shape for the `LEARN_SCATTER_FIT_UPDATED` event.
@@ -143,6 +143,8 @@ export interface StdLearnScatterFitConfig {
   residualDash?: 'dashed' | 'dotted';
   /** Default: `"Reveal Fit"` */
   revealLabel?: string;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
   /** Default: `"Run"` */
   runLabel?: string;
   /** Default: `true` */

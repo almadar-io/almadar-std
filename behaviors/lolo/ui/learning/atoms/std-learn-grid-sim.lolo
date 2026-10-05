@@ -16,6 +16,11 @@ orbital GridSimOrbital {
     id : string!
     active : boolean = false
     title : string
+    taskText : string
+    rule : string
+    rows : number
+    cols : number
+    seeds : [number]
     cells : [number]
     generation : number = 0
     aliveCount : number = 0
@@ -29,17 +34,22 @@ orbital GridSimOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle when (== @config.matchMode "")
+      INIT -> idle when (and (== @config.matchMode "") (== @config.rosterSource "config"))
         (set @entity.active true)
         (set @entity.title @config.title)
+        (set @entity.seeds @config.seeds)
+        (set @entity.rule @config.rule)
+        (set @entity.rows @config.rows)
+        (set @entity.cols @config.cols)
+        (set @entity.taskText @config.taskText)
         (set @entity.generation 0)
         (set @entity.running @config.autoRun)
-        (set @entity.cells (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i) (if (array/includes @config.seeds @i) 1 0))))
+        (set @entity.cells (array/map (array/range 0 (* @entity.rows @entity.cols)) (fn (i) (if (array/includes @entity.seeds @i) 1 0))))
         (set @entity.aliveCount (array/len (array/filter @entity.cells (fn v (> @v 0.05)))))
-        (set @entity.cellShapes (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i)
+        (set @entity.cellShapes (array/map (array/range 0 (* @entity.rows @entity.cols)) (fn (i)
           (let (
-              (r (math/floor (/ @i @config.cols)))
-              (c (math/mod @i @config.cols))
+              (r (math/floor (/ @i @entity.cols)))
+              (c (math/mod @i @entity.cols))
               (v (array/nth @entity.cells @i))
               (cellColor (if (> @v 0.66) @config.onColor (if (> @v 0.33) @config.midColor (if (> @v 0.05) @config.lowColor @config.offColor))))
             )
@@ -69,7 +79,7 @@ orbital GridSimOrbital {
                     { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
                   ] },
                 { type: learning-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
-                { type: typography, variant: body, content: @config.taskText }
+                { type: typography, variant: body, content: @entity.taskText }
               ] }
           ]
         })
@@ -79,17 +89,22 @@ orbital GridSimOrbital {
         (set @entity.running false)
         (render-ui main null)
 
-      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+      MODE_SELECTED -> idle when (and (== ?mode @config.matchMode) (== @config.rosterSource "config"))
         (set @entity.active true)
         (set @entity.title @config.title)
+        (set @entity.seeds @config.seeds)
+        (set @entity.rule @config.rule)
+        (set @entity.rows @config.rows)
+        (set @entity.cols @config.cols)
+        (set @entity.taskText @config.taskText)
         (set @entity.generation 0)
         (set @entity.running @config.autoRun)
-        (set @entity.cells (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i) (if (array/includes @config.seeds @i) 1 0))))
+        (set @entity.cells (array/map (array/range 0 (* @entity.rows @entity.cols)) (fn (i) (if (array/includes @entity.seeds @i) 1 0))))
         (set @entity.aliveCount (array/len (array/filter @entity.cells (fn v (> @v 0.05)))))
-        (set @entity.cellShapes (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i)
+        (set @entity.cellShapes (array/map (array/range 0 (* @entity.rows @entity.cols)) (fn (i)
           (let (
-              (r (math/floor (/ @i @config.cols)))
-              (c (math/mod @i @config.cols))
+              (r (math/floor (/ @i @entity.cols)))
+              (c (math/mod @i @entity.cols))
               (v (array/nth @entity.cells @i))
               (cellColor (if (> @v 0.66) @config.onColor (if (> @v 0.33) @config.midColor (if (> @v 0.05) @config.lowColor @config.offColor))))
             )
@@ -119,10 +134,65 @@ orbital GridSimOrbital {
                     { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
                   ] },
                 { type: learning-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
-                { type: typography, variant: body, content: @config.taskText }
+                { type: typography, variant: body, content: @entity.taskText }
               ] }
           ]
         })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (and (== ?mode @config.matchMode) (and (> ?rows 0) (> ?cols 0))))
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.seeds ?seeds)
+        (set @entity.rule ?rule)
+        (set @entity.rows ?rows)
+        (set @entity.cols ?cols)
+        (set @entity.taskText ?taskText)
+        (set @entity.generation 0)
+        (set @entity.running @config.autoRun)
+        (set @entity.cells (array/map (array/range 0 (* @entity.rows @entity.cols)) (fn (i) (if (array/includes @entity.seeds @i) 1 0))))
+        (set @entity.aliveCount (array/len (array/filter @entity.cells (fn v (> @v 0.05)))))
+        (set @entity.cellShapes (array/map (array/range 0 (* @entity.rows @entity.cols)) (fn (i)
+          (let (
+              (r (math/floor (/ @i @entity.cols)))
+              (c (math/mod @i @entity.cols))
+              (v (array/nth @entity.cells @i))
+              (cellColor (if (> @v 0.66) @config.onColor (if (> @v 0.33) @config.midColor (if (> @v 0.05) @config.lowColor @config.offColor))))
+            )
+            { type: rect, id: (str/concat "cell-" @i), x: (+ 10 (* @c @config.cellSize)), y: (+ 10 (* @r @config.cellSize)), width: (- @config.cellSize 2), height: (- @config.cellSize 2), color: @cellColor, fill: @cellColor }))))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    { type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: @entity.running },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
+                  ] },
+                { type: learning-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
+                { type: typography, variant: body, content: @entity.taskText }
+              ] }
+          ]
+        })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (set @entity.running false)
+        (render-ui main null)
 
       TOGGLE_RUN -> idle when (== @entity.active true)
         (set @entity.running (not @entity.running))
@@ -151,7 +221,7 @@ orbital GridSimOrbital {
                     { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
                   ] },
                 { type: learning-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
-                { type: typography, variant: body, content: @config.taskText }
+                { type: typography, variant: body, content: @entity.taskText }
               ] }
           ]
         })
@@ -184,7 +254,7 @@ orbital GridSimOrbital {
                     { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
                   ] },
                 { type: learning-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
-                { type: typography, variant: body, content: @config.taskText }
+                { type: typography, variant: body, content: @entity.taskText }
               ] }
           ]
         })
@@ -216,7 +286,7 @@ orbital GridSimOrbital {
                     { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
                   ] },
                 { type: learning-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
-                { type: typography, variant: body, content: @config.taskText }
+                { type: typography, variant: body, content: @entity.taskText }
               ] }
           ]
         })
@@ -249,42 +319,42 @@ orbital GridSimOrbital {
                     { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
                   ] },
                 { type: learning-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
-                { type: typography, variant: body, content: @config.taskText }
+                { type: typography, variant: body, content: @entity.taskText }
               ] }
           ]
         })
         (emit RUN_TOGGLED { running: @entity.running })
 
       STEP -> idle when (and (== @entity.active true) (== @entity.running false))
-        (set @entity.cells (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i)
+        (set @entity.cells (array/map (array/range 0 (* @entity.rows @entity.cols)) (fn (i)
               (let (
-                  (r (math/floor (/ @i @config.cols)))
-                  (c (math/mod @i @config.cols))
+                  (r (math/floor (/ @i @entity.cols)))
+                  (c (math/mod @i @entity.cols))
                   (v (array/nth @entity.cells @i))
-                  (up (if (> @r 0) (array/nth @entity.cells (- @i @config.cols)) 0))
-                  (down (if (< @r (- @config.rows 1)) (array/nth @entity.cells (+ @i @config.cols)) 0))
+                  (up (if (> @r 0) (array/nth @entity.cells (- @i @entity.cols)) 0))
+                  (down (if (< @r (- @entity.rows 1)) (array/nth @entity.cells (+ @i @entity.cols)) 0))
                   (left (if (> @c 0) (array/nth @entity.cells (- @i 1)) 0))
-                  (right (if (< @c (- @config.cols 1)) (array/nth @entity.cells (+ @i 1)) 0))
-                  (ul (if (and (> @r 0) (> @c 0)) (array/nth @entity.cells (- (- @i @config.cols) 1)) 0))
-                  (ur (if (and (> @r 0) (< @c (- @config.cols 1))) (array/nth @entity.cells (+ (- @i @config.cols) 1)) 0))
-                  (dl (if (and (< @r (- @config.rows 1)) (> @c 0)) (array/nth @entity.cells (- (+ @i @config.cols) 1)) 0))
-                  (dr (if (and (< @r (- @config.rows 1)) (< @c (- @config.cols 1))) (array/nth @entity.cells (+ @i @config.cols 1)) 0))
+                  (right (if (< @c (- @entity.cols 1)) (array/nth @entity.cells (+ @i 1)) 0))
+                  (ul (if (and (> @r 0) (> @c 0)) (array/nth @entity.cells (- (- @i @entity.cols) 1)) 0))
+                  (ur (if (and (> @r 0) (< @c (- @entity.cols 1))) (array/nth @entity.cells (+ (- @i @entity.cols) 1)) 0))
+                  (dl (if (and (< @r (- @entity.rows 1)) (> @c 0)) (array/nth @entity.cells (- (+ @i @entity.cols) 1)) 0))
+                  (dr (if (and (< @r (- @entity.rows 1)) (< @c (- @entity.cols 1))) (array/nth @entity.cells (+ @i @entity.cols 1)) 0))
                   (n4 (+ @up @down @left @right))
                   (n8 (+ @n4 @ul @ur @dl @dr))
                 )
-                (if (== @config.rule "life")
+                (if (== @entity.rule "life")
                   (if (if (> @v 0.5)
                         (if (== (math/round @n8 0) 2) true (== (math/round @n8 0) 3))
                         (== (math/round @n8 0) 3)) 1 0)
-                  (if (== @config.rule "spread")
+                  (if (== @entity.rule "spread")
                     (if (if (> @v 0.5) true (> @n4 0.5)) 1 0)
                     (math/max 0 (* @config.decay (+ @v (* @config.diffuseRate (- (/ @n4 4) @v)))))))))))
         (set @entity.generation (+ @entity.generation 1))
         (set @entity.aliveCount (array/len (array/filter @entity.cells (fn v (> @v 0.05)))))
-        (set @entity.cellShapes (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i)
+        (set @entity.cellShapes (array/map (array/range 0 (* @entity.rows @entity.cols)) (fn (i)
           (let (
-              (r (math/floor (/ @i @config.cols)))
-              (c (math/mod @i @config.cols))
+              (r (math/floor (/ @i @entity.cols)))
+              (c (math/mod @i @entity.cols))
               (v (array/nth @entity.cells @i))
               (cellColor (if (> @v 0.66) @config.onColor (if (> @v 0.33) @config.midColor (if (> @v 0.05) @config.lowColor @config.offColor))))
             )
@@ -314,19 +384,19 @@ orbital GridSimOrbital {
                     { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
                   ] },
                 { type: learning-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
-                { type: typography, variant: body, content: @config.taskText }
+                { type: typography, variant: body, content: @entity.taskText }
               ] }
           ]
         })
         (emit GRID_STEPPED { generation: @entity.generation, aliveCount: @entity.aliveCount })
 
       TAP_CELL -> idle when (== @entity.active true)
-        (set @entity.cells (array/map (array/range 0 (* @config.rows @config.cols)) (fn (j) (if (== @j (object/get ?payload index)) (if (> (array/nth @entity.cells @j) 0.5) 0 1) (array/nth @entity.cells @j)))))
+        (set @entity.cells (array/map (array/range 0 (* @entity.rows @entity.cols)) (fn (j) (if (== @j (object/get ?payload index)) (if (> (array/nth @entity.cells @j) 0.5) 0 1) (array/nth @entity.cells @j)))))
         (set @entity.aliveCount (array/len (array/filter @entity.cells (fn v (> @v 0.05)))))
-        (set @entity.cellShapes (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i)
+        (set @entity.cellShapes (array/map (array/range 0 (* @entity.rows @entity.cols)) (fn (i)
           (let (
-              (r (math/floor (/ @i @config.cols)))
-              (c (math/mod @i @config.cols))
+              (r (math/floor (/ @i @entity.cols)))
+              (c (math/mod @i @entity.cols))
               (v (array/nth @entity.cells @i))
               (cellColor (if (> @v 0.66) @config.onColor (if (> @v 0.33) @config.midColor (if (> @v 0.05) @config.lowColor @config.offColor))))
             )
@@ -356,7 +426,7 @@ orbital GridSimOrbital {
                     { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
                   ] },
                 { type: learning-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
-                { type: typography, variant: body, content: @config.taskText }
+                { type: typography, variant: body, content: @entity.taskText }
               ] }
           ]
         })
@@ -365,12 +435,12 @@ orbital GridSimOrbital {
       RESET -> idle when (== @entity.active true)
         (set @entity.generation 0)
         (set @entity.running false)
-        (set @entity.cells (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i) (if (array/includes @config.seeds @i) 1 0))))
+        (set @entity.cells (array/map (array/range 0 (* @entity.rows @entity.cols)) (fn (i) (if (array/includes @entity.seeds @i) 1 0))))
         (set @entity.aliveCount (array/len (array/filter @entity.cells (fn v (> @v 0.05)))))
-        (set @entity.cellShapes (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i)
+        (set @entity.cellShapes (array/map (array/range 0 (* @entity.rows @entity.cols)) (fn (i)
           (let (
-              (r (math/floor (/ @i @config.cols)))
-              (c (math/mod @i @config.cols))
+              (r (math/floor (/ @i @entity.cols)))
+              (c (math/mod @i @entity.cols))
               (v (array/nth @entity.cells @i))
               (cellColor (if (> @v 0.66) @config.onColor (if (> @v 0.33) @config.midColor (if (> @v 0.05) @config.lowColor @config.offColor))))
             )
@@ -400,11 +470,11 @@ orbital GridSimOrbital {
                     { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
                   ] },
                 { type: learning-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
-                { type: typography, variant: body, content: @config.taskText }
+                { type: typography, variant: body, content: @entity.taskText }
               ] }
           ]
         })
-        (emit GRID_RESET { seedCount: (array/len @config.seeds) })
+        (emit GRID_RESET { seedCount: (array/len @entity.seeds) })
     }
 
     ticks {
@@ -414,35 +484,35 @@ orbital GridSimOrbital {
         (when (>= (* @entity.elapsedMs @entity.speed) 300)
           (do
             (set @entity.elapsedMs 0)
-            (set @entity.cells (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i)
+            (set @entity.cells (array/map (array/range 0 (* @entity.rows @entity.cols)) (fn (i)
                   (let (
-                      (r (math/floor (/ @i @config.cols)))
-                      (c (math/mod @i @config.cols))
+                      (r (math/floor (/ @i @entity.cols)))
+                      (c (math/mod @i @entity.cols))
                       (v (array/nth @entity.cells @i))
-                      (up (if (> @r 0) (array/nth @entity.cells (- @i @config.cols)) 0))
-                      (down (if (< @r (- @config.rows 1)) (array/nth @entity.cells (+ @i @config.cols)) 0))
+                      (up (if (> @r 0) (array/nth @entity.cells (- @i @entity.cols)) 0))
+                      (down (if (< @r (- @entity.rows 1)) (array/nth @entity.cells (+ @i @entity.cols)) 0))
                       (left (if (> @c 0) (array/nth @entity.cells (- @i 1)) 0))
-                      (right (if (< @c (- @config.cols 1)) (array/nth @entity.cells (+ @i 1)) 0))
-                      (ul (if (and (> @r 0) (> @c 0)) (array/nth @entity.cells (- (- @i @config.cols) 1)) 0))
-                      (ur (if (and (> @r 0) (< @c (- @config.cols 1))) (array/nth @entity.cells (+ (- @i @config.cols) 1)) 0))
-                      (dl (if (and (< @r (- @config.rows 1)) (> @c 0)) (array/nth @entity.cells (- (+ @i @config.cols) 1)) 0))
-                      (dr (if (and (< @r (- @config.rows 1)) (< @c (- @config.cols 1))) (array/nth @entity.cells (+ @i @config.cols 1)) 0))
+                      (right (if (< @c (- @entity.cols 1)) (array/nth @entity.cells (+ @i 1)) 0))
+                      (ul (if (and (> @r 0) (> @c 0)) (array/nth @entity.cells (- (- @i @entity.cols) 1)) 0))
+                      (ur (if (and (> @r 0) (< @c (- @entity.cols 1))) (array/nth @entity.cells (+ (- @i @entity.cols) 1)) 0))
+                      (dl (if (and (< @r (- @entity.rows 1)) (> @c 0)) (array/nth @entity.cells (- (+ @i @entity.cols) 1)) 0))
+                      (dr (if (and (< @r (- @entity.rows 1)) (< @c (- @entity.cols 1))) (array/nth @entity.cells (+ @i @entity.cols 1)) 0))
                       (n4 (+ @up @down @left @right))
                       (n8 (+ @n4 @ul @ur @dl @dr))
                     )
-                    (if (== @config.rule "life")
+                    (if (== @entity.rule "life")
                       (if (if (> @v 0.5)
                             (if (== (math/round @n8 0) 2) true (== (math/round @n8 0) 3))
                             (== (math/round @n8 0) 3)) 1 0)
-                      (if (== @config.rule "spread")
+                      (if (== @entity.rule "spread")
                         (if (if (> @v 0.5) true (> @n4 0.5)) 1 0)
                         (math/max 0 (* @config.decay (+ @v (* @config.diffuseRate (- (/ @n4 4) @v)))))))))))
             (set @entity.generation (+ @entity.generation 1))
             (set @entity.aliveCount (array/len (array/filter @entity.cells (fn v (> @v 0.05)))))
-            (set @entity.cellShapes (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i)
+            (set @entity.cellShapes (array/map (array/range 0 (* @entity.rows @entity.cols)) (fn (i)
               (let (
-                  (r (math/floor (/ @i @config.cols)))
-                  (c (math/mod @i @config.cols))
+                  (r (math/floor (/ @i @entity.cols)))
+                  (c (math/mod @i @entity.cols))
                   (v (array/nth @entity.cells @i))
                   (cellColor (if (> @v 0.66) @config.onColor (if (> @v 0.33) @config.midColor (if (> @v 0.05) @config.lowColor @config.offColor))))
                 )
@@ -455,6 +525,16 @@ orbital GridSimOrbital {
         mode : string
       }
         @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      ROSTER_LOADED {
+        mode : string!
+        taskText : string!
+        rule : string!
+        rows : number!
+        cols : number!
+        seeds : [number]!
+      }
+        @description "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and taskText, rule, rows, cols and seeds define the world; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides."
         @tier "domain"
       TOGGLE_RUN {
       }
@@ -517,8 +597,12 @@ orbital GridSimOrbital {
     config {
       matchMode : string = ""
         @label "Match Mode"
-        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT (or on ROSTER_LOADED when rosterSource is event)."
         @tier "presentation"
+      rosterSource : "config" | "event" = "config"
+        @label "Roster Source"
+        @description "Where the world definition (taskText, rule, rows, cols, seeds) comes from: config reads those knobs at INIT; event waits for ROSTER_LOADED and takes them from its payload."
+        @tier "domain"
       title : string = "Grid World"
         @label "Title"
         @description "The instrument's name, the header's one hero."

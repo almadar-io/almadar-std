@@ -30,7 +30,28 @@ const ALIAS = 'UiMarkdownContent';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiMarkdownContentEventKey = 'INIT';
+export type StdUiMarkdownContentEventKey = 'ANNOTATION' | 'ASK' | 'INIT' | 'NOTE';
+
+/**
+ * Payload shape for the `ASK` event.
+ */
+export interface StdUiMarkdownContentAskPayload {
+  selectedText: string;
+}
+
+/**
+ * Payload shape for the `NOTE` event.
+ */
+export interface StdUiMarkdownContentNotePayload {
+  selectedText: string;
+}
+
+/**
+ * Payload shape for the `ANNOTATION` event.
+ */
+export interface StdUiMarkdownContentAnnotationPayload {
+  annotationId?: string;
+}
 
 /**
  * Typed call-site config block for this trait — every
@@ -39,6 +60,10 @@ export type StdUiMarkdownContentEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiMarkdownContentConfig {
+  /** Default: `"ANNOTATION"` */
+  annotationEvent?: string;
+  /** Default: `[]` */
+  annotations?: EntityRow[];
   ariaBusy?: boolean;
   ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
   ariaDescribedby?: string;
@@ -49,6 +74,9 @@ export interface StdUiMarkdownContentConfig {
   ariaLive?: 'off' | 'polite' | 'assertive';
   ariaPressed?: 'true' | 'false' | 'mixed';
   ariaSelected?: boolean;
+  /** Default: `"ASK"` */
+  askEvent?: string;
+  askLabel?: string;
   className?: string;
   /** Default: `""` */
   content?: string;
@@ -58,6 +86,9 @@ export interface StdUiMarkdownContentConfig {
   enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   enterDelay?: number;
   lang?: string;
+  /** Default: `"NOTE"` */
+  noteEvent?: string;
+  noteLabel?: string;
   role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;

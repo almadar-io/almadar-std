@@ -170,7 +170,7 @@
             },
             "layoutMode": {
               "default": "sidebar",
-              "description": "sidebar = left rail; topnav = top bar; bottomnav = mobile tab bar; minimal = no nav.",
+              "description": "sidebar = left rail; topnav = top bar; bottomnav = mobile tab bar; minimal = no nav; drawer = navigation behind a menu button at every width, content full width.",
               "label": "Where should navigation be placed?",
               "synonyms": "nav position, navigation style, menu placement, layout style",
               "tier": "presentation",
@@ -179,7 +179,8 @@
                 "sidebar",
                 "topnav",
                 "bottomnav",
-                "minimal"
+                "minimal",
+                "drawer"
               ]
             },
             "layoutPattern": {
@@ -188,6 +189,14 @@
               "label": "Layout pattern",
               "tier": "internal",
               "type": "pattern"
+            },
+            "logoSrc": {
+              "default": "",
+              "description": "Address of the logo shown beside the app name in the chrome header (an image URL or an inline data: SVG); empty shows the name's first letter.",
+              "label": "Logo image",
+              "synonyms": "logo, brand mark, app icon, logo url",
+              "tier": "presentation",
+              "type": "string"
             },
             "navItems": {
               "default": "@pages",
@@ -284,6 +293,22 @@
               "refId": "evt_01KXG04FN1SP2J2Q0TZB484HM6",
               "tier": "internal",
               "type": "event"
+            },
+            "showSearch": {
+              "default": true,
+              "description": "The top-bar search box; turn off for apps whose pages carry their own search.",
+              "label": "Show the search box?",
+              "synonyms": "search bar, top search, hide search",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "showThemeToggle": {
+              "default": true,
+              "description": "The theme toggle in the top bar; turn off when the app offers it elsewhere, such as a settings page.",
+              "label": "Show the light/dark toggle?",
+              "synonyms": "dark mode button, theme switch, hide theme toggle",
+              "tier": "presentation",
+              "type": "boolean"
             },
             "sidebarTrait": {
               "description": "Optional trait rendered in the sidebar between the nav links and the footer — the Notion/Confluence-style always-visible page tree; scrolls independently. Unset renders plain nav only.",
@@ -587,6 +612,22 @@
                           ],
                           "currentPath": "@config.currentPath",
                           "layoutMode": "@config.layoutMode",
+                          "logo": [
+                            "if",
+                            [
+                              "==",
+                              "@config.logoSrc",
+                              ""
+                            ],
+                            null,
+                            {
+                              "alt": "",
+                              "className": "h-8 w-8",
+                              "fit": "contain",
+                              "src": "@config.logoSrc",
+                              "type": "image"
+                            }
+                          ],
                           "navItems": [
                             "array/map",
                             [
@@ -684,7 +725,13 @@
                           ],
                           "notificationClickEvent": "@config.notificationClickEvent",
                           "notifications": "@config.notifications",
-                          "searchEvent": "@config.searchEvent",
+                          "searchEvent": [
+                            "if",
+                            "@config.showSearch",
+                            "@config.searchEvent",
+                            null
+                          ],
+                          "showThemeToggle": "@config.showThemeToggle",
                           "sidebarContent": "@config.sidebarTrait",
                           "topBarActions": [
                             "array/filter",
@@ -798,6 +845,22 @@
                           ],
                           "currentPath": "@config.currentPath",
                           "layoutMode": "@config.layoutMode",
+                          "logo": [
+                            "if",
+                            [
+                              "==",
+                              "@config.logoSrc",
+                              ""
+                            ],
+                            null,
+                            {
+                              "alt": "",
+                              "className": "h-8 w-8",
+                              "fit": "contain",
+                              "src": "@config.logoSrc",
+                              "type": "image"
+                            }
+                          ],
                           "navItems": [
                             "array/map",
                             [
@@ -895,7 +958,13 @@
                           ],
                           "notificationClickEvent": "@config.notificationClickEvent",
                           "notifications": "@config.notifications",
-                          "searchEvent": "@config.searchEvent",
+                          "searchEvent": [
+                            "if",
+                            "@config.showSearch",
+                            "@config.searchEvent",
+                            null
+                          ],
+                          "showThemeToggle": "@config.showThemeToggle",
                           "sidebarContent": "@config.sidebarTrait",
                           "topBarActions": [
                             "array/filter",

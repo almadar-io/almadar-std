@@ -20,6 +20,24 @@
             "required": false,
             "description": "Turns in the last conversation compacted.",
             "synonyms": "size, length"
+          },
+          {
+            "name": "pendingInstructions",
+            "type": "string",
+            "required": false,
+            "description": "The ephemeral conversation's own instructions, carried through a summarizing."
+          },
+          {
+            "name": "pendingTools",
+            "type": "array",
+            "required": false,
+            "description": "The ephemeral conversation's own tools, carried through a summarizing."
+          },
+          {
+            "name": "pendingEphemeral",
+            "type": "boolean",
+            "required": false,
+            "description": "The conversation being compacted is ephemeral."
           }
         ],
         "persistence": "runtime"
@@ -38,7 +56,7 @@
           {
             "name": "COMPACTED",
             "direction": "emit",
-            "description": "The conversation, bounded: recent turns verbatim, older turns as one summary note.",
+            "description": "The conversation, bounded: recent turns verbatim, older turns as one summary note. An ephemeral conversation's own `instructions`, `tools` and `ephemeral` flag pass through untouched.",
             "synonyms": "compacted, trimmed, bounded",
             "tier": "domain"
           },
@@ -59,7 +77,7 @@
           {
             "name": "COMPACT",
             "direction": "listen",
-            "description": "Bound this conversation for the model."
+            "description": "Bound this conversation for the model. An ephemeral conversation's own `instructions`, `tools` and `ephemeral` flag ride along."
           }
         ],
         "overridableConfigKeys": [
@@ -101,7 +119,19 @@
           },
           {
             "kind": "set",
+            "resource": "@entity.pendingEphemeral"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.pendingInstructions"
+          },
+          {
+            "kind": "set",
             "resource": "@entity.pendingMessages"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.pendingTools"
           }
         ]
       }

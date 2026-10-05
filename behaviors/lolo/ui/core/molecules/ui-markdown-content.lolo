@@ -2,6 +2,12 @@ app ui-markdown-content "1.0.0"
 "MarkdownContent — UI factory (1:1 with the @almadar/ui markdown-content pattern)."
 ;; @pattern "markdown-content"
 orbital MarkdownContentOrbital {
+  type MarkdownContentAnnotationsItem = {
+    id : string!
+    text : string!
+    kind : "question" | "note"!
+  }
+
   entity MarkdownContentItem [runtime] {
     id : string!
   }
@@ -14,6 +20,12 @@ orbital MarkdownContentOrbital {
         (render-ui main {
           content: @config.content
           direction: @config.direction
+          askEvent: @config.askEvent
+          noteEvent: @config.noteEvent
+          askLabel: @config.askLabel
+          noteLabel: @config.noteLabel
+          annotations: @config.annotations
+          annotationEvent: @config.annotationEvent
           className: @config.className
           enter: @config.enter
           enterDelay: @config.enterDelay
@@ -36,6 +48,24 @@ orbital MarkdownContentOrbital {
         })
     }
 
+    emits {
+      @config.askEvent -> external {
+        selectedText : string!
+      }
+        @description "Event emitted when the reader picks Ask on selected text (as `UI:<askEvent>`)"
+        @tier "essential"
+      @config.noteEvent -> external {
+        selectedText : string!
+      }
+        @description "Event emitted when the reader picks Note on selected text (as `UI:<noteEvent>`)"
+        @tier "essential"
+      @config.annotationEvent -> external {
+        annotationId : string
+      }
+        @description "Event emitted when a highlighted passage is clicked (as `UI:<annotationEvent>`)"
+        @tier "essential"
+    }
+
     config {
       content : string = ""
         @label "Content"
@@ -44,6 +74,30 @@ orbital MarkdownContentOrbital {
       direction : "ltr" | "rtl" = ltr
         @label "Direction"
         @description "Text direction (defaults to ltr; `ltr` is first so the generated config seeds it)"
+        @tier "presentation"
+      askEvent : event = "ASK"
+        @label "Ask Event"
+        @description "Event emitted when the reader picks Ask on selected text (as `UI:<askEvent>`)"
+        @tier "presentation"
+      noteEvent : event = "NOTE"
+        @label "Note Event"
+        @description "Event emitted when the reader picks Note on selected text (as `UI:<noteEvent>`)"
+        @tier "presentation"
+      askLabel : string
+        @label "Ask Label"
+        @description "Ask action label (default: translated)"
+        @tier "presentation"
+      noteLabel : string
+        @label "Note Label"
+        @description "Note action label (default: translated)"
+        @tier "presentation"
+      annotations : [MarkdownContentAnnotationsItem] = []
+        @label "Annotations"
+        @description "Passages to highlight. Each `text` is matched exactly, first occurrence in document order inside a single rendered text node (outside code); a passage that spans formatting boundaries is not highlighted."
+        @tier "presentation"
+      annotationEvent : event = "ANNOTATION"
+        @label "Annotation Event"
+        @description "Event emitted when a highlighted passage is clicked (as `UI:<annotationEvent>`)"
         @tier "presentation"
       className : string
         @label "Class Name"

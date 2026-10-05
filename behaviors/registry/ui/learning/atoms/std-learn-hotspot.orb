@@ -91,6 +91,15 @@
         "parent": "trt_01M075812DYQGS8RJE0J3FWESF",
         "renames": []
       },
+      "evt_01M459WM5Z8JS6P7094FM192FF": {
+        "bakedName": "ROSTER_LOADED",
+        "curName": "ROSTER_LOADED",
+        "id": "evt_01M459WM5Z8JS6P7094FM192FF",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M075812DYQGS8RJE0J3FWESF",
+        "renames": []
+      },
       "orb_01M075812DM89TK888P4V0J9PT": {
         "bakedName": "HotspotOrbital",
         "curName": "HotspotOrbital",
@@ -136,6 +145,69 @@
           {
             "name": "title",
             "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "shapes",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "explanation": {
+                  "name": "explanation",
+                  "required": false,
+                  "type": "string"
+                },
+                "prompt": {
+                  "name": "prompt",
+                  "required": true,
+                  "type": "string"
+                },
+                "targetId": {
+                  "name": "targetId",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "prompts",
+            "type": "array"
           },
           {
             "default": 0.0,
@@ -373,6 +445,17 @@
               "tier": "presentation",
               "type": "string"
             },
+            "rosterSource": {
+              "default": "config",
+              "description": "Where the shapes and prompts roster comes from: config reads the shapes and prompts knobs at INIT; event waits for ROSTER_LOADED and takes the roster from its payload.",
+              "label": "Roster Source",
+              "tier": "domain",
+              "type": "string",
+              "values": [
+                "config",
+                "event"
+              ]
+            },
             "shapes": {
               "default": [
                 {
@@ -532,7 +615,15 @@
             },
             {
               "kind": "set",
+              "resource": "@entity.prompts"
+            },
+            {
+              "kind": "set",
               "resource": "@entity.score"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.shapes"
             },
             {
               "kind": "set",
@@ -641,7 +732,9 @@
               "found",
               "promptIndex",
               "promptText",
+              "prompts",
               "score",
+              "shapes",
               "targetId",
               "title",
               "totalPrompts",
@@ -675,6 +768,76 @@
                   {
                     "name": "mode",
                     "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone), shapes is the hotspot roster and prompts the prompt list; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
+                "id": "evt_01M459WM5Z8JS6P7094FM192FF",
+                "key": "ROSTER_LOADED",
+                "name": "Roster Loaded",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "shapes",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "radius",
+                        "type": "number"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
+                  },
+                  {
+                    "name": "prompts",
+                    "properties": [
+                      {
+                        "name": "prompt",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "targetId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "explanation",
+                        "type": "string"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
                   }
                 ],
                 "tier": "domain"
@@ -806,13 +969,23 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.shapes",
+                    "@config.shapes"
+                  ],
+                  [
+                    "set",
+                    "@entity.prompts",
+                    "@config.prompts"
+                  ],
+                  [
                     "let",
                     [
                       [
                         "first",
                         [
                           "array/nth",
-                          "@config.prompts",
+                          "@entity.prompts",
                           0.0
                         ]
                       ],
@@ -820,7 +993,7 @@
                         "circles",
                         [
                           "array/map",
-                          "@config.shapes",
+                          "@entity.shapes",
                           [
                             "fn",
                             "s",
@@ -868,7 +1041,7 @@
                         "labels",
                         [
                           "array/map",
-                          "@config.shapes",
+                          "@entity.shapes",
                           [
                             "fn",
                             "s",
@@ -938,7 +1111,7 @@
                         "@entity.totalPrompts",
                         [
                           "array/len",
-                          "@config.prompts"
+                          "@entity.prompts"
                         ]
                       ],
                       [
@@ -1226,9 +1399,17 @@
                 "eventId": "evt_01M075812D7NCEX7G3TP34MXBS",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@config.matchMode",
-                  ""
+                  "and",
+                  [
+                    "==",
+                    "@config.matchMode",
+                    ""
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1272,13 +1453,23 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.shapes",
+                    "@config.shapes"
+                  ],
+                  [
+                    "set",
+                    "@entity.prompts",
+                    "@config.prompts"
+                  ],
+                  [
                     "let",
                     [
                       [
                         "first",
                         [
                           "array/nth",
-                          "@config.prompts",
+                          "@entity.prompts",
                           0.0
                         ]
                       ],
@@ -1286,7 +1477,7 @@
                         "circles",
                         [
                           "array/map",
-                          "@config.shapes",
+                          "@entity.shapes",
                           [
                             "fn",
                             "s",
@@ -1334,7 +1525,7 @@
                         "labels",
                         [
                           "array/map",
-                          "@config.shapes",
+                          "@entity.shapes",
                           [
                             "fn",
                             "s",
@@ -1404,7 +1595,7 @@
                         "@entity.totalPrompts",
                         [
                           "array/len",
-                          "@config.prompts"
+                          "@entity.prompts"
                         ]
                       ],
                       [
@@ -1692,93 +1883,48 @@
                 "eventId": "evt_01M075812JWBR49NJTVRXS2MWY",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@payload.mode",
-                  "@config.matchMode"
+                  "and",
+                  [
+                    "==",
+                    "@payload.mode",
+                    "@config.matchMode"
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
                 ],
                 "to": "idle"
               },
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.shapes",
+                    "@payload.shapes"
+                  ],
+                  [
+                    "set",
+                    "@entity.prompts",
+                    "@payload.prompts"
+                  ],
+                  [
                     "let",
                     [
                       [
-                        "tappedId",
+                        "first",
                         [
-                          "str/replace",
-                          [
-                            "object/get",
-                            "@payload.payload",
-                            "id",
-                            ""
-                          ],
-                          "label-",
-                          ""
-                        ]
-                      ],
-                      [
-                        "hit",
-                        [
-                          "==",
-                          "@tappedId",
-                          "@entity.targetId"
-                        ]
-                      ],
-                      [
-                        "tapped",
-                        [
-                          "array/find",
-                          "@config.shapes",
-                          [
-                            "fn",
-                            "s",
-                            [
-                              "==",
-                              [
-                                "object/get",
-                                "@s",
-                                "id"
-                              ],
-                              "@tappedId"
-                            ]
-                          ]
-                        ]
-                      ],
-                      [
-                        "tappedLabel",
-                        [
-                          "object/get",
-                          "@tapped",
-                          "label",
-                          ""
-                        ]
-                      ],
-                      [
-                        "target",
-                        [
-                          "array/find",
-                          "@config.shapes",
-                          [
-                            "fn",
-                            "s",
-                            [
-                              "==",
-                              [
-                                "object/get",
-                                "@s",
-                                "id"
-                              ],
-                              "@entity.targetId"
-                            ]
-                          ]
+                          "array/nth",
+                          "@entity.prompts",
+                          0.0
                         ]
                       ],
                       [
                         "circles",
                         [
                           "array/map",
-                          "@config.shapes",
+                          "@entity.shapes",
                           [
                             "fn",
                             "s",
@@ -1826,7 +1972,563 @@
                         "labels",
                         [
                           "array/map",
-                          "@config.shapes",
+                          "@entity.shapes",
+                          [
+                            "fn",
+                            "s",
+                            {
+                              "align": "center",
+                              "id": [
+                                "str/concat",
+                                "label-",
+                                [
+                                  "object/get",
+                                  "@s",
+                                  "id"
+                                ]
+                              ],
+                              "text": [
+                                "object/get",
+                                "@s",
+                                "label"
+                              ],
+                              "textSize": "xs",
+                              "tone": "label",
+                              "type": "text",
+                              "x": [
+                                "object/get",
+                                "@s",
+                                "x"
+                              ],
+                              "y": [
+                                "+",
+                                [
+                                  "object/get",
+                                  "@s",
+                                  "y"
+                                ],
+                                [
+                                  "object/get",
+                                  "@s",
+                                  "radius",
+                                  22.0
+                                ],
+                                14.0
+                              ]
+                            }
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.active",
+                        true
+                      ],
+                      [
+                        "set",
+                        "@entity.title",
+                        "@config.title"
+                      ],
+                      [
+                        "set",
+                        "@entity.promptIndex",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.totalPrompts",
+                        [
+                          "array/len",
+                          "@entity.prompts"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.score",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.tries",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.found",
+                        false
+                      ],
+                      [
+                        "set",
+                        "@entity.done",
+                        false
+                      ],
+                      [
+                        "set",
+                        "@entity.promptText",
+                        [
+                          "object/get",
+                          "@first",
+                          "prompt"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.targetId",
+                        [
+                          "object/get",
+                          "@first",
+                          "targetId"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.explanation",
+                        [
+                          "object/get",
+                          "@first",
+                          "explanation",
+                          ""
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.feedback",
+                        ""
+                      ],
+                      [
+                        "set",
+                        "@entity.canvasShapes",
+                        [
+                          "array/concat",
+                          "@circles",
+                          "@labels"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.view",
+                        [
+                          {
+                            "children": [
+                              {
+                                "content": "@entity.promptText",
+                                "type": "typography",
+                                "variant": "body"
+                              }
+                            ],
+                            "padding": "md",
+                            "type": "card",
+                            "variant": "bordered"
+                          },
+                          {
+                            "animate": false,
+                            "backgroundColor": "@config.backgroundColor",
+                            "height": "@config.height",
+                            "interactive": true,
+                            "keyMap": {
+                              "ArrowRight": "NEXT",
+                              "KeyR": "RETRY",
+                              "Space": "NEXT"
+                            },
+                            "onShapeClick": "TAP_SHAPE",
+                            "shapes": "@entity.canvasShapes",
+                            "type": "learning-canvas",
+                            "width": "@config.width"
+                          },
+                          {
+                            "children": [
+                              {
+                                "content": "@entity.feedback",
+                                "type": "typography",
+                                "variant": "body"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "xs",
+                            "type": "stack"
+                          },
+                          {
+                            "align": "center",
+                            "children": [
+                              {
+                                "action": "NEXT",
+                                "disabled": [
+                                  "if",
+                                  "@entity.found",
+                                  false,
+                                  true
+                                ],
+                                "icon": "chevron-right",
+                                "label": "@config.nextLabel",
+                                "type": "button",
+                                "variant": "primary"
+                              },
+                              {
+                                "color": "muted",
+                                "content": [
+                                  "str/concat",
+                                  "First-try ",
+                                  "@entity.score",
+                                  " of ",
+                                  "@entity.totalPrompts"
+                                ],
+                                "type": "typography",
+                                "variant": "caption"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack",
+                            "wrap": true
+                          }
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.done",
+                                    "Round complete",
+                                    [
+                                      "if",
+                                      "@entity.found",
+                                      "Correct",
+                                      [
+                                        "if",
+                                        [
+                                          ">",
+                                          "@entity.tries",
+                                          0.0
+                                        ],
+                                        "Try again",
+                                        [
+                                          "str/concat",
+                                          "Score ",
+                                          "@entity.score",
+                                          " / ",
+                                          "@entity.totalPrompts"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.done",
+                                    "primary",
+                                    [
+                                      "if",
+                                      "@entity.found",
+                                      "success",
+                                      [
+                                        "if",
+                                        [
+                                          ">",
+                                          "@entity.tries",
+                                          0.0
+                                        ],
+                                        "error",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "label": [
+                                "str/concat",
+                                "Prompt ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  [
+                                    "+",
+                                    "@entity.promptIndex",
+                                    1.0
+                                  ]
+                                ],
+                                " of ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  "@entity.totalPrompts"
+                                ]
+                              ],
+                              "max": "@entity.totalPrompts",
+                              "showPercentage": false,
+                              "type": "progress-bar",
+                              "value": [
+                                "+",
+                                "@entity.promptIndex",
+                                1.0
+                              ]
+                            },
+                            {
+                              "children": "@entity.view",
+                              "direction": "vertical",
+                              "gap": "md",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459WM5Z8JS6P7094FM192FF",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "and",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ],
+                    [
+                      "and",
+                      [
+                        ">",
+                        [
+                          "array/len",
+                          "@payload.shapes"
+                        ],
+                        0.0
+                      ],
+                      [
+                        ">",
+                        [
+                          "array/len",
+                          "@payload.prompts"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459WM5Z8JS6P7094FM192FF",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "tappedId",
+                        [
+                          "str/replace",
+                          [
+                            "object/get",
+                            "@payload.payload",
+                            "id",
+                            ""
+                          ],
+                          "label-",
+                          ""
+                        ]
+                      ],
+                      [
+                        "hit",
+                        [
+                          "==",
+                          "@tappedId",
+                          "@entity.targetId"
+                        ]
+                      ],
+                      [
+                        "tapped",
+                        [
+                          "array/find",
+                          "@entity.shapes",
+                          [
+                            "fn",
+                            "s",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "@s",
+                                "id"
+                              ],
+                              "@tappedId"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "tappedLabel",
+                        [
+                          "object/get",
+                          "@tapped",
+                          "label",
+                          ""
+                        ]
+                      ],
+                      [
+                        "target",
+                        [
+                          "array/find",
+                          "@entity.shapes",
+                          [
+                            "fn",
+                            "s",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "@s",
+                                "id"
+                              ],
+                              "@entity.targetId"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "circles",
+                        [
+                          "array/map",
+                          "@entity.shapes",
+                          [
+                            "fn",
+                            "s",
+                            {
+                              "fillStyle": "solid",
+                              "fillTone": [
+                                "object/get",
+                                "@s",
+                                "color",
+                                "series-1"
+                              ],
+                              "id": [
+                                "object/get",
+                                "@s",
+                                "id"
+                              ],
+                              "radius": [
+                                "object/get",
+                                "@s",
+                                "radius",
+                                22.0
+                              ],
+                              "tone": [
+                                "object/get",
+                                "@s",
+                                "color",
+                                "series-1"
+                              ],
+                              "type": "circle",
+                              "x": [
+                                "object/get",
+                                "@s",
+                                "x"
+                              ],
+                              "y": [
+                                "object/get",
+                                "@s",
+                                "y"
+                              ]
+                            }
+                          ]
+                        ]
+                      ],
+                      [
+                        "labels",
+                        [
+                          "array/map",
+                          "@entity.shapes",
                           [
                             "fn",
                             "s",
@@ -2369,7 +3071,7 @@
                       ],
                       [
                         "array/len",
-                        "@config.prompts"
+                        "@entity.prompts"
                       ]
                     ],
                     [
@@ -2379,7 +3081,7 @@
                         "score": "@entity.score",
                         "total": [
                           "array/len",
-                          "@config.prompts"
+                          "@entity.prompts"
                         ]
                       }
                     ],
@@ -2403,7 +3105,7 @@
                           "@nextIndex",
                           [
                             "array/len",
-                            "@config.prompts"
+                            "@entity.prompts"
                           ]
                         ]
                       ],
@@ -2411,7 +3113,7 @@
                         "next",
                         [
                           "array/nth",
-                          "@config.prompts",
+                          "@entity.prompts",
                           [
                             "math/min",
                             "@nextIndex",
@@ -2419,7 +3121,7 @@
                               "-",
                               [
                                 "array/len",
-                                "@config.prompts"
+                                "@entity.prompts"
                               ],
                               1.0
                             ]
@@ -2430,7 +3132,7 @@
                         "circles",
                         [
                           "array/map",
-                          "@config.shapes",
+                          "@entity.shapes",
                           [
                             "fn",
                             "s",
@@ -2478,7 +3180,7 @@
                         "labels",
                         [
                           "array/map",
-                          "@config.shapes",
+                          "@entity.shapes",
                           [
                             "fn",
                             "s",
@@ -2902,7 +3604,7 @@
                         "first",
                         [
                           "array/nth",
-                          "@config.prompts",
+                          "@entity.prompts",
                           0.0
                         ]
                       ],
@@ -2910,7 +3612,7 @@
                         "circles",
                         [
                           "array/map",
-                          "@config.shapes",
+                          "@entity.shapes",
                           [
                             "fn",
                             "s",
@@ -2958,7 +3660,7 @@
                         "labels",
                         [
                           "array/map",
-                          "@config.shapes",
+                          "@entity.shapes",
                           [
                             "fn",
                             "s",

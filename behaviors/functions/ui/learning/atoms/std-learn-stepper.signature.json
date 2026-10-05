@@ -19,6 +19,21 @@
             "required": false
           },
           {
+            "name": "stages",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "categories",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "categorySummaries",
+            "type": "array",
+            "required": false
+          },
+          {
             "name": "cursorIndex",
             "type": "number",
             "required": false
@@ -95,6 +110,12 @@
             "name": "MODE_SELECTED",
             "direction": "listen",
             "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "ROSTER_LOADED",
+            "direction": "listen",
+            "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and stages, categories and categorySummaries are the roster; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
             "tier": "domain"
           },
           {
@@ -314,6 +335,18 @@
             "tier": "domain"
           },
           {
+            "key": "rosterSource",
+            "type": "string",
+            "default": "config",
+            "label": "Roster Source",
+            "description": "Where the stages, categories and category summaries come from: config reads those knobs at INIT; event waits for ROSTER_LOADED and takes them from its payload. The axis range (minPosition/maxPosition) stays config.",
+            "tier": "domain",
+            "enumValues": [
+              "config",
+              "event"
+            ]
+          },
+          {
             "key": "stages",
             "type": "[LearnStepperStage]",
             "default": [
@@ -423,7 +456,8 @@
           "MODE_SELECTED",
           "NEXT",
           "PREV",
-          "RESET_STEPPER"
+          "RESET_STEPPER",
+          "ROSTER_LOADED"
         ],
         "definerKnobs": [],
         "entityRebindable": true,
@@ -432,6 +466,8 @@
           "provides": [
             "active",
             "activeFilter",
+            "categories",
+            "categorySummaries",
             "categoryTally",
             "currentStageDescription",
             "currentStageLabel",
@@ -439,6 +475,7 @@
             "filterButtons",
             "narration",
             "shapes",
+            "stages",
             "tallyItems",
             "title",
             "visibleThreadNote"
@@ -460,6 +497,14 @@
           {
             "kind": "set",
             "resource": "@entity.activeFilter"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.categories"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.categorySummaries"
           },
           {
             "kind": "set",
@@ -488,6 +533,10 @@
           {
             "kind": "set",
             "resource": "@entity.shapes"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.stages"
           },
           {
             "kind": "set",

@@ -19,6 +19,16 @@
             "required": false
           },
           {
+            "name": "elements",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "links",
+            "type": "array",
+            "required": false
+          },
+          {
             "name": "enabledIds",
             "type": "array",
             "required": false
@@ -83,6 +93,12 @@
             "name": "MODE_SELECTED",
             "direction": "listen",
             "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "ROSTER_LOADED",
+            "direction": "listen",
+            "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and elements and links are the element roster and its relationships; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
             "tier": "domain"
           },
           {
@@ -289,7 +305,7 @@
             "type": "string",
             "default": "",
             "label": "Match Mode",
-            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT, or on ROSTER_LOADED when rosterSource is event.",
             "tier": "presentation"
           },
           {
@@ -313,6 +329,18 @@
             "default": "Reset",
             "label": "Reset Button Label",
             "tier": "presentation"
+          },
+          {
+            "key": "rosterSource",
+            "type": "string",
+            "default": "config",
+            "label": "Roster Source",
+            "description": "Where the roster comes from: config reads elements and links knobs at INIT; event waits for ROSTER_LOADED and takes the roster from its payload.",
+            "tier": "domain",
+            "enumValues": [
+              "config",
+              "event"
+            ]
           },
           {
             "key": "summary",
@@ -354,6 +382,7 @@
           "INIT",
           "MODE_SELECTED",
           "RESET",
+          "ROSTER_LOADED",
           "TOGGLE"
         ],
         "definerKnobs": [],
@@ -363,8 +392,10 @@
           "provides": [
             "active",
             "edges",
+            "elements",
             "enabledIds",
             "holds",
+            "links",
             "nodes",
             "readout",
             "title",
@@ -394,11 +425,19 @@
           },
           {
             "kind": "set",
+            "resource": "@entity.elements"
+          },
+          {
+            "kind": "set",
             "resource": "@entity.enabledIds"
           },
           {
             "kind": "set",
             "resource": "@entity.holds"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.links"
           },
           {
             "kind": "set",

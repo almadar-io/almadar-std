@@ -30,7 +30,7 @@ const ALIAS = 'LearnCoupledSim';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnCoupledSimEventKey = 'COEFS_CHANGED' | 'INIT' | 'MODE_SELECTED' | 'PAUSE' | 'RESET' | 'RUN' | 'RUN_TOGGLED' | 'SET_A' | 'SET_B' | 'SHOCK' | 'SHOCK_APPLIED' | 'SIM_RESET' | 'SPEED_SET' | 'TOGGLE_RUN';
+export type StdLearnCoupledSimEventKey = 'COEFS_CHANGED' | 'INIT' | 'MODE_SELECTED' | 'PAUSE' | 'RESET' | 'ROSTER_LOADED' | 'RUN' | 'RUN_TOGGLED' | 'SET_A' | 'SET_B' | 'SHOCK' | 'SHOCK_APPLIED' | 'SIM_RESET' | 'SPEED_SET' | 'TOGGLE_RUN';
 
 /**
  * Payload shape for the `RUN_TOGGLED` event.
@@ -119,6 +119,8 @@ export interface StdLearnCoupledSimConfig {
   qLabel?: string;
   /** Default: `40` */
   qStart?: number;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
   /** Default: `"− Prey cull"` */
   shockDownLabel?: string;
   /** Default: `40` */

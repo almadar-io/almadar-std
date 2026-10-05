@@ -64,6 +64,15 @@
         "parent": "trt_01M055GQ55PTH647PY8K2J09RQ",
         "renames": []
       },
+      "evt_01M459WQMZ61TJXMND9JGX66K2": {
+        "bakedName": "ROSTER_LOADED",
+        "curName": "ROSTER_LOADED",
+        "id": "evt_01M459WQMZ61TJXMND9JGX66K2",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M055GQ55PTH647PY8K2J09RQ",
+        "renames": []
+      },
       "orb_01M055GQ55Q5JY2EX41SCDK8QP": {
         "bakedName": "LearnSandboxOrbital",
         "curName": "LearnSandboxOrbital",
@@ -109,6 +118,64 @@
           {
             "name": "title",
             "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "enabled": {
+                  "name": "enabled",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "weight": {
+                  "name": "weight",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "elements",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "links",
+            "type": "array"
           },
           {
             "items": {
@@ -395,7 +462,7 @@
             },
             "matchMode": {
               "default": "",
-              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT, or on ROSTER_LOADED when rosterSource is event.",
               "label": "Match Mode",
               "tier": "presentation",
               "type": "string"
@@ -418,6 +485,17 @@
               "label": "Reset Button Label",
               "tier": "presentation",
               "type": "string"
+            },
+            "rosterSource": {
+              "default": "config",
+              "description": "Where the roster comes from: config reads elements and links knobs at INIT; event waits for ROSTER_LOADED and takes the roster from its payload.",
+              "label": "Roster Source",
+              "tier": "domain",
+              "type": "string",
+              "values": [
+                "config",
+                "event"
+              ]
             },
             "summary": {
               "default": "",
@@ -472,11 +550,19 @@
             },
             {
               "kind": "set",
+              "resource": "@entity.elements"
+            },
+            {
+              "kind": "set",
               "resource": "@entity.enabledIds"
             },
             {
               "kind": "set",
               "resource": "@entity.holds"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.links"
             },
             {
               "kind": "set",
@@ -527,8 +613,10 @@
             "provides": [
               "active",
               "edges",
+              "elements",
               "enabledIds",
               "holds",
+              "links",
               "nodes",
               "readout",
               "title",
@@ -561,6 +649,71 @@
                   {
                     "name": "mode",
                     "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and elements and links are the element roster and its relationships; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
+                "id": "evt_01M459WQMZ61TJXMND9JGX66K2",
+                "key": "ROSTER_LOADED",
+                "name": "Roster Loaded",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "elements",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "weight",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "enabled",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "x",
+                        "type": "number"
+                      },
+                      {
+                        "name": "y",
+                        "type": "number"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
+                  },
+                  {
+                    "name": "links",
+                    "properties": [
+                      {
+                        "name": "from",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "to",
+                        "required": true,
+                        "type": "string"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
                   }
                 ],
                 "tier": "domain"
@@ -621,6 +774,16 @@
             "transitions": [
               {
                 "effects": [
+                  [
+                    "set",
+                    "@entity.elements",
+                    "@config.elements"
+                  ],
+                  [
+                    "set",
+                    "@entity.links",
+                    "@config.links"
+                  ],
                   [
                     "set",
                     "@entity.active",
@@ -936,7 +1099,7 @@
                               "align": "center",
                               "children": [
                                 "array/map",
-                                "@config.elements",
+                                "@entity.elements",
                                 [
                                   "fn",
                                   "e",
@@ -1060,9 +1223,17 @@
                 "eventId": "evt_01M055GQ557G8QV8JREMRHKTHX",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@config.matchMode",
-                  ""
+                  "and",
+                  [
+                    "==",
+                    "@config.matchMode",
+                    ""
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1105,6 +1276,16 @@
               },
               {
                 "effects": [
+                  [
+                    "set",
+                    "@entity.elements",
+                    "@config.elements"
+                  ],
+                  [
+                    "set",
+                    "@entity.links",
+                    "@config.links"
+                  ],
                   [
                     "set",
                     "@entity.active",
@@ -1420,7 +1601,7 @@
                               "align": "center",
                               "children": [
                                 "array/map",
-                                "@config.elements",
+                                "@entity.elements",
                                 [
                                   "fn",
                                   "e",
@@ -1544,9 +1725,17 @@
                 "eventId": "evt_01M055GQ5616ZKF3AC9G2WQX88",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@payload.mode",
-                  "@config.matchMode"
+                  "and",
+                  [
+                    "==",
+                    "@payload.mode",
+                    "@config.matchMode"
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1554,32 +1743,54 @@
                 "effects": [
                   [
                     "set",
+                    "@entity.elements",
+                    "@payload.elements"
+                  ],
+                  [
+                    "set",
+                    "@entity.links",
+                    "@payload.links"
+                  ],
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
                     "@entity.enabledIds",
                     [
-                      "if",
-                      [
-                        "array/includes",
-                        "@entity.enabledIds",
-                        "@payload.elementId"
-                      ],
+                      "array/map",
                       [
                         "array/filter",
-                        "@entity.enabledIds",
+                        "@payload.elements",
                         [
                           "fn",
-                          "eid",
+                          "e",
                           [
-                            "!=",
-                            "@eid",
-                            "@payload.elementId"
+                            "==",
+                            [
+                              "object/get",
+                              "@e",
+                              "enabled",
+                              true
+                            ],
+                            true
                           ]
                         ]
                       ],
                       [
-                        "array/concat",
-                        "@entity.enabledIds",
+                        "fn",
+                        "e",
                         [
-                          "@payload.elementId"
+                          "object/get",
+                          "@e",
+                          "id"
                         ]
                       ]
                     ]
@@ -1591,7 +1802,7 @@
                         "activeElements",
                         [
                           "array/filter",
-                          "@config.elements",
+                          "@payload.elements",
                           [
                             "fn",
                             "e",
@@ -1656,7 +1867,7 @@
                         "nodes",
                         [
                           "array/map",
-                          "@config.elements",
+                          "@payload.elements",
                           [
                             "fn",
                             "e",
@@ -1704,7 +1915,7 @@
                         "edges",
                         [
                           "array/map",
-                          "@config.links",
+                          "@payload.links",
                           [
                             "fn",
                             "l",
@@ -1855,7 +2066,495 @@
                               "align": "center",
                               "children": [
                                 "array/map",
-                                "@config.elements",
+                                "@entity.elements",
+                                [
+                                  "fn",
+                                  "e",
+                                  {
+                                    "action": "TOGGLE",
+                                    "actionPayload": {
+                                      "elementId": [
+                                        "object/get",
+                                        "@e",
+                                        "id"
+                                      ]
+                                    },
+                                    "aria-pressed": [
+                                      "if",
+                                      [
+                                        "array/includes",
+                                        "@entity.enabledIds",
+                                        [
+                                          "object/get",
+                                          "@e",
+                                          "id"
+                                        ]
+                                      ],
+                                      "true",
+                                      "false"
+                                    ],
+                                    "label": [
+                                      "if",
+                                      [
+                                        "array/includes",
+                                        "@entity.enabledIds",
+                                        [
+                                          "object/get",
+                                          "@e",
+                                          "id"
+                                        ]
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@e",
+                                        "label"
+                                      ],
+                                      [
+                                        "str/concat",
+                                        [
+                                          "object/get",
+                                          "@e",
+                                          "label"
+                                        ],
+                                        " — off"
+                                      ]
+                                    ],
+                                    "type": "button",
+                                    "variant": [
+                                      "if",
+                                      [
+                                        "array/includes",
+                                        "@entity.enabledIds",
+                                        [
+                                          "object/get",
+                                          "@e",
+                                          "id"
+                                        ]
+                                      ],
+                                      "secondary",
+                                      "ghost"
+                                    ]
+                                  }
+                                ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "RESET",
+                                  "icon": "rotate-ccw",
+                                  "label": "@config.resetLabel",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Total ",
+                                    "@entity.total",
+                                    " of ",
+                                    "@config.threshold"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
+                              "content": "@entity.readout",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459WQMZ61TJXMND9JGX66K2",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "and",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ],
+                    [
+                      ">",
+                      [
+                        "array/len",
+                        "@payload.elements"
+                      ],
+                      0.0
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459WQMZ61TJXMND9JGX66K2",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.enabledIds",
+                    [
+                      "if",
+                      [
+                        "array/includes",
+                        "@entity.enabledIds",
+                        "@payload.elementId"
+                      ],
+                      [
+                        "array/filter",
+                        "@entity.enabledIds",
+                        [
+                          "fn",
+                          "eid",
+                          [
+                            "!=",
+                            "@eid",
+                            "@payload.elementId"
+                          ]
+                        ]
+                      ],
+                      [
+                        "array/concat",
+                        "@entity.enabledIds",
+                        [
+                          "@payload.elementId"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "activeElements",
+                        [
+                          "array/filter",
+                          "@entity.elements",
+                          [
+                            "fn",
+                            "e",
+                            [
+                              "array/includes",
+                              "@entity.enabledIds",
+                              [
+                                "object/get",
+                                "@e",
+                                "id"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "total",
+                        [
+                          "array/sum",
+                          [
+                            "array/map",
+                            "@activeElements",
+                            [
+                              "fn",
+                              "e",
+                              [
+                                "object/get",
+                                "@e",
+                                "weight"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "holds",
+                        [
+                          ">=",
+                          "@total",
+                          "@config.threshold"
+                        ]
+                      ],
+                      [
+                        "readout",
+                        [
+                          "str/concat",
+                          "@config.outcomeLabel",
+                          ": total ",
+                          "@total",
+                          " of ",
+                          "@config.threshold",
+                          " needed. ",
+                          [
+                            "if",
+                            "@holds",
+                            "Holds.",
+                            "Does not hold."
+                          ]
+                        ]
+                      ],
+                      [
+                        "nodes",
+                        [
+                          "array/map",
+                          "@entity.elements",
+                          [
+                            "fn",
+                            "e",
+                            {
+                              "color": [
+                                "if",
+                                [
+                                  "array/includes",
+                                  "@entity.enabledIds",
+                                  [
+                                    "object/get",
+                                    "@e",
+                                    "id"
+                                  ]
+                                ],
+                                "@config.enabledColor",
+                                "@config.disabledColor"
+                              ],
+                              "id": [
+                                "object/get",
+                                "@e",
+                                "id"
+                              ],
+                              "label": [
+                                "object/get",
+                                "@e",
+                                "label"
+                              ],
+                              "radius": "@config.nodeRadius",
+                              "x": [
+                                "object/get",
+                                "@e",
+                                "x"
+                              ],
+                              "y": [
+                                "object/get",
+                                "@e",
+                                "y"
+                              ]
+                            }
+                          ]
+                        ]
+                      ],
+                      [
+                        "edges",
+                        [
+                          "array/map",
+                          "@entity.links",
+                          [
+                            "fn",
+                            "l",
+                            {
+                              "color": [
+                                "if",
+                                [
+                                  "and",
+                                  [
+                                    "array/includes",
+                                    "@entity.enabledIds",
+                                    [
+                                      "object/get",
+                                      "@l",
+                                      "from"
+                                    ]
+                                  ],
+                                  [
+                                    "array/includes",
+                                    "@entity.enabledIds",
+                                    [
+                                      "object/get",
+                                      "@l",
+                                      "to"
+                                    ]
+                                  ]
+                                ],
+                                "@config.enabledEdgeColor",
+                                "@config.disabledEdgeColor"
+                              ],
+                              "from": [
+                                "object/get",
+                                "@l",
+                                "from"
+                              ],
+                              "to": [
+                                "object/get",
+                                "@l",
+                                "to"
+                              ]
+                            }
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.total",
+                        "@total"
+                      ],
+                      [
+                        "set",
+                        "@entity.holds",
+                        "@holds"
+                      ],
+                      [
+                        "set",
+                        "@entity.readout",
+                        "@readout"
+                      ],
+                      [
+                        "set",
+                        "@entity.nodes",
+                        "@nodes"
+                      ],
+                      [
+                        "set",
+                        "@entity.edges",
+                        "@edges"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.holds",
+                                    "Holds",
+                                    "Does not hold"
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.holds",
+                                    "primary",
+                                    "warning"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "backgroundColor": "@config.backgroundColor",
+                              "edges": "@entity.edges",
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "keyMap": {
+                                "KeyR": "RESET"
+                              },
+                              "nodes": "@entity.nodes",
+                              "shapes": [],
+                              "type": "biology-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                "array/map",
+                                "@entity.elements",
                                 [
                                   "fn",
                                   "e",
@@ -2002,7 +2701,7 @@
                       "array/map",
                       [
                         "array/filter",
-                        "@config.elements",
+                        "@entity.elements",
                         [
                           "fn",
                           "e",
@@ -2036,7 +2735,7 @@
                         "activeElements",
                         [
                           "array/filter",
-                          "@config.elements",
+                          "@entity.elements",
                           [
                             "fn",
                             "e",
@@ -2101,7 +2800,7 @@
                         "nodes",
                         [
                           "array/map",
-                          "@config.elements",
+                          "@entity.elements",
                           [
                             "fn",
                             "e",
@@ -2149,7 +2848,7 @@
                         "edges",
                         [
                           "array/map",
-                          "@config.links",
+                          "@entity.links",
                           [
                             "fn",
                             "l",
@@ -2300,7 +2999,7 @@
                               "align": "center",
                               "children": [
                                 "array/map",
-                                "@config.elements",
+                                "@entity.elements",
                                 [
                                   "fn",
                                   "e",

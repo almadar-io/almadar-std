@@ -30,7 +30,7 @@ const ALIAS = 'LearnPredict';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnPredictEventKey = 'INIT' | 'LEARN_ROUND_COMPLETE' | 'MODE_SELECTED' | 'NEXT' | 'PREDICT' | 'PREDICTION_COMMITTED' | 'RETRY' | 'ROUND_RESTARTED' | 'SCENARIO_ADVANCED';
+export type StdLearnPredictEventKey = 'INIT' | 'LEARN_ROUND_COMPLETE' | 'MODE_SELECTED' | 'NEXT' | 'PREDICT' | 'PREDICTION_COMMITTED' | 'RETRY' | 'ROSTER_LOADED' | 'ROUND_RESTARTED' | 'SCENARIO_ADVANCED';
 
 /**
  * Payload shape for the `PREDICTION_COMMITTED` event.
@@ -85,6 +85,8 @@ export interface StdLearnPredictConfig {
   revealColor?: string;
   /** Default: `"Outcome"` */
   revealLabel?: string;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
   /** Default: `[{"correctIndex":1,"explanation":"With no limiting factor yet, growth compounds each season.","frames":[{"caption":"Season 1: 40 rabbits","value":40},{"caption":"Season 2: 52 rabbits","value":52},{"caption":"Season 3: 68 rabbits","value":68},{"caption":"Season 4: 88 rabbits","value":88},{"caption":"Season 5: 114 rabbits","value":114},{"caption":"Season 6: 148 rabbits — still accelerating","value":148}],"options":["It levels off","It keeps accelerating","It collapses"],"question":"What happens to the population over the next six seasons?","setup":"A small island hosts 40 rabbits with unlimited grass and no predators."},{"correctIndex":1,"explanation":"Predation and food limits impose a carrying capacity.","frames":[{"caption":"Season 1: 148 rabbits","value":148},{"caption":"Season 2: 160 rabbits","value":160},{"caption":"Season 3: 166 rabbits","value":166},{"caption":"Season 4: 169 rabbits","value":169},{"caption":"Season 5: 170 rabbits — the curve flattens","value":170}],"options":["It keeps accelerating","It levels off near a ceiling","It grows linearly"],"question":"What happens to the rabbit population now?","setup":"The same island now has foxes, and grass is running short."}]` */
   scenarios?: EntityRow[];
   /** Default: `""` */

@@ -14,7 +14,7 @@ describe('runsOn', () => {
 
   it('the server set is the data-owning effects plus the OS watchers', () => {
     expect(getOperatorsRunningOn('server')).toEqual([
-      'atomic', 'call-service', 'fetch', 'fetch-stream',
+      'atomic', 'call-service', 'cancel-call', 'fetch', 'fetch-stream',
       'os/debounce', 'os/watch-cron', 'os/watch-env', 'os/watch-files', 'os/watch-http', 'os/watch-port', 'os/watch-process', 'os/watch-signal',
       'persist', 'swap',
     ]);

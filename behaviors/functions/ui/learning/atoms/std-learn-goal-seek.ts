@@ -30,7 +30,7 @@ const ALIAS = 'LearnGoalSeek';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnGoalSeekEventKey = 'CHECK' | 'GOAL_CHECKED' | 'GOAL_RESET' | 'INIT' | 'LEARN_ROUND_COMPLETE' | 'MODE_SELECTED' | 'PARAMS_CHANGED' | 'RESET' | 'SET_PARAM_A' | 'SET_PARAM_B';
+export type StdLearnGoalSeekEventKey = 'CHECK' | 'GOAL_CHECKED' | 'GOAL_RESET' | 'INIT' | 'LEARN_ROUND_COMPLETE' | 'MODE_SELECTED' | 'PARAMS_CHANGED' | 'RESET' | 'ROSTER_LOADED' | 'SET_PARAM_A' | 'SET_PARAM_B';
 
 /**
  * Payload shape for the `PARAMS_CHANGED` event.
@@ -108,6 +108,8 @@ export interface StdLearnGoalSeekConfig {
   paramBMin?: number;
   /** Default: `0.1` */
   paramBStep?: number;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
   /** Default: `true` */
   showAxes?: boolean;
   /** Default: `true` */

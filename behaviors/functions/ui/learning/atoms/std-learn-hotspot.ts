@@ -30,7 +30,7 @@ const ALIAS = 'LearnHotspot';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnHotspotEventKey = 'INIT' | 'LEARN_ROUND_COMPLETE' | 'MODE_SELECTED' | 'NEXT' | 'PROMPT_ADVANCED' | 'RETRY' | 'ROUND_RESTARTED' | 'TAP_JUDGED' | 'TAP_SHAPE';
+export type StdLearnHotspotEventKey = 'INIT' | 'LEARN_ROUND_COMPLETE' | 'MODE_SELECTED' | 'NEXT' | 'PROMPT_ADVANCED' | 'RETRY' | 'ROSTER_LOADED' | 'ROUND_RESTARTED' | 'TAP_JUDGED' | 'TAP_SHAPE';
 
 /**
  * Payload shape for the `TAP_JUDGED` event.
@@ -86,6 +86,8 @@ export interface StdLearnHotspotConfig {
   prompts?: EntityRow[];
   /** Default: `"Try Again"` */
   retryLabel?: string;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
   /** Default: `[{"color":"series-1","id":"nucleus","label":"Nucleus","radius":34,"x":300,"y":170},{"color":"series-2","id":"membrane","label":"Membrane","radius":26,"x":130,"y":120},{"color":"series-3","id":"mitochondrion","label":"Mitochondrion","radius":24,"x":460,"y":120},{"color":"series-4","id":"ribosome","label":"Ribosome","radius":18,"x":200,"y":280},{"color":"series-5","id":"vacuole","label":"Vacuole","radius":28,"x":420,"y":280}]` */
   shapes?: EntityRow[];
   /** Default: `""` */

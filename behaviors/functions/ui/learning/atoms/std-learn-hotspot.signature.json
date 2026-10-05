@@ -19,6 +19,16 @@
             "required": false
           },
           {
+            "name": "shapes",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "prompts",
+            "type": "array",
+            "required": false
+          },
+          {
             "name": "promptIndex",
             "type": "number",
             "required": false
@@ -130,6 +140,12 @@
             "tier": "domain"
           },
           {
+            "name": "ROSTER_LOADED",
+            "direction": "listen",
+            "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone), shapes is the hotspot roster and prompts the prompt list; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
+            "tier": "domain"
+          },
+          {
             "name": "TAP_SHAPE",
             "direction": "listen",
             "description": "Learner tapped a shape on the canvas — the canvas callback wraps its click info as payload { id, type, index }; the id names the hotspot (or its label) and the tap is judged against the current prompt's target.",
@@ -236,6 +252,18 @@
             "default": "Try Again",
             "label": "Retry Label",
             "tier": "presentation"
+          },
+          {
+            "key": "rosterSource",
+            "type": "string",
+            "default": "config",
+            "label": "Roster Source",
+            "description": "Where the shapes and prompts roster comes from: config reads the shapes and prompts knobs at INIT; event waits for ROSTER_LOADED and takes the roster from its payload.",
+            "tier": "domain",
+            "enumValues": [
+              "config",
+              "event"
+            ]
           },
           {
             "key": "shapes",
@@ -352,6 +380,7 @@
           "MODE_SELECTED",
           "NEXT",
           "RETRY",
+          "ROSTER_LOADED",
           "TAP_SHAPE"
         ],
         "definerKnobs": [],
@@ -367,7 +396,9 @@
             "found",
             "promptIndex",
             "promptText",
+            "prompts",
             "score",
+            "shapes",
             "targetId",
             "title",
             "totalPrompts",
@@ -430,7 +461,15 @@
           },
           {
             "kind": "set",
+            "resource": "@entity.prompts"
+          },
+          {
+            "kind": "set",
             "resource": "@entity.score"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.shapes"
           },
           {
             "kind": "set",

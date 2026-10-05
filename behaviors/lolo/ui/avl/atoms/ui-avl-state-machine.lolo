@@ -27,6 +27,23 @@ orbital AvlStateMachineOrbital {
     type : string!
     args : [SExpr]!
   }
+  type AvlStateMachineAnnotations = {
+    states : Map string AvlStateMachineAnnotationsStatesValue
+    transitions : Map string AvlStateMachineAnnotationsTransitionsValue
+    effects : Map string AvlStateMachineAnnotationsEffectsValue
+  }
+  type AvlStateMachineAnnotationsStatesValue = {
+    title : string
+    body : string!
+  }
+  type AvlStateMachineAnnotationsTransitionsValue = {
+    title : string
+    body : string!
+  }
+  type AvlStateMachineAnnotationsEffectsValue = {
+    title : string
+    body : string!
+  }
   type AvlStateMachineTRANSITIONCLICKTransition = {
     index : number!
     event : string!
@@ -57,6 +74,7 @@ orbital AvlStateMachineOrbital {
           entityFields: @config.entityFields
           direction: @config.direction
           showHeader: @config.showHeader
+          annotations: @config.annotations
           className: @config.className
           enter: @config.enter
           enterDelay: @config.enterDelay
@@ -149,6 +167,10 @@ orbital AvlStateMachineOrbital {
       showHeader : boolean = true
         @label "Show Header"
         @description "Show the trait header (name, entity, listens/emits). @default true"
+        @tier "presentation"
+      annotations : AvlStateMachineAnnotations = { states: { pending: { title: "Unpaid", body: "Every order starts here." } }, transitions: { PAY: { body: "Only fires when the amount is positive." } }, effects: { persist: { body: "Saves the order." } } }
+        @label "Annotations"
+        @description "Author explanations shown in a popover on hover: a note per state name, per transition event and per effect type."
         @tier "presentation"
       className : string
         @label "Class Name"

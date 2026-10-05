@@ -18,6 +18,8 @@ orbital ScenarioOrbital {
     id : string!
     active : boolean = false
     title : string
+    nodes : [ScenarioNode]
+    startId : string
     currentId : string
     situation : string
     choices : [ScenarioChoice]
@@ -34,7 +36,9 @@ orbital ScenarioOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle when (== @config.matchMode "")
+      INIT -> idle when (and (== @config.matchMode "") (== @config.rosterSource "config"))
+        (set @entity.nodes @config.nodes)
+        (set @entity.startId @config.startId)
         (let (
             (start (array/find @config.nodes (fn n (== (object/get @n id) @config.startId))))
           )
@@ -89,7 +93,9 @@ orbital ScenarioOrbital {
         (set @entity.active false)
         (render-ui main null)
 
-      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+      MODE_SELECTED -> idle when (and (== ?mode @config.matchMode) (== @config.rosterSource "config"))
+        (set @entity.nodes @config.nodes)
+        (set @entity.startId @config.startId)
         (let (
             (start (array/find @config.nodes (fn n (== (object/get @n id) @config.startId))))
           )
@@ -140,11 +146,68 @@ orbital ScenarioOrbital {
           ]
         })
 
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (and (== ?mode @config.matchMode) (> (array/len ?nodes) 0)))
+        (set @entity.nodes ?nodes)
+        (set @entity.startId ?startId)
+        (let (
+            (start (array/find ?nodes (fn n (== (object/get @n id) ?startId))))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.currentId ?startId)
+            (set @entity.situation (object/get @start situation))
+            (set @entity.choices (object/get @start choices []))
+            (set @entity.metricA @config.metricAStart)
+            (set @entity.metricB @config.metricBStart)
+            (set @entity.stepCount 0)
+            (set @entity.path [])
+            (set @entity.done false)
+            (set @entity.feedback "")
+            (set @entity.view [
+              { type: card, variant: bordered, padding: md, children: [
+                  { type: typography, variant: body, content: @entity.situation }
+                ] }
+            ])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Ended" (str/concat "Decision " (+ @entity.stepCount 1))), variant: (if @entity.done "primary" "neutral") }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: md, wrap: true, children: [
+                    { type: stat-display, label: @config.metricALabel, value: (math/round @entity.metricA 0) },
+                    { type: stat-display, label: @config.metricBLabel, value: (math/round @entity.metricB 0) }
+                  ] },
+                { type: stack, direction: vertical, gap: md, children: @entity.view },
+                { type: stack, direction: vertical, gap: sm, children: (array/map (array/range 0 (array/len @entity.choices)) (fn (i)
+                    { type: button, action: CHOOSE, actionPayload: { index: @i }, label: (object/get (array/nth @entity.choices @i) label), variant: secondary, size: lg, disabled: (if @entity.done true false) })) },
+                { type: typography, variant: body, content: @entity.feedback },
+                { type: stack, direction: vertical, gap: xs, children: (array/map @entity.path (fn (line)
+                    { type: typography, variant: caption, color: muted, content: @line })) },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: RESTART, label: @config.restartLabel, icon: "rotate-ccw", variant: primary, disabled: (if @entity.done false true) },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Decisions " @entity.stepCount) }
+                  ] }
+              ] }
+          ]
+        })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (render-ui main null)
+
       CHOOSE -> idle when (and (== @entity.active true) (== @entity.done false))
         (let (
             (choice (array/nth @entity.choices ?index))
             (nextId (object/get @choice next))
-            (nextNode (array/find @config.nodes (fn n (== (object/get @n id) @nextId))))
+            (nextNode (array/find @entity.nodes (fn n (== (object/get @n id) @nextId))))
             (nextChoices (object/get @nextNode choices []))
             (ended (== (array/len @nextChoices) 0))
             (note (object/get @choice note ""))
@@ -208,12 +271,12 @@ orbital ScenarioOrbital {
 
       RESTART -> idle when (and (== @entity.active true) (== @entity.done true))
         (let (
-            (start (array/find @config.nodes (fn n (== (object/get @n id) @config.startId))))
+            (start (array/find @entity.nodes (fn n (== (object/get @n id) @entity.startId))))
           )
           (do
             (set @entity.active true)
             (set @entity.title @config.title)
-            (set @entity.currentId @config.startId)
+            (set @entity.currentId @entity.startId)
             (set @entity.situation (object/get @start situation))
             (set @entity.choices (object/get @start choices []))
             (set @entity.metricA @config.metricAStart)
@@ -256,7 +319,7 @@ orbital ScenarioOrbital {
               ] }
           ]
         })
-        (emit SCENARIO_RESTARTED { startId: @config.startId })
+        (emit SCENARIO_RESTARTED { startId: @entity.startId })
     }
 
     listens {
@@ -264,6 +327,13 @@ orbital ScenarioOrbital {
         mode : string
       }
         @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      ROSTER_LOADED {
+        mode : string!
+        nodes : [ScenarioNode]!
+        startId : string!
+      }
+        @description "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and nodes is the decision graph and startId the node it opens on; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides."
         @tier "domain"
       CHOOSE {
         index : number
@@ -296,7 +366,7 @@ orbital ScenarioOrbital {
     config {
       matchMode : string = ""
         @label "Match Mode"
-        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT, or on ROSTER_LOADED when rosterSource is event."
         @tier "presentation"
       title : string = "Decision Scenario"
         @label "Title"
@@ -323,6 +393,10 @@ orbital ScenarioOrbital {
       startId : string = "start"
         @label "Start Node"
         @description "Id of the node the scenario opens on."
+        @tier "domain"
+      rosterSource : "config" | "event" = "config"
+        @label "Roster Source"
+        @description "Where the roster comes from: config reads nodes and startId knobs at INIT; event waits for ROSTER_LOADED and takes the roster from its payload."
         @tier "domain"
       nodes : [ScenarioNode] = [
         { id: "start", situation: "Your town's river floods every spring. The council asks you to lead the response.", choices: [

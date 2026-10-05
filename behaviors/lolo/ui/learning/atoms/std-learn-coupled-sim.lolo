@@ -15,6 +15,14 @@ orbital CoupledSimOrbital {
     id : string!
     active : boolean = false
     title : string
+    taskText : string
+    kind : string
+    pLabel : string
+    qLabel : string
+    pStart : number
+    qStart : number
+    coefALabel : string
+    coefBLabel : string
     t : number = 0
     p : number = 0
     q : number = 0
@@ -31,20 +39,28 @@ orbital CoupledSimOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle when (== @config.matchMode "")
+      INIT -> idle when (and (== @config.matchMode "") (== @config.rosterSource "config"))
         (set @entity.active true)
         (set @entity.title @config.title)
+        (set @entity.taskText @config.taskText)
+        (set @entity.kind @config.kind)
+        (set @entity.pLabel @config.pLabel)
+        (set @entity.qLabel @config.qLabel)
+        (set @entity.pStart @config.pStart)
+        (set @entity.qStart @config.qStart)
+        (set @entity.coefALabel @config.coefALabel)
+        (set @entity.coefBLabel @config.coefBLabel)
         (set @entity.t 0)
-        (set @entity.p @config.pStart)
-        (set @entity.q @config.qStart)
+        (set @entity.p @entity.pStart)
+        (set @entity.q @entity.qStart)
         (set @entity.coefA @config.coefADefault)
         (set @entity.coefB @config.coefBDefault)
         (set @entity.running @config.autoRun)
-        (set @entity.pSamples [ { x: 0, y: @config.pStart } ])
-        (set @entity.qSamples [ { x: 0, y: @config.qStart } ])
+        (set @entity.pSamples [ { x: 0, y: @entity.pStart } ])
+        (set @entity.qSamples [ { x: 0, y: @entity.qStart } ])
         (set @entity.curves [
-          { label: @config.pLabel, color: @config.pColor, samples: @entity.pSamples },
-          { label: @config.qLabel, color: @config.qColor, samples: @entity.qSamples }
+          { label: @entity.pLabel, color: @config.pColor, samples: @entity.pSamples },
+          { label: @entity.qLabel, color: @config.qColor, samples: @entity.qSamples }
         ])
         (render-ui main {
           type: box
@@ -74,17 +90,17 @@ orbital CoupledSimOrbital {
                 { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, KeyR: RESET } },
                 { type: stack, direction: vertical, gap: sm, children: [
                     { type: stack, direction: vertical, gap: xs, children: [
-                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @entity.coefALabel ": " (math/round @entity.coefA 3)) },
                         { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
                       ] },
                     { type: stack, direction: vertical, gap: xs, children: [
-                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @entity.coefBLabel ": " (math/round @entity.coefB 3)) },
                         { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
                       ] }
                   ] },
                 { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: body, content: @config.taskText },
-                    { type: typography, variant: caption, color: muted, content: (str/concat @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                    { type: typography, variant: body, content: @entity.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @entity.pLabel " = " (math/round @entity.p 1) " · " @entity.qLabel " = " (math/round @entity.q 1)) }
                   ] }
               ] }
           ]
@@ -95,20 +111,28 @@ orbital CoupledSimOrbital {
         (set @entity.running false)
         (render-ui main null)
 
-      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+      MODE_SELECTED -> idle when (and (== ?mode @config.matchMode) (== @config.rosterSource "config"))
         (set @entity.active true)
         (set @entity.title @config.title)
+        (set @entity.taskText @config.taskText)
+        (set @entity.kind @config.kind)
+        (set @entity.pLabel @config.pLabel)
+        (set @entity.qLabel @config.qLabel)
+        (set @entity.pStart @config.pStart)
+        (set @entity.qStart @config.qStart)
+        (set @entity.coefALabel @config.coefALabel)
+        (set @entity.coefBLabel @config.coefBLabel)
         (set @entity.t 0)
-        (set @entity.p @config.pStart)
-        (set @entity.q @config.qStart)
+        (set @entity.p @entity.pStart)
+        (set @entity.q @entity.qStart)
         (set @entity.coefA @config.coefADefault)
         (set @entity.coefB @config.coefBDefault)
         (set @entity.running @config.autoRun)
-        (set @entity.pSamples [ { x: 0, y: @config.pStart } ])
-        (set @entity.qSamples [ { x: 0, y: @config.qStart } ])
+        (set @entity.pSamples [ { x: 0, y: @entity.pStart } ])
+        (set @entity.qSamples [ { x: 0, y: @entity.qStart } ])
         (set @entity.curves [
-          { label: @config.pLabel, color: @config.pColor, samples: @entity.pSamples },
-          { label: @config.qLabel, color: @config.qColor, samples: @entity.qSamples }
+          { label: @entity.pLabel, color: @config.pColor, samples: @entity.pSamples },
+          { label: @entity.qLabel, color: @config.qColor, samples: @entity.qSamples }
         ])
         (render-ui main {
           type: box
@@ -138,21 +162,93 @@ orbital CoupledSimOrbital {
                 { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, KeyR: RESET } },
                 { type: stack, direction: vertical, gap: sm, children: [
                     { type: stack, direction: vertical, gap: xs, children: [
-                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @entity.coefALabel ": " (math/round @entity.coefA 3)) },
                         { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
                       ] },
                     { type: stack, direction: vertical, gap: xs, children: [
-                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @entity.coefBLabel ": " (math/round @entity.coefB 3)) },
                         { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
                       ] }
                   ] },
                 { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: body, content: @config.taskText },
-                    { type: typography, variant: caption, color: muted, content: (str/concat @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                    { type: typography, variant: body, content: @entity.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @entity.pLabel " = " (math/round @entity.p 1) " · " @entity.qLabel " = " (math/round @entity.q 1)) }
                   ] }
               ] }
           ]
         })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (and (== ?mode @config.matchMode) (!= ?kind "")))
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.taskText ?taskText)
+        (set @entity.kind ?kind)
+        (set @entity.pLabel ?pLabel)
+        (set @entity.qLabel ?qLabel)
+        (set @entity.pStart ?pStart)
+        (set @entity.qStart ?qStart)
+        (set @entity.coefALabel ?coefALabel)
+        (set @entity.coefBLabel ?coefBLabel)
+        (set @entity.t 0)
+        (set @entity.p @entity.pStart)
+        (set @entity.q @entity.qStart)
+        (set @entity.coefA @config.coefADefault)
+        (set @entity.coefB @config.coefBDefault)
+        (set @entity.running @config.autoRun)
+        (set @entity.pSamples [ { x: 0, y: @entity.pStart } ])
+        (set @entity.qSamples [ { x: 0, y: @entity.qStart } ])
+        (set @entity.curves [
+          { label: @entity.pLabel, color: @config.pColor, samples: @entity.pSamples },
+          { label: @entity.qLabel, color: @config.qColor, samples: @entity.qSamples }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (>= @entity.t @config.duration) "Done" (if @entity.running "Running" "Paused")), variant: (if (>= @entity.t @config.duration) "success" (if @entity.running "primary" "neutral")) }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false", disabled: (>= @entity.t @config.duration) }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm },
+                    { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                      ] },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "t = " (math/round @entity.t 1) " of " @config.duration) }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @entity.coefALabel ": " (math/round @entity.coefA 3)) },
+                        { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @entity.coefBLabel ": " (math/round @entity.coefB 3)) },
+                        { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
+                      ] }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: body, content: @entity.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @entity.pLabel " = " (math/round @entity.p 1) " · " @entity.qLabel " = " (math/round @entity.q 1)) }
+                  ] }
+              ] }
+          ]
+        })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (set @entity.running false)
+        (render-ui main null)
 
       TOGGLE_RUN -> idle when (and (== @entity.active true) (or (== @entity.running true) (< @entity.t @config.duration)))
         (set @entity.running (not @entity.running))
@@ -184,17 +280,17 @@ orbital CoupledSimOrbital {
                 { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, KeyR: RESET } },
                 { type: stack, direction: vertical, gap: sm, children: [
                     { type: stack, direction: vertical, gap: xs, children: [
-                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @entity.coefALabel ": " (math/round @entity.coefA 3)) },
                         { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
                       ] },
                     { type: stack, direction: vertical, gap: xs, children: [
-                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @entity.coefBLabel ": " (math/round @entity.coefB 3)) },
                         { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
                       ] }
                   ] },
                 { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: body, content: @config.taskText },
-                    { type: typography, variant: caption, color: muted, content: (str/concat @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                    { type: typography, variant: body, content: @entity.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @entity.pLabel " = " (math/round @entity.p 1) " · " @entity.qLabel " = " (math/round @entity.q 1)) }
                   ] }
               ] }
           ]
@@ -231,17 +327,17 @@ orbital CoupledSimOrbital {
                 { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, KeyR: RESET } },
                 { type: stack, direction: vertical, gap: sm, children: [
                     { type: stack, direction: vertical, gap: xs, children: [
-                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @entity.coefALabel ": " (math/round @entity.coefA 3)) },
                         { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
                       ] },
                     { type: stack, direction: vertical, gap: xs, children: [
-                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @entity.coefBLabel ": " (math/round @entity.coefB 3)) },
                         { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
                       ] }
                   ] },
                 { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: body, content: @config.taskText },
-                    { type: typography, variant: caption, color: muted, content: (str/concat @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                    { type: typography, variant: body, content: @entity.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @entity.pLabel " = " (math/round @entity.p 1) " · " @entity.qLabel " = " (math/round @entity.q 1)) }
                   ] }
               ] }
           ]
@@ -277,17 +373,17 @@ orbital CoupledSimOrbital {
                 { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, KeyR: RESET } },
                 { type: stack, direction: vertical, gap: sm, children: [
                     { type: stack, direction: vertical, gap: xs, children: [
-                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @entity.coefALabel ": " (math/round @entity.coefA 3)) },
                         { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
                       ] },
                     { type: stack, direction: vertical, gap: xs, children: [
-                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @entity.coefBLabel ": " (math/round @entity.coefB 3)) },
                         { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
                       ] }
                   ] },
                 { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: body, content: @config.taskText },
-                    { type: typography, variant: caption, color: muted, content: (str/concat @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                    { type: typography, variant: body, content: @entity.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @entity.pLabel " = " (math/round @entity.p 1) " · " @entity.qLabel " = " (math/round @entity.q 1)) }
                   ] }
               ] }
           ]
@@ -324,17 +420,17 @@ orbital CoupledSimOrbital {
                 { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, KeyR: RESET } },
                 { type: stack, direction: vertical, gap: sm, children: [
                     { type: stack, direction: vertical, gap: xs, children: [
-                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @entity.coefALabel ": " (math/round @entity.coefA 3)) },
                         { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
                       ] },
                     { type: stack, direction: vertical, gap: xs, children: [
-                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @entity.coefBLabel ": " (math/round @entity.coefB 3)) },
                         { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
                       ] }
                   ] },
                 { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: body, content: @config.taskText },
-                    { type: typography, variant: caption, color: muted, content: (str/concat @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                    { type: typography, variant: body, content: @entity.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @entity.pLabel " = " (math/round @entity.p 1) " · " @entity.qLabel " = " (math/round @entity.q 1)) }
                   ] }
               ] }
           ]
@@ -343,16 +439,16 @@ orbital CoupledSimOrbital {
 
       RESET -> idle when (== @entity.active true)
         (set @entity.t 0)
-        (set @entity.p @config.pStart)
-        (set @entity.q @config.qStart)
+        (set @entity.p @entity.pStart)
+        (set @entity.q @entity.qStart)
         (set @entity.coefA @config.coefADefault)
         (set @entity.coefB @config.coefBDefault)
         (set @entity.running false)
-        (set @entity.pSamples [ { x: 0, y: @config.pStart } ])
-        (set @entity.qSamples [ { x: 0, y: @config.qStart } ])
+        (set @entity.pSamples [ { x: 0, y: @entity.pStart } ])
+        (set @entity.qSamples [ { x: 0, y: @entity.qStart } ])
         (set @entity.curves [
-          { label: @config.pLabel, color: @config.pColor, samples: @entity.pSamples },
-          { label: @config.qLabel, color: @config.qColor, samples: @entity.qSamples }
+          { label: @entity.pLabel, color: @config.pColor, samples: @entity.pSamples },
+          { label: @entity.qLabel, color: @config.qColor, samples: @entity.qSamples }
         ])
         (render-ui main {
           type: box
@@ -382,22 +478,22 @@ orbital CoupledSimOrbital {
                 { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, KeyR: RESET } },
                 { type: stack, direction: vertical, gap: sm, children: [
                     { type: stack, direction: vertical, gap: xs, children: [
-                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @entity.coefALabel ": " (math/round @entity.coefA 3)) },
                         { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
                       ] },
                     { type: stack, direction: vertical, gap: xs, children: [
-                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @entity.coefBLabel ": " (math/round @entity.coefB 3)) },
                         { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
                       ] }
                   ] },
                 { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: body, content: @config.taskText },
-                    { type: typography, variant: caption, color: muted, content: (str/concat @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                    { type: typography, variant: body, content: @entity.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @entity.pLabel " = " (math/round @entity.p 1) " · " @entity.qLabel " = " (math/round @entity.q 1)) }
                   ] }
               ] }
           ]
         })
-        (emit SIM_RESET { pStart: @config.pStart, qStart: @config.qStart })
+        (emit SIM_RESET { pStart: @entity.pStart, qStart: @entity.qStart })
 
       SET_A -> idle when (== @entity.active true)
         (set @entity.coefA (math/clamp ?value @config.coefAMin @config.coefAMax))
@@ -429,17 +525,17 @@ orbital CoupledSimOrbital {
                 { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, KeyR: RESET } },
                 { type: stack, direction: vertical, gap: sm, children: [
                     { type: stack, direction: vertical, gap: xs, children: [
-                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @entity.coefALabel ": " (math/round @entity.coefA 3)) },
                         { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
                       ] },
                     { type: stack, direction: vertical, gap: xs, children: [
-                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @entity.coefBLabel ": " (math/round @entity.coefB 3)) },
                         { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
                       ] }
                   ] },
                 { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: body, content: @config.taskText },
-                    { type: typography, variant: caption, color: muted, content: (str/concat @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                    { type: typography, variant: body, content: @entity.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @entity.pLabel " = " (math/round @entity.p 1) " · " @entity.qLabel " = " (math/round @entity.q 1)) }
                   ] }
               ] }
           ]
@@ -476,17 +572,17 @@ orbital CoupledSimOrbital {
                 { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, KeyR: RESET } },
                 { type: stack, direction: vertical, gap: sm, children: [
                     { type: stack, direction: vertical, gap: xs, children: [
-                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @entity.coefALabel ": " (math/round @entity.coefA 3)) },
                         { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
                       ] },
                     { type: stack, direction: vertical, gap: xs, children: [
-                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @entity.coefBLabel ": " (math/round @entity.coefB 3)) },
                         { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
                       ] }
                   ] },
                 { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: body, content: @config.taskText },
-                    { type: typography, variant: caption, color: muted, content: (str/concat @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                    { type: typography, variant: body, content: @entity.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @entity.pLabel " = " (math/round @entity.p 1) " · " @entity.qLabel " = " (math/round @entity.q 1)) }
                   ] }
               ] }
           ]
@@ -497,8 +593,8 @@ orbital CoupledSimOrbital {
         (set @entity.p (math/max 0 (+ @entity.p ?delta)))
         (set @entity.pSamples (array/append @entity.pSamples { x: @entity.t, y: @entity.p }))
         (set @entity.curves [
-          { label: @config.pLabel, color: @config.pColor, samples: @entity.pSamples },
-          { label: @config.qLabel, color: @config.qColor, samples: @entity.qSamples }
+          { label: @entity.pLabel, color: @config.pColor, samples: @entity.pSamples },
+          { label: @entity.qLabel, color: @config.qColor, samples: @entity.qSamples }
         ])
         (render-ui main {
           type: box
@@ -528,17 +624,17 @@ orbital CoupledSimOrbital {
                 { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false, keyMap: { Space: TOGGLE_RUN, KeyR: RESET } },
                 { type: stack, direction: vertical, gap: sm, children: [
                     { type: stack, direction: vertical, gap: xs, children: [
-                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @entity.coefALabel ": " (math/round @entity.coefA 3)) },
                         { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
                       ] },
                     { type: stack, direction: vertical, gap: xs, children: [
-                        { type: typography, variant: caption, color: muted, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @entity.coefBLabel ": " (math/round @entity.coefB 3)) },
                         { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
                       ] }
                   ] },
                 { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: body, content: @config.taskText },
-                    { type: typography, variant: caption, color: muted, content: (str/concat @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+                    { type: typography, variant: body, content: @entity.taskText },
+                    { type: typography, variant: caption, color: muted, content: (str/concat @entity.pLabel " = " (math/round @entity.p 1) " · " @entity.qLabel " = " (math/round @entity.q 1)) }
                   ] }
               ] }
           ]
@@ -555,14 +651,14 @@ orbital CoupledSimOrbital {
             (b @entity.coefB)
             (P @entity.p)
             (Q @entity.q)
-            (dP (if (== @config.kind "predator-prey")
+            (dP (if (== @entity.kind "predator-prey")
                   (- (* @a @P) (* @b @P @Q 0.01))
-                  (if (== @config.kind "epidemic")
+                  (if (== @entity.kind "epidemic")
                     (- 0 (* @a @P @Q 0.01))
                     (- 0 (* @a @P)))))
-            (dQ (if (== @config.kind "predator-prey")
+            (dQ (if (== @entity.kind "predator-prey")
                   (- (* @config.coefC @b @P @Q 0.01) (* @config.coefD @Q))
-                  (if (== @config.kind "epidemic")
+                  (if (== @entity.kind "epidemic")
                     (- (* @a @P @Q 0.01) (* @b @Q))
                     (- (* @a @P) (* @b @Q)))))
             (newP (math/max 0 (+ @P (* @dP @dt))))
@@ -575,8 +671,8 @@ orbital CoupledSimOrbital {
             (set @entity.pSamples (array/append @entity.pSamples { x: @entity.t, y: @newP }))
             (set @entity.qSamples (array/append @entity.qSamples { x: @entity.t, y: @newQ }))
             (set @entity.curves [
-              { label: @config.pLabel, color: @config.pColor, samples: @entity.pSamples },
-              { label: @config.qLabel, color: @config.qColor, samples: @entity.qSamples }
+              { label: @entity.pLabel, color: @config.pColor, samples: @entity.pSamples },
+              { label: @entity.qLabel, color: @config.qColor, samples: @entity.qSamples }
             ])
             (set @entity.running (if (>= @entity.t @config.duration) false true))))
     }
@@ -586,6 +682,19 @@ orbital CoupledSimOrbital {
         mode : string
       }
         @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      ROSTER_LOADED {
+        mode : string!
+        taskText : string!
+        kind : string!
+        pLabel : string!
+        qLabel : string!
+        pStart : number!
+        qStart : number!
+        coefALabel : string!
+        coefBLabel : string!
+      }
+        @description "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and taskText, kind, pLabel, qLabel, pStart, qStart, coefALabel and coefBLabel define the coupled system; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides."
         @tier "domain"
       TOGGLE_RUN {
       }
@@ -656,8 +765,12 @@ orbital CoupledSimOrbital {
     config {
       matchMode : string = ""
         @label "Match Mode"
-        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT (or on ROSTER_LOADED when rosterSource is event)."
         @tier "presentation"
+      rosterSource : "config" | "event" = "config"
+        @label "Roster Source"
+        @description "Where the system definition (taskText, kind, pLabel, qLabel, pStart, qStart, coefALabel, coefBLabel) comes from: config reads those knobs at INIT; event waits for ROSTER_LOADED and takes them from its payload."
+        @tier "domain"
       title : string = "Coupled System"
         @label "Title"
         @description "The instrument's name, the header's one hero."

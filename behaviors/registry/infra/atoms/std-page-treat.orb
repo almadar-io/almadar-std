@@ -1,5 +1,5 @@
 {
-  "description": "std-page-treat — applies a declared visual treatment to one element of a browser tab (hide, blur, highlight, or label it with text) or restores it, and reports which element it treated. TREAT takes the tab and element id std-page-watch reports. The treatments are a fixed, declared set: no arbitrary styles or scripts. Needs a host with the `page` service (a browser extension).",
+  "description": "std-page-treat — applies a declared visual treatment to one element of a browser tab (hide, blur, highlight, or label it with text) or restores it, and reports which element it treated. TREAT takes the tab and element id std-page-watch reports; TREAT_MANY treats a whole list at once and reports which elements were treated and which had already left their page. The treatments are a fixed, declared set: no arbitrary styles or scripts. Needs a host with the `page` service (a browser extension).",
   "ledger": {
     "entries": {
       "ent_01M431PMWEZFEQMV1ZADZ4AR3S": {
@@ -59,6 +59,33 @@
         "bakedName": "TREATED",
         "curName": "TREATED",
         "id": "evt_01M431PMWEYV983BES8KAC6K4E",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M431PMWE8GVWK42G31TJKSYS",
+        "renames": []
+      },
+      "evt_01M45BPXT9139TFQ4Y8FZMW7YR": {
+        "bakedName": "TREATED_MANY",
+        "curName": "TREATED_MANY",
+        "id": "evt_01M45BPXT9139TFQ4Y8FZMW7YR",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M431PMWE8GVWK42G31TJKSYS",
+        "renames": []
+      },
+      "evt_01M45BPXT9RQKY42KAAF2R587N": {
+        "bakedName": "TREAT_MANY",
+        "curName": "TREAT_MANY",
+        "id": "evt_01M45BPXT9RQKY42KAAF2R587N",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M431PMWE8GVWK42G31TJKSYS",
+        "renames": []
+      },
+      "evt_01M45BPXT9SP0TMHXWX7EP6WEE": {
+        "bakedName": "APPLIED_MANY",
+        "curName": "APPLIED_MANY",
+        "id": "evt_01M45BPXT9SP0TMHXWX7EP6WEE",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01M431PMWE8GVWK42G31TJKSYS",
@@ -149,8 +176,16 @@
               "resource": "page.apply"
             },
             {
+              "kind": "call-service",
+              "resource": "page.applyMany"
+            },
+            {
               "kind": "emit",
               "resource": "TREATED"
+            },
+            {
+              "kind": "emit",
+              "resource": "TREATED_MANY"
             },
             {
               "kind": "emit",
@@ -199,6 +234,48 @@
               "tier": "secondary"
             },
             {
+              "description": "The page service applied a list of treatments",
+              "event": "APPLIED_MANY",
+              "eventId": "evt_01M45BPXT9SP0TMHXWX7EP6WEE",
+              "payloadSchema": [
+                {
+                  "entity": "PageElementRef",
+                  "name": "applied",
+                  "properties": [
+                    {
+                      "name": "tab",
+                      "required": true,
+                      "type": "number"
+                    },
+                    {
+                      "name": "elementId",
+                      "required": true,
+                      "type": "string"
+                    }
+                  ],
+                  "type": "[object]"
+                },
+                {
+                  "entity": "PageElementRef",
+                  "name": "missing",
+                  "properties": [
+                    {
+                      "name": "tab",
+                      "required": true,
+                      "type": "number"
+                    },
+                    {
+                      "name": "elementId",
+                      "required": true,
+                      "type": "string"
+                    }
+                  ],
+                  "type": "[object]"
+                }
+              ],
+              "tier": "secondary"
+            },
+            {
               "description": "The page service could not apply the treatment",
               "event": "APPLY_FAILED",
               "eventId": "evt_01M431PMWETQ15DFSCY7X3S3DQ",
@@ -233,6 +310,50 @@
               ],
               "scope": "external",
               "synonyms": "hidden, blurred, highlighted, labelled, restored",
+              "tier": "primary"
+            },
+            {
+              "description": "Each listed element now shows its treatment; `missing` lists those that had left their page (or whose tab closed)",
+              "event": "TREATED_MANY",
+              "eventId": "evt_01M45BPXT9139TFQ4Y8FZMW7YR",
+              "payloadSchema": [
+                {
+                  "entity": "PageElementRef",
+                  "name": "applied",
+                  "properties": [
+                    {
+                      "name": "tab",
+                      "required": true,
+                      "type": "number"
+                    },
+                    {
+                      "name": "elementId",
+                      "required": true,
+                      "type": "string"
+                    }
+                  ],
+                  "type": "[object]"
+                },
+                {
+                  "entity": "PageElementRef",
+                  "name": "missing",
+                  "properties": [
+                    {
+                      "name": "tab",
+                      "required": true,
+                      "type": "number"
+                    },
+                    {
+                      "name": "elementId",
+                      "required": true,
+                      "type": "string"
+                    }
+                  ],
+                  "type": "[object]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "hidden, blurred, restored, treated",
               "tier": "primary"
             },
             {
@@ -321,6 +442,82 @@
                 "tier": "secondary"
               },
               {
+                "description": "Treat a list of page elements in one call, each with its own treatment and label",
+                "external": true,
+                "id": "evt_01M45BPXT9RQKY42KAAF2R587N",
+                "key": "TREAT_MANY",
+                "name": "Treat Many",
+                "payloadSchema": [
+                  {
+                    "name": "items",
+                    "properties": [
+                      {
+                        "name": "tab",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "elementId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "treatment",
+                        "type": "string"
+                      },
+                      {
+                        "name": "label",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ]
+              },
+              {
+                "description": "The page service applied a list of treatments",
+                "id": "evt_01M45BPXT9SP0TMHXWX7EP6WEE",
+                "key": "APPLIED_MANY",
+                "name": "Applied Many",
+                "payloadSchema": [
+                  {
+                    "entity": "PageElementRef",
+                    "name": "applied",
+                    "properties": [
+                      {
+                        "name": "tab",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "elementId",
+                        "required": true,
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  },
+                  {
+                    "entity": "PageElementRef",
+                    "name": "missing",
+                    "properties": [
+                      {
+                        "name": "tab",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "elementId",
+                        "required": true,
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "tier": "secondary"
+              },
+              {
                 "description": "The page service could not apply the treatment",
                 "id": "evt_01M431PMWETQ15DFSCY7X3S3DQ",
                 "key": "APPLY_FAILED",
@@ -356,6 +553,50 @@
                   }
                 ],
                 "synonyms": "hidden, blurred, highlighted, labelled, restored",
+                "tier": "primary"
+              },
+              {
+                "description": "Each listed element now shows its treatment; `missing` lists those that had left their page (or whose tab closed)",
+                "id": "evt_01M45BPXT9139TFQ4Y8FZMW7YR",
+                "key": "TREATED_MANY",
+                "name": "Treated Many",
+                "payloadSchema": [
+                  {
+                    "entity": "PageElementRef",
+                    "name": "applied",
+                    "properties": [
+                      {
+                        "name": "tab",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "elementId",
+                        "required": true,
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  },
+                  {
+                    "entity": "PageElementRef",
+                    "name": "missing",
+                    "properties": [
+                      {
+                        "name": "tab",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "elementId",
+                        "required": true,
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "synonyms": "hidden, blurred, restored, treated",
                 "tier": "primary"
               },
               {
@@ -452,6 +693,56 @@
               {
                 "effects": [
                   [
+                    "call-service",
+                    "page",
+                    "applyMany",
+                    {
+                      "items": "@payload.items"
+                    },
+                    {
+                      "emit": {
+                        "failure": "APPLY_FAILED",
+                        "success": "APPLIED_MANY"
+                      }
+                    }
+                  ]
+                ],
+                "event": "TREAT_MANY",
+                "eventId": "evt_01M45BPXT9RQKY42KAAF2R587N",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.treated",
+                    [
+                      "+",
+                      "@entity.treated",
+                      [
+                        "array/len",
+                        "@payload.applied"
+                      ]
+                    ]
+                  ],
+                  [
+                    "emit",
+                    "TREATED_MANY",
+                    {
+                      "applied": "@payload.applied",
+                      "missing": "@payload.missing"
+                    }
+                  ]
+                ],
+                "event": "APPLIED_MANY",
+                "eventId": "evt_01M45BPXT9SP0TMHXWX7EP6WEE",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
                     "set",
                     "@entity.errorMessage",
                     "@payload.error"
@@ -486,7 +777,41 @@
             ]
           }
         }
-      ]
+      ],
+      "types": {
+        "PageElementRef": [
+          {
+            "name": "tab",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "elementId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "PageTreatment": [
+          {
+            "name": "tab",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "elementId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "treatment",
+            "type": "string"
+          },
+          {
+            "name": "label",
+            "type": "string"
+          }
+        ]
+      }
     }
   ],
   "schemaVersion": 1,

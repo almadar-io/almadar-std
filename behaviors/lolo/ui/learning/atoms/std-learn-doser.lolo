@@ -40,22 +40,24 @@ orbital LearnDoserOrbital {
     containers : [DoserContainer]
     readouts : [DoserReadout]
     doseSeries : [DoserTracePoint]
+    bands : [DoserBand]
   }
 
   trait LearnDoserSim -> @rebindable DoserScene [interaction, instance] {
     initial: idle
 
     state idle {
-      INIT -> idle when (== @config.matchMode "")
+      INIT -> idle when (and (== @config.matchMode "") (== @config.rosterSource "config"))
         (set @entity.active true)
         (set @entity.title @config.title)
+        (set @entity.bands @config.bands)
         (set @entity.dose 0)
         (set @entity.done false)
         (set @entity.running @config.autoDrip)
         (set @entity.elapsedMs 0)
         (let (
-            (matched (array/filter @config.bands (fn b (<= @entity.dose (object/get @b upperBound)))))
-            (band (if (> (array/len @matched) 0) (array/first @matched) (array/nth @config.bands (- (array/len @config.bands) 1))))
+            (matched (array/filter @entity.bands (fn b (<= @entity.dose (object/get @b upperBound)))))
+            (band (if (> (array/len @matched) 0) (array/first @matched) (array/nth @entity.bands (- (array/len @entity.bands) 1))))
           )
           (do
             (set @entity.bandLabel (object/get @band label))
@@ -127,16 +129,17 @@ orbital LearnDoserOrbital {
         (set @entity.running false)
         (render-ui main null)
 
-      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+      MODE_SELECTED -> idle when (and (== ?mode @config.matchMode) (== @config.rosterSource "config"))
         (set @entity.active true)
         (set @entity.title @config.title)
+        (set @entity.bands @config.bands)
         (set @entity.dose 0)
         (set @entity.done false)
         (set @entity.running @config.autoDrip)
         (set @entity.elapsedMs 0)
         (let (
-            (matched (array/filter @config.bands (fn b (<= @entity.dose (object/get @b upperBound)))))
-            (band (if (> (array/len @matched) 0) (array/first @matched) (array/nth @config.bands (- (array/len @config.bands) 1))))
+            (matched (array/filter @entity.bands (fn b (<= @entity.dose (object/get @b upperBound)))))
+            (band (if (> (array/len @matched) 0) (array/first @matched) (array/nth @entity.bands (- (array/len @entity.bands) 1))))
           )
           (do
             (set @entity.bandLabel (object/get @band label))
@@ -203,11 +206,93 @@ orbital LearnDoserOrbital {
           }))
         (emit DOSER_UPDATED { running: @entity.running, dose: @entity.dose, bandLabel: @entity.bandLabel, done: @entity.done })
 
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (and (== ?mode @config.matchMode) (> (array/len ?bands) 0)))
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.bands ?bands)
+        (set @entity.dose 0)
+        (set @entity.done false)
+        (set @entity.running @config.autoDrip)
+        (set @entity.elapsedMs 0)
+        (let (
+            (matched (array/filter @entity.bands (fn b (<= @entity.dose (object/get @b upperBound)))))
+            (band (if (> (array/len @matched) 0) (array/first @matched) (array/nth @entity.bands (- (array/len @entity.bands) 1))))
+          )
+          (do
+            (set @entity.bandLabel (object/get @band label))
+            (set @entity.bandColor (object/get @band color))
+            (set @entity.done (if (object/get @band terminal false) true @entity.done))
+          )
+        )
+        (set @entity.containers [
+          { x: (* @config.width 0.12), y: (* @config.height 0.3), width: (* @config.width 0.28), height: (* @config.height 0.6), divider: "none", level: (math/clamp (/ @entity.dose @config.capacity) 0 1), levelColor: @entity.bandColor, label: @config.reservoirLabel },
+          { x: (* @config.width 0.58), y: (* @config.height 0.05), width: (* @config.width 0.06), height: (* @config.height 0.55), divider: "none", level: (math/clamp (/ (- @config.capacity @entity.dose) @config.capacity) 0 1), levelColor: @config.sourceColor, label: @config.sourceLabel }
+        ])
+        (set @entity.readouts [
+          { label: @config.quantityLabel, value: (str/concat "" (math/round @entity.dose 2)) },
+          { label: @config.zoneReadoutLabel, value: @entity.bandLabel }
+        ])
+        (set @entity.doseSeries [{ x: 0, y: @entity.dose }])
+        (set @entity.narration (str/concat @config.quantityLabel (str/concat " at " (str/concat (str/concat "" (math/round @entity.dose 2)) (str/concat " — " @entity.bandLabel)))))
+        (if @config.showCanvas
+          (render-ui main {
+            type: box
+            padding: md
+            children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                  { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                      { type: stack, direction: vertical, gap: xs, children: [
+                          { type: typography, variant: h4, content: @entity.title },
+                          (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                        ] },
+                      { type: badge, label: (if @entity.done "Locked" (if @entity.running "Auto-dosing" "Ready")), variant: (if @entity.done "warning" (if @entity.running "primary" "neutral")) }
+                    ] },
+                  { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                      { type: button, action: ADD_SMALL, label: (str/concat "Add " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: primary, disabled: @entity.done },
+                      { type: button, action: ADD_LARGE, label: (str/concat "Add " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: secondary, disabled: @entity.done },
+                      (if @entity.running { type: button, action: TOGGLE_DRIP, label: "Pause", icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_DRIP, label: "Auto-dose", icon: "play", variant: secondary, aria-pressed: "false", disabled: @entity.done }),
+                      { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                      { type: typography, variant: caption, color: muted, content: (str/concat @config.quantityLabel (str/concat " " (str/concat (str/concat "" (math/round @entity.dose 2)) (str/concat " of " (str/concat (str/concat "" @config.capacity) (if (== @config.unit "") "" (str/concat " " @config.unit))))))) }
+                    ] },
+                  { type: chemistry-canvas, series: @config.series, keyMap: { Space: TOGGLE_DRIP, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, containers: @entity.containers, readouts: @entity.readouts, traces: [ { series: [ { samples: @entity.doseSeries, label: @config.quantityLabel } ], xLabel: "step", yLabel: @config.quantityLabel } ] },
+                  { type: typography, variant: body, content: @entity.narration }
+                ] }
+            ]
+          })
+          (render-ui main {
+            type: box
+            padding: md
+            children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                  { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                      { type: stack, direction: vertical, gap: xs, children: [
+                          { type: typography, variant: h4, content: @entity.title },
+                          (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                        ] },
+                      { type: badge, label: (if @entity.done "Locked" (if @entity.running "Auto-dosing" "Ready")), variant: (if @entity.done "warning" (if @entity.running "primary" "neutral")) }
+                    ] },
+                  { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                      { type: button, action: ADD_SMALL, label: (str/concat "Add " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: primary, disabled: @entity.done },
+                      { type: button, action: ADD_LARGE, label: (str/concat "Add " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), icon: "plus", variant: secondary, disabled: @entity.done },
+                      (if @entity.running { type: button, action: TOGGLE_DRIP, label: "Pause", icon: "pause", variant: secondary, aria-pressed: "true" } { type: button, action: TOGGLE_DRIP, label: "Auto-dose", icon: "play", variant: secondary, aria-pressed: "false", disabled: @entity.done }),
+                      { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                      { type: typography, variant: caption, color: muted, content: (str/concat @config.quantityLabel (str/concat " " (str/concat (str/concat "" (math/round @entity.dose 2)) (str/concat " of " (str/concat (str/concat "" @config.capacity) (if (== @config.unit "") "" (str/concat " " @config.unit))))))) }
+                    ] }
+                ] }
+            ]
+          }))
+        (emit DOSER_UPDATED { running: @entity.running, dose: @entity.dose, bandLabel: @entity.bandLabel, done: @entity.done })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (set @entity.running false)
+        (render-ui main null)
+
       ADD_SMALL -> idle when (and (== @entity.active true) (== @entity.done false))
         (set @entity.dose (math/min (+ @entity.dose @config.stepSmall) @config.capacity))
         (let (
-            (matched (array/filter @config.bands (fn b (<= @entity.dose (object/get @b upperBound)))))
-            (band (if (> (array/len @matched) 0) (array/first @matched) (array/nth @config.bands (- (array/len @config.bands) 1))))
+            (matched (array/filter @entity.bands (fn b (<= @entity.dose (object/get @b upperBound)))))
+            (band (if (> (array/len @matched) 0) (array/first @matched) (array/nth @entity.bands (- (array/len @entity.bands) 1))))
           )
           (do
             (set @entity.bandLabel (object/get @band label))
@@ -278,8 +363,8 @@ orbital LearnDoserOrbital {
       ADD_LARGE -> idle when (and (== @entity.active true) (== @entity.done false))
         (set @entity.dose (math/min (+ @entity.dose @config.stepLarge) @config.capacity))
         (let (
-            (matched (array/filter @config.bands (fn b (<= @entity.dose (object/get @b upperBound)))))
-            (band (if (> (array/len @matched) 0) (array/first @matched) (array/nth @config.bands (- (array/len @config.bands) 1))))
+            (matched (array/filter @entity.bands (fn b (<= @entity.dose (object/get @b upperBound)))))
+            (band (if (> (array/len @matched) 0) (array/first @matched) (array/nth @entity.bands (- (array/len @entity.bands) 1))))
           )
           (do
             (set @entity.bandLabel (object/get @band label))
@@ -406,8 +491,8 @@ orbital LearnDoserOrbital {
         (set @entity.running @config.autoDrip)
         (set @entity.elapsedMs 0)
         (let (
-            (matched (array/filter @config.bands (fn b (<= @entity.dose (object/get @b upperBound)))))
-            (band (if (> (array/len @matched) 0) (array/first @matched) (array/nth @config.bands (- (array/len @config.bands) 1))))
+            (matched (array/filter @entity.bands (fn b (<= @entity.dose (object/get @b upperBound)))))
+            (band (if (> (array/len @matched) 0) (array/first @matched) (array/nth @entity.bands (- (array/len @entity.bands) 1))))
           )
           (do
             (set @entity.bandLabel (object/get @band label))
@@ -491,6 +576,12 @@ orbital LearnDoserOrbital {
         mode : string
       }
         @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      ROSTER_LOADED {
+        mode : string!
+        bands : [DoserBand]!
+      }
+        @description "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and bands is the band roster; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides."
         @tier "domain"
     }
 
@@ -596,6 +687,10 @@ orbital LearnDoserOrbital {
       historyLength : number = 300
         @label "Dose History"
         @description "Maximum points kept in the dose-history trace; older points drop off once exceeded."
+        @tier "domain"
+      rosterSource : "config" | "event" = "config"
+        @label "Roster Source"
+        @description "Where the band roster comes from: config reads the bands knob at INIT; event waits for ROSTER_LOADED and takes the roster from its payload."
         @tier "domain"
       bands : [DoserBand] = [
         { upperBound: 50, label: "Low", color: "muted", terminal: false },

@@ -30,7 +30,7 @@ const ALIAS = 'LearnDiagram';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnDiagramEventKey = 'CLEAR_PART' | 'INIT' | 'MODE_SELECTED' | 'PART_SELECTED' | 'SELECTION_CLEARED' | 'SELECT_PART';
+export type StdLearnDiagramEventKey = 'CLEAR_PART' | 'INIT' | 'MODE_SELECTED' | 'PART_SELECTED' | 'ROSTER_LOADED' | 'SELECTION_CLEARED' | 'SELECT_PART';
 
 /**
  * Payload shape for the `PART_SELECTED` event.
@@ -62,6 +62,8 @@ export interface StdLearnDiagramConfig {
   overviewText?: string;
   /** Default: `[{"color":"series-1","description":"Receives raw data or requests from the outside world and hands them to the processor.","id":"input","label":"Input","radius":34,"x":120,"y":200},{"color":"series-2","description":"The central component that transforms incoming data according to the system's rules.","id":"processor","label":"Processor","radius":46,"x":300,"y":200},{"color":"series-3","description":"Persists data so it can be retrieved later, even after the system restarts.","id":"storage","label":"Storage","radius":34,"x":300,"y":320},{"color":"series-4","description":"Delivers the processor's results back out to users or other systems.","id":"output","label":"Output","radius":34,"x":480,"y":200},{"color":"series-5","description":"Coordinates timing and configuration for the processor without touching the data itself.","id":"controller","label":"Controller","radius":26,"x":300,"y":80}]` */
   parts?: EntityRow[];
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
   /** Default: `""` */
   summary?: string;
   /** Default: `"System Diagram"` */

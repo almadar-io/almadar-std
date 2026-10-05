@@ -100,6 +100,15 @@
         "parent": "trt_01M0CGSNDKZW4BAAQ48B923K0C",
         "renames": []
       },
+      "evt_01M459WQQNEVCGWRAKJ3M6R067": {
+        "bakedName": "ROSTER_LOADED",
+        "curName": "ROSTER_LOADED",
+        "id": "evt_01M459WQQNEVCGWRAKJ3M6R067",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0CGSNDKZW4BAAQ48B923K0C",
+        "renames": []
+      },
       "orb_01M0CGSNDKXGJ1SK9X9MV7YKYG": {
         "bakedName": "LearnScatterFitOrbital",
         "curName": "LearnScatterFitOrbital",
@@ -145,6 +154,45 @@
           {
             "name": "title",
             "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "initialPoints",
+            "type": "array"
           },
           {
             "items": {
@@ -547,7 +595,7 @@
             },
             "matchMode": {
               "default": "",
-              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT, or on ROSTER_LOADED when rosterSource is event.",
               "label": "Match Mode",
               "tier": "presentation",
               "type": "string"
@@ -668,6 +716,17 @@
               "label": "Reveal Fit Button Label",
               "tier": "presentation",
               "type": "string"
+            },
+            "rosterSource": {
+              "default": "config",
+              "description": "Where the roster comes from: config reads initialPoints knob at INIT; event waits for ROSTER_LOADED and takes the roster from its payload.",
+              "label": "Roster Source",
+              "tier": "domain",
+              "type": "string",
+              "values": [
+                "config",
+                "event"
+              ]
             },
             "runLabel": {
               "default": "Run",
@@ -792,6 +851,10 @@
             {
               "kind": "set",
               "resource": "@entity.guessSlope"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.initialPoints"
             },
             {
               "kind": "set",
@@ -926,6 +989,7 @@
               "guessIntercept",
               "guessScore",
               "guessSlope",
+              "initialPoints",
               "intercept",
               "narration",
               "points",
@@ -963,6 +1027,53 @@
                   {
                     "name": "mode",
                     "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and initialPoints is the starting point set; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
+                "id": "evt_01M459WQQNEVCGWRAKJ3M6R067",
+                "key": "ROSTER_LOADED",
+                "name": "Roster Loaded",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "initialPoints",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "label",
+                        "type": "string"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      },
+                      {
+                        "name": "radius",
+                        "type": "number"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
                   }
                 ],
                 "tier": "domain"
@@ -1087,6 +1198,11 @@
             "transitions": [
               {
                 "effects": [
+                  [
+                    "set",
+                    "@entity.initialPoints",
+                    "@config.initialPoints"
+                  ],
                   [
                     "set",
                     "@entity.active",
@@ -1902,9 +2018,17 @@
                 "eventId": "evt_01M0CGSNDKG9JYEDATK8M75C4N",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@config.matchMode",
-                  ""
+                  "and",
+                  [
+                    "==",
+                    "@config.matchMode",
+                    ""
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1952,6 +2076,11 @@
               },
               {
                 "effects": [
+                  [
+                    "set",
+                    "@entity.initialPoints",
+                    "@config.initialPoints"
+                  ],
                   [
                     "set",
                     "@entity.active",
@@ -2767,9 +2896,892 @@
                 "eventId": "evt_01M0CGSNDNBDW8469VPNX0HE2C",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@payload.mode",
-                  "@config.matchMode"
+                  "and",
+                  [
+                    "==",
+                    "@payload.mode",
+                    "@config.matchMode"
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.initialPoints",
+                    "@payload.initialPoints"
+                  ],
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.points",
+                    "@payload.initialPoints"
+                  ],
+                  [
+                    "set",
+                    "@entity.guessSlope",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.guessIntercept",
+                    [
+                      "/",
+                      [
+                        "+",
+                        "@config.axisYMin",
+                        "@config.axisYMax"
+                      ],
+                      2.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.revealed",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.autoRun"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "pts",
+                        "@payload.initialPoints"
+                      ],
+                      [
+                        "n",
+                        [
+                          "array/len",
+                          "@pts"
+                        ]
+                      ],
+                      [
+                        "meanX",
+                        [
+                          "if",
+                          [
+                            ">",
+                            "@n",
+                            0.0
+                          ],
+                          [
+                            "/",
+                            [
+                              "array/reduce",
+                              "@pts",
+                              0.0,
+                              [
+                                "fn",
+                                [
+                                  "acc",
+                                  "p"
+                                ],
+                                [
+                                  "+",
+                                  "@acc",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "x"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            "@n"
+                          ],
+                          0.0
+                        ]
+                      ],
+                      [
+                        "meanY",
+                        [
+                          "if",
+                          [
+                            ">",
+                            "@n",
+                            0.0
+                          ],
+                          [
+                            "/",
+                            [
+                              "array/reduce",
+                              "@pts",
+                              0.0,
+                              [
+                                "fn",
+                                [
+                                  "acc",
+                                  "p"
+                                ],
+                                [
+                                  "+",
+                                  "@acc",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "y"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            "@n"
+                          ],
+                          0.0
+                        ]
+                      ],
+                      [
+                        "sxx",
+                        [
+                          "array/reduce",
+                          "@pts",
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "p"
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "dx",
+                                  [
+                                    "-",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "x"
+                                    ],
+                                    "@meanX"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "+",
+                                "@acc",
+                                [
+                                  "*",
+                                  "@dx",
+                                  "@dx"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "syy",
+                        [
+                          "array/reduce",
+                          "@pts",
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "p"
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "dy",
+                                  [
+                                    "-",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "y"
+                                    ],
+                                    "@meanY"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "+",
+                                "@acc",
+                                [
+                                  "*",
+                                  "@dy",
+                                  "@dy"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "sxy",
+                        [
+                          "array/reduce",
+                          "@pts",
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "p"
+                            ],
+                            [
+                              "+",
+                              "@acc",
+                              [
+                                "*",
+                                [
+                                  "-",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "x"
+                                  ],
+                                  "@meanX"
+                                ],
+                                [
+                                  "-",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "y"
+                                  ],
+                                  "@meanY"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "newSlope",
+                        [
+                          "if",
+                          [
+                            ">",
+                            "@sxx",
+                            0.0
+                          ],
+                          [
+                            "/",
+                            "@sxy",
+                            "@sxx"
+                          ],
+                          0.0
+                        ]
+                      ],
+                      [
+                        "newIntercept",
+                        [
+                          "-",
+                          "@meanY",
+                          [
+                            "*",
+                            "@newSlope",
+                            "@meanX"
+                          ]
+                        ]
+                      ],
+                      [
+                        "newR",
+                        [
+                          "if",
+                          [
+                            "and",
+                            [
+                              ">",
+                              "@sxx",
+                              0.0
+                            ],
+                            [
+                              ">",
+                              "@syy",
+                              0.0
+                            ]
+                          ],
+                          [
+                            "/",
+                            "@sxy",
+                            [
+                              "math/sqrt",
+                              [
+                                "*",
+                                "@sxx",
+                                "@syy"
+                              ]
+                            ]
+                          ],
+                          0.0
+                        ]
+                      ],
+                      [
+                        "fitCurve",
+                        {
+                          "color": "@config.fitColor",
+                          "label": "@config.fitLabel",
+                          "samples": [
+                            {
+                              "x": "@config.axisXMin",
+                              "y": [
+                                "math/clamp",
+                                "@newIntercept",
+                                "@config.axisYMin",
+                                "@config.axisYMax"
+                              ]
+                            },
+                            {
+                              "x": "@config.axisXMax",
+                              "y": [
+                                "math/clamp",
+                                [
+                                  "+",
+                                  [
+                                    "*",
+                                    "@newSlope",
+                                    "@config.axisXMax"
+                                  ],
+                                  "@newIntercept"
+                                ],
+                                "@config.axisYMin",
+                                "@config.axisYMax"
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      [
+                        "residualCurves",
+                        [
+                          "if",
+                          "@config.showResiduals",
+                          [
+                            "array/map",
+                            "@pts",
+                            [
+                              "fn",
+                              "p",
+                              {
+                                "color": "@config.residualColor",
+                                "dash": "@config.residualDash",
+                                "label": "",
+                                "samples": [
+                                  {
+                                    "x": [
+                                      "object/get",
+                                      "@p",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@p",
+                                      "y"
+                                    ]
+                                  },
+                                  {
+                                    "x": [
+                                      "object/get",
+                                      "@p",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "+",
+                                      [
+                                        "*",
+                                        "@newSlope",
+                                        [
+                                          "object/get",
+                                          "@p",
+                                          "x"
+                                        ]
+                                      ],
+                                      "@newIntercept"
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          ],
+                          []
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.slope",
+                        "@newSlope"
+                      ],
+                      [
+                        "set",
+                        "@entity.intercept",
+                        "@newIntercept"
+                      ],
+                      [
+                        "set",
+                        "@entity.r",
+                        "@newR"
+                      ],
+                      [
+                        "set",
+                        "@entity.rSquared",
+                        [
+                          "*",
+                          "@newR",
+                          "@newR"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.guessScore",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.curves",
+                        [
+                          "array/concat",
+                          [
+                            "array/append",
+                            [],
+                            "@fitCurve"
+                          ],
+                          "@residualCurves"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.done",
+                        [
+                          ">=",
+                          "@n",
+                          "@config.maxPoints"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.narration",
+                        [
+                          "str/concat",
+                          [
+                            "str/concat",
+                            "",
+                            "@n"
+                          ],
+                          " ",
+                          "@config.narrationLoadedTemplate",
+                          " — r = ",
+                          [
+                            "str/concat",
+                            "",
+                            [
+                              "math/round",
+                              "@newR",
+                              3.0
+                            ]
+                          ],
+                          ", R² = ",
+                          [
+                            "str/concat",
+                            "",
+                            [
+                              "math/round",
+                              [
+                                "*",
+                                "@newR",
+                                "@newR"
+                              ],
+                              3.0
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.revealed",
+                                    "Revealed",
+                                    [
+                                      "if",
+                                      "@entity.done",
+                                      "Max points",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "Adding points",
+                                        [
+                                          "if",
+                                          "@config.guessMode",
+                                          "Guessing",
+                                          "Fitted"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.revealed",
+                                    "success",
+                                    [
+                                      "if",
+                                      "@entity.done",
+                                      "neutral",
+                                      [
+                                        "if",
+                                        "@entity.running",
+                                        "primary",
+                                        "neutral"
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "ADD_POINT",
+                                  "disabled": "@entity.done",
+                                  "icon": "plus",
+                                  "label": "@config.addPointLabel",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "REVEAL_FIT",
+                                  "icon": "eye",
+                                  "label": "@config.revealLabel",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                [
+                                  "if",
+                                  "@entity.running",
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "true",
+                                    "icon": "pause",
+                                    "label": "@config.pauseLabel",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  },
+                                  {
+                                    "action": "TOGGLE_RUN",
+                                    "aria-pressed": "false",
+                                    "disabled": "@entity.done",
+                                    "icon": "play",
+                                    "label": "@config.runLabel",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  }
+                                ],
+                                {
+                                  "action": "RESET",
+                                  "icon": "rotate-ccw",
+                                  "label": "@config.resetLabel",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      [
+                                        "array/len",
+                                        "@entity.points"
+                                      ]
+                                    ],
+                                    [
+                                      "str/concat",
+                                      " of ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        "@config.maxPoints"
+                                      ]
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "curves": "@entity.curves",
+                              "gridStep": "@config.gridStep",
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "keyMap": {
+                                "ArrowRight": "ADD_POINT",
+                                "KeyR": "RESET",
+                                "Space": "TOGGLE_RUN"
+                              },
+                              "points": "@entity.points",
+                              "showAxes": "@config.showAxes",
+                              "showGrid": "@config.showGrid",
+                              "showTickLabels": "@config.showTickLabels",
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.axisXMax",
+                              "xMin": "@config.axisXMin",
+                              "yMax": "@config.axisYMax",
+                              "yMin": "@config.axisYMin"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@config.guessSlopeCaption",
+                                        [
+                                          "math/round",
+                                          "@entity.guessSlope",
+                                          2.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "GUESS_LINE",
+                                      "actionPayload": {
+                                        "param": "slope"
+                                      },
+                                      "max": "@config.guessSlopeMax",
+                                      "min": "@config.guessSlopeMin",
+                                      "showTooltip": true,
+                                      "step": "@config.guessSlopeStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.guessSlope"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "@config.guessInterceptCaption",
+                                        [
+                                          "math/round",
+                                          "@entity.guessIntercept",
+                                          1.0
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "GUESS_LINE",
+                                      "actionPayload": {
+                                        "param": "intercept"
+                                      },
+                                      "max": "@config.guessInterceptMax",
+                                      "min": "@config.guessInterceptMin",
+                                      "showTooltip": true,
+                                      "step": "@config.guessInterceptStep",
+                                      "type": "range-slider",
+                                      "value": "@entity.guessIntercept"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "color": "muted",
+                              "content": [
+                                "if",
+                                "@config.showR",
+                                [
+                                  "str/concat",
+                                  "r = ",
+                                  [
+                                    "math/round",
+                                    "@entity.r",
+                                    3.0
+                                  ],
+                                  " — R² = ",
+                                  [
+                                    "math/round",
+                                    "@entity.rSquared",
+                                    3.0
+                                  ],
+                                  " — guess score ",
+                                  "@entity.guessScore",
+                                  "%"
+                                ],
+                                ""
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "content": "@entity.narration",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "LEARN_SCATTER_FIT_UPDATED",
+                    {
+                      "intercept": "@entity.intercept",
+                      "narration": "@entity.narration",
+                      "pointCount": [
+                        "array/len",
+                        "@entity.points"
+                      ],
+                      "r": "@entity.r",
+                      "rSquared": "@entity.rSquared",
+                      "slope": "@entity.slope"
+                    }
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459WQQNEVCGWRAKJ3M6R067",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "==",
+                    "@payload.mode",
+                    "@config.matchMode"
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459WQQNEVCGWRAKJ3M6R067",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -6252,7 +7264,7 @@
                   [
                     "set",
                     "@entity.points",
-                    "@config.initialPoints"
+                    "@entity.initialPoints"
                   ],
                   [
                     "set",
@@ -6287,7 +7299,7 @@
                     [
                       [
                         "pts",
-                        "@config.initialPoints"
+                        "@entity.initialPoints"
                       ],
                       [
                         "n",

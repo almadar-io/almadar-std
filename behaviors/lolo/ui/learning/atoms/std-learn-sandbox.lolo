@@ -31,6 +31,8 @@ orbital LearnSandboxOrbital {
     id : string!
     active : boolean = false
     title : string
+    elements : [LearnSandboxElement]
+    links : [LearnSandboxLink]
     enabledIds : [string]
     total : number = 0
     holds : boolean = false
@@ -43,7 +45,9 @@ orbital LearnSandboxOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle when (== @config.matchMode "")
+      INIT -> idle when (and (== @config.matchMode "") (== @config.rosterSource "config"))
+        (set @entity.elements @config.elements)
+        (set @entity.links @config.links)
         (set @entity.active true)
         (set @entity.title @config.title)
         (set @entity.enabledIds (array/map (array/filter @config.elements (fn e (== (object/get @e enabled true) true))) (fn e (object/get @e id))))
@@ -76,7 +80,7 @@ orbital LearnSandboxOrbital {
                     { type: badge, variant: (if @entity.holds "primary" "warning"), label: (if @entity.holds "Holds" "Does not hold") }
                   ] },
                 { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate, keyMap: { KeyR: RESET } },
-                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @config.elements (fn e { type: button, action: TOGGLE, actionPayload: { elementId: (object/get @e id) }, label: (if (array/includes @entity.enabledIds (object/get @e id)) (object/get @e label) (str/concat (object/get @e label) " — off")), variant: (if (array/includes @entity.enabledIds (object/get @e id)) "secondary" "ghost"), aria-pressed: (if (array/includes @entity.enabledIds (object/get @e id)) "true" "false") })) },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @entity.elements (fn e { type: button, action: TOGGLE, actionPayload: { elementId: (object/get @e id) }, label: (if (array/includes @entity.enabledIds (object/get @e id)) (object/get @e label) (str/concat (object/get @e label) " — off")), variant: (if (array/includes @entity.enabledIds (object/get @e id)) "secondary" "ghost"), aria-pressed: (if (array/includes @entity.enabledIds (object/get @e id)) "true" "false") })) },
                 { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
                     { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
                     { type: typography, variant: caption, color: muted, content: (str/concat "Total " @entity.total " of " @config.threshold) }
@@ -90,7 +94,9 @@ orbital LearnSandboxOrbital {
         (set @entity.active false)
         (render-ui main null)
 
-      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+      MODE_SELECTED -> idle when (and (== ?mode @config.matchMode) (== @config.rosterSource "config"))
+        (set @entity.elements @config.elements)
+        (set @entity.links @config.links)
         (set @entity.active true)
         (set @entity.title @config.title)
         (set @entity.enabledIds (array/map (array/filter @config.elements (fn e (== (object/get @e enabled true) true))) (fn e (object/get @e id))))
@@ -123,7 +129,7 @@ orbital LearnSandboxOrbital {
                     { type: badge, variant: (if @entity.holds "primary" "warning"), label: (if @entity.holds "Holds" "Does not hold") }
                   ] },
                 { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate, keyMap: { KeyR: RESET } },
-                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @config.elements (fn e { type: button, action: TOGGLE, actionPayload: { elementId: (object/get @e id) }, label: (if (array/includes @entity.enabledIds (object/get @e id)) (object/get @e label) (str/concat (object/get @e label) " — off")), variant: (if (array/includes @entity.enabledIds (object/get @e id)) "secondary" "ghost"), aria-pressed: (if (array/includes @entity.enabledIds (object/get @e id)) "true" "false") })) },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @entity.elements (fn e { type: button, action: TOGGLE, actionPayload: { elementId: (object/get @e id) }, label: (if (array/includes @entity.enabledIds (object/get @e id)) (object/get @e label) (str/concat (object/get @e label) " — off")), variant: (if (array/includes @entity.enabledIds (object/get @e id)) "secondary" "ghost"), aria-pressed: (if (array/includes @entity.enabledIds (object/get @e id)) "true" "false") })) },
                 { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
                     { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
                     { type: typography, variant: caption, color: muted, content: (str/concat "Total " @entity.total " of " @config.threshold) }
@@ -133,15 +139,19 @@ orbital LearnSandboxOrbital {
           ]
         })
 
-      TOGGLE -> idle when (== @entity.active true)
-        (set @entity.enabledIds (if (array/includes @entity.enabledIds ?elementId) (array/filter @entity.enabledIds (fn eid (!= @eid ?elementId))) (array/concat @entity.enabledIds [?elementId])))
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (and (== ?mode @config.matchMode) (> (array/len ?elements) 0)))
+        (set @entity.elements ?elements)
+        (set @entity.links ?links)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.enabledIds (array/map (array/filter ?elements (fn e (== (object/get @e enabled true) true))) (fn e (object/get @e id))))
         (let (
-            (activeElements (array/filter @config.elements (fn e (array/includes @entity.enabledIds (object/get @e id)))))
+            (activeElements (array/filter ?elements (fn e (array/includes @entity.enabledIds (object/get @e id)))))
             (total (array/sum (array/map @activeElements (fn e (object/get @e weight)))))
             (holds (>= @total @config.threshold))
             (readout (str/concat @config.outcomeLabel ": total " @total " of " @config.threshold " needed. " (if @holds "Holds." "Does not hold.")))
-            (nodes (array/map @config.elements (fn e { id: (object/get @e id), x: (object/get @e x), y: (object/get @e y), radius: @config.nodeRadius, color: (if (array/includes @entity.enabledIds (object/get @e id)) @config.enabledColor @config.disabledColor), label: (object/get @e label) })))
-            (edges (array/map @config.links (fn l { from: (object/get @l from), to: (object/get @l to), color: (if (and (array/includes @entity.enabledIds (object/get @l from)) (array/includes @entity.enabledIds (object/get @l to))) @config.enabledEdgeColor @config.disabledEdgeColor) })))
+            (nodes (array/map ?elements (fn e { id: (object/get @e id), x: (object/get @e x), y: (object/get @e y), radius: @config.nodeRadius, color: (if (array/includes @entity.enabledIds (object/get @e id)) @config.enabledColor @config.disabledColor), label: (object/get @e label) })))
+            (edges (array/map ?links (fn l { from: (object/get @l from), to: (object/get @l to), color: (if (and (array/includes @entity.enabledIds (object/get @l from)) (array/includes @entity.enabledIds (object/get @l to))) @config.enabledEdgeColor @config.disabledEdgeColor) })))
           )
           (do
             (set @entity.total @total)
@@ -164,7 +174,52 @@ orbital LearnSandboxOrbital {
                     { type: badge, variant: (if @entity.holds "primary" "warning"), label: (if @entity.holds "Holds" "Does not hold") }
                   ] },
                 { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate, keyMap: { KeyR: RESET } },
-                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @config.elements (fn e { type: button, action: TOGGLE, actionPayload: { elementId: (object/get @e id) }, label: (if (array/includes @entity.enabledIds (object/get @e id)) (object/get @e label) (str/concat (object/get @e label) " — off")), variant: (if (array/includes @entity.enabledIds (object/get @e id)) "secondary" "ghost"), aria-pressed: (if (array/includes @entity.enabledIds (object/get @e id)) "true" "false") })) },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @entity.elements (fn e { type: button, action: TOGGLE, actionPayload: { elementId: (object/get @e id) }, label: (if (array/includes @entity.enabledIds (object/get @e id)) (object/get @e label) (str/concat (object/get @e label) " — off")), variant: (if (array/includes @entity.enabledIds (object/get @e id)) "secondary" "ghost"), aria-pressed: (if (array/includes @entity.enabledIds (object/get @e id)) "true" "false") })) },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Total " @entity.total " of " @config.threshold) }
+                  ] },
+                { type: typography, variant: body, content: @entity.readout }
+              ] }
+          ]
+        })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (render-ui main null)
+
+      TOGGLE -> idle when (== @entity.active true)
+        (set @entity.enabledIds (if (array/includes @entity.enabledIds ?elementId) (array/filter @entity.enabledIds (fn eid (!= @eid ?elementId))) (array/concat @entity.enabledIds [?elementId])))
+        (let (
+            (activeElements (array/filter @entity.elements (fn e (array/includes @entity.enabledIds (object/get @e id)))))
+            (total (array/sum (array/map @activeElements (fn e (object/get @e weight)))))
+            (holds (>= @total @config.threshold))
+            (readout (str/concat @config.outcomeLabel ": total " @total " of " @config.threshold " needed. " (if @holds "Holds." "Does not hold.")))
+            (nodes (array/map @entity.elements (fn e { id: (object/get @e id), x: (object/get @e x), y: (object/get @e y), radius: @config.nodeRadius, color: (if (array/includes @entity.enabledIds (object/get @e id)) @config.enabledColor @config.disabledColor), label: (object/get @e label) })))
+            (edges (array/map @entity.links (fn l { from: (object/get @l from), to: (object/get @l to), color: (if (and (array/includes @entity.enabledIds (object/get @l from)) (array/includes @entity.enabledIds (object/get @l to))) @config.enabledEdgeColor @config.disabledEdgeColor) })))
+          )
+          (do
+            (set @entity.total @total)
+            (set @entity.holds @holds)
+            (set @entity.readout @readout)
+            (set @entity.nodes @nodes)
+            (set @entity.edges @edges)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, variant: (if @entity.holds "primary" "warning"), label: (if @entity.holds "Holds" "Does not hold") }
+                  ] },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate, keyMap: { KeyR: RESET } },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @entity.elements (fn e { type: button, action: TOGGLE, actionPayload: { elementId: (object/get @e id) }, label: (if (array/includes @entity.enabledIds (object/get @e id)) (object/get @e label) (str/concat (object/get @e label) " — off")), variant: (if (array/includes @entity.enabledIds (object/get @e id)) "secondary" "ghost"), aria-pressed: (if (array/includes @entity.enabledIds (object/get @e id)) "true" "false") })) },
                 { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
                     { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
                     { type: typography, variant: caption, color: muted, content: (str/concat "Total " @entity.total " of " @config.threshold) }
@@ -176,14 +231,14 @@ orbital LearnSandboxOrbital {
         (emit SYSTEM_CHANGED { total: @entity.total, holds: @entity.holds })
 
       RESET -> idle when (== @entity.active true)
-        (set @entity.enabledIds (array/map (array/filter @config.elements (fn e (== (object/get @e enabled true) true))) (fn e (object/get @e id))))
+        (set @entity.enabledIds (array/map (array/filter @entity.elements (fn e (== (object/get @e enabled true) true))) (fn e (object/get @e id))))
         (let (
-            (activeElements (array/filter @config.elements (fn e (array/includes @entity.enabledIds (object/get @e id)))))
+            (activeElements (array/filter @entity.elements (fn e (array/includes @entity.enabledIds (object/get @e id)))))
             (total (array/sum (array/map @activeElements (fn e (object/get @e weight)))))
             (holds (>= @total @config.threshold))
             (readout (str/concat @config.outcomeLabel ": total " @total " of " @config.threshold " needed. " (if @holds "Holds." "Does not hold.")))
-            (nodes (array/map @config.elements (fn e { id: (object/get @e id), x: (object/get @e x), y: (object/get @e y), radius: @config.nodeRadius, color: (if (array/includes @entity.enabledIds (object/get @e id)) @config.enabledColor @config.disabledColor), label: (object/get @e label) })))
-            (edges (array/map @config.links (fn l { from: (object/get @l from), to: (object/get @l to), color: (if (and (array/includes @entity.enabledIds (object/get @l from)) (array/includes @entity.enabledIds (object/get @l to))) @config.enabledEdgeColor @config.disabledEdgeColor) })))
+            (nodes (array/map @entity.elements (fn e { id: (object/get @e id), x: (object/get @e x), y: (object/get @e y), radius: @config.nodeRadius, color: (if (array/includes @entity.enabledIds (object/get @e id)) @config.enabledColor @config.disabledColor), label: (object/get @e label) })))
+            (edges (array/map @entity.links (fn l { from: (object/get @l from), to: (object/get @l to), color: (if (and (array/includes @entity.enabledIds (object/get @l from)) (array/includes @entity.enabledIds (object/get @l to))) @config.enabledEdgeColor @config.disabledEdgeColor) })))
           )
           (do
             (set @entity.total @total)
@@ -206,7 +261,7 @@ orbital LearnSandboxOrbital {
                     { type: badge, variant: (if @entity.holds "primary" "warning"), label: (if @entity.holds "Holds" "Does not hold") }
                   ] },
                 { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate, keyMap: { KeyR: RESET } },
-                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @config.elements (fn e { type: button, action: TOGGLE, actionPayload: { elementId: (object/get @e id) }, label: (if (array/includes @entity.enabledIds (object/get @e id)) (object/get @e label) (str/concat (object/get @e label) " — off")), variant: (if (array/includes @entity.enabledIds (object/get @e id)) "secondary" "ghost"), aria-pressed: (if (array/includes @entity.enabledIds (object/get @e id)) "true" "false") })) },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: (array/map @entity.elements (fn e { type: button, action: TOGGLE, actionPayload: { elementId: (object/get @e id) }, label: (if (array/includes @entity.enabledIds (object/get @e id)) (object/get @e label) (str/concat (object/get @e label) " — off")), variant: (if (array/includes @entity.enabledIds (object/get @e id)) "secondary" "ghost"), aria-pressed: (if (array/includes @entity.enabledIds (object/get @e id)) "true" "false") })) },
                 { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
                     { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
                     { type: typography, variant: caption, color: muted, content: (str/concat "Total " @entity.total " of " @config.threshold) }
@@ -223,6 +278,13 @@ orbital LearnSandboxOrbital {
         mode : string
       }
         @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      ROSTER_LOADED {
+        mode : string!
+        elements : [LearnSandboxElement]!
+        links : [LearnSandboxLink]!
+      }
+        @description "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and elements and links are the element roster and its relationships; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides."
         @tier "domain"
       TOGGLE {
         elementId : string
@@ -253,7 +315,7 @@ orbital LearnSandboxOrbital {
     config {
       matchMode : string = ""
         @label "Match Mode"
-        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT, or on ROSTER_LOADED when rosterSource is event."
         @tier "presentation"
       title : string = "System Sandbox"
         @label "Title"
@@ -282,6 +344,10 @@ orbital LearnSandboxOrbital {
         @label "Animate"
         @description "Enable continuous redraw loop."
         @tier "presentation"
+      rosterSource : "config" | "event" = "config"
+        @label "Roster Source"
+        @description "Where the roster comes from: config reads elements and links knobs at INIT; event waits for ROSTER_LOADED and takes the roster from its payload."
+        @tier "domain"
       elements : [LearnSandboxElement] = [
         { id: "a", label: "Module A", weight: 15, enabled: true, x: 100, y: 80 },
         { id: "b", label: "Module B", weight: 20, enabled: true, x: 300, y: 60 },

@@ -33,6 +33,8 @@ orbital HotspotOrbital {
     id : string!
     active : boolean = false
     title : string
+    shapes : [HotspotShape]
+    prompts : [HotspotPrompt]
     promptIndex : number = 0
     totalPrompts : number = 0
     score : number = 0
@@ -51,17 +53,19 @@ orbital HotspotOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle when (== @config.matchMode "")
+      INIT -> idle when (and (== @config.matchMode "") (== @config.rosterSource "config"))
+        (set @entity.shapes @config.shapes)
+        (set @entity.prompts @config.prompts)
         (let (
-            (first (array/nth @config.prompts 0))
-            (circles (array/map @config.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), tone: (object/get @s color "series-1"), fillTone: (object/get @s color "series-1"), fillStyle: "solid" })))
-            (labels (array/map @config.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), textSize: "xs", align: "center", tone: "label" })))
+            (first (array/nth @entity.prompts 0))
+            (circles (array/map @entity.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), tone: (object/get @s color "series-1"), fillTone: (object/get @s color "series-1"), fillStyle: "solid" })))
+            (labels (array/map @entity.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), textSize: "xs", align: "center", tone: "label" })))
           )
           (do
             (set @entity.active true)
             (set @entity.title @config.title)
             (set @entity.promptIndex 0)
-            (set @entity.totalPrompts (array/len @config.prompts))
+            (set @entity.totalPrompts (array/len @entity.prompts))
             (set @entity.score 0)
             (set @entity.tries 0)
             (set @entity.found false)
@@ -106,17 +110,19 @@ orbital HotspotOrbital {
         (set @entity.active false)
         (render-ui main null)
 
-      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+      MODE_SELECTED -> idle when (and (== ?mode @config.matchMode) (== @config.rosterSource "config"))
+        (set @entity.shapes @config.shapes)
+        (set @entity.prompts @config.prompts)
         (let (
-            (first (array/nth @config.prompts 0))
-            (circles (array/map @config.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), tone: (object/get @s color "series-1"), fillTone: (object/get @s color "series-1"), fillStyle: "solid" })))
-            (labels (array/map @config.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), textSize: "xs", align: "center", tone: "label" })))
+            (first (array/nth @entity.prompts 0))
+            (circles (array/map @entity.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), tone: (object/get @s color "series-1"), fillTone: (object/get @s color "series-1"), fillStyle: "solid" })))
+            (labels (array/map @entity.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), textSize: "xs", align: "center", tone: "label" })))
           )
           (do
             (set @entity.active true)
             (set @entity.title @config.title)
             (set @entity.promptIndex 0)
-            (set @entity.totalPrompts (array/len @config.prompts))
+            (set @entity.totalPrompts (array/len @entity.prompts))
             (set @entity.score 0)
             (set @entity.tries 0)
             (set @entity.found false)
@@ -157,15 +163,72 @@ orbital HotspotOrbital {
           ]
         })
 
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (and (== ?mode @config.matchMode) (and (> (array/len ?shapes) 0) (> (array/len ?prompts) 0))))
+        (set @entity.shapes ?shapes)
+        (set @entity.prompts ?prompts)
+        (let (
+            (first (array/nth @entity.prompts 0))
+            (circles (array/map @entity.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), tone: (object/get @s color "series-1"), fillTone: (object/get @s color "series-1"), fillStyle: "solid" })))
+            (labels (array/map @entity.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), textSize: "xs", align: "center", tone: "label" })))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.promptIndex 0)
+            (set @entity.totalPrompts (array/len @entity.prompts))
+            (set @entity.score 0)
+            (set @entity.tries 0)
+            (set @entity.found false)
+            (set @entity.done false)
+            (set @entity.promptText (object/get @first prompt))
+            (set @entity.targetId (object/get @first targetId))
+            (set @entity.explanation (object/get @first explanation ""))
+            (set @entity.feedback "")
+            (set @entity.canvasShapes (array/concat @circles @labels))
+            (set @entity.view [
+              { type: card, variant: bordered, padding: md, children: [
+                  { type: typography, variant: body, content: @entity.promptText }
+                ] },
+              { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.canvasShapes, interactive: true, animate: false, onShapeClick: "TAP_SHAPE", keyMap: { Space: NEXT, ArrowRight: NEXT, KeyR: RETRY } },
+              { type: stack, direction: horizontal, gap: xs, children: [
+                  { type: typography, variant: body, content: @entity.feedback }
+                ] },
+              { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                  { type: button, action: NEXT, label: @config.nextLabel, icon: "chevron-right", variant: primary, disabled: (if @entity.found false true) },
+                  { type: typography, variant: caption, color: muted, content: (str/concat "First-try " @entity.score " of " @entity.totalPrompts) }
+                ] }
+            ])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.done "Round complete" (if @entity.found "Correct" (if (> @entity.tries 0) "Try again" (str/concat "Score " @entity.score " / " @entity.totalPrompts)))), variant: (if @entity.done "primary" (if @entity.found "success" (if (> @entity.tries 0) "error" "neutral"))) }
+                  ] },
+                { type: progress-bar, value: (+ @entity.promptIndex 1), max: @entity.totalPrompts, showPercentage: false, label: (str/concat "Prompt " (str/concat "" (+ @entity.promptIndex 1)) " of " (str/concat "" @entity.totalPrompts)) },
+                { type: stack, direction: vertical, gap: md, children: @entity.view }
+              ] }
+          ]
+        })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (render-ui main null)
+
       TAP_SHAPE -> idle when (and (== @entity.active true) (and (== @entity.found false) (== @entity.done false)))
         (let (
             (tappedId (str/replace (object/get ?payload id "") "label-" ""))
             (hit (== @tappedId @entity.targetId))
-            (tapped (array/find @config.shapes (fn s (== (object/get @s id) @tappedId))))
+            (tapped (array/find @entity.shapes (fn s (== (object/get @s id) @tappedId))))
             (tappedLabel (object/get @tapped label ""))
-            (target (array/find @config.shapes (fn s (== (object/get @s id) @entity.targetId))))
-            (circles (array/map @config.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), tone: (object/get @s color "series-1"), fillTone: (object/get @s color "series-1"), fillStyle: "solid" })))
-            (labels (array/map @config.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), textSize: "xs", align: "center", tone: "label" })))
+            (target (array/find @entity.shapes (fn s (== (object/get @s id) @entity.targetId))))
+            (circles (array/map @entity.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), tone: (object/get @s color "series-1"), fillTone: (object/get @s color "series-1"), fillStyle: "solid" })))
+            (labels (array/map @entity.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), textSize: "xs", align: "center", tone: "label" })))
             (ring (if @hit
               [ { type: circle, id: "hit-ring", x: (object/get @target x), y: (object/get @target y), radius: (+ (object/get @target radius 22) 6), tone: @config.hitColor, fillStyle: "outline", stroke: "bold" } ]
               []))
@@ -229,13 +292,13 @@ orbital HotspotOrbital {
         (emit TAP_JUDGED { correct: @entity.found, promptIndex: @entity.promptIndex, tries: @entity.tries })
 
       NEXT -> idle when (and (== @entity.active true) (and (== @entity.found true) (== @entity.done false)))
-        (if (>= (+ @entity.promptIndex 1) (array/len @config.prompts)) (emit LEARN_ROUND_COMPLETE { score: @entity.score, total: (array/len @config.prompts) }) null)
+        (if (>= (+ @entity.promptIndex 1) (array/len @entity.prompts)) (emit LEARN_ROUND_COMPLETE { score: @entity.score, total: (array/len @entity.prompts) }) null)
         (let (
             (nextIndex (+ @entity.promptIndex 1))
-            (finished (>= @nextIndex (array/len @config.prompts)))
-            (next (array/nth @config.prompts (math/min @nextIndex (- (array/len @config.prompts) 1))))
-            (circles (array/map @config.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), tone: (object/get @s color "series-1"), fillTone: (object/get @s color "series-1"), fillStyle: "solid" })))
-            (labels (array/map @config.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), textSize: "xs", align: "center", tone: "label" })))
+            (finished (>= @nextIndex (array/len @entity.prompts)))
+            (next (array/nth @entity.prompts (math/min @nextIndex (- (array/len @entity.prompts) 1))))
+            (circles (array/map @entity.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), tone: (object/get @s color "series-1"), fillTone: (object/get @s color "series-1"), fillStyle: "solid" })))
+            (labels (array/map @entity.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), textSize: "xs", align: "center", tone: "label" })))
           )
           (do
             (set @entity.promptIndex (if @finished @entity.promptIndex @nextIndex))
@@ -288,9 +351,9 @@ orbital HotspotOrbital {
 
       RETRY -> idle when (and (== @entity.active true) (== @entity.done true))
         (let (
-            (first (array/nth @config.prompts 0))
-            (circles (array/map @config.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), tone: (object/get @s color "series-1"), fillTone: (object/get @s color "series-1"), fillStyle: "solid" })))
-            (labels (array/map @config.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), textSize: "xs", align: "center", tone: "label" })))
+            (first (array/nth @entity.prompts 0))
+            (circles (array/map @entity.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), tone: (object/get @s color "series-1"), fillTone: (object/get @s color "series-1"), fillStyle: "solid" })))
+            (labels (array/map @entity.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), textSize: "xs", align: "center", tone: "label" })))
           )
           (do
             (set @entity.promptIndex 0)
@@ -341,6 +404,13 @@ orbital HotspotOrbital {
         mode : string
       }
         @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      ROSTER_LOADED {
+        mode : string!
+        shapes : [HotspotShape]!
+        prompts : [HotspotPrompt]!
+      }
+        @description "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone), shapes is the hotspot roster and prompts the prompt list; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides."
         @tier "domain"
       TAP_SHAPE {
         payload : { id : string  type : string  index : number! }
@@ -400,6 +470,10 @@ orbital HotspotOrbital {
         @label "Concept"
         @description "One line under the title saying what is being identified (keep it under ~65 characters). Empty shows no line."
         @tier "presentation"
+      rosterSource : "config" | "event" = "config"
+        @label "Roster Source"
+        @description "Where the shapes and prompts roster comes from: config reads the shapes and prompts knobs at INIT; event waits for ROSTER_LOADED and takes the roster from its payload."
+        @tier "domain"
       shapes : [HotspotShape] = [
         { id: "nucleus", label: "Nucleus", x: 300, y: 170, radius: 34, color: "series-1" },
         { id: "membrane", label: "Membrane", x: 130, y: 120, radius: 26, color: "series-2" },

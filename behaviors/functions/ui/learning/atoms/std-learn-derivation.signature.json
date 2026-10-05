@@ -14,6 +14,16 @@
             "required": false
           },
           {
+            "name": "premises",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "candidates",
+            "type": "array",
+            "required": false
+          },
+          {
             "name": "title",
             "type": "string",
             "required": false
@@ -88,6 +98,12 @@
             "name": "MODE_SELECTED",
             "direction": "listen",
             "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "ROSTER_LOADED",
+            "direction": "listen",
+            "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone), premises are the starting lines and candidates the offered derivation steps; a matching instrument re-initialises from them exactly as INIT does from config, any other instrument hides.",
             "tier": "domain"
           },
           {
@@ -400,6 +416,18 @@
             "tier": "presentation"
           },
           {
+            "key": "rosterSource",
+            "type": "string",
+            "default": "config",
+            "label": "Roster Source",
+            "description": "Where the roster comes from: config reads the premises/candidates knob(s) at INIT; event waits for ROSTER_LOADED and takes the roster from its payload.",
+            "tier": "domain",
+            "enumValues": [
+              "config",
+              "event"
+            ]
+          },
+          {
             "key": "summary",
             "type": "string",
             "default": "",
@@ -431,6 +459,7 @@
           "INIT",
           "MODE_SELECTED",
           "RESET",
+          "ROSTER_LOADED",
           "TOGGLE_RUN"
         ],
         "definerKnobs": [],
@@ -439,11 +468,13 @@
           "requires": [],
           "provides": [
             "active",
+            "candidates",
             "elapsedMs",
             "feedback",
             "goalReached",
             "lines",
             "narration",
+            "premises",
             "renderChildren",
             "running",
             "title"
@@ -475,6 +506,10 @@
           {
             "kind": "set",
             "resource": "@entity.active"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.candidates"
           },
           {
             "kind": "set",
@@ -520,6 +555,10 @@
             "kind": "set",
             "resource": "@entity.narration",
             "site": "tick"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.premises"
           },
           {
             "kind": "set",

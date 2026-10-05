@@ -19,6 +19,11 @@
             "required": false
           },
           {
+            "name": "frames",
+            "type": "array",
+            "required": false
+          },
+          {
             "name": "frameIndex",
             "type": "number",
             "required": false
@@ -93,6 +98,12 @@
             "name": "MODE_SELECTED",
             "direction": "listen",
             "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "ROSTER_LOADED",
+            "direction": "listen",
+            "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and frames is the frame roster; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
             "tier": "domain"
           },
           {
@@ -310,6 +321,18 @@
             "tier": "presentation"
           },
           {
+            "key": "rosterSource",
+            "type": "string",
+            "default": "config",
+            "label": "Roster Source",
+            "description": "Where the frame roster comes from: config reads the frames knob at INIT; event waits for ROSTER_LOADED and takes the roster from its payload.",
+            "tier": "domain",
+            "enumValues": [
+              "config",
+              "event"
+            ]
+          },
+          {
             "key": "summary",
             "type": "string",
             "default": "",
@@ -350,6 +373,7 @@
           "PAUSE",
           "PLAY",
           "RESTART",
+          "ROSTER_LOADED",
           "SPEED_SET",
           "TOGGLE_RUN"
         ],
@@ -364,6 +388,7 @@
             "frameCaption",
             "frameIndex",
             "frameLabel",
+            "frames",
             "running",
             "speed",
             "statusNote",
@@ -438,6 +463,10 @@
             "kind": "set",
             "resource": "@entity.frameLabel",
             "site": "tick"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.frames"
           },
           {
             "kind": "set",

@@ -19,6 +19,11 @@
             "required": false
           },
           {
+            "name": "values",
+            "type": "array",
+            "required": false
+          },
+          {
             "name": "nodes",
             "type": "array",
             "required": false
@@ -148,6 +153,12 @@
             "tier": "domain"
           },
           {
+            "name": "ROSTER_LOADED",
+            "direction": "listen",
+            "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and values is the insertion sequence; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
+            "tier": "domain"
+          },
+          {
             "name": "INSERT_VALUE",
             "direction": "listen",
             "description": "Insert the next config-declared value: descends one comparison step per press from the root, coloring the descent cursor and comparison trail, until it attaches as a leaf. Pressing again while a descent is in flight continues that same descent.",
@@ -227,6 +238,18 @@
             "tier": "presentation"
           },
           {
+            "key": "rosterSource",
+            "type": "string",
+            "default": "config",
+            "label": "Roster Source",
+            "description": "Where the insertion values come from: config reads the values knob at INIT; event waits for ROSTER_LOADED and takes them from its payload.",
+            "tier": "domain",
+            "enumValues": [
+              "config",
+              "event"
+            ]
+          },
+          {
             "key": "showComparisons",
             "type": "boolean",
             "default": true,
@@ -297,6 +320,7 @@
           "INSERT_VALUE",
           "MODE_SELECTED",
           "RESET",
+          "ROSTER_LOADED",
           "RUN_TRAVERSAL",
           "TOGGLE_RUN"
         ],
@@ -326,7 +350,8 @@
             "title",
             "trail",
             "traversalOrder",
-            "traversing"
+            "traversing",
+            "values"
           ]
         },
         "effectRow": [
@@ -470,6 +495,10 @@
             "kind": "set",
             "resource": "@entity.traversing",
             "site": "tick"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.values"
           },
           {
             "kind": "ticks",

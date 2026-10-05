@@ -39,6 +39,8 @@ export type StdUiModuleCardEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiModuleCardConfig {
+  /** Default: `{"item":{}}` */
+  annotations?: Record<string, TraitConfig>;
   ariaBusy?: boolean;
   ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
   ariaDescribedby?: string;

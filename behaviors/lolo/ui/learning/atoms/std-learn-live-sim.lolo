@@ -16,6 +16,7 @@ orbital LearnLiveSimOrbital {
     active : boolean = false
     title : string
     bodies : [LiveSimBody]
+    loadedBodies : [LiveSimBody]
     running : boolean = false
     gravity : number = 0
     damping : number = 1
@@ -27,9 +28,10 @@ orbital LearnLiveSimOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle when (== @config.matchMode "")
+      INIT -> idle when (and (== @config.matchMode "") (== @config.rosterSource "config"))
         (set @entity.active true)
         (set @entity.title @config.title)
+        (set @entity.loadedBodies @config.bodies)
         (set @entity.bodies @config.bodies)
         (set @entity.running @config.running)
         (set @entity.gravity @config.gravity)
@@ -74,9 +76,10 @@ orbital LearnLiveSimOrbital {
         (set @entity.running false)
         (render-ui main null)
 
-      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+      MODE_SELECTED -> idle when (and (== ?mode @config.matchMode) (== @config.rosterSource "config"))
         (set @entity.active true)
         (set @entity.title @config.title)
+        (set @entity.loadedBodies @config.bodies)
         (set @entity.bodies @config.bodies)
         (set @entity.running @config.running)
         (set @entity.gravity @config.gravity)
@@ -115,6 +118,54 @@ orbital LearnLiveSimOrbital {
               ] }
           ]
         })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (and (== ?mode @config.matchMode) (> (array/len ?bodies) 0)))
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.loadedBodies ?bodies)
+        (set @entity.bodies ?bodies)
+        (set @entity.running @config.running)
+        (set @entity.gravity @config.gravity)
+        (set @entity.damping @config.damping)
+        (set @entity.tickCount 0)
+        (set @entity.sampleSpeed 0)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Tick " @entity.tickCount) }
+                  ] },
+                { type: physics-canvas, keyMap: { Space: TOGGLE_RUN, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bodies: @entity.bodies, showVelocity: @config.showVelocity, showForces: false, velocityScale: @config.velocityScale },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat "Gravity: " (math/round @entity.gravity 2)) },
+                        { type: range-slider, min: -1, max: 1.5, step: 0.05, value: @entity.gravity, showTooltip: true, action: "SET_GRAVITY" }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat "Damping: " (math/round @entity.damping 3)) },
+                        { type: range-slider, min: 0.9, max: 1, step: 0.005, value: @entity.damping, showTooltip: true, action: "SET_DAMPING" }
+                      ] }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "Sample body speed " (math/round @entity.sampleSpeed 2)) }
+              ] }
+          ]
+        })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (set @entity.running false)
+        (render-ui main null)
 
       TOGGLE_RUN -> idle when (== @entity.active true)
         (set @entity.running (not @entity.running))
@@ -225,7 +276,7 @@ orbital LearnLiveSimOrbital {
         (emit RUN_TOGGLED { running: @entity.running })
 
       RESET -> idle when (== @entity.active true)
-        (set @entity.bodies @config.bodies)
+        (set @entity.bodies @entity.loadedBodies)
         (set @entity.running false)
         (set @entity.gravity @config.gravity)
         (set @entity.damping @config.damping)
@@ -404,6 +455,12 @@ orbital LearnLiveSimOrbital {
       }
         @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
         @tier "domain"
+      ROSTER_LOADED {
+        mode : string!
+        bodies : [LiveSimBody]!
+      }
+        @description "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and bodies is the initial body list; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides."
+        @tier "domain"
       TOGGLE_RUN {
       }
         @description "Learner pressed the Play/Pause toggle — flips the running flag."
@@ -450,8 +507,12 @@ orbital LearnLiveSimOrbital {
     config {
       matchMode : string = ""
         @label "Match Mode"
-        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT (or on ROSTER_LOADED when rosterSource is event)."
         @tier "presentation"
+      rosterSource : "config" | "event" = "config"
+        @label "Roster Source"
+        @description "Where the body roster comes from: config reads the bodies knob at INIT; event waits for ROSTER_LOADED and takes the bodies from its payload."
+        @tier "domain"
       title : string = "Live Sim"
         @label "Title"
         @description "The instrument's name, the header's one hero."
@@ -502,7 +563,7 @@ orbital LearnLiveSimOrbital {
         { id: "ball-c", x: 420, y: 40, radius: 11, color: "series-3", vx: 2, vy: -1 }
       ]
         @label "Bodies"
-        @description "Initial bodies; each carries position (x,y), radius, color, and velocity (vx,vy). Restored on Reset."
+        @description "Initial bodies; each carries position (x,y), radius, color, and velocity (vx,vy). Restored on Reset. Used when rosterSource is config."
         @tier "presentation"
     }
   }

@@ -5,6 +5,11 @@ type AgentChatMessage = {
   role : "user" | "assistant"
   content : string!
 }
+type AgentTool = {
+  event : event
+  read : string
+  scope : "declared"
+}
 type AgentMemoryRow = {
   id : string!
   content : string!
@@ -56,7 +61,9 @@ orbital AgentMemoryOrbital {
           type: alert
           variant: error
         })
-      RECALL -> recalling
+      RECALL -> ready when ?ephemeral
+        (emit RECALLED { messages: ?messages, context: "", instructions: (str/default ?instructions ""), tools: (object/get ? tools []), ephemeral: true })
+      RECALL -> recalling when (not ?ephemeral)
         (set @entity.pendingMessages ?messages)
         (set @entity.pendingQuery (object/get (array/last ?messages) content))
         (call-service llm embed {
@@ -64,7 +71,8 @@ orbital AgentMemoryOrbital {
         } {
           emit: { failure: MemoryEmbedFailed, success: MemoryEmbedded }
         })
-      REMEMBER -> remembering
+      REMEMBER -> ready when ?ephemeral
+      REMEMBER -> remembering when (not ?ephemeral)
         (set @entity.pendingContent (str/concat "Asked: " @entity.pendingQuery " | Answered: " ?reply))
         (call-service llm embed {
           texts: [(str/concat "Asked: " @entity.pendingQuery " | Answered: " ?reply)]
@@ -122,8 +130,11 @@ orbital AgentMemoryOrbital {
       RECALLED -> external {
         messages : [AgentChatMessage]!
         context : string
+        instructions : string
+        tools : [AgentTool]
+        ephemeral : boolean
       }
-        @description "The conversation, with what the assistant remembers that is closest to its last turn."
+        @description "The conversation, with what the assistant remembers that is closest to its last turn. An ephemeral conversation is never recalled for: empty `context`, its own `instructions`, `tools` and `ephemeral` flag pass through."
         @synonyms "recalled, remembered, context ready"
         @tier "domain"
       ASSISTANT_MEMORIES_LOADED -> external {
@@ -171,12 +182,16 @@ orbital AgentMemoryOrbital {
         @description "List what the assistant remembers for this person."
       RECALL {
         messages : [AgentChatMessage]!
+        instructions : string
+        tools : [AgentTool]
+        ephemeral : boolean
       }
-        @description "Recall what is relevant to this conversation's last turn."
+        @description "Recall what is relevant to this conversation's last turn. An ephemeral conversation skips the recall."
       REMEMBER {
         reply : string!
+        ephemeral : boolean
       }
-        @description "Remember the exchange just answered."
+        @description "Remember the exchange just answered. An ephemeral conversation is never remembered."
     }
   }
 

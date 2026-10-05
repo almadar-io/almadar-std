@@ -91,6 +91,15 @@
         "parent": "trt_01M055GQ1E7K3CRWHDCC78SAD0",
         "renames": []
       },
+      "evt_01M459W74B3EZ019XMHP1C7ZZ3": {
+        "bakedName": "ROSTER_LOADED",
+        "curName": "ROSTER_LOADED",
+        "id": "evt_01M459W74B3EZ019XMHP1C7ZZ3",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M055GQ1E7K3CRWHDCC78SAD0",
+        "renames": []
+      },
       "orb_01M055GQ1EMETS8ZCD55EFG32J": {
         "bakedName": "LearnArrangementOrbital",
         "curName": "LearnArrangementOrbital",
@@ -132,6 +141,35 @@
             "default": false,
             "name": "active",
             "type": "boolean"
+          },
+          {
+            "items": {
+              "properties": {
+                "correctPosition": {
+                  "name": "correctPosition",
+                  "required": true,
+                  "type": "number"
+                },
+                "hint": {
+                  "name": "hint",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "items",
+            "type": "array"
           },
           {
             "name": "title",
@@ -512,6 +550,17 @@
               "tier": "presentation",
               "type": "string"
             },
+            "rosterSource": {
+              "default": "config",
+              "description": "Where the roster comes from: config reads the items knob(s) at INIT; event waits for ROSTER_LOADED and takes the roster from its payload.",
+              "label": "Roster Source",
+              "tier": "domain",
+              "type": "string",
+              "values": [
+                "config",
+                "event"
+              ]
+            },
             "slotBorderColor": {
               "default": "ink",
               "label": "Slot Border Color",
@@ -620,6 +669,10 @@
             },
             {
               "kind": "set",
+              "resource": "@entity.items"
+            },
+            {
+              "kind": "set",
               "resource": "@entity.placedIds"
             },
             {
@@ -690,6 +743,7 @@
               "active",
               "checked",
               "correctCount",
+              "items",
               "placedIds",
               "slotShapes",
               "title",
@@ -723,6 +777,46 @@
                   {
                     "name": "mode",
                     "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and items is the roster to order; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides.",
+                "id": "evt_01M459W74B3EZ019XMHP1C7ZZ3",
+                "key": "ROSTER_LOADED",
+                "name": "Roster Loaded",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "items",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "correctPosition",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "hint",
+                        "type": "string"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
                   }
                 ],
                 "tier": "domain"
@@ -817,6 +911,11 @@
                 "effects": [
                   [
                     "set",
+                    "@entity.items",
+                    "@config.items"
+                  ],
+                  [
+                    "set",
                     "@entity.active",
                     true
                   ],
@@ -830,7 +929,7 @@
                     "@entity.totalItems",
                     [
                       "array/len",
-                      "@config.items"
+                      "@entity.items"
                     ]
                   ],
                   [
@@ -911,7 +1010,7 @@
                                       "@filled",
                                       [
                                         "array/find",
-                                        "@config.items",
+                                        "@entity.items",
                                         [
                                           "fn",
                                           "it",
@@ -1186,7 +1285,7 @@
                                 "array/map",
                                 [
                                   "array/filter",
-                                  "@config.items",
+                                  "@entity.items",
                                   [
                                     "fn",
                                     "it",
@@ -1356,9 +1455,17 @@
                 "eventId": "evt_01M055GQ1E4CVQN2ZCCPA3NH1V",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@config.matchMode",
-                  ""
+                  "and",
+                  [
+                    "==",
+                    "@config.matchMode",
+                    ""
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1403,6 +1510,11 @@
                 "effects": [
                   [
                     "set",
+                    "@entity.items",
+                    "@config.items"
+                  ],
+                  [
+                    "set",
                     "@entity.active",
                     true
                   ],
@@ -1416,7 +1528,7 @@
                     "@entity.totalItems",
                     [
                       "array/len",
-                      "@config.items"
+                      "@entity.items"
                     ]
                   ],
                   [
@@ -1497,7 +1609,7 @@
                                       "@filled",
                                       [
                                         "array/find",
-                                        "@config.items",
+                                        "@entity.items",
                                         [
                                           "fn",
                                           "it",
@@ -1772,7 +1884,7 @@
                                 "array/map",
                                 [
                                   "array/filter",
-                                  "@config.items",
+                                  "@entity.items",
                                   [
                                     "fn",
                                     "it",
@@ -1942,9 +2054,17 @@
                 "eventId": "evt_01M055GQ1FV25EAX7AXNEYCY1E",
                 "from": "idle",
                 "guard": [
-                  "==",
-                  "@payload.mode",
-                  "@config.matchMode"
+                  "and",
+                  [
+                    "==",
+                    "@payload.mode",
+                    "@config.matchMode"
+                  ],
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "config"
+                  ]
                 ],
                 "to": "idle"
               },
@@ -1952,12 +2072,31 @@
                 "effects": [
                   [
                     "set",
-                    "@entity.placedIds",
+                    "@entity.items",
+                    "@payload.items"
+                  ],
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.totalItems",
                     [
-                      "array/append",
-                      "@entity.placedIds",
-                      "@payload.itemId"
+                      "array/len",
+                      "@entity.items"
                     ]
+                  ],
+                  [
+                    "set",
+                    "@entity.placedIds",
+                    []
                   ],
                   [
                     "set",
@@ -2032,7 +2171,7 @@
                                       "@filled",
                                       [
                                         "array/find",
-                                        "@config.items",
+                                        "@entity.items",
                                         [
                                           "fn",
                                           "it",
@@ -2307,7 +2446,595 @@
                                 "array/map",
                                 [
                                   "array/filter",
-                                  "@config.items",
+                                  "@entity.items",
+                                  [
+                                    "fn",
+                                    "it",
+                                    [
+                                      "not",
+                                      [
+                                        "array/includes",
+                                        "@entity.placedIds",
+                                        [
+                                          "object/get",
+                                          "@it",
+                                          "id"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "fn",
+                                  "it",
+                                  {
+                                    "action": "PLACE",
+                                    "actionPayload": {
+                                      "itemId": [
+                                        "object/get",
+                                        "@it",
+                                        "id"
+                                      ]
+                                    },
+                                    "disabled": "@entity.checked",
+                                    "label": [
+                                      "if",
+                                      [
+                                        "!=",
+                                        [
+                                          "object/get",
+                                          "@it",
+                                          "hint",
+                                          ""
+                                        ],
+                                        ""
+                                      ],
+                                      [
+                                        "str/concat",
+                                        [
+                                          "object/get",
+                                          "@it",
+                                          "label"
+                                        ],
+                                        " — ",
+                                        [
+                                          "object/get",
+                                          "@it",
+                                          "hint",
+                                          ""
+                                        ]
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@it",
+                                        "label"
+                                      ]
+                                    ],
+                                    "size": "lg",
+                                    "type": "button",
+                                    "variant": "secondary"
+                                  }
+                                ]
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "CHECK",
+                                  "disabled": [
+                                    "if",
+                                    [
+                                      ">=",
+                                      [
+                                        "array/len",
+                                        "@entity.placedIds"
+                                      ],
+                                      "@entity.totalItems"
+                                    ],
+                                    false,
+                                    true
+                                  ],
+                                  "icon": "check",
+                                  "label": "@config.checkLabel",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "UNDO",
+                                  "disabled": [
+                                    "if",
+                                    [
+                                      ">",
+                                      [
+                                        "array/len",
+                                        "@entity.placedIds"
+                                      ],
+                                      0.0
+                                    ],
+                                    false,
+                                    true
+                                  ],
+                                  "icon": "chevron-left",
+                                  "label": "@config.undoLabel",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RETRY",
+                                  "icon": "rotate-ccw",
+                                  "label": "@config.retryLabel",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": [
+                                    "str/concat",
+                                    "Placed ",
+                                    [
+                                      "array/len",
+                                      "@entity.placedIds"
+                                    ],
+                                    " of ",
+                                    "@entity.totalItems"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "wrap": true
+                            },
+                            {
+                              "content": [
+                                "if",
+                                "@entity.checked",
+                                "@entity.verdict",
+                                "Tap items to build the sequence in order, then press Check."
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459W74B3EZ019XMHP1C7ZZ3",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "and",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ],
+                    [
+                      ">",
+                      [
+                        "array/len",
+                        "@payload.items"
+                      ],
+                      0.0
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    null
+                  ]
+                ],
+                "event": "ROSTER_LOADED",
+                "eventId": "evt_01M459W74B3EZ019XMHP1C7ZZ3",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@config.rosterSource",
+                    "event"
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@payload.mode",
+                      "@config.matchMode"
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.placedIds",
+                    [
+                      "array/append",
+                      "@entity.placedIds",
+                      "@payload.itemId"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.checked",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.correctCount",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.verdict",
+                    ""
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "placedCount",
+                        [
+                          "array/len",
+                          "@entity.placedIds"
+                        ]
+                      ],
+                      [
+                        "slotShapes",
+                        [
+                          "array/flatten",
+                          [
+                            "array/map",
+                            [
+                              "array/range",
+                              "@entity.totalItems"
+                            ],
+                            [
+                              "fn",
+                              "i",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "placedId",
+                                    [
+                                      "if",
+                                      [
+                                        "<",
+                                        "@i",
+                                        "@placedCount"
+                                      ],
+                                      [
+                                        "array/nth",
+                                        "@entity.placedIds",
+                                        "@i"
+                                      ],
+                                      ""
+                                    ]
+                                  ],
+                                  [
+                                    "filled",
+                                    [
+                                      "!=",
+                                      "@placedId",
+                                      ""
+                                    ]
+                                  ],
+                                  [
+                                    "item",
+                                    [
+                                      "if",
+                                      "@filled",
+                                      [
+                                        "array/find",
+                                        "@entity.items",
+                                        [
+                                          "fn",
+                                          "it",
+                                          [
+                                            "==",
+                                            [
+                                              "object/get",
+                                              "@it",
+                                              "id"
+                                            ],
+                                            "@placedId"
+                                          ]
+                                        ]
+                                      ],
+                                      null
+                                    ]
+                                  ],
+                                  [
+                                    "label",
+                                    [
+                                      "if",
+                                      "@filled",
+                                      [
+                                        "object/get",
+                                        "@item",
+                                        "label"
+                                      ],
+                                      ""
+                                    ]
+                                  ],
+                                  [
+                                    "correctForSlot",
+                                    [
+                                      "if",
+                                      "@filled",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "@item",
+                                          "correctPosition"
+                                        ],
+                                        "@i"
+                                      ],
+                                      false
+                                    ]
+                                  ],
+                                  [
+                                    "fillColor",
+                                    [
+                                      "if",
+                                      [
+                                        "not",
+                                        "@filled"
+                                      ],
+                                      "@config.emptySlotColor",
+                                      [
+                                        "if",
+                                        "@entity.checked",
+                                        [
+                                          "if",
+                                          "@correctForSlot",
+                                          "@config.correctColor",
+                                          "@config.incorrectColor"
+                                        ],
+                                        "@config.pendingColor"
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "bx",
+                                    [
+                                      "+",
+                                      "@config.slotLeft",
+                                      [
+                                        "*",
+                                        "@i",
+                                        "@config.slotSpacing"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  {
+                                    "fillStyle": "tint",
+                                    "fillTone": "@fillColor",
+                                    "height": "@config.slotHeight",
+                                    "id": [
+                                      "str/concat",
+                                      "slot-",
+                                      "@i"
+                                    ],
+                                    "tone": "@config.slotBorderColor",
+                                    "type": "rect",
+                                    "width": "@config.slotWidth",
+                                    "x": "@bx",
+                                    "y": "@config.slotY"
+                                  },
+                                  {
+                                    "align": "center",
+                                    "id": [
+                                      "str/concat",
+                                      "slot-label-",
+                                      "@i"
+                                    ],
+                                    "text": [
+                                      "if",
+                                      "@filled",
+                                      "@label",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "+",
+                                          "@i",
+                                          1.0
+                                        ]
+                                      ]
+                                    ],
+                                    "textSize": "@config.slotFontSize",
+                                    "tone": "@config.slotTextColor",
+                                    "type": "text",
+                                    "x": [
+                                      "+",
+                                      "@bx",
+                                      [
+                                        "/",
+                                        "@config.slotWidth",
+                                        2.0
+                                      ]
+                                    ],
+                                    "y": [
+                                      "+",
+                                      "@config.slotY",
+                                      [
+                                        "/",
+                                        "@config.slotHeight",
+                                        2.0
+                                      ],
+                                      5.0
+                                    ]
+                                  }
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "set",
+                      "@entity.slotShapes",
+                      "@slotShapes"
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "align": "start",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@config.summary",
+                                        ""
+                                      ],
+                                      null,
+                                      {
+                                        "color": "muted",
+                                        "content": "@config.summary",
+                                        "type": "typography",
+                                        "variant": "body2"
+                                      }
+                                    ]
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": [
+                                    "if",
+                                    "@entity.checked",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.correctCount",
+                                        "@entity.totalItems"
+                                      ],
+                                      "Correct",
+                                      [
+                                        "str/concat",
+                                        "@entity.correctCount",
+                                        " / ",
+                                        "@entity.totalItems",
+                                        " correct"
+                                      ]
+                                    ],
+                                    [
+                                      "str/concat",
+                                      [
+                                        "array/len",
+                                        "@entity.placedIds"
+                                      ],
+                                      " / ",
+                                      "@entity.totalItems",
+                                      " placed"
+                                    ]
+                                  ],
+                                  "type": "badge",
+                                  "variant": [
+                                    "if",
+                                    "@entity.checked",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@entity.correctCount",
+                                        "@entity.totalItems"
+                                      ],
+                                      "success",
+                                      "error"
+                                    ],
+                                    "neutral"
+                                  ]
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "curves": [],
+                              "gridStep": 1.0,
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "keyMap": {
+                                "Backspace": "UNDO",
+                                "KeyR": "RETRY",
+                                "Space": "CHECK"
+                              },
+                              "points": [],
+                              "shapes": "@entity.slotShapes",
+                              "showAxes": false,
+                              "showGrid": false,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.width",
+                              "xMin": 0.0,
+                              "yMax": "@config.height",
+                              "yMin": 0.0
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                [
+                                  "array/filter",
+                                  "@entity.items",
                                   [
                                     "fn",
                                     "it",
@@ -2585,7 +3312,7 @@
                                       "@filled",
                                       [
                                         "array/find",
-                                        "@config.items",
+                                        "@entity.items",
                                         [
                                           "fn",
                                           "it",
@@ -2860,7 +3587,7 @@
                                 "array/map",
                                 [
                                   "array/filter",
-                                  "@config.items",
+                                  "@entity.items",
                                   [
                                     "fn",
                                     "it",
@@ -3082,7 +3809,7 @@
                                   "item",
                                   [
                                     "array/find",
-                                    "@config.items",
+                                    "@entity.items",
                                     [
                                       "fn",
                                       "it",
@@ -3218,7 +3945,7 @@
                                       "@filled",
                                       [
                                         "array/find",
-                                        "@config.items",
+                                        "@entity.items",
                                         [
                                           "fn",
                                           "it",
@@ -3493,7 +4220,7 @@
                                 "array/map",
                                 [
                                   "array/filter",
-                                  "@config.items",
+                                  "@entity.items",
                                   [
                                     "fn",
                                     "it",
@@ -3785,7 +4512,7 @@
                                       "@filled",
                                       [
                                         "array/find",
-                                        "@config.items",
+                                        "@entity.items",
                                         [
                                           "fn",
                                           "it",
@@ -4060,7 +4787,7 @@
                                 "array/map",
                                 [
                                   "array/filter",
-                                  "@config.items",
+                                  "@entity.items",
                                   [
                                     "fn",
                                     "it",

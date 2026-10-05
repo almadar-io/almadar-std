@@ -2,6 +2,23 @@ app ui-state-machine-view "1.0.0"
 "StateMachineView — UI factory (1:1 with the @almadar/ui state-machine-view pattern)."
 ;; @pattern "state-machine-view"
 orbital StateMachineViewOrbital {
+  type StateMachineViewAnnotations = {
+    states : Map string StateMachineViewAnnotationsStatesValue
+    transitions : Map string StateMachineViewAnnotationsTransitionsValue
+    effects : Map string StateMachineViewAnnotationsEffectsValue
+  }
+  type StateMachineViewAnnotationsStatesValue = {
+    title : string
+    body : string!
+  }
+  type StateMachineViewAnnotationsTransitionsValue = {
+    title : string
+    body : string!
+  }
+  type StateMachineViewAnnotationsEffectsValue = {
+    title : string
+    body : string!
+  }
   type StateMachineViewTrait = {
     name : string!
     linkedEntity : string!
@@ -62,6 +79,7 @@ orbital StateMachineViewOrbital {
           entityFields: @config.entityFields
           direction: @config.direction
           showHeader: @config.showHeader
+          annotations: @config.annotations
           className: @config.className
           trait: @config.traitProp
           isLoading: @config.isLoading
@@ -152,6 +170,10 @@ orbital StateMachineViewOrbital {
       showHeader : boolean = true
         @label "Show Header"
         @description "Show the trait header (name, entity, listens/emits). @default true"
+        @tier "presentation"
+      annotations : StateMachineViewAnnotations = { states: { pending: { title: "Unpaid", body: "Every order starts here." } }, transitions: { PAY: { body: "Only fires when the amount is positive." } }, effects: { persist: { body: "Saves the order." } } }
+        @label "Annotations"
+        @description "Author explanations shown in a popover on hover: a note per state name, per transition event and per effect type."
         @tier "presentation"
       className : string
         @label "Class Name"

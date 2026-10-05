@@ -30,7 +30,7 @@ const ALIAS = 'LearnGridSim';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnGridSimEventKey = 'CELL_TOGGLED' | 'GRID_RESET' | 'GRID_STEPPED' | 'INIT' | 'MODE_SELECTED' | 'PAUSE' | 'RESET' | 'RUN' | 'RUN_TOGGLED' | 'SPEED_SET' | 'STEP' | 'TAP_CELL' | 'TOGGLE_RUN';
+export type StdLearnGridSimEventKey = 'CELL_TOGGLED' | 'GRID_RESET' | 'GRID_STEPPED' | 'INIT' | 'MODE_SELECTED' | 'PAUSE' | 'RESET' | 'ROSTER_LOADED' | 'RUN' | 'RUN_TOGGLED' | 'SPEED_SET' | 'STEP' | 'TAP_CELL' | 'TOGGLE_RUN';
 
 /**
  * Payload shape for the `RUN_TOGGLED` event.
@@ -93,6 +93,8 @@ export interface StdLearnGridSimConfig {
   offColor?: string;
   /** Default: `"series-2"` */
   onColor?: string;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
   /** Default: `12` */
   rows?: number;
   /** Default: `"life"` */

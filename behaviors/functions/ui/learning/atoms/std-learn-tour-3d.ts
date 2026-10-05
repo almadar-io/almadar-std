@@ -30,7 +30,7 @@ const ALIAS = 'LearnTour3d';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnTour3dEventKey = 'INIT' | 'LEARN_ROUND_COMPLETE' | 'MODE_SELECTED' | 'RESET' | 'SELECT_STATION' | 'SYNC_STATIONS' | 'TOUR' | 'TOUR_3D_UPDATED';
+export type StdLearnTour3dEventKey = 'INIT' | 'LEARN_ROUND_COMPLETE' | 'MODE_SELECTED' | 'RESET' | 'ROSTER_LOADED' | 'SELECT_STATION' | 'SYNC_STATIONS' | 'TOUR' | 'TOUR_3D_UPDATED';
 
 /**
  * Payload shape for the `TOUR_3D_UPDATED` event.
@@ -79,6 +79,8 @@ export interface StdLearnTour3dConfig {
   post?: EntityRow;
   /** Default: `"Reset"` */
   resetLabel?: string;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
   /** Default: `[{"caption":"The first stop on the tour — the camera retargets here and the narration reads its caption.","color":"series-1","id":"alpha","name":"Station Alpha","opacity":1,"radius":1,"shape":"sphere","x":0,"y":0,"z":0},{"caption":"The second stop — press Tour again or click a shape to advance the selection.","color":"series-2","id":"beta","name":"Station Beta","opacity":1,"radius":0.8,"shape":"sphere","x":3,"y":1,"z":-1},{"caption":"The final stop — once every station has been visited the tour marks itself complete.","color":"series-3","id":"gamma","name":"Station Gamma","opacity":1,"radius":0.8,"shape":"sphere","x":-3,"y":-1,"z":1}]` */
   stations?: EntityRow[];
   /** Default: `""` */

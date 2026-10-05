@@ -30,7 +30,7 @@ const ALIAS = 'LearnArrangement';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnArrangementEventKey = 'ARRANGEMENT_CHECKED' | 'ARRANGEMENT_RESET' | 'CHECK' | 'INIT' | 'LEARN_ROUND_COMPLETE' | 'MODE_SELECTED' | 'PLACE' | 'RETRY' | 'UNDO';
+export type StdLearnArrangementEventKey = 'ARRANGEMENT_CHECKED' | 'ARRANGEMENT_RESET' | 'CHECK' | 'INIT' | 'LEARN_ROUND_COMPLETE' | 'MODE_SELECTED' | 'PLACE' | 'RETRY' | 'ROSTER_LOADED' | 'UNDO';
 
 /**
  * Payload shape for the `ARRANGEMENT_CHECKED` event.
@@ -77,6 +77,8 @@ export interface StdLearnArrangementConfig {
   pendingColor?: string;
   /** Default: `"Retry"` */
   retryLabel?: string;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
   /** Default: `"ink"` */
   slotBorderColor?: string;
   /** Default: `"sm"` */

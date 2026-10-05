@@ -36,7 +36,7 @@ orbital LearnDiagramOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle when (== @config.matchMode "")
+      INIT -> idle when (and (== @config.matchMode "") (== @config.rosterSource "config"))
         (set @entity.active true)
         (set @entity.title @config.title)
         (set @entity.parts @config.parts)
@@ -81,7 +81,7 @@ orbital LearnDiagramOrbital {
         (set @entity.active false)
         (render-ui main null)
 
-      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+      MODE_SELECTED -> idle when (and (== ?mode @config.matchMode) (== @config.rosterSource "config"))
         (set @entity.active true)
         (set @entity.title @config.title)
         (set @entity.parts @config.parts)
@@ -121,6 +121,51 @@ orbital LearnDiagramOrbital {
               ] }
           ]
         })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (and (== ?mode @config.matchMode) (> (array/len ?parts) 0)))
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.parts ?parts)
+        (set @entity.links ?links)
+        (set @entity.selectedId "")
+        (set @entity.selectedIndex -1)
+        (set @entity.captionText @config.overviewText)
+        (set @entity.readoutText "")
+        (let (
+            (buttons (array/map @entity.parts (fn p { type: button, action: SELECT_PART, actionPayload: { partId: (object/get @p id) }, label: (object/get @p label), variant: (if (== @entity.selectedId (object/get @p id)) "primary" "secondary"), size: sm })))
+            (clearButton { type: button, action: CLEAR_PART, label: @config.clearLabel, variant: ghost, size: sm })
+          )
+          (do
+            (set @entity.partButtons (array/append @buttons @clearButton))
+            (set @entity.captionChildren (if (!= @entity.readoutText "") [ { type: typography, variant: caption, color: muted, content: @entity.readoutText }, { type: typography, variant: body, content: @entity.captionText } ] [ { type: typography, variant: body, content: @entity.captionText } ]))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (== @entity.selectedId "") "Overview" (str/concat "Part " (str/concat "" (+ @entity.selectedIndex 1)) " of " (str/concat "" (array/len @entity.parts)))), variant: (if (== @entity.selectedId "") "neutral" "primary") }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: xs, wrap: true, children: @entity.partButtons },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                  nodes: (array/map @entity.parts (fn p { id: (object/get @p id), x: (object/get @p x), y: (object/get @p y), radius: (if (== (object/get @p id) @entity.selectedId) (* (object/get @p radius) 1.4) (object/get @p radius)), color: (object/get @p color), label: (object/get @p label) })),
+                  edges: @entity.links,
+                  shapes: (if (== @entity.selectedId "") [] [ { type: circle, x: (object/get (array/nth @entity.parts @entity.selectedIndex) x), y: (object/get (array/nth @entity.parts @entity.selectedIndex) y), radius: (+ (object/get (array/nth @entity.parts @entity.selectedIndex) radius) 10), color: @config.highlightColor, stroke: bold } ])
+                },
+                { type: card, variant: bordered, padding: md, children: @entity.captionChildren }
+              ] }
+          ]
+        })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (render-ui main null)
 
       SELECT_PART -> idle when (== @entity.active true)
         (let (
@@ -212,6 +257,13 @@ orbital LearnDiagramOrbital {
       }
         @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
         @tier "domain"
+      ROSTER_LOADED {
+        mode : string!
+        parts : [LearnDiagramPart]!
+        links : [LearnDiagramLink]!
+      }
+        @description "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone), parts is the labeled-part roster and links the connector list; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides."
+        @tier "domain"
       SELECT_PART {
         partId : string
       }
@@ -242,6 +294,10 @@ orbital LearnDiagramOrbital {
         @label "Match Mode"
         @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
         @tier "presentation"
+      rosterSource : "config" | "event" = "config"
+        @label "Roster Source"
+        @description "Where the parts and links roster comes from: config reads the parts and links knobs at INIT; event waits for ROSTER_LOADED and takes the roster from its payload."
+        @tier "domain"
       title : string = "System Diagram"
         @label "Title"
         @description "Title shown above the diagram."

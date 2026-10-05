@@ -24,6 +24,11 @@ type AgentThreadRow = {
   content : string!
   createdAt : number
 }
+type AgentTool = {
+  event : event
+  read : string
+  scope : "declared"
+}
 type AgentToolKind = "input" | "read" | "invalid"
 type AgentMessageEntry = {
   type : "message"!
@@ -96,6 +101,11 @@ orbital AgentSessionOrbital {
     id : string!
     entries : [AgentFeedEntry] @description "The conversation as shown: messages with the assistant's steps between them." = []
     working : boolean @description "The assistant is answering." = false
+    chatInstructions : string @description "The ephemeral conversation's own instructions (empty: the assistant's configured ones)." = ""
+    chatTools : [AgentTool] @description "The ephemeral conversation's own tools (empty: none)." = []
+    chatTitle : string @description "The ephemeral conversation's header title." = ""
+    chatSubtitle : string @description "The ephemeral conversation's header subtitle." = ""
+    chatAvatar : string @description "The ephemeral conversation's header avatar image." = ""
   }
 
   trait AgentThread -> @rebindable AgentMessage [lifecycle] {
@@ -250,14 +260,19 @@ orbital AgentSessionOrbital {
       backLabel : string = "Back"
         @label "Back to the conversation"
         @tier "presentation"
+      ephemeral : boolean = false
+        @label "Ephemeral conversation?"
+        @description "A self-contained conversation: it runs under the instructions, tools, greeting and header the app starts it with (ASSISTANT_CHAT_START), is never stored among the person's conversations or remembered, shows no conversation, past-chat or memory buttons, and ignores the assistant's own replies."
+        @synonyms "private, one-off, scoped chat, own persona, not saved"
+        @tier "domain"
     }
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when (not @config.ephemeral)
         (emit ASSISTANT_HISTORY_REQUESTED {})
         (render-ui main {
-          children: [{
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if ["=", @entity.chatAvatar, ""] hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -306,7 +321,7 @@ orbital AgentSessionOrbital {
             justify: between
             wrap: true
             type: stack
-          }, {
+          }), {
             activities: @entity.entries
             className: flex-1
             emptyTitle: @config.emptyTitle
@@ -324,10 +339,79 @@ orbital AgentSessionOrbital {
           gap: sm
           type: stack
         })
-      THREAD_LOADED -> idle
+      INIT -> idle when @config.ephemeral
+        (render-ui main {
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if ["=", @entity.chatAvatar, ""] hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+            children: [{
+              action: NEW_CHAT_CLICKED
+              aria-label: @config.newChatLabel
+              icon: message-square-plus
+              label: @config.newChatLabel
+              size: sm
+              type: button
+              variant: secondary
+            }, {
+              children: [{
+                action: OPEN_CHATS_CLICKED
+                aria-label: @config.chatsLabel
+                label: @config.chatsLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                action: OPEN_MEMORY_CLICKED
+                aria-label: @config.memoryLabel
+                label: @config.memoryLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                children: (array/map @config.links (fn item {
+                  href: @item.href
+                  label: @item.label
+                  size: sm
+                  type: button
+                  variant: ghost
+                }))
+                direction: horizontal
+                gap: xs
+                type: stack
+              }]
+              align: center
+              className: shrink-0
+              direction: horizontal
+              gap: none
+              type: stack
+            }]
+            align: center
+            className: shrink-0
+            direction: horizontal
+            gap: sm
+            justify: between
+            wrap: true
+            type: stack
+          }), {
+            activities: @entity.entries
+            className: flex-1
+            emptyTitle: @config.emptyTitle
+            idPrefix: agent-conversation
+            rawLlmPreferenceKey: agent-conversation-raw-llm
+            type: agent-chat-feed
+            working: @entity.working
+          }, {
+            placeholder: @config.placeholder
+            sendEvent: ASK
+            type: chat-bar
+          }]
+          className: "h-full min-h-0 flex-1"
+          direction: vertical
+          gap: sm
+          type: stack
+        })
+      THREAD_LOADED -> idle when (not @config.ephemeral)
         (set @entity.entries (array/map (array/sort ?data createdAt asc) (fn item { type: message, role: @item.role, content: @item.content, timestamp: @item.createdAt })))
         (render-ui main {
-          children: [{
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if ["=", @entity.chatAvatar, ""] hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -376,7 +460,7 @@ orbital AgentSessionOrbital {
             justify: between
             wrap: true
             type: stack
-          }, {
+          }), {
             activities: @entity.entries
             className: flex-1
             emptyTitle: @config.emptyTitle
@@ -394,12 +478,12 @@ orbital AgentSessionOrbital {
           gap: sm
           type: stack
         })
-      ASK -> idle when (and (not @entity.working) (not ["=", (str/default ?message ""), ""]))
+      ASK -> idle when (and (not @config.ephemeral) (not @entity.working) (not ["=", (str/default ?message ""), ""]))
         (set @entity.entries (array/append @entity.entries { type: message, role: user, content: ?message, timestamp: @now }))
         (set @entity.working true)
         (emit ASSISTANT_SEND { message: ?message })
         (render-ui main {
-          children: [{
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if ["=", @entity.chatAvatar, ""] hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -448,7 +532,7 @@ orbital AgentSessionOrbital {
             justify: between
             wrap: true
             type: stack
-          }, {
+          }), {
             activities: @entity.entries
             className: flex-1
             emptyTitle: @config.emptyTitle
@@ -466,10 +550,162 @@ orbital AgentSessionOrbital {
           gap: sm
           type: stack
         })
-      STEP -> idle
+      ASK -> idle when (and @config.ephemeral (not @entity.working) (not ["=", (str/default ?message ""), ""]))
+        (set @entity.entries (array/append @entity.entries { type: message, role: user, content: ?message, timestamp: @now }))
+        (set @entity.working true)
+        (emit ASSISTANT_EPHEMERAL_SEND {
+          messages: (array/map (array/filter @entity.entries (fn item ["=", @item.type, "message"])) (fn item { role: @item.role, content: @item.content }))
+          instructions: @entity.chatInstructions
+          tools: @entity.chatTools
+          ephemeral: true
+        })
+        (render-ui main {
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if ["=", @entity.chatAvatar, ""] hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+            children: [{
+              action: NEW_CHAT_CLICKED
+              aria-label: @config.newChatLabel
+              icon: message-square-plus
+              label: @config.newChatLabel
+              size: sm
+              type: button
+              variant: secondary
+            }, {
+              children: [{
+                action: OPEN_CHATS_CLICKED
+                aria-label: @config.chatsLabel
+                label: @config.chatsLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                action: OPEN_MEMORY_CLICKED
+                aria-label: @config.memoryLabel
+                label: @config.memoryLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                children: (array/map @config.links (fn item {
+                  href: @item.href
+                  label: @item.label
+                  size: sm
+                  type: button
+                  variant: ghost
+                }))
+                direction: horizontal
+                gap: xs
+                type: stack
+              }]
+              align: center
+              className: shrink-0
+              direction: horizontal
+              gap: none
+              type: stack
+            }]
+            align: center
+            className: shrink-0
+            direction: horizontal
+            gap: sm
+            justify: between
+            wrap: true
+            type: stack
+          }), {
+            activities: @entity.entries
+            className: flex-1
+            emptyTitle: @config.emptyTitle
+            idPrefix: agent-conversation
+            rawLlmPreferenceKey: agent-conversation-raw-llm
+            type: agent-chat-feed
+            working: @entity.working
+          }, {
+            placeholder: @config.placeholder
+            sendEvent: ASK
+            type: chat-bar
+          }]
+          className: "h-full min-h-0 flex-1"
+          direction: vertical
+          gap: sm
+          type: stack
+        })
+      START_CHAT -> idle when (and @config.ephemeral (not @entity.working))
+        (set @entity.entries (if ["=", (str/default ?greeting ""), ""] [] [{ type: message, role: assistant, content: ?greeting, timestamp: @now }]))
+        (set @entity.chatInstructions (str/default ?instructions ""))
+        (set @entity.chatTools (object/get ? tools []))
+        (set @entity.chatTitle (str/default ?title ""))
+        (set @entity.chatSubtitle (str/default ?subtitle ""))
+        (set @entity.chatAvatar (str/default ?avatar ""))
+        (render-ui main {
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if ["=", @entity.chatAvatar, ""] hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+            children: [{
+              action: NEW_CHAT_CLICKED
+              aria-label: @config.newChatLabel
+              icon: message-square-plus
+              label: @config.newChatLabel
+              size: sm
+              type: button
+              variant: secondary
+            }, {
+              children: [{
+                action: OPEN_CHATS_CLICKED
+                aria-label: @config.chatsLabel
+                label: @config.chatsLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                action: OPEN_MEMORY_CLICKED
+                aria-label: @config.memoryLabel
+                label: @config.memoryLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                children: (array/map @config.links (fn item {
+                  href: @item.href
+                  label: @item.label
+                  size: sm
+                  type: button
+                  variant: ghost
+                }))
+                direction: horizontal
+                gap: xs
+                type: stack
+              }]
+              align: center
+              className: shrink-0
+              direction: horizontal
+              gap: none
+              type: stack
+            }]
+            align: center
+            className: shrink-0
+            direction: horizontal
+            gap: sm
+            justify: between
+            wrap: true
+            type: stack
+          }), {
+            activities: @entity.entries
+            className: flex-1
+            emptyTitle: @config.emptyTitle
+            idPrefix: agent-conversation
+            rawLlmPreferenceKey: agent-conversation-raw-llm
+            type: agent-chat-feed
+            working: @entity.working
+          }, {
+            placeholder: @config.placeholder
+            sendEvent: ASK
+            type: chat-bar
+          }]
+          className: "h-full min-h-0 flex-1"
+          direction: vertical
+          gap: sm
+          type: stack
+        })
+      STEP -> idle when (not @config.ephemeral)
         (set @entity.entries (array/append @entity.entries ?activity))
         (render-ui main {
-          children: [{
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if ["=", @entity.chatAvatar, ""] hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -518,7 +754,7 @@ orbital AgentSessionOrbital {
             justify: between
             wrap: true
             type: stack
-          }, {
+          }), {
             activities: @entity.entries
             className: flex-1
             emptyTitle: @config.emptyTitle
@@ -536,11 +772,11 @@ orbital AgentSessionOrbital {
           gap: sm
           type: stack
         })
-      REPLIED -> idle
+      REPLIED -> idle when ["=", (if ?ephemeral true false), @config.ephemeral]
         (set @entity.entries (array/append @entity.entries { type: message, role: assistant, content: ?reply, timestamp: @now }))
         (set @entity.working false)
         (render-ui main {
-          children: [{
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if ["=", @entity.chatAvatar, ""] hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -589,7 +825,7 @@ orbital AgentSessionOrbital {
             justify: between
             wrap: true
             type: stack
-          }, {
+          }), {
             activities: @entity.entries
             className: flex-1
             emptyTitle: @config.emptyTitle
@@ -611,7 +847,7 @@ orbital AgentSessionOrbital {
         (set @entity.entries [])
         (emit ASSISTANT_NEW_CHAT {})
         (render-ui main {
-          children: [{
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if ["=", @entity.chatAvatar, ""] hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -660,7 +896,7 @@ orbital AgentSessionOrbital {
             justify: between
             wrap: true
             type: stack
-          }, {
+          }), {
             activities: @entity.entries
             className: flex-1
             emptyTitle: @config.emptyTitle
@@ -680,7 +916,7 @@ orbital AgentSessionOrbital {
         })
       OPEN_CHATS_CLICKED -> idle
         (emit ASSISTANT_CHATS_REQUESTED {})
-      CHATS_LISTED -> idle
+      CHATS_LISTED -> idle when (not @config.ephemeral)
         (render-ui main {
           children: [{
             children: [{
@@ -735,7 +971,7 @@ orbital AgentSessionOrbital {
       CHAT_PICKED -> idle when (not @entity.working)
         (emit ASSISTANT_CHAT_SELECTED { chatId: ?id })
         (render-ui main {
-          children: [{
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if ["=", @entity.chatAvatar, ""] hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -784,7 +1020,7 @@ orbital AgentSessionOrbital {
             justify: between
             wrap: true
             type: stack
-          }, {
+          }), {
             activities: @entity.entries
             className: flex-1
             emptyTitle: @config.emptyTitle
@@ -804,7 +1040,7 @@ orbital AgentSessionOrbital {
         })
       OPEN_MEMORY_CLICKED -> idle
         (emit ASSISTANT_MEMORIES_REQUESTED {})
-      MEMORIES_LISTED -> idle
+      MEMORIES_LISTED -> idle when (not @config.ephemeral)
         (render-ui main {
           children: [{
             children: [{
@@ -855,7 +1091,7 @@ orbital AgentSessionOrbital {
         })
       BACK_TO_CHAT -> idle
         (render-ui main {
-          children: [{
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if ["=", @entity.chatAvatar, ""] hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -904,7 +1140,7 @@ orbital AgentSessionOrbital {
             justify: between
             wrap: true
             type: stack
-          }, {
+          }), {
             activities: @entity.entries
             className: flex-1
             emptyTitle: @config.emptyTitle
@@ -922,11 +1158,11 @@ orbital AgentSessionOrbital {
           gap: sm
           type: stack
         })
-      REPLY_FAILED -> idle
+      REPLY_FAILED -> idle when ["=", (if ?ephemeral true false), @config.ephemeral]
         (set @entity.entries (array/append @entity.entries { type: error, message: ?error, timestamp: @now }))
         (set @entity.working false)
         (render-ui main {
-          children: [{
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if ["=", @entity.chatAvatar, ""] hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -975,7 +1211,7 @@ orbital AgentSessionOrbital {
             justify: between
             wrap: true
             type: stack
-          }, {
+          }), {
             activities: @entity.entries
             className: flex-1
             emptyTitle: @config.emptyTitle
@@ -1011,6 +1247,15 @@ orbital AgentSessionOrbital {
         @description "Start a new conversation."
         @synonyms "new chat, start over, clear"
         @tier "presentation"
+      ASSISTANT_EPHEMERAL_SEND -> external {
+        messages : [AgentChatMessage]!
+        instructions : string
+        tools : [AgentTool]
+        ephemeral : boolean!
+      }
+        @description "An ephemeral conversation asked something: the whole conversation so far (greeting included), and its own `instructions` and `tools`. Nothing is stored or remembered; the assistant answers under exactly these."
+        @synonyms "ask privately, scoped ask"
+        @tier "domain"
       ASSISTANT_SEND -> external {
         message : string!
       }
@@ -1063,6 +1308,17 @@ orbital AgentSessionOrbital {
       *.ASSISTANT_REPLY_FAILED -> REPLY_FAILED
       *.ASSISTANT_CHATS_LOADED -> CHATS_LISTED
       *.ASSISTANT_MEMORIES_LOADED -> MEMORIES_LISTED
+      *.ASSISTANT_CHAT_START -> START_CHAT
+      START_CHAT {
+        greeting : string
+        instructions : string
+        tools : [AgentTool]
+        title : string
+        subtitle : string
+        avatar : string
+      }
+        @description "Start an ephemeral conversation (only on an AgentConversation whose `ephemeral` knob is on): it opens with `greeting` as the assistant's first message under a header of `title`, `subtitle` and `avatar` (an image URL), and every ask runs under `instructions` (empty: the assistant's configured ones) and exactly `tools` (absent or `[]`: none). Ignored while it is answering."
+        @synonyms "open private chat, begin scoped conversation"
       CHATS_LISTED {
         data : [AgentChatRow]
       }
@@ -1085,10 +1341,12 @@ orbital AgentSessionOrbital {
         @synonyms "progress, activity, working"
       REPLIED {
         reply : string!
+        ephemeral : boolean
       }
         @description "The assistant answered."
       REPLY_FAILED {
         error : string!
+        ephemeral : boolean
       }
         @description "The assistant could not answer."
     }
@@ -1156,7 +1414,7 @@ orbital AgentChatsOrbital {
       ChatReadyForSend -> ready
         (emit ASSISTANT_SEND_IN_CHAT { chatId: ?id, message: @entity.pendingMessage })
         (emit ASSISTANT_CHATS_CHANGED {})
-      REPLIED -> ready
+      REPLIED -> ready when (not ?ephemeral)
         (set @entity.pendingReply ?reply)
         (fetch AgentChat {
           emit: { failure: AgentChatsLoadFailed, success: ChatsForReply }
@@ -1294,6 +1552,7 @@ orbital AgentChatsOrbital {
         @description "The user asked something; place it in the current conversation."
       REPLIED {
         reply : string!
+        ephemeral : boolean
       }
         @description "The assistant answered; place the answer in the current conversation."
       LOAD_HISTORY {
