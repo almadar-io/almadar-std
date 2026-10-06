@@ -95,6 +95,7 @@ export interface StdUiDataListConfig {
   /** Default: `"none"` */
   gap?: 'none' | 'sm' | 'md' | 'lg';
   groupBy?: string;
+  groupFormat?: 'date' | 'time' | 'datetime' | 'currency' | 'number' | 'boolean' | 'percent';
   hasMore?: boolean;
   infiniteScroll?: boolean;
   /** Default: `false` */
