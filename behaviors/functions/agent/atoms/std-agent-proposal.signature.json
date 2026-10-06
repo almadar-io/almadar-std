@@ -403,28 +403,70 @@
         "overridableConfigKeys": [
           {
             "key": "cancelKey",
-            "type": "unknown",
-            "default": "agent-proposal"
+            "type": "string",
+            "default": "agent-proposal",
+            "label": "Cancel key",
+            "description": "The key this instance's model call runs under, so CANCEL aborts it. Give each instance of the loop in one app its own.",
+            "synonyms": "call key, abort key",
+            "tier": "internal"
           },
           {
             "key": "instructions",
-            "type": "unknown",
-            "default": "@config.instructions"
+            "type": "string",
+            "default": "@config.instructions",
+            "label": "How should the assistant behave?",
+            "description": "Standing instructions sent with every conversation.",
+            "synonyms": "system prompt, persona, guidance",
+            "tier": "domain"
           },
           {
             "key": "maxSteps",
-            "type": "unknown",
-            "default": "@config.maxSteps"
+            "type": "number",
+            "default": "@config.maxSteps",
+            "label": "Model round-trips per request",
+            "description": "How many model calls one request may take before it fails.",
+            "tier": "policy"
           },
           {
             "key": "quiet",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Run in the background?",
+            "description": "No live ASSISTANT_STEP stream and no failure toast: the request is reported only through ASSISTANT_REPLIED and ASSISTANT_REPLY_FAILED. For a run nobody is watching, such as one the app starts on its own.",
+            "synonyms": "silent, background, no toast, suppress errors, headless run",
+            "tier": "policy"
           },
           {
             "key": "tools",
-            "type": "unknown",
-            "default": "@config.tools"
+            "type": "[AgentTool]",
+            "default": "@config.tools",
+            "items": {
+              "properties": {
+                "event": {
+                  "name": "event",
+                  "required": false,
+                  "type": "event"
+                },
+                "read": {
+                  "name": "read",
+                  "required": false,
+                  "type": "string"
+                },
+                "scope": {
+                  "name": "scope",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "declared"
+                  ]
+                }
+              },
+              "type": "object"
+            },
+            "label": "What may the assistant do?",
+            "description": "The declared inputs it may fire (`{ event: Trait.EVENT }`) and the entities it may read (`{ read: Entity }`), as the signed-in user.",
+            "synonyms": "allowlist, abilities, actions, permissions",
+            "tier": "domain"
           }
         ],
         "capabilities": [],

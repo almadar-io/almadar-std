@@ -524,25 +524,464 @@
         "overridableConfigKeys": [
           {
             "key": "action",
-            "type": "unknown",
-            "default": "INVOICE_HOURS"
+            "type": "event",
+            "default": "INVOICE_HOURS",
+            "label": "Action",
+            "description": "Declarative event name — emits UI:{action} via eventBus on click",
+            "tier": "presentation"
           },
           {
             "key": "actionPayload",
-            "type": "unknown",
+            "type": "@payload(action)",
             "default": {
               "id": "@callsitePayload.row.id"
+            },
+            "label": "Action Payload",
+            "description": "Payload to include with the action event",
+            "tier": "presentation"
+          },
+          {
+            "key": "ariaBusy",
+            "type": "boolean",
+            "label": "Aria-busy",
+            "description": "This region is updating; assistive technology waits before announcing it.",
+            "synonyms": "aria-busy",
+            "tier": "presentation"
+          },
+          {
+            "key": "ariaCurrent",
+            "type": "string",
+            "label": "Aria-current",
+            "description": "Marks the current item in a set: the current page, step, location, date or time.",
+            "synonyms": "aria-current",
+            "tier": "presentation",
+            "enumValues": [
+              "page",
+              "step",
+              "location",
+              "date",
+              "time",
+              "true",
+              "false"
+            ]
+          },
+          {
+            "key": "ariaDescribedby",
+            "type": "string",
+            "label": "Aria-describedby",
+            "description": "Id of the element whose text describes this one (help text, error).",
+            "synonyms": "aria-describedby",
+            "tier": "presentation"
+          },
+          {
+            "key": "ariaExpanded",
+            "type": "boolean",
+            "label": "Aria-expanded",
+            "description": "Whether the element it controls is expanded.",
+            "synonyms": "aria-expanded",
+            "tier": "presentation"
+          },
+          {
+            "key": "ariaHidden",
+            "type": "boolean",
+            "label": "Aria-hidden",
+            "description": "Hide from assistive technology (decorative content only).",
+            "synonyms": "aria-hidden",
+            "tier": "presentation"
+          },
+          {
+            "key": "ariaLabel",
+            "type": "string",
+            "label": "Aria-label",
+            "description": "Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).",
+            "synonyms": "aria-label",
+            "tier": "presentation"
+          },
+          {
+            "key": "ariaLabelledby",
+            "type": "string",
+            "label": "Aria-labelledby",
+            "description": "Id of the element whose text names this one.",
+            "synonyms": "aria-labelledby",
+            "tier": "presentation"
+          },
+          {
+            "key": "ariaLive",
+            "type": "string",
+            "label": "Aria-live",
+            "description": "Announce changes to this region: polite waits for a pause, assertive interrupts.",
+            "synonyms": "aria-live",
+            "tier": "presentation",
+            "enumValues": [
+              "off",
+              "polite",
+              "assertive"
+            ]
+          },
+          {
+            "key": "ariaPressed",
+            "type": "string",
+            "label": "Aria-pressed",
+            "description": "Toggle-button state.",
+            "synonyms": "aria-pressed",
+            "tier": "presentation",
+            "enumValues": [
+              "true",
+              "false",
+              "mixed"
+            ]
+          },
+          {
+            "key": "ariaSelected",
+            "type": "boolean",
+            "label": "Aria-selected",
+            "description": "Whether this item is selected (tabs, options, grid cells).",
+            "synonyms": "aria-selected",
+            "tier": "presentation"
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "label": "Class Name",
+            "description": "Additional CSS classes applied to the root element.",
+            "tier": "presentation"
+          },
+          {
+            "key": "dir",
+            "type": "string",
+            "label": "Dir",
+            "description": "Text direction of this element's content.",
+            "tier": "presentation",
+            "enumValues": [
+              "ltr",
+              "rtl",
+              "auto"
+            ]
+          },
+          {
+            "key": "disabled",
+            "type": "boolean",
+            "label": "Disabled",
+            "description": "Disable the button (greys out, blocks click events)",
+            "tier": "presentation"
+          },
+          {
+            "key": "enter",
+            "type": "string",
+            "label": "Enter",
+            "description": "How this element animates in when it mounts (theme-styled); overrides the theme's default slot entry. `none` opts out.",
+            "tier": "presentation",
+            "enumValues": [
+              "none",
+              "fade",
+              "rise",
+              "scale",
+              "slide"
+            ]
+          },
+          {
+            "key": "enterDelay",
+            "type": "number",
+            "label": "Enter Delay",
+            "description": "Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.",
+            "tier": "presentation"
+          },
+          {
+            "key": "href",
+            "type": "string",
+            "label": "Href",
+            "description": "Makes the button a link: `#anchor` scrolls, an absolute URL loads, a path navigates in-app",
+            "tier": "presentation"
+          },
+          {
+            "key": "icon",
+            "type": "icon",
+            "label": "Icon",
+            "description": "Alias for leftIcon",
+            "tier": "presentation"
+          },
+          {
+            "key": "iconAsset",
+            "type": "ButtonIconAsset",
+            "label": "Icon Asset",
+            "description": "Asset image rendered as the leading icon; takes precedence over icon/leftIcon when provided.",
+            "tier": "presentation",
+            "properties": {
+              "animations": {
+                "name": "animations",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "aspect": {
+                "name": "aspect",
+                "required": false,
+                "type": "string",
+                "values": [
+                  "1:1",
+                  "16:9",
+                  "5:7",
+                  "8:1",
+                  "4:1",
+                  "5:3",
+                  "1:2"
+                ]
+              },
+              "atlas": {
+                "name": "atlas",
+                "required": false,
+                "type": "string"
+              },
+              "category": {
+                "name": "category",
+                "required": true,
+                "type": "string"
+              },
+              "dimension": {
+                "name": "dimension",
+                "required": false,
+                "type": "string",
+                "values": [
+                  "2d",
+                  "3d"
+                ]
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "role": {
+                "name": "role",
+                "required": true,
+                "type": "string"
+              },
+              "sprite": {
+                "name": "sprite",
+                "required": false,
+                "type": "string"
+              },
+              "style": {
+                "name": "style",
+                "required": false,
+                "type": "string",
+                "values": [
+                  "pixel",
+                  "vector",
+                  "hd",
+                  "1-bit",
+                  "isometric"
+                ]
+              },
+              "thumbnailUrl": {
+                "name": "thumbnailUrl",
+                "required": false,
+                "type": "string"
+              },
+              "url": {
+                "name": "url",
+                "required": true,
+                "type": "string"
+              },
+              "variant": {
+                "name": "variant",
+                "required": false,
+                "type": "string"
+              }
             }
           },
           {
+            "key": "iconRight",
+            "type": "icon",
+            "label": "Icon Right",
+            "description": "Alias for rightIcon",
+            "tier": "presentation"
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "isLoading prop",
+            "tier": "presentation"
+          },
+          {
             "key": "label",
-            "type": "unknown",
-            "default": "Invoice"
+            "type": "string",
+            "default": "Invoice",
+            "label": "Label",
+            "description": "Button label text (alternative to children for schema-driven rendering)",
+            "tier": "presentation"
+          },
+          {
+            "key": "lang",
+            "type": "string",
+            "label": "Lang",
+            "description": "Language of this element's content (BCP 47, e.g. ar, sl, en).",
+            "tier": "presentation"
+          },
+          {
+            "key": "leftIcon",
+            "type": "icon",
+            "label": "Left Icon",
+            "description": "Left icon: a Lucide component or a canonical icon name string (e.g. 'plus', 'trash').",
+            "tier": "presentation"
+          },
+          {
+            "key": "rightIcon",
+            "type": "icon",
+            "label": "Right Icon",
+            "description": "Right icon: a Lucide component or a canonical icon name string.",
+            "tier": "presentation"
+          },
+          {
+            "key": "role",
+            "type": "string",
+            "label": "Role",
+            "description": "WAI-ARIA role when the element's native semantics don't describe it.",
+            "tier": "presentation",
+            "enumValues": [
+              "alert",
+              "alertdialog",
+              "application",
+              "article",
+              "banner",
+              "blockquote",
+              "button",
+              "caption",
+              "cell",
+              "checkbox",
+              "code",
+              "columnheader",
+              "combobox",
+              "complementary",
+              "contentinfo",
+              "definition",
+              "deletion",
+              "dialog",
+              "document",
+              "emphasis",
+              "feed",
+              "figure",
+              "form",
+              "generic",
+              "grid",
+              "gridcell",
+              "group",
+              "heading",
+              "img",
+              "insertion",
+              "link",
+              "list",
+              "listbox",
+              "listitem",
+              "log",
+              "main",
+              "marquee",
+              "math",
+              "menu",
+              "menubar",
+              "menuitem",
+              "menuitemcheckbox",
+              "menuitemradio",
+              "meter",
+              "navigation",
+              "none",
+              "note",
+              "option",
+              "paragraph",
+              "presentation",
+              "progressbar",
+              "radio",
+              "radiogroup",
+              "region",
+              "row",
+              "rowgroup",
+              "rowheader",
+              "scrollbar",
+              "search",
+              "searchbox",
+              "separator",
+              "slider",
+              "spinbutton",
+              "status",
+              "strong",
+              "subscript",
+              "superscript",
+              "switch",
+              "tab",
+              "table",
+              "tablist",
+              "tabpanel",
+              "term",
+              "textbox",
+              "time",
+              "timer",
+              "toolbar",
+              "tooltip",
+              "tree",
+              "treegrid",
+              "treeitem"
+            ]
+          },
+          {
+            "key": "size",
+            "type": "string",
+            "default": "md",
+            "label": "Size",
+            "description": "size prop",
+            "tier": "presentation",
+            "enumValues": [
+              "sm",
+              "md",
+              "lg"
+            ]
+          },
+          {
+            "key": "skeleton",
+            "type": "string",
+            "label": "Skeleton",
+            "description": "Skeleton shown while this element's server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.",
+            "tier": "presentation",
+            "enumValues": [
+              "header",
+              "table",
+              "list",
+              "grid",
+              "detail",
+              "stats",
+              "form",
+              "card",
+              "text",
+              "none"
+            ]
+          },
+          {
+            "key": "tabIndex",
+            "type": "number",
+            "label": "Tab Index",
+            "description": "0 puts the element in the Tab order; -1 makes it focusable only programmatically.",
+            "tier": "presentation"
           },
           {
             "key": "variant",
-            "type": "unknown",
-            "default": "primary"
+            "type": "string",
+            "default": "primary",
+            "enumValues": [
+              "primary",
+              "secondary",
+              "ghost",
+              "danger",
+              "success",
+              "warning",
+              "default",
+              "link"
+            ],
+            "label": "Variant",
+            "description": "variant prop",
+            "tier": "presentation"
           }
         ],
         "capabilities": [],
@@ -553,7 +992,12 @@
         ],
         "definerKnobs": [
           "action"
-        ]
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
       },
       {
         "name": "InlineRoleGate2",
@@ -562,18 +1006,32 @@
         "overridableConfigKeys": [
           {
             "key": "content",
-            "type": "unknown",
-            "default": "@trait.InlineButtonRender1"
+            "type": "trait",
+            "default": "@trait.InlineButtonRender1",
+            "label": "Gated content",
+            "description": "The trait rendered when the viewer's role is allowed, e.g. a button or panel trait ref.",
+            "synonyms": "wrapped content, guarded element, protected button",
+            "tier": "presentation"
           },
           {
             "key": "roles",
-            "type": "unknown",
-            "default": "@config.invoiceRoles"
+            "type": "[string]",
+            "default": "@config.invoiceRoles",
+            "items": {
+              "type": "string"
+            },
+            "label": "Visible to roles",
+            "description": "Roles (matched against viewerRole) that see the content. Empty = everyone; any other viewer sees nothing.",
+            "synonyms": "allowed roles, only for, who can see, permitted roles",
+            "tier": "policy"
           },
           {
             "key": "viewerRole",
-            "type": "unknown",
-            "default": "@config.viewerRole"
+            "type": "string",
+            "default": "@config.viewerRole",
+            "label": "Viewer's role",
+            "description": "The signed-in viewer's role that `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`); left empty, only an ungated (empty `roles`) gate renders.",
+            "tier": "policy"
           }
         ],
         "capabilities": [],
@@ -582,7 +1040,12 @@
         "transitionEvents": [
           "INIT"
         ],
-        "definerKnobs": []
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
       },
       {
         "name": "InlineButtonRender3",
@@ -591,25 +1054,464 @@
         "overridableConfigKeys": [
           {
             "key": "action",
-            "type": "unknown",
-            "default": "WRITE_OFF_HOURS"
+            "type": "event",
+            "default": "WRITE_OFF_HOURS",
+            "label": "Action",
+            "description": "Declarative event name — emits UI:{action} via eventBus on click",
+            "tier": "presentation"
           },
           {
             "key": "actionPayload",
-            "type": "unknown",
+            "type": "@payload(action)",
             "default": {
               "id": "@callsitePayload.row.id"
+            },
+            "label": "Action Payload",
+            "description": "Payload to include with the action event",
+            "tier": "presentation"
+          },
+          {
+            "key": "ariaBusy",
+            "type": "boolean",
+            "label": "Aria-busy",
+            "description": "This region is updating; assistive technology waits before announcing it.",
+            "synonyms": "aria-busy",
+            "tier": "presentation"
+          },
+          {
+            "key": "ariaCurrent",
+            "type": "string",
+            "label": "Aria-current",
+            "description": "Marks the current item in a set: the current page, step, location, date or time.",
+            "synonyms": "aria-current",
+            "tier": "presentation",
+            "enumValues": [
+              "page",
+              "step",
+              "location",
+              "date",
+              "time",
+              "true",
+              "false"
+            ]
+          },
+          {
+            "key": "ariaDescribedby",
+            "type": "string",
+            "label": "Aria-describedby",
+            "description": "Id of the element whose text describes this one (help text, error).",
+            "synonyms": "aria-describedby",
+            "tier": "presentation"
+          },
+          {
+            "key": "ariaExpanded",
+            "type": "boolean",
+            "label": "Aria-expanded",
+            "description": "Whether the element it controls is expanded.",
+            "synonyms": "aria-expanded",
+            "tier": "presentation"
+          },
+          {
+            "key": "ariaHidden",
+            "type": "boolean",
+            "label": "Aria-hidden",
+            "description": "Hide from assistive technology (decorative content only).",
+            "synonyms": "aria-hidden",
+            "tier": "presentation"
+          },
+          {
+            "key": "ariaLabel",
+            "type": "string",
+            "label": "Aria-label",
+            "description": "Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).",
+            "synonyms": "aria-label",
+            "tier": "presentation"
+          },
+          {
+            "key": "ariaLabelledby",
+            "type": "string",
+            "label": "Aria-labelledby",
+            "description": "Id of the element whose text names this one.",
+            "synonyms": "aria-labelledby",
+            "tier": "presentation"
+          },
+          {
+            "key": "ariaLive",
+            "type": "string",
+            "label": "Aria-live",
+            "description": "Announce changes to this region: polite waits for a pause, assertive interrupts.",
+            "synonyms": "aria-live",
+            "tier": "presentation",
+            "enumValues": [
+              "off",
+              "polite",
+              "assertive"
+            ]
+          },
+          {
+            "key": "ariaPressed",
+            "type": "string",
+            "label": "Aria-pressed",
+            "description": "Toggle-button state.",
+            "synonyms": "aria-pressed",
+            "tier": "presentation",
+            "enumValues": [
+              "true",
+              "false",
+              "mixed"
+            ]
+          },
+          {
+            "key": "ariaSelected",
+            "type": "boolean",
+            "label": "Aria-selected",
+            "description": "Whether this item is selected (tabs, options, grid cells).",
+            "synonyms": "aria-selected",
+            "tier": "presentation"
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "label": "Class Name",
+            "description": "Additional CSS classes applied to the root element.",
+            "tier": "presentation"
+          },
+          {
+            "key": "dir",
+            "type": "string",
+            "label": "Dir",
+            "description": "Text direction of this element's content.",
+            "tier": "presentation",
+            "enumValues": [
+              "ltr",
+              "rtl",
+              "auto"
+            ]
+          },
+          {
+            "key": "disabled",
+            "type": "boolean",
+            "label": "Disabled",
+            "description": "Disable the button (greys out, blocks click events)",
+            "tier": "presentation"
+          },
+          {
+            "key": "enter",
+            "type": "string",
+            "label": "Enter",
+            "description": "How this element animates in when it mounts (theme-styled); overrides the theme's default slot entry. `none` opts out.",
+            "tier": "presentation",
+            "enumValues": [
+              "none",
+              "fade",
+              "rise",
+              "scale",
+              "slide"
+            ]
+          },
+          {
+            "key": "enterDelay",
+            "type": "number",
+            "label": "Enter Delay",
+            "description": "Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.",
+            "tier": "presentation"
+          },
+          {
+            "key": "href",
+            "type": "string",
+            "label": "Href",
+            "description": "Makes the button a link: `#anchor` scrolls, an absolute URL loads, a path navigates in-app",
+            "tier": "presentation"
+          },
+          {
+            "key": "icon",
+            "type": "icon",
+            "label": "Icon",
+            "description": "Alias for leftIcon",
+            "tier": "presentation"
+          },
+          {
+            "key": "iconAsset",
+            "type": "ButtonIconAsset",
+            "label": "Icon Asset",
+            "description": "Asset image rendered as the leading icon; takes precedence over icon/leftIcon when provided.",
+            "tier": "presentation",
+            "properties": {
+              "animations": {
+                "name": "animations",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "aspect": {
+                "name": "aspect",
+                "required": false,
+                "type": "string",
+                "values": [
+                  "1:1",
+                  "16:9",
+                  "5:7",
+                  "8:1",
+                  "4:1",
+                  "5:3",
+                  "1:2"
+                ]
+              },
+              "atlas": {
+                "name": "atlas",
+                "required": false,
+                "type": "string"
+              },
+              "category": {
+                "name": "category",
+                "required": true,
+                "type": "string"
+              },
+              "dimension": {
+                "name": "dimension",
+                "required": false,
+                "type": "string",
+                "values": [
+                  "2d",
+                  "3d"
+                ]
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "role": {
+                "name": "role",
+                "required": true,
+                "type": "string"
+              },
+              "sprite": {
+                "name": "sprite",
+                "required": false,
+                "type": "string"
+              },
+              "style": {
+                "name": "style",
+                "required": false,
+                "type": "string",
+                "values": [
+                  "pixel",
+                  "vector",
+                  "hd",
+                  "1-bit",
+                  "isometric"
+                ]
+              },
+              "thumbnailUrl": {
+                "name": "thumbnailUrl",
+                "required": false,
+                "type": "string"
+              },
+              "url": {
+                "name": "url",
+                "required": true,
+                "type": "string"
+              },
+              "variant": {
+                "name": "variant",
+                "required": false,
+                "type": "string"
+              }
             }
           },
           {
+            "key": "iconRight",
+            "type": "icon",
+            "label": "Icon Right",
+            "description": "Alias for rightIcon",
+            "tier": "presentation"
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "isLoading prop",
+            "tier": "presentation"
+          },
+          {
             "key": "label",
-            "type": "unknown",
-            "default": "Write Off"
+            "type": "string",
+            "default": "Write Off",
+            "label": "Label",
+            "description": "Button label text (alternative to children for schema-driven rendering)",
+            "tier": "presentation"
+          },
+          {
+            "key": "lang",
+            "type": "string",
+            "label": "Lang",
+            "description": "Language of this element's content (BCP 47, e.g. ar, sl, en).",
+            "tier": "presentation"
+          },
+          {
+            "key": "leftIcon",
+            "type": "icon",
+            "label": "Left Icon",
+            "description": "Left icon: a Lucide component or a canonical icon name string (e.g. 'plus', 'trash').",
+            "tier": "presentation"
+          },
+          {
+            "key": "rightIcon",
+            "type": "icon",
+            "label": "Right Icon",
+            "description": "Right icon: a Lucide component or a canonical icon name string.",
+            "tier": "presentation"
+          },
+          {
+            "key": "role",
+            "type": "string",
+            "label": "Role",
+            "description": "WAI-ARIA role when the element's native semantics don't describe it.",
+            "tier": "presentation",
+            "enumValues": [
+              "alert",
+              "alertdialog",
+              "application",
+              "article",
+              "banner",
+              "blockquote",
+              "button",
+              "caption",
+              "cell",
+              "checkbox",
+              "code",
+              "columnheader",
+              "combobox",
+              "complementary",
+              "contentinfo",
+              "definition",
+              "deletion",
+              "dialog",
+              "document",
+              "emphasis",
+              "feed",
+              "figure",
+              "form",
+              "generic",
+              "grid",
+              "gridcell",
+              "group",
+              "heading",
+              "img",
+              "insertion",
+              "link",
+              "list",
+              "listbox",
+              "listitem",
+              "log",
+              "main",
+              "marquee",
+              "math",
+              "menu",
+              "menubar",
+              "menuitem",
+              "menuitemcheckbox",
+              "menuitemradio",
+              "meter",
+              "navigation",
+              "none",
+              "note",
+              "option",
+              "paragraph",
+              "presentation",
+              "progressbar",
+              "radio",
+              "radiogroup",
+              "region",
+              "row",
+              "rowgroup",
+              "rowheader",
+              "scrollbar",
+              "search",
+              "searchbox",
+              "separator",
+              "slider",
+              "spinbutton",
+              "status",
+              "strong",
+              "subscript",
+              "superscript",
+              "switch",
+              "tab",
+              "table",
+              "tablist",
+              "tabpanel",
+              "term",
+              "textbox",
+              "time",
+              "timer",
+              "toolbar",
+              "tooltip",
+              "tree",
+              "treegrid",
+              "treeitem"
+            ]
+          },
+          {
+            "key": "size",
+            "type": "string",
+            "default": "md",
+            "label": "Size",
+            "description": "size prop",
+            "tier": "presentation",
+            "enumValues": [
+              "sm",
+              "md",
+              "lg"
+            ]
+          },
+          {
+            "key": "skeleton",
+            "type": "string",
+            "label": "Skeleton",
+            "description": "Skeleton shown while this element's server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.",
+            "tier": "presentation",
+            "enumValues": [
+              "header",
+              "table",
+              "list",
+              "grid",
+              "detail",
+              "stats",
+              "form",
+              "card",
+              "text",
+              "none"
+            ]
+          },
+          {
+            "key": "tabIndex",
+            "type": "number",
+            "label": "Tab Index",
+            "description": "0 puts the element in the Tab order; -1 makes it focusable only programmatically.",
+            "tier": "presentation"
           },
           {
             "key": "variant",
-            "type": "unknown",
-            "default": "danger"
+            "type": "string",
+            "default": "danger",
+            "enumValues": [
+              "primary",
+              "secondary",
+              "ghost",
+              "danger",
+              "success",
+              "warning",
+              "default",
+              "link"
+            ],
+            "label": "Variant",
+            "description": "variant prop",
+            "tier": "presentation"
           }
         ],
         "capabilities": [],
@@ -620,7 +1522,12 @@
         ],
         "definerKnobs": [
           "action"
-        ]
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
       },
       {
         "name": "InlineRoleGate4",
@@ -629,18 +1536,32 @@
         "overridableConfigKeys": [
           {
             "key": "content",
-            "type": "unknown",
-            "default": "@trait.InlineButtonRender3"
+            "type": "trait",
+            "default": "@trait.InlineButtonRender3",
+            "label": "Gated content",
+            "description": "The trait rendered when the viewer's role is allowed, e.g. a button or panel trait ref.",
+            "synonyms": "wrapped content, guarded element, protected button",
+            "tier": "presentation"
           },
           {
             "key": "roles",
-            "type": "unknown",
-            "default": "@config.writeOffRoles"
+            "type": "[string]",
+            "default": "@config.writeOffRoles",
+            "items": {
+              "type": "string"
+            },
+            "label": "Visible to roles",
+            "description": "Roles (matched against viewerRole) that see the content. Empty = everyone; any other viewer sees nothing.",
+            "synonyms": "allowed roles, only for, who can see, permitted roles",
+            "tier": "policy"
           },
           {
             "key": "viewerRole",
-            "type": "unknown",
-            "default": "@config.viewerRole"
+            "type": "string",
+            "default": "@config.viewerRole",
+            "label": "Viewer's role",
+            "description": "The signed-in viewer's role that `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`); left empty, only an ungated (empty `roles`) gate renders.",
+            "tier": "policy"
           }
         ],
         "capabilities": [],
@@ -649,7 +1570,12 @@
         "transitionEvents": [
           "INIT"
         ],
-        "definerKnobs": []
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
       }
     ],
     "pages": [

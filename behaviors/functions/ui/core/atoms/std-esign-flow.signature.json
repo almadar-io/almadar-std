@@ -248,29 +248,102 @@
         ],
         "overridableConfigKeys": [
           {
+            "key": "detailPattern",
+            "type": "pattern",
+            "default": "stack",
+            "label": "Layout pattern",
+            "description": "Pattern used to arrange the form body",
+            "tier": "internal"
+          },
+          {
+            "key": "detailSlot",
+            "type": "slot",
+            "default": "modal",
+            "label": "Render slot",
+            "description": "UI slot the modal renders into",
+            "tier": "internal"
+          },
+          {
+            "key": "fieldOverrides",
+            "type": "[ModalFieldOverride]",
+            "default": [],
+            "label": "Any per-field display copy overrides?",
+            "description": "Per-field label/placeholder/hint overrides, keyed by field name. Types, options and required-ness stay entity-schema-driven (declare once on the entity); override only display copy the entity's @description doesn't fit.",
+            "synonyms": "field labels, custom labels, help text overrides, placeholder text",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "hint": {
+                  "name": "hint",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "placeholder": {
+                  "name": "placeholder",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "fields",
-            "type": "unknown",
+            "type": "[string]",
             "default": [
               "documentId",
               "recipientName",
               "recipientEmail",
               "requesterName"
-            ]
+            ],
+            "items": {
+              "type": "string"
+            },
+            "label": "Which fields appear in the form?",
+            "description": "Entity fields rendered as inputs inside the modal form.",
+            "synonyms": "form fields, inputs, editable fields, field list",
+            "tier": "domain"
           },
           {
             "key": "icon",
-            "type": "unknown",
-            "default": "file-signature"
+            "type": "string",
+            "default": "file-signature",
+            "label": "Which icon appears in the modal header?",
+            "description": "Lucide icon name shown next to the modal title.",
+            "synonyms": "header icon, modal icon, title icon",
+            "tier": "presentation"
           },
           {
             "key": "mode",
-            "type": "unknown",
-            "default": "create"
+            "type": "string",
+            "default": "create",
+            "enumValues": [
+              "create",
+              "edit"
+            ],
+            "label": "Is this for creating or editing?",
+            "description": "create = blank form; edit = pre-filled from the selected row.",
+            "synonyms": "form mode, create or edit, new or update, add or modify",
+            "tier": "internal"
           },
           {
             "key": "title",
-            "type": "unknown",
-            "default": "New Signature Request"
+            "type": "string",
+            "default": "New Signature Request",
+            "label": "What should the modal heading say?",
+            "description": "Heading displayed at the top of the modal.",
+            "synonyms": "modal title, dialog heading, panel title, form title",
+            "tier": "presentation"
           }
         ],
         "capabilities": [],
@@ -290,7 +363,14 @@
         "effectEntityRefs": [
           "ModalRecord"
         ],
-        "definerKnobs": []
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "seedRow"
+          ]
+        }
       },
       {
         "name": "SignatureSessionDelete",
@@ -301,23 +381,35 @@
         "overridableConfigKeys": [
           {
             "key": "alertMessage",
-            "type": "unknown",
-            "default": "Are you sure you want to cancel this signature request?"
+            "type": "string",
+            "default": "Are you sure you want to cancel this signature request?",
+            "label": "Alert message",
+            "description": "Body text explaining what the user is confirming",
+            "tier": "presentation"
           },
           {
             "key": "confirmLabel",
-            "type": "unknown",
-            "default": "Cancel Request"
+            "type": "string",
+            "default": "Cancel Request",
+            "label": "Confirm button",
+            "description": "Label on the primary confirm action button",
+            "tier": "presentation"
           },
           {
             "key": "icon",
-            "type": "unknown",
-            "default": "alert-triangle"
+            "type": "string",
+            "default": "alert-triangle",
+            "label": "Icon",
+            "description": "Icon name displayed in the confirmation modal header",
+            "tier": "presentation"
           },
           {
             "key": "title",
-            "type": "unknown",
-            "default": "Cancel Signature Request"
+            "type": "string",
+            "default": "Cancel Signature Request",
+            "label": "Modal title",
+            "description": "Heading shown at the top of the confirmation modal",
+            "tier": "presentation"
           }
         ],
         "capabilities": [],
@@ -338,7 +430,15 @@
         "effectEntityRefs": [
           "ConfirmAction"
         ],
-        "definerKnobs": []
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "name",
+            "pendingId"
+          ]
+        }
       },
       {
         "name": "SignatureSessionPersistor",
