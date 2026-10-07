@@ -448,23 +448,8 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                 'type': 'string',
               },
               {
-                'entity': 'AgentTool',
                 'name': 'tools',
-                'properties': [
-                  {
-                    'name': 'event',
-                    'type': 'event',
-                  },
-                  {
-                    'name': 'read',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'scope',
-                    'type': 'string',
-                  },
-                ],
-                'type': '[object]',
+                'type': '[AgentTool]',
               },
               {
                 'name': 'ephemeral',
@@ -839,21 +824,7 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                 },
                 {
                   'name': 'tools',
-                  'properties': [
-                    {
-                      'name': 'event',
-                      'type': 'event',
-                    },
-                    {
-                      'name': 'read',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'scope',
-                      'type': 'string',
-                    },
-                  ],
-                  'type': '[object]',
+                  'type': '[AgentTool]',
                 },
                 {
                   'name': 'ephemeral',
@@ -1009,23 +980,8 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   'type': 'string',
                 },
                 {
-                  'entity': 'AgentTool',
                   'name': 'tools',
-                  'properties': [
-                    {
-                      'name': 'event',
-                      'type': 'event',
-                    },
-                    {
-                      'name': 'read',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'scope',
-                      'type': 'string',
-                    },
-                  ],
-                  'type': '[object]',
+                  'type': '[AgentTool]',
                 },
                 {
                   'name': 'ephemeral',

@@ -338,7 +338,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                 'payload': {
                   'name': 'payload',
                   'required': false,
-                  'type': 'object',
+                  'type': 'SExpr',
                 },
                 'roles': {
                   'items': {
@@ -362,7 +362,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                 'when': {
                   'name': 'when',
                   'required': false,
-                  'type': 'object',
+                  'type': 'SExpr',
                 },
               },
               'type': 'object',
@@ -571,7 +571,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
               'payload': {
                 'name': 'payload',
                 'required': false,
-                'type': 'object',
+                'type': 'SExpr',
               },
               'variant': {
                 'name': 'variant',
@@ -587,7 +587,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
               'when': {
                 'name': 'when',
                 'required': false,
-                'type': 'object',
+                'type': 'SExpr',
               },
             },
             'tier': 'presentation',

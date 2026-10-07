@@ -71,13 +71,13 @@ export interface StdUiControlGridConfig {
   buttons?: EntityRow[];
   className?: string;
   dir?: 'ltr' | 'rtl' | 'auto';
-  /** Default: `{"item":{"animations":["static"],"aspect":"1:1","category":"item","dimension":"2d","name":"item","role":"item","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/features/sword.png"}}` */
+  /** Default: `{"up":{"animations":["static"],"aspect":"1:1","category":"item","dimension":"2d","name":"item","role":"item","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/features/sword.png"}}` */
   directionAssets?: Record<string, TraitConfig>;
   /** Default: `"DIRECTION"` */
   directionEvent?: string;
-  /** Default: `{"item":"INIT"}` */
+  /** Default: `{"up":"INIT"}` */
   directionEvents?: Record<string, TraitConfig>;
-  /** Default: `{"item":"INIT"}` */
+  /** Default: `{"up":"INIT"}` */
   directionReleaseEvents?: Record<string, TraitConfig>;
   disabled?: boolean;
   enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';

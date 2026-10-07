@@ -2,11 +2,16 @@ app std-agent-proposal "1.0.0"
 "std-agent-proposal — an agent that reads what the person hands over, works out a structured proposal, and commits nothing until they approve it. The app starts it with PROPOSAL_REQUESTED { input, context } (any trait emitting it, or the person typing into the start form when `showInputForm` is on). A second std-agent-tool-loop answers with `instructions`, `prompt` and `tools` as the signed-in person — `quiet`, its reply and failure renamed PROPOSAL_LOOP_REPLIED / PROPOSAL_LOOP_FAILED so they never reach the assistant's chat — and submits its proposal through one declared input, PROPOSE (its @description is the tool text): a summary and a list of items, each a flat map of scalar values the app names. The person reviews it (the summary, the items drawn with `itemPattern` and `itemFields`) and chooses: Approve emits PROPOSAL_APPROVED { proposal } for the app to commit (the app owns the commit; this atom writes nothing); Revise sends their written feedback back to the agent, which proposes again; Discard emits PROPOSAL_DISCARDED. Cancel while the agent works aborts its model call and emits PROPOSAL_CANCELLED. A run that fails, or ends without proposing, shows its error with Retry and Discard. The panel renders into `panelSlot`. Import the orbital once per app: `orbital Proposal = Proposal.orbitals.AgentProposalOrbital { config { instructions: \"…\", prompt: \"…\", itemFields: […] } }`, restating `tools` with PROPOSE addressed by its local orbital name (`{ event: Proposal.AgentProposalWorkflow.PROPOSE }`). Instructions, prompts, item fields and labels are the app's vocabulary, declared in config."
 ;; @capabilities "agent proposal, review before commit, human approval of agent output, approve or revise agent suggestions, structured proposal review, ai drafts for approval, extract then confirm"
 
-type AgentTool = {
-  event : event
-  read : string
-  scope : "declared"
+type AgentToolScope = {
+  scope : "declared"!
 }
+type AgentToolInput = {
+  event : EventAddress!
+}
+type AgentToolRead = {
+  read : string!
+}
+type AgentTool = AgentToolScope | AgentToolInput | AgentToolRead
 type AgentChatMessage = {
   role : "user" | "assistant"
   content : string!

@@ -943,26 +943,49 @@
               "description": "The ephemeral conversation's own tools (empty: none).",
               "items": {
                 "properties": {
-                  "event": {
-                    "name": "event",
-                    "required": false,
-                    "type": "event"
+                  "AgentToolInput": {
+                    "name": "AgentToolInput",
+                    "properties": {
+                      "event": {
+                        "name": "event",
+                        "required": true,
+                        "type": "EventAddress"
+                      }
+                    },
+                    "type": "object"
                   },
-                  "read": {
-                    "name": "read",
-                    "required": false,
-                    "type": "string"
+                  "AgentToolRead": {
+                    "name": "AgentToolRead",
+                    "properties": {
+                      "read": {
+                        "name": "read",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
                   },
-                  "scope": {
-                    "name": "scope",
-                    "required": false,
-                    "type": "string",
-                    "values": [
-                      "declared"
-                    ]
+                  "AgentToolScope": {
+                    "name": "AgentToolScope",
+                    "properties": {
+                      "scope": {
+                        "name": "scope",
+                        "required": true,
+                        "type": "string",
+                        "values": [
+                          "declared"
+                        ]
+                      }
+                    },
+                    "type": "object"
                   }
                 },
-                "type": "object"
+                "type": "union",
+                "values": [
+                  "AgentToolScope",
+                  "AgentToolInput",
+                  "AgentToolRead"
+                ]
               },
               "name": "chatTools",
               "type": "array"
@@ -2039,23 +2062,8 @@
                   "type": "string"
                 },
                 {
-                  "entity": "AgentTool",
                   "name": "tools",
-                  "properties": [
-                    {
-                      "name": "event",
-                      "type": "event"
-                    },
-                    {
-                      "name": "read",
-                      "type": "string"
-                    },
-                    {
-                      "name": "scope",
-                      "type": "string"
-                    }
-                  ],
-                  "type": "[object]"
+                  "type": "[AgentTool]"
                 },
                 {
                   "name": "ephemeral",
@@ -2327,21 +2335,7 @@
                   },
                   {
                     "name": "tools",
-                    "properties": [
-                      {
-                        "name": "event",
-                        "type": "event"
-                      },
-                      {
-                        "name": "read",
-                        "type": "string"
-                      },
-                      {
-                        "name": "scope",
-                        "type": "string"
-                      }
-                    ],
-                    "type": "[object]"
+                    "type": "[AgentTool]"
                   },
                   {
                     "name": "title",
@@ -2567,23 +2561,8 @@
                     "type": "string"
                   },
                   {
-                    "entity": "AgentTool",
                     "name": "tools",
-                    "properties": [
-                      {
-                        "name": "event",
-                        "type": "event"
-                      },
-                      {
-                        "name": "read",
-                        "type": "string"
-                      },
-                      {
-                        "name": "scope",
-                        "type": "string"
-                      }
-                    ],
-                    "type": "[object]"
+                    "type": "[AgentTool]"
                   },
                   {
                     "name": "ephemeral",
@@ -5224,20 +5203,6 @@
             "type": "number"
           }
         ],
-        "AgentTool": [
-          {
-            "name": "event",
-            "type": "event"
-          },
-          {
-            "name": "read",
-            "type": "string"
-          },
-          {
-            "name": "scope",
-            "type": "string"
-          }
-        ],
         "AgentToolCallActivity": [
           {
             "name": "type",
@@ -5266,6 +5231,20 @@
           {
             "name": "isExecuting",
             "type": "boolean"
+          }
+        ],
+        "AgentToolInput": [
+          {
+            "name": "event",
+            "required": true,
+            "type": "EventAddress"
+          }
+        ],
+        "AgentToolRead": [
+          {
+            "name": "read",
+            "required": true,
+            "type": "string"
           }
         ],
         "AgentToolResultActivity": [
@@ -5305,6 +5284,13 @@
             "name": "timestamp",
             "required": true,
             "type": "number"
+          }
+        ],
+        "AgentToolScope": [
+          {
+            "name": "scope",
+            "required": true,
+            "type": "string"
           }
         ]
       }
@@ -7903,20 +7889,6 @@
             "type": "number"
           }
         ],
-        "AgentTool": [
-          {
-            "name": "event",
-            "type": "event"
-          },
-          {
-            "name": "read",
-            "type": "string"
-          },
-          {
-            "name": "scope",
-            "type": "string"
-          }
-        ],
         "AgentToolCallActivity": [
           {
             "name": "type",
@@ -7945,6 +7917,20 @@
           {
             "name": "isExecuting",
             "type": "boolean"
+          }
+        ],
+        "AgentToolInput": [
+          {
+            "name": "event",
+            "required": true,
+            "type": "EventAddress"
+          }
+        ],
+        "AgentToolRead": [
+          {
+            "name": "read",
+            "required": true,
+            "type": "string"
           }
         ],
         "AgentToolResultActivity": [
@@ -7984,6 +7970,13 @@
             "name": "timestamp",
             "required": true,
             "type": "number"
+          }
+        ],
+        "AgentToolScope": [
+          {
+            "name": "scope",
+            "required": true,
+            "type": "string"
           }
         ]
       }

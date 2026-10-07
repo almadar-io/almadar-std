@@ -473,9 +473,9 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-array',
     minArity: 1,
     maxArity: 2,
-    description: 'Minimum value (optionally by field)',
+    description: 'Minimum value (optionally by field); null when no element counts',
     hasSideEffects: false,
-    returnType: 'number',
+    returnType: 'number | null',
     params: [
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'key', type: 'string', description: 'Field to compare', optional: true },
@@ -487,9 +487,9 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-array',
     minArity: 1,
     maxArity: 2,
-    description: 'Maximum value (optionally by field)',
+    description: 'Maximum value (optionally by field); null when no element counts',
     hasSideEffects: false,
-    returnType: 'number',
+    returnType: 'number | null',
     params: [
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'key', type: 'string', description: 'Field to compare', optional: true },

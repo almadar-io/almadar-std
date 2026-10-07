@@ -273,26 +273,49 @@
           "description": "As the signed-in user: `{ scope: declared }` (the default) gives it every external input the program declares and a read over every persisted entity, so each building block's declared inputs become its abilities; or list them — `{ event: Orbital.Trait.EVENT }` for one input, `{ read: Entity }` for one entity.",
           "items": {
             "properties": {
-              "event": {
-                "name": "event",
-                "required": false,
-                "type": "event"
+              "AgentToolInput": {
+                "name": "AgentToolInput",
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "required": true,
+                    "type": "EventAddress"
+                  }
+                },
+                "type": "object"
               },
-              "read": {
-                "name": "read",
-                "required": false,
-                "type": "string"
+              "AgentToolRead": {
+                "name": "AgentToolRead",
+                "properties": {
+                  "read": {
+                    "name": "read",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
               },
-              "scope": {
-                "name": "scope",
-                "required": false,
-                "type": "string",
-                "values": [
-                  "declared"
-                ]
+              "AgentToolScope": {
+                "name": "AgentToolScope",
+                "properties": {
+                  "scope": {
+                    "name": "scope",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "declared"
+                    ]
+                  }
+                },
+                "type": "object"
               }
             },
-            "type": "object"
+            "type": "union",
+            "values": [
+              "AgentToolScope",
+              "AgentToolInput",
+              "AgentToolRead"
+            ]
           },
           "label": "What may the assistant do?",
           "synonyms": "allowlist, abilities, actions, permissions",
@@ -623,17 +646,24 @@
             "type": "string"
           }
         ],
-        "AgentTool": [
+        "AgentToolInput": [
           {
             "name": "event",
-            "type": "event"
-          },
+            "required": true,
+            "type": "EventAddress"
+          }
+        ],
+        "AgentToolRead": [
           {
             "name": "read",
+            "required": true,
             "type": "string"
-          },
+          }
+        ],
+        "AgentToolScope": [
           {
             "name": "scope",
+            "required": true,
             "type": "string"
           }
         ],
@@ -857,17 +887,24 @@
             "type": "string"
           }
         ],
-        "AgentTool": [
+        "AgentToolInput": [
           {
             "name": "event",
-            "type": "event"
-          },
+            "required": true,
+            "type": "EventAddress"
+          }
+        ],
+        "AgentToolRead": [
           {
             "name": "read",
+            "required": true,
             "type": "string"
-          },
+          }
+        ],
+        "AgentToolScope": [
           {
             "name": "scope",
+            "required": true,
             "type": "string"
           }
         ],

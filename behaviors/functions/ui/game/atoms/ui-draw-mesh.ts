@@ -55,8 +55,7 @@ export interface StdUiDrawMeshConfig {
   radiusBottom?: number;
   radiusTop?: number;
   receiveShadow?: boolean;
-  /** Default: `[]` */
-  rotation?: number[];
+  rotation?: unknown;
   segments?: number;
   /** Default: `"box"` */
   shape?: 'box' | 'sphere' | 'capsule' | 'cylinder' | 'cone' | 'torus' | 'plane' | 'circle' | 'polyhedron';

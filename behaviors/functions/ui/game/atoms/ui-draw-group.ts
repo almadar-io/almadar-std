@@ -48,8 +48,7 @@ export interface StdUiDrawGroupConfig {
   /** Default: `{"x":1,"y":1,"z":1}` */
   position?: EntityRow;
   rotate?: number;
-  /** Default: `[]` */
-  rotation?: number[];
+  rotation?: unknown;
   scale?: number;
   skeleton?: boolean;
 }

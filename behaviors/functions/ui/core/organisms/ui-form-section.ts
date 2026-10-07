@@ -315,7 +315,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'default': {},
             'description': 'Inspection form extensions',
             'items': {
-              'type': 'object',
+              'type': 'SExpr',
             },
             'label': 'Conditional Fields',
             'tier': 'presentation',
@@ -990,7 +990,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                 'expression': {
                   'name': 'expression',
                   'required': true,
-                  'type': 'object',
+                  'type': 'SExpr',
                 },
                 'triggerFields': {
                   'items': {
@@ -1214,7 +1214,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                 'condition': {
                   'name': 'condition',
                   'required': false,
-                  'type': 'object',
+                  'type': 'SExpr',
                 },
                 'fields': {
                   'items': {
@@ -1530,7 +1530,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                 'condition': {
                   'name': 'condition',
                   'required': true,
-                  'type': 'object',
+                  'type': 'SExpr',
                 },
                 'fieldId': {
                   'name': 'fieldId',

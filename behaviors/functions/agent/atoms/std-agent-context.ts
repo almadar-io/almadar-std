@@ -243,26 +243,49 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
             'description': 'The ephemeral conversation\'s own tools, carried through a summarizing.',
             'items': {
               'properties': {
-                'event': {
-                  'name': 'event',
-                  'required': false,
-                  'type': 'event',
+                'AgentToolInput': {
+                  'name': 'AgentToolInput',
+                  'properties': {
+                    'event': {
+                      'name': 'event',
+                      'required': true,
+                      'type': 'EventAddress',
+                    },
+                  },
+                  'type': 'object',
                 },
-                'read': {
-                  'name': 'read',
-                  'required': false,
-                  'type': 'string',
+                'AgentToolRead': {
+                  'name': 'AgentToolRead',
+                  'properties': {
+                    'read': {
+                      'name': 'read',
+                      'required': true,
+                      'type': 'string',
+                    },
+                  },
+                  'type': 'object',
                 },
-                'scope': {
-                  'name': 'scope',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'declared',
-                  ],
+                'AgentToolScope': {
+                  'name': 'AgentToolScope',
+                  'properties': {
+                    'scope': {
+                      'name': 'scope',
+                      'required': true,
+                      'type': 'string',
+                      'values': [
+                        'declared',
+                      ],
+                    },
+                  },
+                  'type': 'object',
                 },
               },
-              'type': 'object',
+              'type': 'union',
+              'values': [
+                'AgentToolScope',
+                'AgentToolInput',
+                'AgentToolRead',
+              ],
             },
             'name': 'pendingTools',
             'type': 'array',
@@ -354,23 +377,8 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                 'type': 'string',
               },
               {
-                'entity': 'AgentTool',
                 'name': 'tools',
-                'properties': [
-                  {
-                    'name': 'event',
-                    'type': 'event',
-                  },
-                  {
-                    'name': 'read',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'scope',
-                    'type': 'string',
-                  },
-                ],
-                'type': '[object]',
+                'type': '[AgentTool]',
               },
               {
                 'name': 'ephemeral',
@@ -444,21 +452,7 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                 },
                 {
                   'name': 'tools',
-                  'properties': [
-                    {
-                      'name': 'event',
-                      'type': 'event',
-                    },
-                    {
-                      'name': 'read',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'scope',
-                      'type': 'string',
-                    },
-                  ],
-                  'type': '[object]',
+                  'type': '[AgentTool]',
                 },
                 {
                   'name': 'ephemeral',
@@ -519,23 +513,8 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                   'type': 'string',
                 },
                 {
-                  'entity': 'AgentTool',
                   'name': 'tools',
-                  'properties': [
-                    {
-                      'name': 'event',
-                      'type': 'event',
-                    },
-                    {
-                      'name': 'read',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'scope',
-                      'type': 'string',
-                    },
-                  ],
-                  'type': '[object]',
+                  'type': '[AgentTool]',
                 },
                 {
                   'name': 'ephemeral',

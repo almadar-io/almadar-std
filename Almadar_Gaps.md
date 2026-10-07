@@ -8,7 +8,9 @@ Every open gap this repo owns lives here. This file is the source of truth; the 
 - **Close by deleting.** Remove the entry in the same commit as the fix. There is no "closed" section; git history is the record.
 - **Cross-repo gaps don't go here.** If fixing it needs another repo, describe it in your report or PR body; the monorepo coordinator files it.
 
-Next code: `G-STD-046`
+Next code: `G-STD-047`
+
+- **G-STD-046** — `std-agent-proposal` passes a constant `cancelKey: "agent-proposal"` to its tool loop, so an app importing the orbital more than once (project-friday imports it four times: meeting minutes, inbox replies, content, social posts) shares one cancel key — cancelling one agent's run can abort another's model call. The key should derive from the import (an orbital-level knob defaulting per import). behaviors/lolo/agent/atoms/std-agent-proposal.lolo:542 [mechanical] — prevention rung: none of the three (a runtime cross-talk between two legal imports); found by reading the atom while composing it.
 
 ## Open gaps
 

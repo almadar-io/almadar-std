@@ -58,7 +58,7 @@ export interface StdUiDashboardLayoutConfig {
   currentPath?: string;
   headerActions?: PatternValue;
   /** Default: `"sidebar"` */
-  layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal';
+  layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal' | 'drawer';
   logo?: PatternValue;
   /** Default: `[]` */
   navItems?: EntityRow[];

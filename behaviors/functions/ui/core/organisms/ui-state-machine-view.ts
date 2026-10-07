@@ -59,6 +59,8 @@ export interface StdUiStateMachineViewTransitionClickPayload {
 export interface StdUiStateMachineViewConfig {
   activeState?: string;
   activeTransition?: number;
+  /** Default: `{"effects":{"persist":{"body":"Saves the order."}},"states":{"pending":{"body":"Every order starts here.","title":"Unpaid"}},"transitions":{"PAY":{"body":"Only fires when the amount is positive."}}}` */
+  annotations?: EntityRow;
   ariaBusy?: boolean;
   ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
   ariaDescribedby?: string;
@@ -183,6 +185,92 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
             'label': 'Active Transition',
             'tier': 'presentation',
             'type': 'number',
+          },
+          'annotations': {
+            'default': {
+              'effects': {
+                'persist': {
+                  'body': 'Saves the order.',
+                },
+              },
+              'states': {
+                'pending': {
+                  'body': 'Every order starts here.',
+                  'title': 'Unpaid',
+                },
+              },
+              'transitions': {
+                'PAY': {
+                  'body': 'Only fires when the amount is positive.',
+                },
+              },
+            },
+            'description': 'Author explanations shown in a popover on hover: a note per state name, per transition event and per effect type.',
+            'label': 'Annotations',
+            'properties': {
+              'effects': {
+                'items': {
+                  'properties': {
+                    'body': {
+                      'name': 'body',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    'title': {
+                      'name': 'title',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
+                  'type': 'object',
+                },
+                'name': 'effects',
+                'required': false,
+                'type': 'object',
+              },
+              'states': {
+                'items': {
+                  'properties': {
+                    'body': {
+                      'name': 'body',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    'title': {
+                      'name': 'title',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
+                  'type': 'object',
+                },
+                'name': 'states',
+                'required': false,
+                'type': 'object',
+              },
+              'transitions': {
+                'items': {
+                  'properties': {
+                    'body': {
+                      'name': 'body',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    'title': {
+                      'name': 'title',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
+                  'type': 'object',
+                },
+                'name': 'transitions',
+                'required': false,
+                'type': 'object',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'StateMachineViewAnnotations',
           },
           'ariaBusy': {
             'description': 'This region is updating; assistive technology waits before announcing it.',
@@ -591,7 +679,7 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                         'properties': {
                           'args': {
                             'items': {
-                              'type': 'object',
+                              'type': 'SExpr',
                             },
                             'name': 'args',
                             'required': true,
@@ -622,7 +710,7 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                     'guard': {
                       'name': 'guard',
                       'required': false,
-                      'type': 'object',
+                      'type': 'SExpr',
                     },
                     'index': {
                       'name': 'index',
@@ -838,6 +926,7 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                   {
                     'activeState': '@config.activeState',
                     'activeTransition': '@config.activeTransition',
+                    'annotations': '@config.annotations',
                     'aria-busy': '@config.ariaBusy',
                     'aria-current': '@config.ariaCurrent',
                     'aria-describedby': '@config.ariaDescribedby',
