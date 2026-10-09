@@ -1,5 +1,7 @@
-app std-site-footer "1.0.0"
-"std-site-footer — the footer at the bottom of a public site: brand name and tagline, columns of links, and a bottom row with the copyright line and legal links. Links follow `href` (in-app path, #anchor, or absolute URL) and each click emits FOOTER_LINK_CLICKED. Pick for marketing sites, docs portals and product websites."
+app std-site-footer [
+  version: "1.0.0",
+  description: "std-site-footer — the footer at the bottom of a public site: brand name and tagline, columns of links, and a bottom row with the copyright line and legal links. Links follow `href` (in-app path, #anchor, or absolute URL) and each click emits FOOTER_LINK_CLICKED. Pick for marketing sites, docs portals and product websites."
+]
 type FooterLink = { label : string!, href : string! }
 type FooterColumn = { title : string!, links : [FooterLink] }
 orbital SiteFooterOrbital {
@@ -18,6 +20,10 @@ orbital SiteFooterOrbital {
           paddingY: xl
           border: true
           fullWidth: true
+          bg: (if (== @config.surface inverse) inverse transparent)
+          edgeTop: @config.edgeTop
+          edgeColor: @config.edgeColor
+          texture: @config.texture
           className: "border-x-0 border-b-0"
           children: [{
             type: container
@@ -39,7 +45,8 @@ orbital SiteFooterOrbital {
                   children: [{
                   type: typography
                   content: @config.brandName
-                  variant: h5
+                  variant: h2
+                  size: lg
                   weight: bold
                 }, {
                   type: typography
@@ -151,6 +158,22 @@ orbital SiteFooterOrbital {
       legalLinks : [FooterLink] = []
         @label "Legal links"
         @description "Links in the bottom row, e.g. Privacy and Terms"
+        @tier "presentation"
+      surface : "plain" | "inverse" = plain
+        @label "Surface"
+        @description "plain, or inverted colors (inverse) for a dark closing band"
+        @tier "presentation"
+      edgeTop : "none" | "curve" | "wave" | "arc" | "tilt" | "step" | "scallop" = none
+        @label "Top edge"
+        @description "Shape cut into the top of the footer; curve uses the theme's shape"
+        @tier "presentation"
+      edgeColor : "background" | "muted" | "surface" | "gradient" | "inverse" = background
+        @label "Edge fill"
+        @description "The surface of the section above the footer, which fills the cut"
+        @tier "presentation"
+      texture : boolean = false
+        @label "Texture"
+        @description "Lay the theme's texture over the footer"
         @tier "presentation"
     }
   }

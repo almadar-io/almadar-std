@@ -137,6 +137,28 @@
               "tier": "presentation",
               "type": "render-ui"
             },
+            "backgroundPosition": {
+              "default": "center",
+              "description": "Which part of the photo stays visible when it is cropped",
+              "label": "Background photo focus",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "center",
+                "top",
+                "bottom",
+                "left",
+                "right"
+              ]
+            },
+            "backgroundSrc": {
+              "default": "",
+              "description": "Photo URL filling the block behind the copy when the surface is image",
+              "label": "Background photo",
+              "synonyms": "background image, hero photo, cover photo",
+              "tier": "presentation",
+              "type": "string"
+            },
             "command": {
               "default": "",
               "description": "A shell command shown in a copyable code box under the actions, e.g. an install one-liner; empty hides it",
@@ -183,10 +205,10 @@
                       [
                         "==",
                         "@config.look",
-                        "banner"
+                        "hero"
                       ],
-                      "h2",
-                      "h1"
+                      "h1",
+                      "h2"
                     ],
                     "weight": "bold"
                   },
@@ -211,7 +233,16 @@
                       "hidden",
                       "max-w-2xl text-pretty"
                     ],
-                    "color": "muted",
+                    "color": [
+                      "if",
+                      [
+                        "==",
+                        "@config.look",
+                        "header"
+                      ],
+                      "primary",
+                      "muted"
+                    ],
                     "content": "@config.lede",
                     "type": "typography",
                     "variant": "large"
@@ -327,6 +358,52 @@
               "tier": "internal",
               "type": "render-ui"
             },
+            "edgeBottom": {
+              "default": "none",
+              "description": "Shape cut into the bottom of the block; curve uses the theme's shape",
+              "label": "Bottom edge",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "none",
+                "curve",
+                "wave",
+                "arc",
+                "tilt",
+                "step",
+                "scallop"
+              ]
+            },
+            "edgeColor": {
+              "default": "background",
+              "description": "The surface of the neighbouring section, which fills the cut",
+              "label": "Edge fill",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "background",
+                "muted",
+                "surface",
+                "gradient",
+                "inverse"
+              ]
+            },
+            "edgeTop": {
+              "default": "none",
+              "description": "Shape cut into the top of the block; curve uses the theme's shape",
+              "label": "Top edge",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "none",
+                "curve",
+                "wave",
+                "arc",
+                "tilt",
+                "step",
+                "scallop"
+              ]
+            },
             "eyebrow": {
               "default": "",
               "description": "Small badge above the headline; empty hides it",
@@ -354,6 +431,37 @@
                 "tall"
               ]
             },
+            "illustration": {
+              "default": "",
+              "description": "Inline SVG shown beside or below the copy instead of the media image; empty uses the media image",
+              "label": "Illustration",
+              "synonyms": "artwork, graphic, drawing, svg",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "illustrationContent": {
+              "default": {
+                "alt": "",
+                "animate": true,
+                "animation": "draw",
+                "height": [
+                  "if",
+                  [
+                    "==",
+                    "@config.look",
+                    "header"
+                  ],
+                  200.0,
+                  380.0
+                ],
+                "svgContent": "@config.illustration",
+                "type": "animated-graphic",
+                "width": "100%"
+              },
+              "label": "Illustration block",
+              "tier": "internal",
+              "type": "render-ui"
+            },
             "lede": {
               "default": "",
               "description": "One or two sentences under the headline; empty hides it",
@@ -364,14 +472,15 @@
             },
             "look": {
               "default": "hero",
-              "description": "hero = full-width page opener with an h1; banner = contained call-to-action card with an h2",
+              "description": "hero = full-width page opener with an h1; banner = contained call-to-action card with an h2; header = compact opener at the top of an app page",
               "label": "Look",
               "synonyms": "cta banner, call to action, callout, page header, masthead",
               "tier": "presentation",
               "type": "string",
               "values": [
                 "hero",
-                "banner"
+                "banner",
+                "header"
               ]
             },
             "mediaAlt": {
@@ -450,12 +559,64 @@
                     "muted"
                   ],
                   "muted",
-                  "transparent"
+                  [
+                    "if",
+                    [
+                      "==",
+                      "@config.surface",
+                      "accent"
+                    ],
+                    "gradient",
+                    [
+                      "if",
+                      [
+                        "or",
+                        [
+                          "==",
+                          "@config.surface",
+                          "inverse"
+                        ],
+                        [
+                          "==",
+                          "@config.surface",
+                          "image"
+                        ]
+                      ],
+                      "inverse",
+                      "transparent"
+                    ]
+                  ]
                 ],
                 "children": [
                   {
                     "aria-hidden": true,
                     "children": [
+                      {
+                        "alt": "",
+                        "className": "h-full",
+                        "fit": "cover",
+                        "position": "@config.backgroundPosition",
+                        "priority": [
+                          "==",
+                          "@config.look",
+                          "hero"
+                        ],
+                        "src": "@config.backgroundSrc",
+                        "type": "image"
+                      },
+                      {
+                        "className": [
+                          "if",
+                          [
+                            "==",
+                            "@config.surface",
+                            "image"
+                          ],
+                          "band-scrim",
+                          "hidden"
+                        ],
+                        "type": "box"
+                      },
                       "@config.backdropContent"
                     ],
                     "className": "inset-0 pointer-events-none",
@@ -487,7 +648,16 @@
                                 "align": "center",
                                 "children": [
                                   "@config.copyContent",
-                                  "@config.mediaContent"
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@config.illustration",
+                                      ""
+                                    ],
+                                    "@config.mediaContent",
+                                    "@config.illustrationContent"
+                                  ]
                                 ],
                                 "gap": "xl",
                                 "ratio": "1:1",
@@ -538,6 +708,9 @@
                   "flex min-h-[80vh] items-center",
                   ""
                 ],
+                "edgeBottom": "@config.edgeBottom",
+                "edgeColor": "@config.edgeColor",
+                "edgeTop": "@config.edgeTop",
                 "fullWidth": true,
                 "overflow": "hidden",
                 "paddingY": [
@@ -545,12 +718,32 @@
                   [
                     "==",
                     "@config.look",
-                    "banner"
+                    "hero"
                   ],
-                  "xl",
-                  "2xl"
+                  "2xl",
+                  [
+                    "if",
+                    [
+                      "==",
+                      "@config.look",
+                      "banner"
+                    ],
+                    "xl",
+                    "lg"
+                  ]
                 ],
                 "position": "relative",
+                "rounded": [
+                  "if",
+                  [
+                    "==",
+                    "@config.look",
+                    "header"
+                  ],
+                  "2xl",
+                  "none"
+                ],
+                "texture": "@config.texture",
                 "type": "box"
               },
               "label": "Side-by-side body",
@@ -567,12 +760,64 @@
                     "muted"
                   ],
                   "muted",
-                  "transparent"
+                  [
+                    "if",
+                    [
+                      "==",
+                      "@config.surface",
+                      "accent"
+                    ],
+                    "gradient",
+                    [
+                      "if",
+                      [
+                        "or",
+                        [
+                          "==",
+                          "@config.surface",
+                          "inverse"
+                        ],
+                        [
+                          "==",
+                          "@config.surface",
+                          "image"
+                        ]
+                      ],
+                      "inverse",
+                      "transparent"
+                    ]
+                  ]
                 ],
                 "children": [
                   {
                     "aria-hidden": true,
                     "children": [
+                      {
+                        "alt": "",
+                        "className": "h-full",
+                        "fit": "cover",
+                        "position": "@config.backgroundPosition",
+                        "priority": [
+                          "==",
+                          "@config.look",
+                          "hero"
+                        ],
+                        "src": "@config.backgroundSrc",
+                        "type": "image"
+                      },
+                      {
+                        "className": [
+                          "if",
+                          [
+                            "==",
+                            "@config.surface",
+                            "image"
+                          ],
+                          "band-scrim",
+                          "hidden"
+                        ],
+                        "type": "box"
+                      },
                       "@config.backdropContent"
                     ],
                     "className": "inset-0 pointer-events-none",
@@ -613,7 +858,16 @@
                                 ],
                                 "children": [
                                   "@config.copyContent",
-                                  "@config.mediaContent"
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@config.illustration",
+                                      ""
+                                    ],
+                                    "@config.mediaContent",
+                                    "@config.illustrationContent"
+                                  ]
                                 ],
                                 "direction": "vertical",
                                 "gap": "2xl",
@@ -664,6 +918,9 @@
                   "flex min-h-[80vh] items-center",
                   ""
                 ],
+                "edgeBottom": "@config.edgeBottom",
+                "edgeColor": "@config.edgeColor",
+                "edgeTop": "@config.edgeTop",
                 "fullWidth": true,
                 "overflow": "hidden",
                 "paddingY": [
@@ -671,12 +928,32 @@
                   [
                     "==",
                     "@config.look",
-                    "banner"
+                    "hero"
                   ],
-                  "xl",
-                  "2xl"
+                  "2xl",
+                  [
+                    "if",
+                    [
+                      "==",
+                      "@config.look",
+                      "banner"
+                    ],
+                    "xl",
+                    "lg"
+                  ]
                 ],
                 "position": "relative",
+                "rounded": [
+                  "if",
+                  [
+                    "==",
+                    "@config.look",
+                    "header"
+                  ],
+                  "2xl",
+                  "none"
+                ],
+                "texture": "@config.texture",
                 "type": "box"
               },
               "label": "Stacked body",
@@ -685,14 +962,24 @@
             },
             "surface": {
               "default": "plain",
-              "description": "Background behind the block",
+              "description": "Background behind the block: plain, muted, a soft theme gradient (accent), inverted colors (inverse), or a photo (image, set Background photo)",
               "label": "Surface",
               "tier": "presentation",
               "type": "string",
               "values": [
                 "plain",
-                "muted"
+                "muted",
+                "accent",
+                "inverse",
+                "image"
               ]
+            },
+            "texture": {
+              "default": false,
+              "description": "Lay the theme's texture over the block",
+              "label": "Texture",
+              "tier": "presentation",
+              "type": "boolean"
             }
           },
           "effectRow": [

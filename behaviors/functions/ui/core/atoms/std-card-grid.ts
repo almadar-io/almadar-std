@@ -51,6 +51,12 @@ export interface StdCardGridConfig {
   alignment?: 'center' | 'start';
   /** Default: `3` */
   columns?: number;
+  /** Default: `"none"` */
+  edgeBottom?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
+  /** Default: `"background"` */
+  edgeColor?: 'background' | 'muted' | 'surface' | 'gradient' | 'inverse';
+  /** Default: `"none"` */
+  edgeTop?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
   /** Default: `""` */
   heading?: string;
   /** Default: `[{"description":"What this card is about.","title":"First card"},{"description":"What this card is about.","title":"Second card"},{"description":"What this card is about.","title":"Third card"}]` */
@@ -60,7 +66,9 @@ export interface StdCardGridConfig {
   /** Default: `"plain"` */
   look?: 'media' | 'profile' | 'plain';
   /** Default: `"plain"` */
-  surface?: 'plain' | 'muted';
+  surface?: 'plain' | 'muted' | 'accent' | 'inverse';
+  /** Default: `false` */
+  texture?: boolean;
 }
 
 /**

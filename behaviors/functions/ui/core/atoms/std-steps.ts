@@ -41,6 +41,12 @@ export type StdStepsEventKey = 'INIT';
 export interface StdStepsConfig {
   /** Default: `"center"` */
   alignment?: 'center' | 'start';
+  /** Default: `"none"` */
+  edgeBottom?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
+  /** Default: `"background"` */
+  edgeColor?: 'background' | 'muted' | 'surface' | 'gradient' | 'inverse';
+  /** Default: `"none"` */
+  edgeTop?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
   /** Default: `""` */
   heading?: string;
   /** Default: `"row"` */
@@ -50,7 +56,9 @@ export interface StdStepsConfig {
   /** Default: `[{"description":"Say what you want in plain words.","title":"Describe it"},{"description":"Check the plan before anything is built.","title":"Review it"},{"description":"Publish when it looks right.","title":"Ship it"}]` */
   steps?: EntityRow[];
   /** Default: `"plain"` */
-  surface?: 'plain' | 'muted';
+  surface?: 'plain' | 'muted' | 'accent' | 'inverse';
+  /** Default: `false` */
+  texture?: boolean;
 }
 
 /**

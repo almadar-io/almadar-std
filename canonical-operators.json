@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-07T08:31:05.345Z",
+  "generated": "2026-10-08T16:52:49.550Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -175,7 +175,20 @@
       ]
     },
     "std-behavior": {
-      "description": "Behavior substrate effects (runtime)",
+      "description": "Behavior reflection effects (catalog, describe, source)",
+      "target": [
+        "ts"
+      ]
+    },
+    "std-behavior-value": {
+      "description": "Behaviors as first-class values (pure)",
+      "target": [
+        "ts",
+        "rust"
+      ]
+    },
+    "std-program": {
+      "description": "Read, print and evaluate programs held as data",
       "target": [
         "ts"
       ]
@@ -1975,30 +1988,96 @@
       ],
       "docsSource": "generated"
     },
-    "behavior/call": {
-      "category": "std-behavior",
+    "behavior/apply": {
+      "category": "std-behavior-value",
       "minArity": 2,
-      "maxArity": 3,
-      "returnType": "ServiceCallResult",
-      "description": "Call a behavior service action. Returns the ServiceCallResult union — resolves to the specific member when the (behavior, action) pair is a literal.",
+      "maxArity": 2,
+      "returnType": "any",
+      "description": "Record overrides on a behavior value and return the new value of the same kind. A trait value takes the §8 trait-reference surface (config, events and fields merge key-wise, the later value winning; listens, emitsScope and linkedEntity replace); an orbital value takes the §8b import body (maps merge key-wise, traits per trait, extend and retype by field name, the rest replaces). Nothing is resolved until the value is bound or evaluated.",
       "module": "behavior",
-      "hasSideEffects": true,
-      "runsOn": "any",
-      "title": "Call",
+      "returnSemantics": "identity-of-arg<0>",
       "params": [
         {
-          "name": "behavior",
-          "type": "string",
-          "description": "Behavior name"
+          "name": "value",
+          "type": "trait",
+          "description": "The trait value"
         },
         {
-          "name": "action",
-          "type": "string",
-          "description": "Action name (variadic)"
+          "name": "overrides",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "config": {
+                "kind": "object",
+                "fields": {},
+                "open": true
+              },
+              "events": {
+                "kind": "object",
+                "fields": {},
+                "open": true
+              },
+              "fields": {
+                "kind": "object",
+                "fields": {},
+                "open": true
+              },
+              "listens": {
+                "kind": "array",
+                "of": "object"
+              },
+              "emitsScope": "string",
+              "linkedEntity": "string"
+            }
+          },
+          "description": "The LOLO §8 trait-reference override surface"
         }
       ],
       "examples": [
-        "(behavior/call \"user-service\" \"login\")"
+        "(behavior/apply @entity.widget {\"config\":{\"compact\":true}})"
+      ],
+      "docsSource": "generated"
+    },
+    "behavior/catalog": {
+      "category": "std-behavior",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "CatalogEntry[]",
+      "description": "List the installed behaviors under registry folders (`<prefix>/<topic>[/<tier>]`), optionally narrowed by exposure. Each entry carries its traits as values and its shipped embedding vectors.",
+      "module": "behavior",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "params": [
+        {
+          "name": "scope",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "paths": {
+                "kind": "array",
+                "of": "string"
+              },
+              "exposure": {
+                "kind": "array",
+                "of": "string"
+              }
+            }
+          },
+          "description": "Registry folders and an optional exposure filter"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {},
+            "open": true
+          },
+          "description": "Emit configuration ({ emit: { success, failure } })",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(behavior/catalog {\"paths\":[\"std/ui/core/molecules\"]} {\"emit\":{\"success\":\"LISTED\",\"failure\":\"LIST_FAILED\"}})"
       ],
       "docsSource": "generated"
     },
@@ -2022,6 +2101,37 @@
       ],
       "docsSource": "generated"
     },
+    "behavior/describe": {
+      "category": "std-behavior",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "any",
+      "description": "Describe a trait value (its knobs, the events it emits and listens to, its transition events, and the shipped knob embedding vectors), or an orbital value or a whole behavior `{ behavior }` (its app knobs and, per orbital, its knobs, primary entity fields, the entities it borrows from sibling orbitals, its traits and pages).",
+      "module": "behavior",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "params": [
+        {
+          "name": "value",
+          "type": "trait",
+          "description": "The trait value"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {},
+            "open": true
+          },
+          "description": "Emit configuration ({ emit: { success, failure } })",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(behavior/describe @entity.widget {\"emit\":{\"success\":\"DESCRIBED\",\"failure\":\"DESCRIBE_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
     "behavior/detect-layout": {
       "category": "std-composition",
       "minArity": 1,
@@ -2039,33 +2149,6 @@
       ],
       "examples": [
         "(behavior/detect-layout [{\"name\": \"a\"} {\"name\": \"b\"}]) // => \"tabs\""
-      ],
-      "docsSource": "generated"
-    },
-    "behavior/instantiate": {
-      "category": "std-behavior",
-      "minArity": 2,
-      "maxArity": 3,
-      "returnType": "BuilderResult",
-      "description": "Instantiate a behavior from the registry at runtime (meta-programming). Equivalent to compile-time `uses` but dynamic — the behavior name is a runtime value. Applies the same override surface (linkedEntity, events, config, fields).",
-      "module": "behavior",
-      "hasSideEffects": true,
-      "runsOn": "any",
-      "title": "Instantiate",
-      "params": [
-        {
-          "name": "behavior",
-          "type": "string",
-          "description": "Behavior name"
-        },
-        {
-          "name": "config",
-          "type": "object",
-          "description": "Configuration object (variadic)"
-        }
-      ],
-      "examples": [
-        "(behavior/instantiate \"my-behavior\" {})"
       ],
       "docsSource": "generated"
     },
@@ -2091,6 +2174,37 @@
       ],
       "examples": [
         "(behavior/pipe 5 (fn x (+ \"x\" 1))) // => 6"
+      ],
+      "docsSource": "generated"
+    },
+    "behavior/source": {
+      "category": "std-behavior",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "sexpr",
+      "description": "The behavior a trait value belongs to, as a quoted program.",
+      "module": "behavior",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "params": [
+        {
+          "name": "value",
+          "type": "trait",
+          "description": "The trait value"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {},
+            "open": true
+          },
+          "description": "Emit configuration ({ emit: { success, failure } })",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(behavior/source @entity.widget {\"emit\":{\"success\":\"SOURCED\",\"failure\":\"SOURCE_FAILED\"}})"
       ],
       "docsSource": "generated"
     },
@@ -2376,43 +2490,6 @@
       ],
       "examples": [
         "(checkpoint/save {\"layers\":[{\"type\":\"dense\",\"units\":2}]} \"ckpt-1\")"
-      ],
-      "docsSource": "generated"
-    },
-    "compose/compose-all": {
-      "category": "std-behavior",
-      "minArity": 0,
-      "maxArity": 0,
-      "returnType": "ComposeAllResult",
-      "description": "Compose all orbitals in the workspace into a single schema. Backed by composeBehaviors.",
-      "module": "behavior",
-      "hasSideEffects": true,
-      "runsOn": "any",
-      "title": "Compose All",
-      "examples": [
-        "(compose/compose-all) // => {}"
-      ],
-      "docsSource": "generated"
-    },
-    "compose/compose-children": {
-      "category": "std-behavior",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "ComposeChildrenResult",
-      "description": "Compose child orbitals under a parent for recursive builds.",
-      "module": "behavior",
-      "hasSideEffects": true,
-      "runsOn": "any",
-      "title": "Compose Children",
-      "params": [
-        {
-          "name": "parent",
-          "type": "object",
-          "description": "Parent orbital"
-        }
-      ],
-      "examples": [
-        "(compose/compose-children \"GameScreenOrbital\") // => {}"
       ],
       "docsSource": "generated"
     },
@@ -4426,38 +4503,6 @@
       ],
       "examples": [
         "(log \"User signed in\")"
-      ],
-      "docsSource": "generated"
-    },
-    "lolo/emit-body": {
-      "category": "std-behavior",
-      "minArity": 3,
-      "maxArity": 3,
-      "returnType": "LoloEmitResult",
-      "description": "Emit a .lolo orbital body from the LLM (free-lolo path). Returns the emitted lolo source.",
-      "module": "behavior",
-      "hasSideEffects": true,
-      "runsOn": "any",
-      "title": "Emit Body",
-      "params": [
-        {
-          "name": "prompt",
-          "type": "string",
-          "description": "Generation prompt"
-        },
-        {
-          "name": "context",
-          "type": "object",
-          "description": "Emission context"
-        },
-        {
-          "name": "config",
-          "type": "object",
-          "description": "Emission configuration"
-        }
-      ],
-      "examples": [
-        "(lolo/emit-body \"PlayerOrbital\" {\"topics\":[\"game/2d\"]} \"player ship with movement\")"
       ],
       "docsSource": "generated"
     },
@@ -6819,6 +6864,171 @@
         "(prob/variance [2 4 4 4 5 5 7 9]) // => 4"
       ],
       "docsSource": "reference-docs"
+    },
+    "program/compose": {
+      "category": "std-program",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": "sexpr",
+      "description": "Assemble programs into one app program, in the order given: pages, layout, event wiring and the app nav (core `composeAppFromFiles`). Success carries the composed program; it is not validated or written — pass it to `program/eval`.",
+      "module": "program",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "params": [
+        {
+          "name": "programs",
+          "type": {
+            "kind": "array",
+            "of": {
+              "kind": "sexpr"
+            }
+          },
+          "description": "The programs to assemble, in roster order"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "appName": "string",
+              "layout": "string"
+            },
+            "open": true
+          },
+          "description": "The app name, an optional layout strategy, and the emit configuration"
+        }
+      ],
+      "examples": [
+        "(program/compose @entity.programs {\"appName\":\"Shop\",\"emit\":{\"success\":\"COMPOSED\",\"failure\":\"COMPOSE_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "program/eval": {
+      "category": "std-program",
+      "minArity": 1,
+      "maxArity": 3,
+      "returnType": "EvaluatedProgram",
+      "description": "Validate a program (`.orb` IR) at the 0-error / 0-warning bar and write it into the workspace (default `orbitals/<name>.orb`, or the project named by `into`). Success carries `{ behavior, traits }` — the written program and its traits as values; failure carries the validator errors as data. A `prior` program keeps ids stable across a re-evaluation.",
+      "module": "program",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "params": [
+        {
+          "name": "program",
+          "type": {
+            "kind": "sexpr"
+          },
+          "description": "A quoted program"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "prior": {
+                "kind": "sexpr"
+              }
+            },
+            "open": true
+          },
+          "description": "Emit configuration and an optional prior program",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(program/eval @entity.program {\"emit\":{\"success\":\"BUILT\",\"failure\":\"BUILD_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "program/print": {
+      "category": "std-program",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "string",
+      "description": "Format a quoted program as `.lolo` source text.",
+      "module": "program",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "params": [
+        {
+          "name": "program",
+          "type": {
+            "kind": "sexpr"
+          },
+          "description": "A quoted program"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {},
+            "open": true
+          },
+          "description": "Emit configuration ({ emit: { success, failure } })",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(program/print @entity.program {\"emit\":{\"success\":\"PRINTED\",\"failure\":\"PRINT_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "program/read": {
+      "category": "std-program",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "sexpr",
+      "description": "Parse `.lolo` source text into a quoted program.",
+      "module": "program",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "params": [
+        {
+          "name": "text",
+          "type": "string",
+          "description": "`.lolo` source"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {},
+            "open": true
+          },
+          "description": "Emit configuration ({ emit: { success, failure } })",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(program/read @entity.draft {\"emit\":{\"success\":\"READ\",\"failure\":\"READ_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "quasiquote": {
+      "category": "control",
+      "minArity": 1,
+      "maxArity": null,
+      "returnType": "sexpr",
+      "description": "A quoted template with live holes: the template is held as data like `quote`, and each `(unquote e)` inside it is replaced by the value of `e` (a program built from values the trait holds, for `program/eval`)",
+      "module": "core",
+      "params": [
+        {
+          "name": "body",
+          "type": "string",
+          "description": "The template as canonical JSON text with every @ written as \\u0040 and each hole i written as [\"unquote\", i] (the .lolo parser encodes `(quasiquote x)`)"
+        },
+        {
+          "name": "holes",
+          "type": {
+            "kind": "sexpr"
+          },
+          "description": "The unquoted expressions, in canonical order; hole i fills marker i"
+        }
+      ],
+      "examples": [
+        "(quasiquote \"[\\\"set\\\",\\\"\\\\\\\\u0040entity.a\\\",[\\\"unquote\\\",0]]\" @payload.v)"
+      ],
+      "docsSource": "generated"
     },
     "quote": {
       "category": "control",
@@ -9808,6 +10018,27 @@
       ],
       "docsSource": "generated"
     },
+    "unquote": {
+      "category": "control",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "any",
+      "description": "A live hole inside `(quasiquote …)`: its expression is evaluated and spliced into the template. Legal only inside a quasiquote",
+      "module": "core",
+      "params": [
+        {
+          "name": "expr",
+          "type": {
+            "kind": "sexpr"
+          },
+          "description": "The expression whose value fills the hole"
+        }
+      ],
+      "examples": [
+        "(quasiquote \"[\\\"unquote\\\",0]\" @entity.widget)"
+      ],
+      "docsSource": "generated"
+    },
     "validate/array": {
       "category": "std-validate",
       "minArity": 1,
@@ -10312,33 +10543,6 @@
         "(validate/uuid \"550e8400-e29b-41d4-a716-446655440000\")"
       ],
       "docsSource": "reference-docs"
-    },
-    "validate/validate": {
-      "category": "std-behavior",
-      "minArity": 1,
-      "maxArity": 2,
-      "returnType": "ValidateResult",
-      "description": "Validate an orbital or the composed schema using orb validate.",
-      "module": "behavior",
-      "hasSideEffects": true,
-      "runsOn": "any",
-      "title": "Validate",
-      "params": [
-        {
-          "name": "path",
-          "type": "string",
-          "description": "Orbital or schema path"
-        },
-        {
-          "name": "options",
-          "type": "object",
-          "description": "Validation options (variadic)"
-        }
-      ],
-      "examples": [
-        "(validate/validate \"composed\")"
-      ],
-      "docsSource": "generated"
     },
     "vec/add": {
       "category": "std-vec",

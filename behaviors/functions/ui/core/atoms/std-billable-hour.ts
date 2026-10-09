@@ -589,7 +589,7 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
                 'when': {
                   'name': 'when',
                   'required': false,
-                  'type': 'object',
+                  'type': 'SExpr',
                 },
               },
               'type': 'object',

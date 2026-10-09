@@ -47,6 +47,12 @@ export interface StdPricingPlanSelectedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdPricingConfig {
+  /** Default: `"none"` */
+  edgeBottom?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
+  /** Default: `"background"` */
+  edgeColor?: 'background' | 'muted' | 'surface' | 'gradient' | 'inverse';
+  /** Default: `"none"` */
+  edgeTop?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
   /** Default: `""` */
   footnote?: string;
   /** Default: `""` */
@@ -56,7 +62,9 @@ export interface StdPricingConfig {
   /** Default: `[{"actionHref":"#","actionLabel":"Start free","features":["1 project","Community support"],"name":"Starter","period":"/month","price":"$0","summary":"For trying things out."},{"actionHref":"#","actionLabel":"Choose Team","badge":"Popular","features":["Unlimited projects","Shared workspace","Priority support"],"highlighted":true,"name":"Team","period":"/month","price":"$29","summary":"For teams shipping every week."}]` */
   plans?: EntityRow[];
   /** Default: `"plain"` */
-  surface?: 'plain' | 'muted';
+  surface?: 'plain' | 'muted' | 'accent' | 'inverse';
+  /** Default: `false` */
+  texture?: boolean;
 }
 
 /**

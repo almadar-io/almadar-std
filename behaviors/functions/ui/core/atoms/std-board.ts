@@ -127,10 +127,10 @@ export interface StdBoardBoardItemsSaveFailedPayload {
  */
 export interface StdBoardConfig {
   /** Default: `"floating"` */
-  addPlacement?: 'floating' | 'inline';
+  addPlacement?: 'floating' | 'inline' | 'none';
   /** Default: `"columns"` */
   boardLook?: 'columns' | 'kanban-classic';
-  /** Default: `{"children":[["if",["=","@config.addPlacement","inline"],{"children":[{"action":"ADD_CARD","icon":"plus","label":"Add item","size":"sm","type":"button","variant":"secondary"}],"direction":"horizontal","gap":"sm","justify":"end","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if","@config.showHeader",{"children":[{"align":"center","children":[{"name":"kanban-square","size":"lg","type":"icon"},{"content":"@config.title","type":"typography","variant":"h3"}],"direction":"horizontal","gap":"sm","type":"stack"},{"type":"divider"}],"direction":"vertical","gap":"md","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"BoardView","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"cols":"@config.gridCols","dndRoot":true,"entity":"@entity.boards","fields":[],"gap":"md","renderItem":["fn","col",{"children":[{"children":[{"align":"center","children":[{"name":"@col.icon","type":"icon"},{"content":"@col.label","type":"typography","variant":"h4"},{"label":"@col.count","type":"badge","variant":"@col.variant"}],"direction":"horizontal","gap":"xs","type":"stack"},{"accepts":"*","dragGroup":"@col.key","dropEvent":"MOVE_CARD","entity":"@col.items","fields":[],"gap":"sm","positionEvent":"REORDER_POSITION","renderItem":["fn","item",{"children":[{"children":[{"content":"@config.cardTitleBinding","type":"typography","variant":"h4"},{"color":"muted","content":"@config.cardDescriptionBinding","type":"typography","variant":"caption"},{"align":"center","children":[{"action":"OPEN_CARD","actionPayload":{"description":"@config.cardDescriptionBinding","id":"@config.cardIdBinding","notes":"@config.cardNotesBinding","row":"@item","stage":"@config.cardStageBinding","title":"@config.cardTitleBinding"},"icon":"arrow-right","label":"Open","type":"button","variant":"ghost"}],"direction":"horizontal","gap":"xs","type":"stack"}],"direction":"vertical","gap":"xs","type":"stack"}],"look":"@config.cardLook","type":"card"}],"reorderEvent":"REORDER_CARD","sortable":true,"type":"data-list"}],"direction":"vertical","gap":"sm","type":"stack"}],"look":"@config.cardLook","type":"card"}],"type":"data-grid"},["if",["=","@config.addPlacement","floating"],{"action":"ADD_CARD","icon":"plus","label":"Add item","type":"floating-action-button","variant":"primary"},{"children":[],"gap":"none","type":"stack"}]],"direction":"vertical","gap":"md","type":"stack"}` */
+  /** Default: `{"children":[["if",["=","@config.addPlacement","inline"],{"children":[{"action":"ADD_CARD","icon":"plus","label":"Add item","size":"sm","type":"button","variant":"secondary"}],"direction":"horizontal","gap":"sm","justify":"end","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if","@config.showHeader",{"children":[{"align":"center","children":[{"name":"kanban-square","size":"lg","type":"icon"},{"content":"@config.title","type":"typography","variant":"h3"}],"direction":"horizontal","gap":"sm","type":"stack"},{"type":"divider"}],"direction":"vertical","gap":"md","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"BoardView","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"cols":"@config.gridCols","dndRoot":"@config.draggable","entity":"@entity.boards","fields":[],"gap":"md","renderItem":["fn",["col","colIndex"],{"children":[{"children":[{"align":"center","children":[{"name":"@col.icon","type":"icon"},{"content":["if",["==",["array/len","@config.columnLabels"],0],"@col.label",["array/nth","@config.columnLabels","@colIndex"]],"type":"typography","variant":"h4"},{"label":"@col.count","type":"badge","variant":"@col.variant"}],"direction":"horizontal","gap":"xs","type":"stack"},{"accepts":["if","@config.draggable","*",""],"dragGroup":["if","@config.draggable","@col.key",""],"dropEvent":"MOVE_CARD","entity":"@col.items","fields":[],"gap":"sm","itemEnter":"@config.cardEnter","positionEvent":"REORDER_POSITION","renderItem":["fn","item",{"children":[{"children":[{"content":"@config.cardTitleBinding","type":"typography","variant":"h4"},{"color":"muted","content":"@config.cardDescriptionBinding","type":"typography","variant":"caption"},{"align":"center","children":[{"action":"OPEN_CARD","actionPayload":{"description":"@config.cardDescriptionBinding","id":"@config.cardIdBinding","notes":"@config.cardNotesBinding","row":"@item","stage":"@config.cardStageBinding","title":"@config.cardTitleBinding"},"icon":"arrow-right","label":"Open","type":"button","variant":"ghost"}],"direction":"horizontal","gap":"xs","type":"stack"}],"direction":"vertical","gap":"xs","type":"stack"}],"look":"@config.cardLook","type":"card"}],"reorderEvent":"REORDER_CARD","sortable":"@config.draggable","type":"data-list"}],"direction":"vertical","gap":"sm","type":"stack"}],"look":"@config.cardLook","type":"card"}],"type":"data-grid"},["if",["=","@config.addPlacement","floating"],{"action":"ADD_CARD","icon":"plus","label":"Add item","type":"floating-action-button","variant":"primary"},{"children":[],"gap":"none","type":"stack"}]],"direction":"vertical","gap":"md","type":"stack"}` */
   bodyContent?: unknown;
   /** Default: `false` */
   bodySearch?: boolean;
@@ -140,6 +140,8 @@ export interface StdBoardConfig {
   cardActionsContent?: unknown;
   /** Default: `"@item.description"` */
   cardDescriptionBinding?: string;
+  /** Default: `"none"` */
+  cardEnter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   /** Default: `"@item.id"` */
   cardIdBinding?: string;
   /** Default: `"elevated"` */
@@ -150,8 +152,12 @@ export interface StdBoardConfig {
   cardStageBinding?: string;
   /** Default: `"@item.title"` */
   cardTitleBinding?: string;
+  /** Default: `[]` */
+  columnLabels?: string[];
   /** Default: `[{"icon":"circle","key":"todo","label":"To Do","variant":"default"},{"icon":"circle-dot","key":"doing","label":"In Progress","variant":"primary"},{"icon":"check-circle","key":"done","label":"Done","variant":"success"}]` */
   columns?: EntityRow[];
+  /** Default: `true` */
+  draggable?: boolean;
   /** Default: `"toolbar"` */
   filterBarLook?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
   /** Default: `[]` */
@@ -164,7 +170,7 @@ export interface StdBoardConfig {
   groupByField?: string;
   /** Default: `[]` */
   include?: string[];
-  /** Default: `{"children":[["if",["=","@config.addPlacement","inline"],{"children":[{"action":"ADD_CARD","icon":"plus","label":"Add card","size":"sm","type":"button","variant":"secondary"}],"direction":"horizontal","gap":"sm","justify":"end","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if","@config.showHeader",{"children":[{"align":"center","children":[{"name":"kanban-square","size":"xl","type":"icon"},{"content":"@config.title","type":"typography","variant":"h2"}],"className":"px-card-md","direction":"horizontal","gap":"sm","type":"stack"},{"type":"divider"}],"direction":"vertical","gap":"md","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"className":"px-card-md","direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"BoardView","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"className":"px-card-md","direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"className":"w-full pb-2","dndRoot":true,"entity":"@entity.boards","fields":[],"gap":"lg","minCardWidth":300,"renderItem":["fn","col",{"children":[{"children":[{"align":"center","children":[{"name":"@col.icon","type":"icon"},{"className":"flex-1","content":"@col.label","type":"typography","variant":"h4"},{"label":"@col.count","size":"sm","type":"badge","variant":"primary"}],"className":"p-card-md border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)]","direction":"horizontal","gap":"sm","type":"stack"},{"accepts":"*","className":"p-card-md min-h-[120px]","dragGroup":"@col.key","dropEvent":"MOVE_CARD","entity":"@col.items","fields":[],"gap":"sm","positionEvent":"REORDER_POSITION","renderItem":["fn","item",{"children":[{"children":[{"content":"@config.cardTitleBinding","type":"typography","variant":"body","weight":"medium"},{"className":"line-clamp-2","color":"muted","content":"@config.cardDescriptionBinding","type":"typography","variant":"caption"},{"align":"center","children":[{"label":"@config.cardStageBinding","size":"sm","type":"badge","variant":"@col.variant"},{"action":"OPEN_CARD","actionPayload":{"description":"@config.cardDescriptionBinding","id":"@config.cardIdBinding","notes":"@config.cardNotesBinding","row":"@item","stage":"@config.cardStageBinding","title":"@config.cardTitleBinding"},"className":"ml-auto","icon":"arrow-right","label":"Open","size":"sm","type":"button","variant":"ghost"}],"className":"pt-1","direction":"horizontal","gap":"xs","type":"stack"}],"direction":"vertical","gap":"xs","type":"stack"}],"className":"cursor-grab hover:shadow-lg transition-shadow","look":"@config.cardLook","padding":"sm","type":"card"}],"reorderEvent":"REORDER_CARD","sortable":true,"type":"data-list"}],"direction":"vertical","gap":"none","type":"stack"}],"className":"w-[300px] bg-[var(--color-surface-subtle)] rounded-lg overflow-hidden","look":"elevated","padding":"none","type":"card"}],"scrollX":true,"type":"data-grid"},["if",["=","@config.addPlacement","floating"],{"action":"ADD_CARD","icon":"plus","label":"Add card","type":"floating-action-button","variant":"primary"},{"children":[],"gap":"none","type":"stack"}]],"className":"h-full","direction":"vertical","gap":"md","type":"stack"}` */
+  /** Default: `{"children":[["if",["=","@config.addPlacement","inline"],{"children":[{"action":"ADD_CARD","icon":"plus","label":"Add card","size":"sm","type":"button","variant":"secondary"}],"direction":"horizontal","gap":"sm","justify":"end","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if","@config.showHeader",{"children":[{"align":"center","children":[{"name":"kanban-square","size":"xl","type":"icon"},{"content":"@config.title","type":"typography","variant":"h2"}],"className":"px-card-md","direction":"horizontal","gap":"sm","type":"stack"},{"type":"divider"}],"direction":"vertical","gap":"md","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"className":"px-card-md","direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"BoardView","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"className":"px-card-md","direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"className":"w-full pb-2","dndRoot":"@config.draggable","entity":"@entity.boards","fields":[],"gap":"lg","minCardWidth":300,"renderItem":["fn",["col","colIndex"],{"children":[{"children":[{"align":"center","children":[{"name":"@col.icon","type":"icon"},{"className":"flex-1","content":["if",["==",["array/len","@config.columnLabels"],0],"@col.label",["array/nth","@config.columnLabels","@colIndex"]],"type":"typography","variant":"h4"},{"label":"@col.count","size":"sm","type":"badge","variant":"primary"}],"className":"p-card-md border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)]","direction":"horizontal","gap":"sm","type":"stack"},{"accepts":["if","@config.draggable","*",""],"className":"p-card-md min-h-[120px]","dragGroup":["if","@config.draggable","@col.key",""],"dropEvent":"MOVE_CARD","entity":"@col.items","fields":[],"gap":"sm","itemEnter":"@config.cardEnter","positionEvent":"REORDER_POSITION","renderItem":["fn","item",{"children":[{"children":[{"content":"@config.cardTitleBinding","type":"typography","variant":"body","weight":"medium"},{"className":"line-clamp-2","color":"muted","content":"@config.cardDescriptionBinding","type":"typography","variant":"caption"},{"align":"center","children":[{"label":"@config.cardStageBinding","size":"sm","type":"badge","variant":"@col.variant"},{"action":"OPEN_CARD","actionPayload":{"description":"@config.cardDescriptionBinding","id":"@config.cardIdBinding","notes":"@config.cardNotesBinding","row":"@item","stage":"@config.cardStageBinding","title":"@config.cardTitleBinding"},"className":"ml-auto","icon":"arrow-right","label":"Open","size":"sm","type":"button","variant":"ghost"}],"className":"pt-1","direction":"horizontal","gap":"xs","type":"stack"}],"direction":"vertical","gap":"xs","type":"stack"}],"className":"cursor-grab hover:shadow-lg transition-shadow","look":"@config.cardLook","padding":"sm","type":"card"}],"reorderEvent":"REORDER_CARD","sortable":"@config.draggable","type":"data-list"}],"direction":"vertical","gap":"none","type":"stack"}],"className":"w-[300px] bg-[var(--color-surface-subtle)] rounded-lg overflow-hidden","look":"elevated","padding":"none","type":"card"}],"scrollX":true,"type":"data-grid"},["if",["=","@config.addPlacement","floating"],{"action":"ADD_CARD","icon":"plus","label":"Add card","type":"floating-action-button","variant":"primary"},{"children":[],"gap":"none","type":"stack"}]],"className":"h-full","direction":"vertical","gap":"md","type":"stack"}` */
   kanbanClassicBodyContent?: unknown;
   /** Default: `10` */
   pageSize?: number;
@@ -506,7 +512,7 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
         'config': {
           'addPlacement': {
             'default': 'floating',
-            'description': 'Where the add-item button sits: \'floating\' (default) pins a floating action button to the screen corner; \'inline\' renders an ordinary Add button above the columns, for a board embedded in a card or panel.',
+            'description': 'Where the add-item button sits: \'floating\' (default) pins a floating action button to the screen corner; \'inline\' renders an ordinary Add button above the columns, for a board embedded in a card or panel.; none hides the add button (a read-only board)',
             'label': 'Add button placement',
             'synonyms': 'add button position, floating add, inline add, add item button placement. user phrases: \'put the add button inside the board\' / \'no floating button\' -> inline',
             'tier': 'presentation',
@@ -514,6 +520,7 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
             'values': [
               'floating',
               'inline',
+              'none',
             ],
           },
           'boardLook': {
@@ -651,13 +658,16 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                 ],
                 {
                   'cols': '@config.gridCols',
-                  'dndRoot': true,
+                  'dndRoot': '@config.draggable',
                   'entity': '@entity.boards',
                   'fields': [],
                   'gap': 'md',
                   'renderItem': [
                     'fn',
-                    'col',
+                    [
+                      'col',
+                      'colIndex',
+                    ],
                     {
                       'children': [
                         {
@@ -670,7 +680,23 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                                   'type': 'icon',
                                 },
                                 {
-                                  'content': '@col.label',
+                                  'content': [
+                                    'if',
+                                    [
+                                      '==',
+                                      [
+                                        'array/len',
+                                        '@config.columnLabels',
+                                      ],
+                                      0,
+                                    ],
+                                    '@col.label',
+                                    [
+                                      'array/nth',
+                                      '@config.columnLabels',
+                                      '@colIndex',
+                                    ],
+                                  ],
                                   'type': 'typography',
                                   'variant': 'h4',
                                 },
@@ -685,12 +711,23 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                               'type': 'stack',
                             },
                             {
-                              'accepts': '*',
-                              'dragGroup': '@col.key',
+                              'accepts': [
+                                'if',
+                                '@config.draggable',
+                                '*',
+                                '',
+                              ],
+                              'dragGroup': [
+                                'if',
+                                '@config.draggable',
+                                '@col.key',
+                                '',
+                              ],
                               'dropEvent': 'MOVE_CARD',
                               'entity': '@col.items',
                               'fields': [],
                               'gap': 'sm',
+                              'itemEnter': '@config.cardEnter',
                               'positionEvent': 'REORDER_POSITION',
                               'renderItem': [
                                 'fn',
@@ -744,7 +781,7 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                                 },
                               ],
                               'reorderEvent': 'REORDER_CARD',
-                              'sortable': true,
+                              'sortable': '@config.draggable',
                               'type': 'data-list',
                             },
                           ],
@@ -920,6 +957,20 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
             'tier': 'presentation',
             'type': 'string',
           },
+          'cardEnter': {
+            'default': 'none',
+            'description': 'Animation a card plays when it appears in a column, so a moved card visibly arrives',
+            'label': 'Card entrance',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'none',
+              'fade',
+              'rise',
+              'scale',
+              'slide',
+            ],
+          },
           'cardIdBinding': {
             'default': '@item.id',
             'description': 'Per-card binding for the id used in action payloads.',
@@ -963,6 +1014,16 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
             'label': 'Card title binding',
             'tier': 'presentation',
             'type': 'string',
+          },
+          'columnLabels': {
+            'default': [],
+            'description': 'Optional labels in the same order as the columns, used only where the board is drawn, so they may be translated; empty shows each column\'s own label',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Column labels',
+            'tier': 'presentation',
+            'type': '[string]',
           },
           'columns': {
             'default': [
@@ -1014,6 +1075,13 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
             'label': 'Columns',
             'tier': 'domain',
             'type': '[ColumnSpec]',
+          },
+          'draggable': {
+            'default': true,
+            'description': 'Let people drag cards between columns and reorder them; off shows the board read-only to the pointer (moves still work through events)',
+            'label': 'Drag cards',
+            'tier': 'presentation',
+            'type': 'boolean',
           },
           'filterBarLook': {
             'default': 'toolbar',
@@ -1228,14 +1296,17 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                 ],
                 {
                   'className': 'w-full pb-2',
-                  'dndRoot': true,
+                  'dndRoot': '@config.draggable',
                   'entity': '@entity.boards',
                   'fields': [],
                   'gap': 'lg',
                   'minCardWidth': 300,
                   'renderItem': [
                     'fn',
-                    'col',
+                    [
+                      'col',
+                      'colIndex',
+                    ],
                     {
                       'children': [
                         {
@@ -1249,7 +1320,23 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                                 },
                                 {
                                   'className': 'flex-1',
-                                  'content': '@col.label',
+                                  'content': [
+                                    'if',
+                                    [
+                                      '==',
+                                      [
+                                        'array/len',
+                                        '@config.columnLabels',
+                                      ],
+                                      0,
+                                    ],
+                                    '@col.label',
+                                    [
+                                      'array/nth',
+                                      '@config.columnLabels',
+                                      '@colIndex',
+                                    ],
+                                  ],
                                   'type': 'typography',
                                   'variant': 'h4',
                                 },
@@ -1266,13 +1353,24 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                               'type': 'stack',
                             },
                             {
-                              'accepts': '*',
+                              'accepts': [
+                                'if',
+                                '@config.draggable',
+                                '*',
+                                '',
+                              ],
                               'className': 'p-card-md min-h-[120px]',
-                              'dragGroup': '@col.key',
+                              'dragGroup': [
+                                'if',
+                                '@config.draggable',
+                                '@col.key',
+                                '',
+                              ],
                               'dropEvent': 'MOVE_CARD',
                               'entity': '@col.items',
                               'fields': [],
                               'gap': 'sm',
+                              'itemEnter': '@config.cardEnter',
                               'positionEvent': 'REORDER_POSITION',
                               'renderItem': [
                                 'fn',
@@ -1339,7 +1437,7 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                                 },
                               ],
                               'reorderEvent': 'REORDER_CARD',
-                              'sortable': true,
+                              'sortable': '@config.draggable',
                               'type': 'data-list',
                             },
                           ],
@@ -2432,7 +2530,10 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                         'gap': 'sm',
                         'renderItem': [
                           'fn',
-                          'col',
+                          [
+                            'col',
+                            'colIndex',
+                          ],
                           {
                             'action': 'MOVE_CARD',
                             'actionPayload': {
@@ -2440,7 +2541,23 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                               'targetGroup': '@col.key',
                             },
                             'icon': '@col.icon',
-                            'label': '@col.label',
+                            'label': [
+                              'if',
+                              [
+                                '==',
+                                [
+                                  'array/len',
+                                  '@config.columnLabels',
+                                ],
+                                0,
+                              ],
+                              '@col.label',
+                              [
+                                'array/nth',
+                                '@config.columnLabels',
+                                '@colIndex',
+                              ],
+                            ],
                             'type': 'button',
                             'variant': 'secondary',
                           },

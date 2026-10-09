@@ -1,14 +1,14 @@
 /**
- * Behavior Module - Orbital behavior composition, instantiation, validation, and lolo emission.
+ * Behavior Module — behaviors as first-class values, and reflection over them.
  *
- * Combines compose/*, behavior/*, validate/*, and lolo/* operators under one
- * module. All are backed by rabit's internal services (composeBehaviors,
- * instantiateOrbital, orb validate, emitLoloBody). The return types are
- * concrete substrate structs — zero JsonValue returns (§3.2 of the design doc).
- *
- * behavior/instantiate is runtime `uses` — meta-programming: the lolo program
- * composes other lolo behaviors at runtime, using the same registry + override
- * surface as compile-time `uses` declarations.
+ * A trait value (`std/std-kanban.traits.KanbanBoard`, held in a `trait`-typed
+ * field) names a trait of an installed behavior package; an orbital value
+ * (`std/std-kanban.orbitals.KanbanOrbital`, `orbital`-typed) names one of its
+ * orbitals. `behavior/apply` records overrides on either (the LOLO §8
+ * trait-reference surface, or the §8b orbital-import body); `program/eval`
+ * performs them through the compiler's own reference forms.
+ * `behavior/catalog|describe|source` read the host's installed packages through
+ * `orb`, so they run on the server. Design: `docs/Almadar_Studio_Behavior.md`.
  *
  * @packageDocumentation
  */
@@ -16,80 +16,57 @@
 import type { StdOperatorMeta } from '../types.js';
 
 export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
-  'compose/compose-all': {
-    module: 'behavior', category: 'std-behavior',
-    minArity: 0, maxArity: 0,
-    description: 'Compose all orbitals in the workspace into a single schema. Backed by composeBehaviors.',
-    hasSideEffects: true,
-    runsOn: 'any',
-    returnType: 'ComposeAllResult',
-    params: [],
-    example: '["compose/compose-all"]',
-  },
-  'compose/compose-children': {
-    module: 'behavior', category: 'std-behavior',
-    minArity: 1, maxArity: 1,
-    description: 'Compose child orbitals under a parent for recursive builds.',
-    hasSideEffects: true,
-    runsOn: 'any',
-    returnType: 'ComposeChildrenResult',
-    params: [{ name: 'parentName', type: 'string', description: 'Parent orbital name' }],
-    example: '["compose/compose-children", "GameScreenOrbital"]',
-  },
-  'behavior/instantiate': {
-    module: 'behavior', category: 'std-behavior',
-    minArity: 2, maxArity: 3,
-    description: 'Instantiate a behavior from the registry at runtime (meta-programming). Equivalent to compile-time `uses` but dynamic — the behavior name is a runtime value. Applies the same override surface (linkedEntity, events, config, fields).',
-    hasSideEffects: true,
-    runsOn: 'any',
-    returnType: 'BuilderResult',
+  'behavior/apply': {
+    module: 'behavior', category: 'std-behavior-value',
+    minArity: 2, maxArity: 2,
+    description: 'Record overrides on a behavior value and return the new value of the same kind. A trait value takes the §8 trait-reference surface (config, events and fields merge key-wise, the later value winning; listens, emitsScope and linkedEntity replace); an orbital value takes the §8b import body (maps merge key-wise, traits per trait, extend and retype by field name, the rest replaces). Nothing is resolved until the value is bound or evaluated.',
+    hasSideEffects: false,
+    returnType: 'any',
+    returnSemantics: 'identity-of-arg<0>',
     params: [
-      { name: 'behavior', type: 'string', description: 'Behavior/organism name (e.g. "std-ecommerce")' },
-      { name: 'orbitalName', type: 'string', description: 'Canonical orbital name to instantiate' },
-      { name: 'overrides', type: { kind: 'object', fields: { linkedEntity: 'string', method: 'string' }, open: true }, description: 'Override surface: linkedEntity, events, config, fields', optional: true },
+      { name: 'value', type: 'any', description: 'A trait value or an orbital value' },
+      { name: 'overrides', type: { kind: 'object', fields: {}, open: true }, description: 'The LOLO §8 trait-reference overrides (trait value) or the §8b import body (orbital value)' },
     ],
-    example: '["behavior/instantiate", "std-ecommerce", "ProductOrbital", { "linkedEntity": "Product" }]',
+    example: '["behavior/apply", "@entity.widget", { "config": { "compact": true } }]',
   },
-  'behavior/call': {
-    module: 'behavior', category: 'std-behavior',
-    minArity: 2, maxArity: 3,
-    description: 'Call a behavior service action. Returns the ServiceCallResult union — resolves to the specific member when the (behavior, action) pair is a literal.',
-    hasSideEffects: true,
-    runsOn: 'any',
-    returnType: 'ServiceCallResult',
-    params: [
-      { name: 'behavior', type: 'string', description: 'Service/behavior name' },
-      { name: 'action', type: 'string', description: 'Action name' },
-      { name: 'args', type: { kind: 'object', fields: {}, open: true }, description: 'Action arguments', optional: true },
-    ],
-    example: '["behavior/call", "validator", "validate-composed"]',
-  },
-  'lolo/emit-body': {
-    module: 'behavior', category: 'std-behavior',
-    minArity: 3, maxArity: 3,
-    description: 'Emit a .lolo orbital body from the LLM (free-lolo path). Returns the emitted lolo source.',
-    hasSideEffects: true,
-    runsOn: 'any',
-    returnType: 'LoloEmitResult',
-    params: [
-      { name: 'name', type: 'string', description: 'Orbital name' },
-      { name: 'palette', type: { kind: 'object', fields: { topics: { kind: 'array', of: 'string' }, hints: { kind: 'array', of: 'string' } } }, description: 'Topic-tree palette + primitive hints' },
-      { name: 'deltaPrompt', type: 'string', description: 'Per-orbital instruction prompt' },
-    ],
-    example: '["lolo/emit-body", "PlayerOrbital", { "topics": ["game/2d"] }, "player ship with movement"]',
-  },
-  'validate/validate': {
+  'behavior/catalog': {
     module: 'behavior', category: 'std-behavior',
     minArity: 1, maxArity: 2,
-    description: 'Validate an orbital or the composed schema using orb validate.',
+    description: 'List the installed behaviors under registry folders (`<prefix>/<topic>[/<tier>]`), optionally narrowed by exposure. Each entry carries its traits as values and its shipped embedding vectors.',
     hasSideEffects: true,
-    runsOn: 'any',
-    returnType: 'ValidateResult',
+    runsOn: 'server',
+    returnType: 'CatalogEntry[]',
     params: [
-      { name: 'target', type: { kind: 'union', of: [{ kind: 'literal', value: 'orbital' }, { kind: 'literal', value: 'composed' }] }, description: 'Validation target' },
-      { name: 'name', type: 'string', description: 'Orbital name (required when target is "orbital")', optional: true },
+      { name: 'scope', type: { kind: 'object', fields: { paths: { kind: 'array', of: 'string' }, exposure: { kind: 'array', of: 'string' } } }, description: 'Registry folders and an optional exposure filter' },
+      { name: 'options', type: { kind: 'object', fields: {}, open: true }, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
     ],
-    example: '["validate/validate", "composed"]',
+    example: '["behavior/catalog", { "paths": ["std/ui/core/molecules"] }, { "emit": { "success": "LISTED", "failure": "LIST_FAILED" } }]',
+  },
+  'behavior/describe': {
+    module: 'behavior', category: 'std-behavior',
+    minArity: 1, maxArity: 2,
+    description: 'Describe a trait value (its knobs, the events it emits and listens to, its transition events, and the shipped knob embedding vectors), or an orbital value or a whole behavior `{ behavior }` (its app knobs and, per orbital, its knobs, primary entity fields, the entities it borrows from sibling orbitals, its traits and pages).',
+    hasSideEffects: true,
+    runsOn: 'server',
+    returnType: 'any',
+    params: [
+      { name: 'value', type: 'any', description: 'A trait value, an orbital value, or { behavior }' },
+      { name: 'options', type: { kind: 'object', fields: {}, open: true }, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
+    ],
+    example: '["behavior/describe", "@entity.widget", { "emit": { "success": "DESCRIBED", "failure": "DESCRIBE_FAILED" } }]',
+  },
+  'behavior/source': {
+    module: 'behavior', category: 'std-behavior',
+    minArity: 1, maxArity: 2,
+    description: 'The behavior a trait value belongs to, as a quoted program.',
+    hasSideEffects: true,
+    runsOn: 'server',
+    returnType: 'sexpr',
+    params: [
+      { name: 'value', type: 'trait', description: 'The trait value' },
+      { name: 'options', type: { kind: 'object', fields: {}, open: true }, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
+    ],
+    example: '["behavior/source", "@entity.widget", { "emit": { "success": "SOURCED", "failure": "SOURCE_FAILED" } }]',
   },
 };
 

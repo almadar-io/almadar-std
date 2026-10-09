@@ -56,10 +56,34 @@ export interface StdLearnTransportLearnUpdatedPayload {
 export interface StdLearnTransportConfig {
   /** Default: `false` */
   autoRun?: boolean;
+  /** Default: `false` */
+  compact?: boolean;
+  /** Default: `"Done"` */
+  doneLabel?: string;
   /** Default: `""` */
   matchMode?: string;
+  /** Default: `"of"` */
+  ofWord?: string;
+  /** Default: `"Pause"` */
+  pauseLabel?: string;
+  /** Default: `"Paused"` */
+  pausedLabel?: string;
+  /** Default: `"Play"` */
+  playLabel?: string;
+  /** Default: `"Reset"` */
+  resetLabel?: string;
+  /** Default: `false` */
+  runWhenVisible?: boolean;
+  /** Default: `"Running"` */
+  runningLabel?: string;
+  /** Default: `"Speed"` */
+  speedLabel?: string;
   /** Default: `500` */
   stepIntervalMs?: number;
+  /** Default: `"Step"` */
+  stepLabel?: string;
+  /** Default: `"Step"` */
+  stepWord?: string;
   /** Default: `""` */
   summary?: string;
   /** Default: `"Learning Instrument"` */

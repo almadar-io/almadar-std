@@ -1,5 +1,7 @@
-app std-pricing "1.0.0"
-"std-pricing — side-by-side plan cards from a config list: plan name, price and billing period, a one-line summary, the included features, and a link action per plan; one plan can be highlighted as recommended with a badge. Optional heading and footnote. Clicking a plan's action follows its href and emits PLAN_SELECTED. Pick for pricing pages, subscription tiers and service packages."
+app std-pricing [
+  version: "1.0.0",
+  description: "std-pricing — side-by-side plan cards from a config list: plan name, price and billing period, a one-line summary, the included features, and a link action per plan; one plan can be highlighted as recommended with a badge. Optional heading and footnote. Clicking a plan's action follows its href and emits PLAN_SELECTED. Pick for pricing pages, subscription tiers and service packages."
+]
 type PricingPlan = { name : string!, price : string!, period : string, summary : string, features : [string], actionLabel : string, actionHref : string, highlighted : boolean, badge : string }
 orbital PricingOrbital {
 
@@ -15,7 +17,11 @@ orbital PricingOrbital {
         (render-ui main {
           type: box
           paddingY: xl
-          bg: (if (== @config.surface muted) muted transparent)
+          bg: (if (== @config.surface muted) muted (if (== @config.surface accent) gradient (if (== @config.surface inverse) inverse transparent)))
+          edgeTop: @config.edgeTop
+          edgeBottom: @config.edgeBottom
+          edgeColor: @config.edgeColor
+          texture: @config.texture
           fullWidth: true
           children: [{
             type: container
@@ -167,8 +173,24 @@ orbital PricingOrbital {
         @label "Footnote"
         @description "Small print under the plans, e.g. taxes or billing terms"
         @tier "presentation"
-      surface : "plain" | "muted" = plain
+      surface : "plain" | "muted" | "accent" | "inverse" = plain
         @label "Surface"
+        @tier "presentation"
+      edgeTop : "none" | "curve" | "wave" | "arc" | "tilt" | "step" | "scallop" = none
+        @label "Top edge"
+        @description "Shape cut into the top of the section; curve uses the theme's shape"
+        @tier "presentation"
+      edgeBottom : "none" | "curve" | "wave" | "arc" | "tilt" | "step" | "scallop" = none
+        @label "Bottom edge"
+        @description "Shape cut into the bottom of the section; curve uses the theme's shape"
+        @tier "presentation"
+      edgeColor : "background" | "muted" | "surface" | "gradient" | "inverse" = background
+        @label "Edge fill"
+        @description "The surface of the neighbouring section, which fills the cut"
+        @tier "presentation"
+      texture : boolean = false
+        @label "Texture"
+        @description "Lay the theme's texture over the section"
         @tier "presentation"
     }
   }

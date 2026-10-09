@@ -1,5 +1,7 @@
-app ui-data-list "1.0.0"
-"DataList — UI factory (1:1 with the @almadar/ui data-list pattern)."
+app ui-data-list [
+  version: "1.0.0",
+  description: "DataList — UI factory (1:1 with the @almadar/ui data-list pattern)."
+]
 ;; @pattern "data-list"
 orbital DataListOrbital {
     type DataListLoaded = Event { data : [DataListItem] } "DataList rows finished loading; payload.data holds the collection"
@@ -34,6 +36,7 @@ orbital DataListOrbital {
     variant : "primary" | "secondary" | "ghost" | "danger"
     when : SExpr
     payload : SExpr
+    navigatesTo : string
     roles : [string]
   }
   type DataListError = {
@@ -86,6 +89,7 @@ orbital DataListOrbital {
           fields: @config.fields
           columns: @config.columns
           itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          itemEnter: @config.itemEnter
           maxInlineActions: @config.maxInlineActions
           itemClickEvent: @config.itemClickEvent
           gap: @config.gap
@@ -151,6 +155,7 @@ orbital DataListOrbital {
           fields: @config.fields
           columns: @config.columns
           itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          itemEnter: @config.itemEnter
           maxInlineActions: @config.maxInlineActions
           itemClickEvent: @config.itemClickEvent
           gap: @config.gap
@@ -216,6 +221,7 @@ orbital DataListOrbital {
           fields: @config.fields
           columns: @config.columns
           itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          itemEnter: @config.itemEnter
           maxInlineActions: @config.maxInlineActions
           itemClickEvent: @config.itemClickEvent
           gap: @config.gap
@@ -359,6 +365,10 @@ orbital DataListOrbital {
       itemActions : [DataListItemActionsItem] = []
         @label "Item Actions"
         @description "Per-item action buttons"
+        @tier "presentation"
+      itemEnter : "none" | "fade" | "rise" | "scale" | "slide"
+        @label "Item Enter"
+        @description "Entrance animation each row plays when it mounts, so an item arriving in this list (moved from another) animates in"
         @tier "presentation"
       maxInlineActions : number
         @label "Max Inline Actions"

@@ -1,0 +1,638 @@
+[
+  {
+    "organism": "std-behavior-tour",
+    "orbital": "BehaviorTourOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-behavior-tour.ts",
+    "entities": [
+      {
+        "name": "TourScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "steps",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "elapsedMs",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "done",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "cursor",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "shown",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "TourTransport",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "TOUR_PLAY"
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "autoRun",
+            "type": "boolean",
+            "default": "@config.autoPlay",
+            "label": "Auto Run",
+            "description": "When true the clock starts stepping on INIT; the Reset arm restores this value.",
+            "tier": "domain"
+          },
+          {
+            "key": "compact",
+            "type": "boolean",
+            "default": "@config.compact",
+            "label": "Compact controls",
+            "description": "Show only Play / Pause and Reset: hides Step, the speed buttons, the step counter and the status badge",
+            "tier": "presentation"
+          },
+          {
+            "key": "doneLabel",
+            "type": "string",
+            "default": "@config.doneLabel",
+            "label": "Done label",
+            "description": "Text of the status badge once finished; set it per language",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "ofWord",
+            "type": "string",
+            "default": "@config.ofWord",
+            "label": "Of word",
+            "description": "Text of the word between the step and the total; set it per language",
+            "tier": "presentation"
+          },
+          {
+            "key": "pausedLabel",
+            "type": "string",
+            "default": "@config.pausedLabel",
+            "label": "Paused label",
+            "description": "Text of the status badge while paused; set it per language",
+            "tier": "presentation"
+          },
+          {
+            "key": "pauseLabel",
+            "type": "string",
+            "default": "@config.pauseLabel",
+            "label": "Pause label",
+            "description": "Text of the Pause button; set it per language",
+            "tier": "presentation"
+          },
+          {
+            "key": "playLabel",
+            "type": "string",
+            "default": "@config.playLabel",
+            "label": "Play label",
+            "description": "Text of the Play button; set it per language",
+            "tier": "presentation"
+          },
+          {
+            "key": "resetLabel",
+            "type": "string",
+            "default": "@config.resetLabel",
+            "label": "Reset label",
+            "description": "Text of the Reset button; set it per language",
+            "tier": "presentation"
+          },
+          {
+            "key": "runningLabel",
+            "type": "string",
+            "default": "@config.runningLabel",
+            "label": "Running label",
+            "description": "Text of the status badge while the clock runs; set it per language",
+            "tier": "presentation"
+          },
+          {
+            "key": "runWhenVisible",
+            "type": "boolean",
+            "default": false,
+            "label": "Play when visible",
+            "description": "Start the clock the first time the instrument scrolls into view (never under reduced motion; a visitor's Pause is kept)",
+            "tier": "presentation"
+          },
+          {
+            "key": "speedLabel",
+            "type": "string",
+            "default": "@config.speedLabel",
+            "label": "Speed label",
+            "description": "Text of the speed button group name; set it per language",
+            "tier": "presentation"
+          },
+          {
+            "key": "stepIntervalMs",
+            "type": "number",
+            "default": "@config.stepIntervalMs",
+            "label": "Step Interval (ms)",
+            "description": "Milliseconds of running clock per domain step — the 32ms base tick accumulates elapsed time and fires LEARN_STEP each time this interval elapses. 300-900 suits narrated steppers; 32 fires every frame for continuous sims.",
+            "tier": "domain"
+          },
+          {
+            "key": "stepLabel",
+            "type": "string",
+            "default": "@config.stepLabel",
+            "label": "Step label",
+            "description": "Text of the Step button; set it per language",
+            "tier": "presentation"
+          },
+          {
+            "key": "stepWord",
+            "type": "string",
+            "default": "@config.stepWord",
+            "label": "Step word",
+            "description": "Text of the step counter word; set it per language",
+            "tier": "presentation"
+          },
+          {
+            "key": "summary",
+            "type": "string",
+            "default": "@config.summary",
+            "label": "Concept",
+            "description": "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line.",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "@config.title",
+            "label": "Title",
+            "description": "The instrument's name, the header's one hero. Empty shows no title.",
+            "tier": "presentation"
+          },
+          {
+            "key": "totalSteps",
+            "type": "int",
+            "default": 0,
+            "label": "Total Steps",
+            "description": "When the walk has a known length, the step counter reads 'Step N of M'. 0 means open-ended.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "ref": "LearnTransport.traits.LearnTransportSim",
+        "linkedEntity": "TourScene",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "RESET",
+          "SPEED_SET",
+          "STEP",
+          "TOGGLE_RUN"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [
+            "done"
+          ],
+          "provides": [
+            "active",
+            "elapsedMs",
+            "running",
+            "speed",
+            "steps",
+            "title"
+          ]
+        }
+      },
+      {
+        "name": "TourEmptyDemo",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [],
+        "capabilities": [],
+        "linkedEntity": "TourScene",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": [],
+        "effectRow": [
+          {
+            "kind": "render-ui",
+            "resource": "main"
+          }
+        ]
+      },
+      {
+        "name": "BehaviorTour",
+        "emittedEvents": [
+          "TOUR_PLAY",
+          "TOUR_STEP",
+          "TOUR_RESET"
+        ],
+        "listenedEvents": [
+          "LEARN_STEP",
+          "LEARN_RESET"
+        ],
+        "events": [
+          {
+            "name": "TOUR_PLAY",
+            "direction": "emit",
+            "description": "The demo scrolled into view with playWhenVisible on: starts the composed transport's clock.",
+            "tier": "internal"
+          },
+          {
+            "name": "TOUR_STEP",
+            "direction": "emit",
+            "description": "One scripted step: the program routes it to the demo behavior's own event with a filtered listen on `event`.",
+            "synonyms": "tour step, demo step, tutorial step, next step",
+            "tier": "domain"
+          },
+          {
+            "name": "TOUR_RESET",
+            "direction": "emit",
+            "description": "Reset was pressed: the program returns the demo behavior to its starting state.",
+            "synonyms": "restart tour, reset demo",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "LEARN_STEP",
+            "direction": "listen",
+            "description": "One tick of the composed transport, or its Step button.",
+            "tier": "internal"
+          },
+          {
+            "name": "TOUR_VISIBLE",
+            "direction": "listen"
+          },
+          {
+            "name": "LEARN_RESET",
+            "direction": "listen",
+            "description": "The composed transport's Reset.",
+            "tier": "internal"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "autoPlay",
+            "type": "boolean",
+            "default": false,
+            "label": "Play on load",
+            "description": "Start playing as soon as the tour appears",
+            "tier": "presentation"
+          },
+          {
+            "key": "captions",
+            "type": "[string]",
+            "default": [],
+            "label": "Step captions",
+            "description": "In the same order as the events: what is shown while each step plays (rendered only, so it may be translated)",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "compact",
+            "type": "boolean",
+            "default": true,
+            "label": "Compact controls",
+            "description": "Show only Play / Pause and Reset",
+            "tier": "presentation"
+          },
+          {
+            "key": "demo",
+            "type": "trait",
+            "default": "@trait.TourEmptyDemo",
+            "label": "Demo",
+            "description": "The running behavior the tour plays, as a @trait reference",
+            "tier": "domain"
+          },
+          {
+            "key": "doneLabel",
+            "type": "string",
+            "default": "Done",
+            "label": "Done label",
+            "tier": "presentation"
+          },
+          {
+            "key": "events",
+            "type": "[string]",
+            "default": [],
+            "label": "Step events",
+            "description": "In order: the event name each step sends to the demo",
+            "synonyms": "script, walkthrough, tutorial steps",
+            "tier": "domain",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "introCaption",
+            "type": "string",
+            "default": "",
+            "label": "Intro caption",
+            "description": "Shown before the first step and after Reset",
+            "tier": "presentation"
+          },
+          {
+            "key": "loop",
+            "type": "boolean",
+            "default": true,
+            "label": "Loop",
+            "description": "Start again from the first step after the last one instead of stopping",
+            "tier": "presentation"
+          },
+          {
+            "key": "ofWord",
+            "type": "string",
+            "default": "of",
+            "label": "Of word",
+            "tier": "presentation"
+          },
+          {
+            "key": "pauseLabel",
+            "type": "string",
+            "default": "Pause",
+            "label": "Pause label",
+            "tier": "presentation"
+          },
+          {
+            "key": "pausedLabel",
+            "type": "string",
+            "default": "Paused",
+            "label": "Paused label",
+            "tier": "presentation"
+          },
+          {
+            "key": "playLabel",
+            "type": "string",
+            "default": "Play",
+            "label": "Play label",
+            "tier": "presentation"
+          },
+          {
+            "key": "playWhenVisible",
+            "type": "boolean",
+            "default": false,
+            "label": "Play when visible",
+            "description": "Start playing the first time the tour scrolls into view (never under reduced motion)",
+            "tier": "presentation"
+          },
+          {
+            "key": "resetLabel",
+            "type": "string",
+            "default": "Reset",
+            "label": "Reset label",
+            "tier": "presentation"
+          },
+          {
+            "key": "runningLabel",
+            "type": "string",
+            "default": "Running",
+            "label": "Running label",
+            "tier": "presentation"
+          },
+          {
+            "key": "speedLabel",
+            "type": "string",
+            "default": "Speed",
+            "label": "Speed label",
+            "tier": "presentation"
+          },
+          {
+            "key": "stepIntervalMs",
+            "type": "number",
+            "default": 2200,
+            "label": "Step interval",
+            "description": "Milliseconds each step stays on screen while playing",
+            "tier": "presentation"
+          },
+          {
+            "key": "stepLabel",
+            "type": "string",
+            "default": "Step",
+            "label": "Step label",
+            "tier": "presentation"
+          },
+          {
+            "key": "stepWord",
+            "type": "string",
+            "default": "Step",
+            "label": "Step word",
+            "tier": "presentation"
+          },
+          {
+            "key": "summary",
+            "type": "string",
+            "default": "",
+            "label": "Summary",
+            "description": "One line under the title; empty hides it",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "",
+            "label": "Title",
+            "description": "Shown in the control bar; empty hides it",
+            "tier": "presentation"
+          },
+          {
+            "key": "tourContent",
+            "type": "render-ui",
+            "default": {
+              "children": [
+                {
+                  "animation": "none",
+                  "children": [
+                    {
+                      "children": [
+                        "@config.demo"
+                      ],
+                      "padding": "lg",
+                      "type": "card"
+                    }
+                  ],
+                  "revealEvent": [
+                    "if",
+                    "@config.playWhenVisible",
+                    "TOUR_VISIBLE",
+                    ""
+                  ],
+                  "threshold": 0.4,
+                  "trigger": "scroll",
+                  "type": "animated-reveal"
+                },
+                {
+                  "align": "start",
+                  "children": [
+                    {
+                      "color": "primary",
+                      "name": "message-square-text",
+                      "size": "md",
+                      "type": "icon"
+                    },
+                    {
+                      "content": [
+                        "if",
+                        [
+                          "<",
+                          "@entity.shown",
+                          0
+                        ],
+                        "@config.introCaption",
+                        [
+                          "array/nth",
+                          "@config.captions",
+                          "@entity.shown"
+                        ]
+                      ],
+                      "type": "typography",
+                      "variant": "body"
+                    }
+                  ],
+                  "className": [
+                    "if",
+                    [
+                      "and",
+                      [
+                        "<",
+                        "@entity.shown",
+                        0
+                      ],
+                      [
+                        "==",
+                        "@config.introCaption",
+                        ""
+                      ]
+                    ],
+                    "hidden",
+                    ""
+                  ],
+                  "direction": "horizontal",
+                  "gap": "sm",
+                  "type": "stack"
+                },
+                "@trait.TourTransport"
+              ],
+              "direction": "vertical",
+              "gap": "md",
+              "type": "stack"
+            },
+            "label": "Tour layout",
+            "tier": "internal"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "TourScene",
+        "transitionEvents": [
+          "INIT",
+          "LEARN_RESET",
+          "LEARN_STEP",
+          "TOUR_VISIBLE"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [
+            "active",
+            "running"
+          ],
+          "provides": [
+            "cursor",
+            "done",
+            "shown"
+          ]
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "TOUR_PLAY"
+          },
+          {
+            "kind": "emit",
+            "resource": "TOUR_RESET"
+          },
+          {
+            "kind": "emit",
+            "resource": "TOUR_STEP"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "main"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.cursor"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.done"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.shown"
+          }
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "BehaviorTourPage",
+        "defaultPath": "/tour",
+        "primaryEntity": "TourScene"
+      }
+    ],
+    "emittedEvents": [
+      "TOUR_PLAY",
+      "TOUR_RESET",
+      "TOUR_STEP"
+    ],
+    "listenedEvents": [
+      "LEARN_RESET",
+      "LEARN_STEP",
+      "TOUR_PLAY"
+    ],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

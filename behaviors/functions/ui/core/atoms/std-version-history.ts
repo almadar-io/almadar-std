@@ -380,7 +380,7 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                 'when': {
                   'name': 'when',
                   'required': false,
-                  'type': 'object',
+                  'type': 'SExpr',
                 },
               },
               'type': 'object',

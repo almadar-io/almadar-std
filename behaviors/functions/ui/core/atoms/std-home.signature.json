@@ -1,0 +1,3418 @@
+[
+  {
+    "organism": "std-home",
+    "orbital": "HomeOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-home.ts",
+    "entities": [
+      {
+        "name": "HomeView",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "HomeHeader",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "alignment",
+            "type": "string",
+            "default": "start",
+            "enumValues": [
+              "center",
+              "start"
+            ],
+            "label": "Alignment",
+            "description": "Center the copy, or align it to the start edge",
+            "tier": "presentation"
+          },
+          {
+            "key": "backdropContent",
+            "type": "render-ui",
+            "default": {
+              "className": "hidden",
+              "type": "box"
+            },
+            "label": "Backdrop",
+            "description": "A scene behind the whole block, such as an animated canvas; it fills the block, never takes clicks, and the copy stays on top. Empty by default.",
+            "tier": "presentation"
+          },
+          {
+            "key": "backgroundPosition",
+            "type": "string",
+            "default": "center",
+            "label": "Background photo focus",
+            "description": "Which part of the photo stays visible when it is cropped",
+            "tier": "presentation",
+            "enumValues": [
+              "center",
+              "top",
+              "bottom",
+              "left",
+              "right"
+            ]
+          },
+          {
+            "key": "backgroundSrc",
+            "type": "string",
+            "default": "",
+            "label": "Background photo",
+            "description": "Photo URL filling the block behind the copy when the surface is image",
+            "synonyms": "background image, hero photo, cover photo",
+            "tier": "presentation"
+          },
+          {
+            "key": "command",
+            "type": "string",
+            "default": "",
+            "label": "Command",
+            "description": "A shell command shown in a copyable code box under the actions, e.g. an install one-liner; empty hides it",
+            "synonyms": "install command, cli, terminal snippet",
+            "tier": "presentation"
+          },
+          {
+            "key": "copyContent",
+            "type": "render-ui",
+            "default": {
+              "align": [
+                "if",
+                [
+                  "==",
+                  "@config.alignment",
+                  "center"
+                ],
+                "center",
+                "start"
+              ],
+              "children": [
+                {
+                  "label": "@config.eyebrow",
+                  "size": "md",
+                  "type": "badge",
+                  "variant": "primary"
+                },
+                {
+                  "align": [
+                    "if",
+                    [
+                      "==",
+                      "@config.alignment",
+                      "center"
+                    ],
+                    "center",
+                    "left"
+                  ],
+                  "className": "tracking-tight text-balance",
+                  "content": "@config.headline",
+                  "type": "typography",
+                  "variant": [
+                    "if",
+                    [
+                      "==",
+                      "@config.look",
+                      "hero"
+                    ],
+                    "h1",
+                    "h2"
+                  ],
+                  "weight": "bold"
+                },
+                {
+                  "align": [
+                    "if",
+                    [
+                      "==",
+                      "@config.alignment",
+                      "center"
+                    ],
+                    "center",
+                    "left"
+                  ],
+                  "className": [
+                    "if",
+                    [
+                      "==",
+                      "@config.lede",
+                      ""
+                    ],
+                    "hidden",
+                    "max-w-2xl text-pretty"
+                  ],
+                  "color": [
+                    "if",
+                    [
+                      "==",
+                      "@config.look",
+                      "header"
+                    ],
+                    "primary",
+                    "muted"
+                  ],
+                  "content": "@config.lede",
+                  "type": "typography",
+                  "variant": "large"
+                },
+                {
+                  "children": [
+                    {
+                      "action": "HERO_PRIMARY",
+                      "actionPayload": {
+                        "href": "@config.primaryHref"
+                      },
+                      "className": [
+                        "if",
+                        [
+                          "==",
+                          "@config.primaryLabel",
+                          ""
+                        ],
+                        "hidden",
+                        ""
+                      ],
+                      "href": "@config.primaryHref",
+                      "label": "@config.primaryLabel",
+                      "size": "lg",
+                      "type": "button",
+                      "variant": "primary"
+                    },
+                    {
+                      "action": "HERO_SECONDARY",
+                      "actionPayload": {
+                        "href": "@config.secondaryHref"
+                      },
+                      "className": [
+                        "if",
+                        [
+                          "==",
+                          "@config.secondaryLabel",
+                          ""
+                        ],
+                        "hidden",
+                        ""
+                      ],
+                      "href": "@config.secondaryHref",
+                      "label": "@config.secondaryLabel",
+                      "size": "lg",
+                      "type": "button",
+                      "variant": "secondary"
+                    }
+                  ],
+                  "className": [
+                    "if",
+                    [
+                      "==",
+                      "@config.primaryLabel",
+                      ""
+                    ],
+                    [
+                      "if",
+                      [
+                        "==",
+                        "@config.secondaryLabel",
+                        ""
+                      ],
+                      "hidden",
+                      "pt-2"
+                    ],
+                    "pt-2"
+                  ],
+                  "direction": "horizontal",
+                  "gap": "md",
+                  "justify": [
+                    "if",
+                    [
+                      "==",
+                      "@config.alignment",
+                      "center"
+                    ],
+                    "center",
+                    "start"
+                  ],
+                  "type": "stack",
+                  "wrap": true
+                },
+                {
+                  "children": [
+                    {
+                      "code": "@config.command",
+                      "language": "bash",
+                      "showCopyButton": true,
+                      "showLanguageBadge": false,
+                      "type": "code-block"
+                    }
+                  ],
+                  "className": [
+                    "if",
+                    [
+                      "==",
+                      "@config.command",
+                      ""
+                    ],
+                    "hidden",
+                    "max-w-xl"
+                  ],
+                  "fullWidth": true,
+                  "type": "box"
+                }
+              ],
+              "direction": "vertical",
+              "gap": "lg",
+              "type": "stack"
+            },
+            "label": "Copy block",
+            "tier": "internal"
+          },
+          {
+            "key": "edgeBottom",
+            "type": "string",
+            "default": "none",
+            "label": "Bottom edge",
+            "description": "Shape cut into the bottom of the block; curve uses the theme's shape",
+            "tier": "presentation",
+            "enumValues": [
+              "none",
+              "curve",
+              "wave",
+              "arc",
+              "tilt",
+              "step",
+              "scallop"
+            ]
+          },
+          {
+            "key": "edgeColor",
+            "type": "string",
+            "default": "background",
+            "label": "Edge fill",
+            "description": "The surface of the neighbouring section, which fills the cut",
+            "tier": "presentation",
+            "enumValues": [
+              "background",
+              "muted",
+              "surface",
+              "gradient",
+              "inverse"
+            ]
+          },
+          {
+            "key": "edgeTop",
+            "type": "string",
+            "default": "none",
+            "label": "Top edge",
+            "description": "Shape cut into the top of the block; curve uses the theme's shape",
+            "tier": "presentation",
+            "enumValues": [
+              "none",
+              "curve",
+              "wave",
+              "arc",
+              "tilt",
+              "step",
+              "scallop"
+            ]
+          },
+          {
+            "key": "eyebrow",
+            "type": "string",
+            "default": "",
+            "label": "Eyebrow",
+            "description": "Small badge above the headline; empty hides it",
+            "synonyms": "tag, kicker, label above title",
+            "tier": "presentation"
+          },
+          {
+            "key": "headline",
+            "type": "string",
+            "default": "@config.greeting",
+            "label": "Headline",
+            "description": "Main headline",
+            "synonyms": "title, heading",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "string",
+            "default": "auto",
+            "label": "Height",
+            "description": "auto fits the copy; tall fills most of the screen with the copy centred, for a hero over a backdrop scene",
+            "tier": "presentation",
+            "enumValues": [
+              "auto",
+              "tall"
+            ]
+          },
+          {
+            "key": "illustration",
+            "type": "string",
+            "default": "",
+            "label": "Illustration",
+            "description": "Inline SVG shown beside or below the copy instead of the media image; empty uses the media image",
+            "synonyms": "artwork, graphic, drawing, svg",
+            "tier": "presentation"
+          },
+          {
+            "key": "illustrationContent",
+            "type": "render-ui",
+            "default": {
+              "alt": "",
+              "animate": true,
+              "animation": "draw",
+              "height": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "header"
+                ],
+                200,
+                380
+              ],
+              "svgContent": "@config.illustration",
+              "type": "animated-graphic",
+              "width": "100%"
+            },
+            "label": "Illustration block",
+            "tier": "internal"
+          },
+          {
+            "key": "lede",
+            "type": "string",
+            "default": "@config.summary",
+            "label": "Supporting text",
+            "description": "One or two sentences under the headline; empty hides it",
+            "synonyms": "subtitle, subheading, description, tagline",
+            "tier": "presentation"
+          },
+          {
+            "key": "look",
+            "type": "string",
+            "default": "header",
+            "enumValues": [
+              "hero",
+              "banner",
+              "header"
+            ],
+            "label": "Look",
+            "description": "hero = full-width page opener with an h1; banner = contained call-to-action card with an h2; header = compact opener at the top of an app page",
+            "synonyms": "cta banner, call to action, callout, page header, masthead",
+            "tier": "presentation"
+          },
+          {
+            "key": "mediaAlt",
+            "type": "string",
+            "default": "",
+            "label": "Media alt text",
+            "tier": "presentation"
+          },
+          {
+            "key": "mediaContent",
+            "type": "render-ui",
+            "default": {
+              "alt": "@config.mediaAlt",
+              "bordered": true,
+              "loading": "eager",
+              "rounded": "xl",
+              "src": "@config.mediaSrc",
+              "type": "image"
+            },
+            "label": "Media block",
+            "tier": "internal"
+          },
+          {
+            "key": "mediaPosition",
+            "type": "string",
+            "default": "below",
+            "label": "Media position",
+            "description": "Below the copy, or beside it on wide screens",
+            "tier": "presentation",
+            "enumValues": [
+              "below",
+              "side"
+            ]
+          },
+          {
+            "key": "mediaSrc",
+            "type": "string",
+            "default": "",
+            "label": "Media image",
+            "description": "Screenshot or illustration URL; empty hides it",
+            "synonyms": "hero image, screenshot, picture",
+            "tier": "presentation"
+          },
+          {
+            "key": "primaryHref",
+            "type": "string",
+            "default": "@config.primaryActionHref",
+            "label": "Primary action link",
+            "description": "In-app path, #anchor, or absolute URL",
+            "tier": "presentation"
+          },
+          {
+            "key": "primaryLabel",
+            "type": "string",
+            "default": "@config.primaryActionLabel",
+            "label": "Primary action label",
+            "description": "Empty hides the primary action",
+            "tier": "presentation"
+          },
+          {
+            "key": "secondaryHref",
+            "type": "string",
+            "default": "",
+            "label": "Secondary action link",
+            "description": "In-app path, #anchor, or absolute URL",
+            "tier": "presentation"
+          },
+          {
+            "key": "secondaryLabel",
+            "type": "string",
+            "default": "",
+            "label": "Secondary action label",
+            "description": "Empty hides the secondary action",
+            "tier": "presentation"
+          },
+          {
+            "key": "sideContent",
+            "type": "render-ui",
+            "default": {
+              "bg": [
+                "if",
+                [
+                  "==",
+                  "@config.surface",
+                  "muted"
+                ],
+                "muted",
+                [
+                  "if",
+                  [
+                    "==",
+                    "@config.surface",
+                    "accent"
+                  ],
+                  "gradient",
+                  [
+                    "if",
+                    [
+                      "or",
+                      [
+                        "==",
+                        "@config.surface",
+                        "inverse"
+                      ],
+                      [
+                        "==",
+                        "@config.surface",
+                        "image"
+                      ]
+                    ],
+                    "inverse",
+                    "transparent"
+                  ]
+                ]
+              ],
+              "children": [
+                {
+                  "aria-hidden": true,
+                  "children": [
+                    {
+                      "alt": "",
+                      "className": "h-full",
+                      "fit": "cover",
+                      "position": "@config.backgroundPosition",
+                      "priority": [
+                        "==",
+                        "@config.look",
+                        "hero"
+                      ],
+                      "src": "@config.backgroundSrc",
+                      "type": "image"
+                    },
+                    {
+                      "className": [
+                        "if",
+                        [
+                          "==",
+                          "@config.surface",
+                          "image"
+                        ],
+                        "band-scrim",
+                        "hidden"
+                      ],
+                      "type": "box"
+                    },
+                    "@config.backdropContent"
+                  ],
+                  "className": "inset-0 pointer-events-none",
+                  "position": "absolute",
+                  "type": "box"
+                },
+                {
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "bg": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "muted",
+                            "transparent"
+                          ],
+                          "border": [
+                            "==",
+                            "@config.look",
+                            "banner"
+                          ],
+                          "children": [
+                            {
+                              "align": "center",
+                              "children": [
+                                "@config.copyContent",
+                                [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@config.illustration",
+                                    ""
+                                  ],
+                                  "@config.mediaContent",
+                                  "@config.illustrationContent"
+                                ]
+                              ],
+                              "gap": "xl",
+                              "ratio": "1:1",
+                              "type": "split"
+                            }
+                          ],
+                          "padding": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "xl",
+                            "none"
+                          ],
+                          "rounded": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "2xl",
+                            "none"
+                          ],
+                          "type": "box"
+                        }
+                      ],
+                      "maxWidth": "xl",
+                      "padding": "lg",
+                      "size": "xl",
+                      "type": "container"
+                    }
+                  ],
+                  "fullWidth": true,
+                  "position": "relative",
+                  "type": "box"
+                }
+              ],
+              "className": [
+                "if",
+                [
+                  "==",
+                  "@config.height",
+                  "tall"
+                ],
+                "flex min-h-[80vh] items-center",
+                ""
+              ],
+              "edgeBottom": "@config.edgeBottom",
+              "edgeColor": "@config.edgeColor",
+              "edgeTop": "@config.edgeTop",
+              "fullWidth": true,
+              "overflow": "hidden",
+              "paddingY": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "hero"
+                ],
+                "2xl",
+                [
+                  "if",
+                  [
+                    "==",
+                    "@config.look",
+                    "banner"
+                  ],
+                  "xl",
+                  "lg"
+                ]
+              ],
+              "position": "relative",
+              "rounded": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "header"
+                ],
+                "2xl",
+                "none"
+              ],
+              "texture": "@config.texture",
+              "type": "box"
+            },
+            "label": "Side-by-side body",
+            "tier": "internal"
+          },
+          {
+            "key": "stackedContent",
+            "type": "render-ui",
+            "default": {
+              "bg": [
+                "if",
+                [
+                  "==",
+                  "@config.surface",
+                  "muted"
+                ],
+                "muted",
+                [
+                  "if",
+                  [
+                    "==",
+                    "@config.surface",
+                    "accent"
+                  ],
+                  "gradient",
+                  [
+                    "if",
+                    [
+                      "or",
+                      [
+                        "==",
+                        "@config.surface",
+                        "inverse"
+                      ],
+                      [
+                        "==",
+                        "@config.surface",
+                        "image"
+                      ]
+                    ],
+                    "inverse",
+                    "transparent"
+                  ]
+                ]
+              ],
+              "children": [
+                {
+                  "aria-hidden": true,
+                  "children": [
+                    {
+                      "alt": "",
+                      "className": "h-full",
+                      "fit": "cover",
+                      "position": "@config.backgroundPosition",
+                      "priority": [
+                        "==",
+                        "@config.look",
+                        "hero"
+                      ],
+                      "src": "@config.backgroundSrc",
+                      "type": "image"
+                    },
+                    {
+                      "className": [
+                        "if",
+                        [
+                          "==",
+                          "@config.surface",
+                          "image"
+                        ],
+                        "band-scrim",
+                        "hidden"
+                      ],
+                      "type": "box"
+                    },
+                    "@config.backdropContent"
+                  ],
+                  "className": "inset-0 pointer-events-none",
+                  "position": "absolute",
+                  "type": "box"
+                },
+                {
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "bg": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "muted",
+                            "transparent"
+                          ],
+                          "border": [
+                            "==",
+                            "@config.look",
+                            "banner"
+                          ],
+                          "children": [
+                            {
+                              "align": [
+                                "if",
+                                [
+                                  "==",
+                                  "@config.alignment",
+                                  "center"
+                                ],
+                                "center",
+                                "stretch"
+                              ],
+                              "children": [
+                                "@config.copyContent",
+                                [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@config.illustration",
+                                    ""
+                                  ],
+                                  "@config.mediaContent",
+                                  "@config.illustrationContent"
+                                ]
+                              ],
+                              "direction": "vertical",
+                              "gap": "2xl",
+                              "type": "stack"
+                            }
+                          ],
+                          "padding": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "xl",
+                            "none"
+                          ],
+                          "rounded": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "2xl",
+                            "none"
+                          ],
+                          "type": "box"
+                        }
+                      ],
+                      "maxWidth": "xl",
+                      "padding": "lg",
+                      "size": "xl",
+                      "type": "container"
+                    }
+                  ],
+                  "fullWidth": true,
+                  "position": "relative",
+                  "type": "box"
+                }
+              ],
+              "className": [
+                "if",
+                [
+                  "==",
+                  "@config.height",
+                  "tall"
+                ],
+                "flex min-h-[80vh] items-center",
+                ""
+              ],
+              "edgeBottom": "@config.edgeBottom",
+              "edgeColor": "@config.edgeColor",
+              "edgeTop": "@config.edgeTop",
+              "fullWidth": true,
+              "overflow": "hidden",
+              "paddingY": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "hero"
+                ],
+                "2xl",
+                [
+                  "if",
+                  [
+                    "==",
+                    "@config.look",
+                    "banner"
+                  ],
+                  "xl",
+                  "lg"
+                ]
+              ],
+              "position": "relative",
+              "rounded": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "header"
+                ],
+                "2xl",
+                "none"
+              ],
+              "texture": "@config.texture",
+              "type": "box"
+            },
+            "label": "Stacked body",
+            "tier": "internal"
+          },
+          {
+            "key": "surface",
+            "type": "string",
+            "default": "plain",
+            "enumValues": [
+              "plain",
+              "muted",
+              "accent",
+              "inverse",
+              "image"
+            ],
+            "label": "Surface",
+            "description": "Background behind the block: plain, muted, a soft theme gradient (accent), inverted colors (inverse), or a photo (image, set Background photo)",
+            "tier": "presentation"
+          },
+          {
+            "key": "texture",
+            "type": "boolean",
+            "default": true,
+            "label": "Texture",
+            "description": "Lay the theme's texture over the block",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Hero.traits.HeroRender",
+        "linkedEntity": "HomeView",
+        "transitionEvents": [
+          "HERO_PRIMARY",
+          "HERO_SECONDARY",
+          "INIT"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      },
+      {
+        "name": "HomeHero",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "alignment",
+            "type": "string",
+            "default": "start",
+            "enumValues": [
+              "center",
+              "start"
+            ],
+            "label": "Alignment",
+            "description": "Center the copy, or align it to the start edge",
+            "tier": "presentation"
+          },
+          {
+            "key": "backdropContent",
+            "type": "render-ui",
+            "default": {
+              "className": "hidden",
+              "type": "box"
+            },
+            "label": "Backdrop",
+            "description": "A scene behind the whole block, such as an animated canvas; it fills the block, never takes clicks, and the copy stays on top. Empty by default.",
+            "tier": "presentation"
+          },
+          {
+            "key": "backgroundPosition",
+            "type": "string",
+            "default": "@config.backgroundPosition",
+            "enumValues": [
+              "center",
+              "top",
+              "bottom",
+              "left",
+              "right"
+            ],
+            "label": "Background photo focus",
+            "description": "Which part of the photo stays visible when it is cropped",
+            "tier": "presentation"
+          },
+          {
+            "key": "backgroundSrc",
+            "type": "string",
+            "default": "@config.backgroundSrc",
+            "label": "Background photo",
+            "description": "Photo URL filling the block behind the copy when the surface is image",
+            "synonyms": "background image, hero photo, cover photo",
+            "tier": "presentation"
+          },
+          {
+            "key": "command",
+            "type": "string",
+            "default": "",
+            "label": "Command",
+            "description": "A shell command shown in a copyable code box under the actions, e.g. an install one-liner; empty hides it",
+            "synonyms": "install command, cli, terminal snippet",
+            "tier": "presentation"
+          },
+          {
+            "key": "copyContent",
+            "type": "render-ui",
+            "default": {
+              "align": [
+                "if",
+                [
+                  "==",
+                  "@config.alignment",
+                  "center"
+                ],
+                "center",
+                "start"
+              ],
+              "children": [
+                {
+                  "label": "@config.eyebrow",
+                  "size": "md",
+                  "type": "badge",
+                  "variant": "primary"
+                },
+                {
+                  "align": [
+                    "if",
+                    [
+                      "==",
+                      "@config.alignment",
+                      "center"
+                    ],
+                    "center",
+                    "left"
+                  ],
+                  "className": "tracking-tight text-balance",
+                  "content": "@config.headline",
+                  "type": "typography",
+                  "variant": [
+                    "if",
+                    [
+                      "==",
+                      "@config.look",
+                      "hero"
+                    ],
+                    "h1",
+                    "h2"
+                  ],
+                  "weight": "bold"
+                },
+                {
+                  "align": [
+                    "if",
+                    [
+                      "==",
+                      "@config.alignment",
+                      "center"
+                    ],
+                    "center",
+                    "left"
+                  ],
+                  "className": [
+                    "if",
+                    [
+                      "==",
+                      "@config.lede",
+                      ""
+                    ],
+                    "hidden",
+                    "max-w-2xl text-pretty"
+                  ],
+                  "color": [
+                    "if",
+                    [
+                      "==",
+                      "@config.look",
+                      "header"
+                    ],
+                    "primary",
+                    "muted"
+                  ],
+                  "content": "@config.lede",
+                  "type": "typography",
+                  "variant": "large"
+                },
+                {
+                  "children": [
+                    {
+                      "action": "HERO_PRIMARY",
+                      "actionPayload": {
+                        "href": "@config.primaryHref"
+                      },
+                      "className": [
+                        "if",
+                        [
+                          "==",
+                          "@config.primaryLabel",
+                          ""
+                        ],
+                        "hidden",
+                        ""
+                      ],
+                      "href": "@config.primaryHref",
+                      "label": "@config.primaryLabel",
+                      "size": "lg",
+                      "type": "button",
+                      "variant": "primary"
+                    },
+                    {
+                      "action": "HERO_SECONDARY",
+                      "actionPayload": {
+                        "href": "@config.secondaryHref"
+                      },
+                      "className": [
+                        "if",
+                        [
+                          "==",
+                          "@config.secondaryLabel",
+                          ""
+                        ],
+                        "hidden",
+                        ""
+                      ],
+                      "href": "@config.secondaryHref",
+                      "label": "@config.secondaryLabel",
+                      "size": "lg",
+                      "type": "button",
+                      "variant": "secondary"
+                    }
+                  ],
+                  "className": [
+                    "if",
+                    [
+                      "==",
+                      "@config.primaryLabel",
+                      ""
+                    ],
+                    [
+                      "if",
+                      [
+                        "==",
+                        "@config.secondaryLabel",
+                        ""
+                      ],
+                      "hidden",
+                      "pt-2"
+                    ],
+                    "pt-2"
+                  ],
+                  "direction": "horizontal",
+                  "gap": "md",
+                  "justify": [
+                    "if",
+                    [
+                      "==",
+                      "@config.alignment",
+                      "center"
+                    ],
+                    "center",
+                    "start"
+                  ],
+                  "type": "stack",
+                  "wrap": true
+                },
+                {
+                  "children": [
+                    {
+                      "code": "@config.command",
+                      "language": "bash",
+                      "showCopyButton": true,
+                      "showLanguageBadge": false,
+                      "type": "code-block"
+                    }
+                  ],
+                  "className": [
+                    "if",
+                    [
+                      "==",
+                      "@config.command",
+                      ""
+                    ],
+                    "hidden",
+                    "max-w-xl"
+                  ],
+                  "fullWidth": true,
+                  "type": "box"
+                }
+              ],
+              "direction": "vertical",
+              "gap": "lg",
+              "type": "stack"
+            },
+            "label": "Copy block",
+            "tier": "internal"
+          },
+          {
+            "key": "edgeBottom",
+            "type": "string",
+            "default": "curve",
+            "enumValues": [
+              "none",
+              "curve",
+              "wave",
+              "arc",
+              "tilt",
+              "step",
+              "scallop"
+            ],
+            "label": "Bottom edge",
+            "description": "Shape cut into the bottom of the block; curve uses the theme's shape",
+            "tier": "presentation"
+          },
+          {
+            "key": "edgeColor",
+            "type": "string",
+            "default": "background",
+            "enumValues": [
+              "background",
+              "muted",
+              "surface",
+              "gradient",
+              "inverse"
+            ],
+            "label": "Edge fill",
+            "description": "The surface of the neighbouring section, which fills the cut",
+            "tier": "presentation"
+          },
+          {
+            "key": "edgeTop",
+            "type": "string",
+            "default": "none",
+            "label": "Top edge",
+            "description": "Shape cut into the top of the block; curve uses the theme's shape",
+            "tier": "presentation",
+            "enumValues": [
+              "none",
+              "curve",
+              "wave",
+              "arc",
+              "tilt",
+              "step",
+              "scallop"
+            ]
+          },
+          {
+            "key": "eyebrow",
+            "type": "string",
+            "default": "",
+            "label": "Eyebrow",
+            "description": "Small badge above the headline; empty hides it",
+            "synonyms": "tag, kicker, label above title",
+            "tier": "presentation"
+          },
+          {
+            "key": "headline",
+            "type": "string",
+            "default": "@config.greeting",
+            "label": "Headline",
+            "description": "Main headline",
+            "synonyms": "title, heading",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "string",
+            "default": "auto",
+            "label": "Height",
+            "description": "auto fits the copy; tall fills most of the screen with the copy centred, for a hero over a backdrop scene",
+            "tier": "presentation",
+            "enumValues": [
+              "auto",
+              "tall"
+            ]
+          },
+          {
+            "key": "illustration",
+            "type": "string",
+            "default": "@config.illustration",
+            "label": "Illustration",
+            "description": "Inline SVG shown beside or below the copy instead of the media image; empty uses the media image",
+            "synonyms": "artwork, graphic, drawing, svg",
+            "tier": "presentation"
+          },
+          {
+            "key": "illustrationContent",
+            "type": "render-ui",
+            "default": {
+              "alt": "",
+              "animate": true,
+              "animation": "draw",
+              "height": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "header"
+                ],
+                200,
+                380
+              ],
+              "svgContent": "@config.illustration",
+              "type": "animated-graphic",
+              "width": "100%"
+            },
+            "label": "Illustration block",
+            "tier": "internal"
+          },
+          {
+            "key": "lede",
+            "type": "string",
+            "default": "@config.summary",
+            "label": "Supporting text",
+            "description": "One or two sentences under the headline; empty hides it",
+            "synonyms": "subtitle, subheading, description, tagline",
+            "tier": "presentation"
+          },
+          {
+            "key": "look",
+            "type": "string",
+            "default": "hero",
+            "enumValues": [
+              "hero",
+              "banner",
+              "header"
+            ],
+            "label": "Look",
+            "description": "hero = full-width page opener with an h1; banner = contained call-to-action card with an h2; header = compact opener at the top of an app page",
+            "synonyms": "cta banner, call to action, callout, page header, masthead",
+            "tier": "presentation"
+          },
+          {
+            "key": "mediaAlt",
+            "type": "string",
+            "default": "",
+            "label": "Media alt text",
+            "tier": "presentation"
+          },
+          {
+            "key": "mediaContent",
+            "type": "render-ui",
+            "default": {
+              "alt": "@config.mediaAlt",
+              "bordered": true,
+              "loading": "eager",
+              "rounded": "xl",
+              "src": "@config.mediaSrc",
+              "type": "image"
+            },
+            "label": "Media block",
+            "tier": "internal"
+          },
+          {
+            "key": "mediaPosition",
+            "type": "string",
+            "default": "side",
+            "enumValues": [
+              "below",
+              "side"
+            ],
+            "label": "Media position",
+            "description": "Below the copy, or beside it on wide screens",
+            "tier": "presentation"
+          },
+          {
+            "key": "mediaSrc",
+            "type": "string",
+            "default": "",
+            "label": "Media image",
+            "description": "Screenshot or illustration URL; empty hides it",
+            "synonyms": "hero image, screenshot, picture",
+            "tier": "presentation"
+          },
+          {
+            "key": "primaryHref",
+            "type": "string",
+            "default": "@config.primaryActionHref",
+            "label": "Primary action link",
+            "description": "In-app path, #anchor, or absolute URL",
+            "tier": "presentation"
+          },
+          {
+            "key": "primaryLabel",
+            "type": "string",
+            "default": "@config.primaryActionLabel",
+            "label": "Primary action label",
+            "description": "Empty hides the primary action",
+            "tier": "presentation"
+          },
+          {
+            "key": "secondaryHref",
+            "type": "string",
+            "default": "",
+            "label": "Secondary action link",
+            "description": "In-app path, #anchor, or absolute URL",
+            "tier": "presentation"
+          },
+          {
+            "key": "secondaryLabel",
+            "type": "string",
+            "default": "",
+            "label": "Secondary action label",
+            "description": "Empty hides the secondary action",
+            "tier": "presentation"
+          },
+          {
+            "key": "sideContent",
+            "type": "render-ui",
+            "default": {
+              "bg": [
+                "if",
+                [
+                  "==",
+                  "@config.surface",
+                  "muted"
+                ],
+                "muted",
+                [
+                  "if",
+                  [
+                    "==",
+                    "@config.surface",
+                    "accent"
+                  ],
+                  "gradient",
+                  [
+                    "if",
+                    [
+                      "or",
+                      [
+                        "==",
+                        "@config.surface",
+                        "inverse"
+                      ],
+                      [
+                        "==",
+                        "@config.surface",
+                        "image"
+                      ]
+                    ],
+                    "inverse",
+                    "transparent"
+                  ]
+                ]
+              ],
+              "children": [
+                {
+                  "aria-hidden": true,
+                  "children": [
+                    {
+                      "alt": "",
+                      "className": "h-full",
+                      "fit": "cover",
+                      "position": "@config.backgroundPosition",
+                      "priority": [
+                        "==",
+                        "@config.look",
+                        "hero"
+                      ],
+                      "src": "@config.backgroundSrc",
+                      "type": "image"
+                    },
+                    {
+                      "className": [
+                        "if",
+                        [
+                          "==",
+                          "@config.surface",
+                          "image"
+                        ],
+                        "band-scrim",
+                        "hidden"
+                      ],
+                      "type": "box"
+                    },
+                    "@config.backdropContent"
+                  ],
+                  "className": "inset-0 pointer-events-none",
+                  "position": "absolute",
+                  "type": "box"
+                },
+                {
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "bg": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "muted",
+                            "transparent"
+                          ],
+                          "border": [
+                            "==",
+                            "@config.look",
+                            "banner"
+                          ],
+                          "children": [
+                            {
+                              "align": "center",
+                              "children": [
+                                "@config.copyContent",
+                                [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@config.illustration",
+                                    ""
+                                  ],
+                                  "@config.mediaContent",
+                                  "@config.illustrationContent"
+                                ]
+                              ],
+                              "gap": "xl",
+                              "ratio": "1:1",
+                              "type": "split"
+                            }
+                          ],
+                          "padding": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "xl",
+                            "none"
+                          ],
+                          "rounded": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "2xl",
+                            "none"
+                          ],
+                          "type": "box"
+                        }
+                      ],
+                      "maxWidth": "xl",
+                      "padding": "lg",
+                      "size": "xl",
+                      "type": "container"
+                    }
+                  ],
+                  "fullWidth": true,
+                  "position": "relative",
+                  "type": "box"
+                }
+              ],
+              "className": [
+                "if",
+                [
+                  "==",
+                  "@config.height",
+                  "tall"
+                ],
+                "flex min-h-[80vh] items-center",
+                ""
+              ],
+              "edgeBottom": "@config.edgeBottom",
+              "edgeColor": "@config.edgeColor",
+              "edgeTop": "@config.edgeTop",
+              "fullWidth": true,
+              "overflow": "hidden",
+              "paddingY": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "hero"
+                ],
+                "2xl",
+                [
+                  "if",
+                  [
+                    "==",
+                    "@config.look",
+                    "banner"
+                  ],
+                  "xl",
+                  "lg"
+                ]
+              ],
+              "position": "relative",
+              "rounded": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "header"
+                ],
+                "2xl",
+                "none"
+              ],
+              "texture": "@config.texture",
+              "type": "box"
+            },
+            "label": "Side-by-side body",
+            "tier": "internal"
+          },
+          {
+            "key": "stackedContent",
+            "type": "render-ui",
+            "default": {
+              "bg": [
+                "if",
+                [
+                  "==",
+                  "@config.surface",
+                  "muted"
+                ],
+                "muted",
+                [
+                  "if",
+                  [
+                    "==",
+                    "@config.surface",
+                    "accent"
+                  ],
+                  "gradient",
+                  [
+                    "if",
+                    [
+                      "or",
+                      [
+                        "==",
+                        "@config.surface",
+                        "inverse"
+                      ],
+                      [
+                        "==",
+                        "@config.surface",
+                        "image"
+                      ]
+                    ],
+                    "inverse",
+                    "transparent"
+                  ]
+                ]
+              ],
+              "children": [
+                {
+                  "aria-hidden": true,
+                  "children": [
+                    {
+                      "alt": "",
+                      "className": "h-full",
+                      "fit": "cover",
+                      "position": "@config.backgroundPosition",
+                      "priority": [
+                        "==",
+                        "@config.look",
+                        "hero"
+                      ],
+                      "src": "@config.backgroundSrc",
+                      "type": "image"
+                    },
+                    {
+                      "className": [
+                        "if",
+                        [
+                          "==",
+                          "@config.surface",
+                          "image"
+                        ],
+                        "band-scrim",
+                        "hidden"
+                      ],
+                      "type": "box"
+                    },
+                    "@config.backdropContent"
+                  ],
+                  "className": "inset-0 pointer-events-none",
+                  "position": "absolute",
+                  "type": "box"
+                },
+                {
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "bg": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "muted",
+                            "transparent"
+                          ],
+                          "border": [
+                            "==",
+                            "@config.look",
+                            "banner"
+                          ],
+                          "children": [
+                            {
+                              "align": [
+                                "if",
+                                [
+                                  "==",
+                                  "@config.alignment",
+                                  "center"
+                                ],
+                                "center",
+                                "stretch"
+                              ],
+                              "children": [
+                                "@config.copyContent",
+                                [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@config.illustration",
+                                    ""
+                                  ],
+                                  "@config.mediaContent",
+                                  "@config.illustrationContent"
+                                ]
+                              ],
+                              "direction": "vertical",
+                              "gap": "2xl",
+                              "type": "stack"
+                            }
+                          ],
+                          "padding": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "xl",
+                            "none"
+                          ],
+                          "rounded": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "2xl",
+                            "none"
+                          ],
+                          "type": "box"
+                        }
+                      ],
+                      "maxWidth": "xl",
+                      "padding": "lg",
+                      "size": "xl",
+                      "type": "container"
+                    }
+                  ],
+                  "fullWidth": true,
+                  "position": "relative",
+                  "type": "box"
+                }
+              ],
+              "className": [
+                "if",
+                [
+                  "==",
+                  "@config.height",
+                  "tall"
+                ],
+                "flex min-h-[80vh] items-center",
+                ""
+              ],
+              "edgeBottom": "@config.edgeBottom",
+              "edgeColor": "@config.edgeColor",
+              "edgeTop": "@config.edgeTop",
+              "fullWidth": true,
+              "overflow": "hidden",
+              "paddingY": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "hero"
+                ],
+                "2xl",
+                [
+                  "if",
+                  [
+                    "==",
+                    "@config.look",
+                    "banner"
+                  ],
+                  "xl",
+                  "lg"
+                ]
+              ],
+              "position": "relative",
+              "rounded": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "header"
+                ],
+                "2xl",
+                "none"
+              ],
+              "texture": "@config.texture",
+              "type": "box"
+            },
+            "label": "Stacked body",
+            "tier": "internal"
+          },
+          {
+            "key": "surface",
+            "type": "string",
+            "default": "@config.heroSurface",
+            "enumValues": [
+              "plain",
+              "muted",
+              "accent",
+              "inverse",
+              "image"
+            ],
+            "label": "Surface",
+            "description": "Background behind the block: plain, muted, a soft theme gradient (accent), inverted colors (inverse), or a photo (image, set Background photo)",
+            "tier": "presentation"
+          },
+          {
+            "key": "texture",
+            "type": "boolean",
+            "default": false,
+            "label": "Texture",
+            "description": "Lay the theme's texture over the block",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Hero.traits.HeroRender",
+        "linkedEntity": "HomeView",
+        "transitionEvents": [
+          "HERO_PRIMARY",
+          "HERO_SECONDARY",
+          "INIT"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      },
+      {
+        "name": "HomeWelcome",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "alignment",
+            "type": "string",
+            "default": "center",
+            "enumValues": [
+              "center",
+              "start"
+            ],
+            "label": "Alignment",
+            "description": "Center the copy, or align it to the start edge",
+            "tier": "presentation"
+          },
+          {
+            "key": "backdropContent",
+            "type": "render-ui",
+            "default": {
+              "className": "hidden",
+              "type": "box"
+            },
+            "label": "Backdrop",
+            "description": "A scene behind the whole block, such as an animated canvas; it fills the block, never takes clicks, and the copy stays on top. Empty by default.",
+            "tier": "presentation"
+          },
+          {
+            "key": "backgroundPosition",
+            "type": "string",
+            "default": "center",
+            "label": "Background photo focus",
+            "description": "Which part of the photo stays visible when it is cropped",
+            "tier": "presentation",
+            "enumValues": [
+              "center",
+              "top",
+              "bottom",
+              "left",
+              "right"
+            ]
+          },
+          {
+            "key": "backgroundSrc",
+            "type": "string",
+            "default": "",
+            "label": "Background photo",
+            "description": "Photo URL filling the block behind the copy when the surface is image",
+            "synonyms": "background image, hero photo, cover photo",
+            "tier": "presentation"
+          },
+          {
+            "key": "command",
+            "type": "string",
+            "default": "",
+            "label": "Command",
+            "description": "A shell command shown in a copyable code box under the actions, e.g. an install one-liner; empty hides it",
+            "synonyms": "install command, cli, terminal snippet",
+            "tier": "presentation"
+          },
+          {
+            "key": "copyContent",
+            "type": "render-ui",
+            "default": {
+              "align": [
+                "if",
+                [
+                  "==",
+                  "@config.alignment",
+                  "center"
+                ],
+                "center",
+                "start"
+              ],
+              "children": [
+                {
+                  "label": "@config.eyebrow",
+                  "size": "md",
+                  "type": "badge",
+                  "variant": "primary"
+                },
+                {
+                  "align": [
+                    "if",
+                    [
+                      "==",
+                      "@config.alignment",
+                      "center"
+                    ],
+                    "center",
+                    "left"
+                  ],
+                  "className": "tracking-tight text-balance",
+                  "content": "@config.headline",
+                  "type": "typography",
+                  "variant": [
+                    "if",
+                    [
+                      "==",
+                      "@config.look",
+                      "hero"
+                    ],
+                    "h1",
+                    "h2"
+                  ],
+                  "weight": "bold"
+                },
+                {
+                  "align": [
+                    "if",
+                    [
+                      "==",
+                      "@config.alignment",
+                      "center"
+                    ],
+                    "center",
+                    "left"
+                  ],
+                  "className": [
+                    "if",
+                    [
+                      "==",
+                      "@config.lede",
+                      ""
+                    ],
+                    "hidden",
+                    "max-w-2xl text-pretty"
+                  ],
+                  "color": [
+                    "if",
+                    [
+                      "==",
+                      "@config.look",
+                      "header"
+                    ],
+                    "primary",
+                    "muted"
+                  ],
+                  "content": "@config.lede",
+                  "type": "typography",
+                  "variant": "large"
+                },
+                {
+                  "children": [
+                    {
+                      "action": "HERO_PRIMARY",
+                      "actionPayload": {
+                        "href": "@config.primaryHref"
+                      },
+                      "className": [
+                        "if",
+                        [
+                          "==",
+                          "@config.primaryLabel",
+                          ""
+                        ],
+                        "hidden",
+                        ""
+                      ],
+                      "href": "@config.primaryHref",
+                      "label": "@config.primaryLabel",
+                      "size": "lg",
+                      "type": "button",
+                      "variant": "primary"
+                    },
+                    {
+                      "action": "HERO_SECONDARY",
+                      "actionPayload": {
+                        "href": "@config.secondaryHref"
+                      },
+                      "className": [
+                        "if",
+                        [
+                          "==",
+                          "@config.secondaryLabel",
+                          ""
+                        ],
+                        "hidden",
+                        ""
+                      ],
+                      "href": "@config.secondaryHref",
+                      "label": "@config.secondaryLabel",
+                      "size": "lg",
+                      "type": "button",
+                      "variant": "secondary"
+                    }
+                  ],
+                  "className": [
+                    "if",
+                    [
+                      "==",
+                      "@config.primaryLabel",
+                      ""
+                    ],
+                    [
+                      "if",
+                      [
+                        "==",
+                        "@config.secondaryLabel",
+                        ""
+                      ],
+                      "hidden",
+                      "pt-2"
+                    ],
+                    "pt-2"
+                  ],
+                  "direction": "horizontal",
+                  "gap": "md",
+                  "justify": [
+                    "if",
+                    [
+                      "==",
+                      "@config.alignment",
+                      "center"
+                    ],
+                    "center",
+                    "start"
+                  ],
+                  "type": "stack",
+                  "wrap": true
+                },
+                {
+                  "children": [
+                    {
+                      "code": "@config.command",
+                      "language": "bash",
+                      "showCopyButton": true,
+                      "showLanguageBadge": false,
+                      "type": "code-block"
+                    }
+                  ],
+                  "className": [
+                    "if",
+                    [
+                      "==",
+                      "@config.command",
+                      ""
+                    ],
+                    "hidden",
+                    "max-w-xl"
+                  ],
+                  "fullWidth": true,
+                  "type": "box"
+                }
+              ],
+              "direction": "vertical",
+              "gap": "lg",
+              "type": "stack"
+            },
+            "label": "Copy block",
+            "tier": "internal"
+          },
+          {
+            "key": "edgeBottom",
+            "type": "string",
+            "default": "none",
+            "label": "Bottom edge",
+            "description": "Shape cut into the bottom of the block; curve uses the theme's shape",
+            "tier": "presentation",
+            "enumValues": [
+              "none",
+              "curve",
+              "wave",
+              "arc",
+              "tilt",
+              "step",
+              "scallop"
+            ]
+          },
+          {
+            "key": "edgeColor",
+            "type": "string",
+            "default": "background",
+            "label": "Edge fill",
+            "description": "The surface of the neighbouring section, which fills the cut",
+            "tier": "presentation",
+            "enumValues": [
+              "background",
+              "muted",
+              "surface",
+              "gradient",
+              "inverse"
+            ]
+          },
+          {
+            "key": "edgeTop",
+            "type": "string",
+            "default": "none",
+            "label": "Top edge",
+            "description": "Shape cut into the top of the block; curve uses the theme's shape",
+            "tier": "presentation",
+            "enumValues": [
+              "none",
+              "curve",
+              "wave",
+              "arc",
+              "tilt",
+              "step",
+              "scallop"
+            ]
+          },
+          {
+            "key": "eyebrow",
+            "type": "string",
+            "default": "",
+            "label": "Eyebrow",
+            "description": "Small badge above the headline; empty hides it",
+            "synonyms": "tag, kicker, label above title",
+            "tier": "presentation"
+          },
+          {
+            "key": "headline",
+            "type": "string",
+            "default": "@config.greeting",
+            "label": "Headline",
+            "description": "Main headline",
+            "synonyms": "title, heading",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "string",
+            "default": "auto",
+            "label": "Height",
+            "description": "auto fits the copy; tall fills most of the screen with the copy centred, for a hero over a backdrop scene",
+            "tier": "presentation",
+            "enumValues": [
+              "auto",
+              "tall"
+            ]
+          },
+          {
+            "key": "illustration",
+            "type": "string",
+            "default": "@config.illustration",
+            "label": "Illustration",
+            "description": "Inline SVG shown beside or below the copy instead of the media image; empty uses the media image",
+            "synonyms": "artwork, graphic, drawing, svg",
+            "tier": "presentation"
+          },
+          {
+            "key": "illustrationContent",
+            "type": "render-ui",
+            "default": {
+              "alt": "",
+              "animate": true,
+              "animation": "draw",
+              "height": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "header"
+                ],
+                200,
+                380
+              ],
+              "svgContent": "@config.illustration",
+              "type": "animated-graphic",
+              "width": "100%"
+            },
+            "label": "Illustration block",
+            "tier": "internal"
+          },
+          {
+            "key": "lede",
+            "type": "string",
+            "default": "@config.summary",
+            "label": "Supporting text",
+            "description": "One or two sentences under the headline; empty hides it",
+            "synonyms": "subtitle, subheading, description, tagline",
+            "tier": "presentation"
+          },
+          {
+            "key": "look",
+            "type": "string",
+            "default": "banner",
+            "enumValues": [
+              "hero",
+              "banner",
+              "header"
+            ],
+            "label": "Look",
+            "description": "hero = full-width page opener with an h1; banner = contained call-to-action card with an h2; header = compact opener at the top of an app page",
+            "synonyms": "cta banner, call to action, callout, page header, masthead",
+            "tier": "presentation"
+          },
+          {
+            "key": "mediaAlt",
+            "type": "string",
+            "default": "",
+            "label": "Media alt text",
+            "tier": "presentation"
+          },
+          {
+            "key": "mediaContent",
+            "type": "render-ui",
+            "default": {
+              "alt": "@config.mediaAlt",
+              "bordered": true,
+              "loading": "eager",
+              "rounded": "xl",
+              "src": "@config.mediaSrc",
+              "type": "image"
+            },
+            "label": "Media block",
+            "tier": "internal"
+          },
+          {
+            "key": "mediaPosition",
+            "type": "string",
+            "default": "below",
+            "label": "Media position",
+            "description": "Below the copy, or beside it on wide screens",
+            "tier": "presentation",
+            "enumValues": [
+              "below",
+              "side"
+            ]
+          },
+          {
+            "key": "mediaSrc",
+            "type": "string",
+            "default": "",
+            "label": "Media image",
+            "description": "Screenshot or illustration URL; empty hides it",
+            "synonyms": "hero image, screenshot, picture",
+            "tier": "presentation"
+          },
+          {
+            "key": "primaryHref",
+            "type": "string",
+            "default": "@config.primaryActionHref",
+            "label": "Primary action link",
+            "description": "In-app path, #anchor, or absolute URL",
+            "tier": "presentation"
+          },
+          {
+            "key": "primaryLabel",
+            "type": "string",
+            "default": "@config.primaryActionLabel",
+            "label": "Primary action label",
+            "description": "Empty hides the primary action",
+            "tier": "presentation"
+          },
+          {
+            "key": "secondaryHref",
+            "type": "string",
+            "default": "",
+            "label": "Secondary action link",
+            "description": "In-app path, #anchor, or absolute URL",
+            "tier": "presentation"
+          },
+          {
+            "key": "secondaryLabel",
+            "type": "string",
+            "default": "",
+            "label": "Secondary action label",
+            "description": "Empty hides the secondary action",
+            "tier": "presentation"
+          },
+          {
+            "key": "sideContent",
+            "type": "render-ui",
+            "default": {
+              "bg": [
+                "if",
+                [
+                  "==",
+                  "@config.surface",
+                  "muted"
+                ],
+                "muted",
+                [
+                  "if",
+                  [
+                    "==",
+                    "@config.surface",
+                    "accent"
+                  ],
+                  "gradient",
+                  [
+                    "if",
+                    [
+                      "or",
+                      [
+                        "==",
+                        "@config.surface",
+                        "inverse"
+                      ],
+                      [
+                        "==",
+                        "@config.surface",
+                        "image"
+                      ]
+                    ],
+                    "inverse",
+                    "transparent"
+                  ]
+                ]
+              ],
+              "children": [
+                {
+                  "aria-hidden": true,
+                  "children": [
+                    {
+                      "alt": "",
+                      "className": "h-full",
+                      "fit": "cover",
+                      "position": "@config.backgroundPosition",
+                      "priority": [
+                        "==",
+                        "@config.look",
+                        "hero"
+                      ],
+                      "src": "@config.backgroundSrc",
+                      "type": "image"
+                    },
+                    {
+                      "className": [
+                        "if",
+                        [
+                          "==",
+                          "@config.surface",
+                          "image"
+                        ],
+                        "band-scrim",
+                        "hidden"
+                      ],
+                      "type": "box"
+                    },
+                    "@config.backdropContent"
+                  ],
+                  "className": "inset-0 pointer-events-none",
+                  "position": "absolute",
+                  "type": "box"
+                },
+                {
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "bg": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "muted",
+                            "transparent"
+                          ],
+                          "border": [
+                            "==",
+                            "@config.look",
+                            "banner"
+                          ],
+                          "children": [
+                            {
+                              "align": "center",
+                              "children": [
+                                "@config.copyContent",
+                                [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@config.illustration",
+                                    ""
+                                  ],
+                                  "@config.mediaContent",
+                                  "@config.illustrationContent"
+                                ]
+                              ],
+                              "gap": "xl",
+                              "ratio": "1:1",
+                              "type": "split"
+                            }
+                          ],
+                          "padding": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "xl",
+                            "none"
+                          ],
+                          "rounded": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "2xl",
+                            "none"
+                          ],
+                          "type": "box"
+                        }
+                      ],
+                      "maxWidth": "xl",
+                      "padding": "lg",
+                      "size": "xl",
+                      "type": "container"
+                    }
+                  ],
+                  "fullWidth": true,
+                  "position": "relative",
+                  "type": "box"
+                }
+              ],
+              "className": [
+                "if",
+                [
+                  "==",
+                  "@config.height",
+                  "tall"
+                ],
+                "flex min-h-[80vh] items-center",
+                ""
+              ],
+              "edgeBottom": "@config.edgeBottom",
+              "edgeColor": "@config.edgeColor",
+              "edgeTop": "@config.edgeTop",
+              "fullWidth": true,
+              "overflow": "hidden",
+              "paddingY": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "hero"
+                ],
+                "2xl",
+                [
+                  "if",
+                  [
+                    "==",
+                    "@config.look",
+                    "banner"
+                  ],
+                  "xl",
+                  "lg"
+                ]
+              ],
+              "position": "relative",
+              "rounded": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "header"
+                ],
+                "2xl",
+                "none"
+              ],
+              "texture": "@config.texture",
+              "type": "box"
+            },
+            "label": "Side-by-side body",
+            "tier": "internal"
+          },
+          {
+            "key": "stackedContent",
+            "type": "render-ui",
+            "default": {
+              "bg": [
+                "if",
+                [
+                  "==",
+                  "@config.surface",
+                  "muted"
+                ],
+                "muted",
+                [
+                  "if",
+                  [
+                    "==",
+                    "@config.surface",
+                    "accent"
+                  ],
+                  "gradient",
+                  [
+                    "if",
+                    [
+                      "or",
+                      [
+                        "==",
+                        "@config.surface",
+                        "inverse"
+                      ],
+                      [
+                        "==",
+                        "@config.surface",
+                        "image"
+                      ]
+                    ],
+                    "inverse",
+                    "transparent"
+                  ]
+                ]
+              ],
+              "children": [
+                {
+                  "aria-hidden": true,
+                  "children": [
+                    {
+                      "alt": "",
+                      "className": "h-full",
+                      "fit": "cover",
+                      "position": "@config.backgroundPosition",
+                      "priority": [
+                        "==",
+                        "@config.look",
+                        "hero"
+                      ],
+                      "src": "@config.backgroundSrc",
+                      "type": "image"
+                    },
+                    {
+                      "className": [
+                        "if",
+                        [
+                          "==",
+                          "@config.surface",
+                          "image"
+                        ],
+                        "band-scrim",
+                        "hidden"
+                      ],
+                      "type": "box"
+                    },
+                    "@config.backdropContent"
+                  ],
+                  "className": "inset-0 pointer-events-none",
+                  "position": "absolute",
+                  "type": "box"
+                },
+                {
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "bg": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "muted",
+                            "transparent"
+                          ],
+                          "border": [
+                            "==",
+                            "@config.look",
+                            "banner"
+                          ],
+                          "children": [
+                            {
+                              "align": [
+                                "if",
+                                [
+                                  "==",
+                                  "@config.alignment",
+                                  "center"
+                                ],
+                                "center",
+                                "stretch"
+                              ],
+                              "children": [
+                                "@config.copyContent",
+                                [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@config.illustration",
+                                    ""
+                                  ],
+                                  "@config.mediaContent",
+                                  "@config.illustrationContent"
+                                ]
+                              ],
+                              "direction": "vertical",
+                              "gap": "2xl",
+                              "type": "stack"
+                            }
+                          ],
+                          "padding": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "xl",
+                            "none"
+                          ],
+                          "rounded": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "2xl",
+                            "none"
+                          ],
+                          "type": "box"
+                        }
+                      ],
+                      "maxWidth": "xl",
+                      "padding": "lg",
+                      "size": "xl",
+                      "type": "container"
+                    }
+                  ],
+                  "fullWidth": true,
+                  "position": "relative",
+                  "type": "box"
+                }
+              ],
+              "className": [
+                "if",
+                [
+                  "==",
+                  "@config.height",
+                  "tall"
+                ],
+                "flex min-h-[80vh] items-center",
+                ""
+              ],
+              "edgeBottom": "@config.edgeBottom",
+              "edgeColor": "@config.edgeColor",
+              "edgeTop": "@config.edgeTop",
+              "fullWidth": true,
+              "overflow": "hidden",
+              "paddingY": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "hero"
+                ],
+                "2xl",
+                [
+                  "if",
+                  [
+                    "==",
+                    "@config.look",
+                    "banner"
+                  ],
+                  "xl",
+                  "lg"
+                ]
+              ],
+              "position": "relative",
+              "rounded": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "header"
+                ],
+                "2xl",
+                "none"
+              ],
+              "texture": "@config.texture",
+              "type": "box"
+            },
+            "label": "Stacked body",
+            "tier": "internal"
+          },
+          {
+            "key": "surface",
+            "type": "string",
+            "default": "accent",
+            "enumValues": [
+              "plain",
+              "muted",
+              "accent",
+              "inverse",
+              "image"
+            ],
+            "label": "Surface",
+            "description": "Background behind the block: plain, muted, a soft theme gradient (accent), inverted colors (inverse), or a photo (image, set Background photo)",
+            "tier": "presentation"
+          },
+          {
+            "key": "texture",
+            "type": "boolean",
+            "default": false,
+            "label": "Texture",
+            "description": "Lay the theme's texture over the block",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Hero.traits.HeroRender",
+        "linkedEntity": "HomeView",
+        "transitionEvents": [
+          "HERO_PRIMARY",
+          "HERO_SECONDARY",
+          "INIT"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      },
+      {
+        "name": "HomeRender",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "actionRow",
+            "type": "render-ui",
+            "default": {
+              "children": "@config.actions",
+              "className": [
+                "if",
+                [
+                  "==",
+                  [
+                    "array/len",
+                    "@config.actions"
+                  ],
+                  0
+                ],
+                "hidden",
+                ""
+              ],
+              "direction": "horizontal",
+              "gap": "sm",
+              "type": "stack",
+              "wrap": true
+            },
+            "label": "Action row",
+            "tier": "internal"
+          },
+          {
+            "key": "actions",
+            "type": "[trait]",
+            "default": [],
+            "label": "Actions",
+            "description": "The organism's own operation triggers, such as a button that opens a create form; each entry is a @trait reference",
+            "synonyms": "quick actions, create, new, start",
+            "tier": "domain",
+            "items": {
+              "type": "trait"
+            }
+          },
+          {
+            "key": "backgroundPosition",
+            "type": "string",
+            "default": "center",
+            "label": "Hero photo focus",
+            "description": "Which part of the photo stays visible when it is cropped",
+            "tier": "presentation",
+            "enumValues": [
+              "center",
+              "top",
+              "bottom",
+              "left",
+              "right"
+            ]
+          },
+          {
+            "key": "backgroundSrc",
+            "type": "string",
+            "default": "",
+            "label": "Hero photo",
+            "description": "spotlight only: photo URL behind the greeting when the hero background is image",
+            "synonyms": "hero image, cover photo, background image",
+            "tier": "presentation"
+          },
+          {
+            "key": "briefingContent",
+            "type": "render-ui",
+            "default": {
+              "children": [
+                "@trait.HomeHeader",
+                "@config.kpiRow",
+                {
+                  "align": "start",
+                  "children": [
+                    "@config.sectionColumn",
+                    {
+                      "children": [
+                        "@config.actionRow",
+                        "@config.shortcutList"
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
+                    }
+                  ],
+                  "gap": "lg",
+                  "ratio": "2:1",
+                  "type": "split"
+                }
+              ],
+              "direction": "vertical",
+              "gap": "lg",
+              "type": "stack"
+            },
+            "label": "Briefing layout",
+            "tier": "internal"
+          },
+          {
+            "key": "commandContent",
+            "type": "render-ui",
+            "default": {
+              "children": [
+                "@trait.HomeHeader",
+                "@config.kpiRow",
+                "@config.actionRow",
+                "@config.sectionGrid",
+                "@config.shortcutTiles"
+              ],
+              "direction": "vertical",
+              "gap": "lg",
+              "type": "stack"
+            },
+            "label": "Command layout",
+            "tier": "internal"
+          },
+          {
+            "key": "conciergeContent",
+            "type": "render-ui",
+            "default": {
+              "children": [
+                "@trait.HomeWelcome",
+                "@config.kpiRow",
+                "@config.shortcutTiles",
+                "@config.actionRow",
+                "@config.sectionGrid"
+              ],
+              "direction": "vertical",
+              "gap": "lg",
+              "type": "stack"
+            },
+            "label": "Concierge layout",
+            "tier": "internal"
+          },
+          {
+            "key": "emptyDescription",
+            "type": "string",
+            "default": "Start with one of the shortcuts above.",
+            "label": "Empty description",
+            "description": "Tells people what will appear here and how to start",
+            "tier": "presentation"
+          },
+          {
+            "key": "emptyTitle",
+            "type": "string",
+            "default": "Nothing here yet",
+            "label": "Empty title",
+            "description": "Shown in place of the sections while there are none",
+            "tier": "presentation"
+          },
+          {
+            "key": "greeting",
+            "type": "string",
+            "default": "Welcome back",
+            "label": "Greeting",
+            "description": "Headline at the top of the home page",
+            "synonyms": "welcome, title, headline",
+            "tier": "presentation"
+          },
+          {
+            "key": "heroSurface",
+            "type": "string",
+            "default": "accent",
+            "label": "Hero background",
+            "description": "spotlight only: accent = the theme's gradient; image = the hero photo under a scrim",
+            "tier": "presentation",
+            "enumValues": [
+              "accent",
+              "image"
+            ]
+          },
+          {
+            "key": "homeLook",
+            "type": "string",
+            "default": "command",
+            "label": "Home look",
+            "description": "Figures always sit right under the greeting. Staff: command = then actions and sections; briefing = then sections in the main column with actions and shortcut links in a side rail; launchpad = then big shortcut tiles. Customers: spotlight = photo or gradient hero, then actions, tiles and their items; concierge = centred greeting, then shortcut tiles.",
+            "synonyms": "dashboard style, home layout, overview layout, admin home, customer home",
+            "tier": "presentation",
+            "enumValues": [
+              "command",
+              "briefing",
+              "launchpad",
+              "spotlight",
+              "concierge"
+            ]
+          },
+          {
+            "key": "illustration",
+            "type": "string",
+            "default": "",
+            "label": "Illustration",
+            "description": "spotlight and concierge: inline SVG beside the greeting; empty hides it",
+            "tier": "presentation"
+          },
+          {
+            "key": "kpiRow",
+            "type": "render-ui",
+            "default": {
+              "children": "@config.kpis",
+              "className": [
+                "if",
+                [
+                  "==",
+                  [
+                    "array/len",
+                    "@config.kpis"
+                  ],
+                  0
+                ],
+                "hidden",
+                ""
+              ],
+              "gap": "md",
+              "minChildWidth": "180px",
+              "type": "simple-grid"
+            },
+            "label": "Figures row",
+            "tier": "internal"
+          },
+          {
+            "key": "kpis",
+            "type": "[trait]",
+            "default": [],
+            "label": "Headline figures",
+            "description": "Stat tiles summarising the app, most important first (keep to about five); each entry is a @trait reference",
+            "synonyms": "kpis, metrics, stats, numbers",
+            "tier": "domain",
+            "items": {
+              "type": "trait"
+            }
+          },
+          {
+            "key": "launchpadContent",
+            "type": "render-ui",
+            "default": {
+              "children": [
+                "@trait.HomeHeader",
+                "@config.kpiRow",
+                "@config.actionRow",
+                "@config.shortcutTiles",
+                "@config.sectionGrid"
+              ],
+              "direction": "vertical",
+              "gap": "lg",
+              "type": "stack"
+            },
+            "label": "Launchpad layout",
+            "tier": "internal"
+          },
+          {
+            "key": "primaryActionHref",
+            "type": "string",
+            "default": "",
+            "label": "Main action link",
+            "description": "Page the main action opens (in-app path or #anchor)",
+            "tier": "presentation"
+          },
+          {
+            "key": "primaryActionLabel",
+            "type": "string",
+            "default": "",
+            "label": "Main action",
+            "description": "Label of the one most important thing to do next, shown in the header; empty hides it",
+            "synonyms": "cta, primary button, get started",
+            "tier": "presentation"
+          },
+          {
+            "key": "sectionColumn",
+            "type": "render-ui",
+            "default": {
+              "children": [
+                {
+                  "className": [
+                    "if",
+                    [
+                      "==",
+                      [
+                        "array/len",
+                        "@config.sections"
+                      ],
+                      0
+                    ],
+                    "",
+                    "hidden"
+                  ],
+                  "description": "@config.emptyDescription",
+                  "icon": "layout-dashboard",
+                  "title": "@config.emptyTitle",
+                  "type": "empty-state"
+                },
+                {
+                  "children": "@config.sections",
+                  "className": [
+                    "if",
+                    [
+                      "==",
+                      [
+                        "array/len",
+                        "@config.sections"
+                      ],
+                      0
+                    ],
+                    "hidden",
+                    ""
+                  ],
+                  "direction": "vertical",
+                  "gap": "lg",
+                  "type": "stack"
+                }
+              ],
+              "fullWidth": true,
+              "type": "box"
+            },
+            "label": "Sections column",
+            "tier": "internal"
+          },
+          {
+            "key": "sectionGrid",
+            "type": "render-ui",
+            "default": {
+              "children": [
+                {
+                  "className": [
+                    "if",
+                    [
+                      "==",
+                      [
+                        "array/len",
+                        "@config.sections"
+                      ],
+                      0
+                    ],
+                    "",
+                    "hidden"
+                  ],
+                  "description": "@config.emptyDescription",
+                  "icon": "layout-dashboard",
+                  "title": "@config.emptyTitle",
+                  "type": "empty-state"
+                },
+                {
+                  "children": "@config.sections",
+                  "className": [
+                    "if",
+                    [
+                      "==",
+                      [
+                        "array/len",
+                        "@config.sections"
+                      ],
+                      0
+                    ],
+                    "hidden",
+                    ""
+                  ],
+                  "gap": "lg",
+                  "minChildWidth": "360px",
+                  "type": "simple-grid"
+                }
+              ],
+              "fullWidth": true,
+              "type": "box"
+            },
+            "label": "Sections grid",
+            "tier": "internal"
+          },
+          {
+            "key": "sections",
+            "type": "[trait]",
+            "default": [],
+            "label": "Overview sections",
+            "description": "Short actionable lists and panels gathered from the app's pages (needs attention, recent, upcoming); each entry is a @trait reference",
+            "synonyms": "widgets, panels, recent, upcoming, activity, needs attention",
+            "tier": "domain",
+            "items": {
+              "type": "trait"
+            }
+          },
+          {
+            "key": "shortcutList",
+            "type": "render-ui",
+            "default": {
+              "children": [
+                "array/map",
+                "@config.shortcuts",
+                [
+                  "fn",
+                  "s",
+                  {
+                    "href": [
+                      "object/get",
+                      "@s",
+                      "href",
+                      "#"
+                    ],
+                    "icon": [
+                      "object/get",
+                      "@s",
+                      "icon",
+                      "arrow-right"
+                    ],
+                    "label": [
+                      "object/get",
+                      "@s",
+                      "label",
+                      ""
+                    ],
+                    "size": "md",
+                    "type": "button",
+                    "variant": [
+                      "if",
+                      [
+                        "object/get",
+                        "@s",
+                        "primary",
+                        false
+                      ],
+                      "primary",
+                      "ghost"
+                    ]
+                  }
+                ]
+              ],
+              "className": [
+                "if",
+                [
+                  "==",
+                  [
+                    "array/len",
+                    "@config.shortcuts"
+                  ],
+                  0
+                ],
+                "hidden",
+                ""
+              ],
+              "direction": "vertical",
+              "gap": "xs",
+              "type": "stack"
+            },
+            "label": "Shortcut list",
+            "tier": "internal"
+          },
+          {
+            "key": "shortcutTiles",
+            "type": "render-ui",
+            "default": {
+              "children": [
+                "array/map",
+                "@config.shortcuts",
+                [
+                  "fn",
+                  "s",
+                  {
+                    "children": [
+                      {
+                        "align": "start",
+                        "children": [
+                          {
+                            "color": "primary",
+                            "name": [
+                              "object/get",
+                              "@s",
+                              "icon",
+                              "arrow-right"
+                            ],
+                            "size": "lg",
+                            "type": "icon"
+                          },
+                          {
+                            "content": [
+                              "object/get",
+                              "@s",
+                              "label",
+                              ""
+                            ],
+                            "type": "typography",
+                            "variant": "h4"
+                          },
+                          {
+                            "color": "muted",
+                            "content": [
+                              "object/get",
+                              "@s",
+                              "description",
+                              ""
+                            ],
+                            "type": "typography",
+                            "variant": "body2"
+                          },
+                          {
+                            "href": [
+                              "object/get",
+                              "@s",
+                              "href",
+                              "#"
+                            ],
+                            "iconRight": "arrow-right",
+                            "label": [
+                              "object/get",
+                              "@s",
+                              "actionLabel",
+                              "Open"
+                            ],
+                            "size": "sm",
+                            "type": "button",
+                            "variant": [
+                              "if",
+                              [
+                                "object/get",
+                                "@s",
+                                "primary",
+                                false
+                              ],
+                              "primary",
+                              "secondary"
+                            ]
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      }
+                    ],
+                    "padding": "lg",
+                    "type": "card"
+                  }
+                ]
+              ],
+              "className": [
+                "if",
+                [
+                  "==",
+                  [
+                    "array/len",
+                    "@config.shortcuts"
+                  ],
+                  0
+                ],
+                "hidden",
+                ""
+              ],
+              "gap": "md",
+              "minChildWidth": "220px",
+              "type": "simple-grid"
+            },
+            "label": "Shortcut tiles",
+            "tier": "internal"
+          },
+          {
+            "key": "shortcuts",
+            "type": "[HomeShortcut]",
+            "default": [],
+            "label": "Shortcuts",
+            "description": "Links to the pages people go to most: label, href, optional icon, one-line description, button label and whether it is the primary one",
+            "synonyms": "quick links, go to, jump to, navigation tiles",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "actionLabel": {
+                  "name": "actionLabel",
+                  "required": false,
+                  "type": "string"
+                },
+                "description": {
+                  "name": "description",
+                  "required": false,
+                  "type": "string"
+                },
+                "href": {
+                  "name": "href",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "primary": {
+                  "name": "primary",
+                  "required": false,
+                  "type": "boolean"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "spotlightContent",
+            "type": "render-ui",
+            "default": {
+              "children": [
+                "@trait.HomeHero",
+                "@config.kpiRow",
+                "@config.actionRow",
+                "@config.shortcutTiles",
+                "@config.sectionGrid"
+              ],
+              "direction": "vertical",
+              "gap": "lg",
+              "type": "stack"
+            },
+            "label": "Spotlight layout",
+            "tier": "internal"
+          },
+          {
+            "key": "summary",
+            "type": "string",
+            "default": "",
+            "label": "Summary",
+            "description": "One sentence under the greeting; empty hides it",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "HomeView",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        },
+        "effectRow": [
+          {
+            "kind": "render-ui",
+            "resource": "main"
+          }
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "HomePage",
+        "defaultPath": "/home",
+        "primaryEntity": "HomeView"
+      }
+    ],
+    "emittedEvents": [],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

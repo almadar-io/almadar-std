@@ -58,6 +58,8 @@ export const OPERATOR_CATEGORIES = [
   'std-memory',
   'std-trace',
   'std-behavior',
+  'std-behavior-value',
+  'std-program',
   'std-integration',
 ] as const;
 
@@ -215,6 +217,7 @@ export const STD_MODULES = [
   'memory',
   'trace',
   'behavior',
+  'program',
   'integration',
 ] as const;
 
@@ -262,6 +265,8 @@ export const STD_OPERATOR_CATEGORIES = [
   'std-memory',
   'std-trace',
   'std-behavior',
+  'std-behavior-value',
+  'std-program',
   'std-integration',
 ] as const;
 

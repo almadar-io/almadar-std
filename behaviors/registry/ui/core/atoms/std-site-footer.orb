@@ -176,6 +176,36 @@
               "tier": "presentation",
               "type": "string"
             },
+            "edgeColor": {
+              "default": "background",
+              "description": "The surface of the section above the footer, which fills the cut",
+              "label": "Edge fill",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "background",
+                "muted",
+                "surface",
+                "gradient",
+                "inverse"
+              ]
+            },
+            "edgeTop": {
+              "default": "none",
+              "description": "Shape cut into the top of the footer; curve uses the theme's shape",
+              "label": "Top edge",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "none",
+                "curve",
+                "wave",
+                "arc",
+                "tilt",
+                "step",
+                "scallop"
+              ]
+            },
             "legalLinks": {
               "default": [],
               "description": "Links in the bottom row, e.g. Privacy and Terms",
@@ -198,12 +228,30 @@
               "tier": "presentation",
               "type": "[FooterLink]"
             },
+            "surface": {
+              "default": "plain",
+              "description": "plain, or inverted colors (inverse) for a dark closing band",
+              "label": "Surface",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "plain",
+                "inverse"
+              ]
+            },
             "tagline": {
               "default": "",
               "description": "One line under the brand name; empty hides it",
               "label": "Tagline",
               "tier": "presentation",
               "type": "string"
+            },
+            "texture": {
+              "default": false,
+              "description": "Lay the theme's texture over the footer",
+              "label": "Texture",
+              "tier": "presentation",
+              "type": "boolean"
             }
           },
           "effectRow": [
@@ -303,6 +351,16 @@
                     "render-ui",
                     "main",
                     {
+                      "bg": [
+                        "if",
+                        [
+                          "==",
+                          "@config.surface",
+                          "inverse"
+                        ],
+                        "inverse",
+                        "transparent"
+                      ],
                       "border": true,
                       "children": [
                         {
@@ -315,8 +373,9 @@
                                       "children": [
                                         {
                                           "content": "@config.brandName",
+                                          "size": "lg",
                                           "type": "typography",
-                                          "variant": "h5",
+                                          "variant": "h2",
                                           "weight": "bold"
                                         },
                                         {
@@ -514,8 +573,11 @@
                         }
                       ],
                       "className": "border-x-0 border-b-0",
+                      "edgeColor": "@config.edgeColor",
+                      "edgeTop": "@config.edgeTop",
                       "fullWidth": true,
                       "paddingY": "xl",
+                      "texture": "@config.texture",
                       "type": "box"
                     }
                   ]

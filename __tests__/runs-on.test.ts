@@ -12,11 +12,11 @@ describe('runsOn', () => {
     expect(pureWithSite.map(([k]) => k)).toEqual([]);
   });
 
-  it('the server set is the data-owning effects plus the OS watchers', () => {
+  it('the server set is the data-owning effects, the OS watchers, and the effects that read installed packages through orb', () => {
     expect(getOperatorsRunningOn('server')).toEqual([
-      'atomic', 'call-service', 'cancel-call', 'fetch', 'fetch-stream',
+      'atomic', 'behavior/catalog', 'behavior/describe', 'behavior/source', 'call-service', 'cancel-call', 'fetch', 'fetch-stream',
       'os/debounce', 'os/watch-cron', 'os/watch-env', 'os/watch-files', 'os/watch-http', 'os/watch-port', 'os/watch-process', 'os/watch-signal',
-      'persist', 'swap',
+      'persist', 'program/compose', 'program/eval', 'program/print', 'program/read', 'swap',
     ]);
   });
 

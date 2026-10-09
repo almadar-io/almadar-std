@@ -304,6 +304,217 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
         return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
       })(),
     } as Entity,
+    config: {
+      'approveLabel': {
+        'default': 'Approve',
+        'label': 'Approve button',
+        'tier': 'presentation',
+        'type': 'string',
+      },
+      'cancelLabel': {
+        'default': 'Cancel',
+        'label': 'Cancel button',
+        'tier': 'presentation',
+        'type': 'string',
+      },
+      'discardLabel': {
+        'default': 'Discard',
+        'label': 'Discard button',
+        'tier': 'presentation',
+        'type': 'string',
+      },
+      'feedbackLabel': {
+        'default': 'What should change?',
+        'label': 'Revision feedback label',
+        'tier': 'presentation',
+        'type': 'string',
+      },
+      'icon': {
+        'default': 'sparkles',
+        'label': 'Panel icon',
+        'tier': 'presentation',
+        'type': 'string',
+      },
+      'inputLabel': {
+        'default': 'What should the agent work from?',
+        'label': 'Start form label',
+        'tier': 'presentation',
+        'type': 'string',
+      },
+      'instructions': {
+        'default': 'You turn what the person hands over into one structured proposal. Look things up with the tools if you need to, then call the proposal tool exactly once with a short summary and the list of items. Do not call it again unless asked to revise.',
+        'description': 'Standing instructions sent with every run.',
+        'label': 'How should the agent behave?',
+        'synonyms': 'system prompt, persona, guidance',
+        'tier': 'domain',
+        'type': 'string',
+      },
+      'itemFields': {
+        'default': [],
+        'description': 'The item keys to show, each `{ name, label, variant }`.',
+        'items': {
+          'properties': {
+            'label': {
+              'name': 'label',
+              'required': false,
+              'type': 'string',
+            },
+            'name': {
+              'name': 'name',
+              'required': true,
+              'type': 'string',
+            },
+            'variant': {
+              'name': 'variant',
+              'required': false,
+              'type': 'string',
+            },
+          },
+          'type': 'object',
+        },
+        'label': 'Which item values are shown?',
+        'synonyms': 'columns, fields, attributes',
+        'tier': 'domain',
+        'type': '[ProposalField]',
+      },
+      'itemPattern': {
+        'default': 'data-list',
+        'description': 'The pattern the review renders the items with; it receives `entity` (the items) and `fields`.',
+        'label': 'How are the proposed items drawn?',
+        'synonyms': 'item layout, list pattern, table',
+        'tier': 'presentation',
+        'type': 'pattern',
+      },
+      'itemsHeading': {
+        'default': 'Items',
+        'label': 'Items heading',
+        'tier': 'presentation',
+        'type': 'string',
+      },
+      'maxSteps': {
+        'default': 8,
+        'label': 'Model round-trips per run',
+        'tier': 'policy',
+        'type': 'number',
+      },
+      'panelSlot': {
+        'default': 'main',
+        'description': '`main` for the content of a page or launcher; `modal` or `drawer` for an overlay.',
+        'label': 'Where the panel renders',
+        'tier': 'presentation',
+        'type': 'slot',
+      },
+      'prompt': {
+        'default': 'Work out a proposal from the following.',
+        'description': 'The request that precedes the person\'s input in every run.',
+        'label': 'What is the agent asked to do?',
+        'synonyms': 'task, goal, brief, question',
+        'tier': 'domain',
+        'type': 'string',
+      },
+      'retryLabel': {
+        'default': 'Retry',
+        'label': 'Retry button',
+        'tier': 'presentation',
+        'type': 'string',
+      },
+      'reviseLabel': {
+        'default': 'Revise',
+        'label': 'Revise button',
+        'tier': 'presentation',
+        'type': 'string',
+      },
+      'showInputForm': {
+        'default': true,
+        'description': 'On, the idle panel lets the person type what the agent works from. Off, the panel renders nothing until the app starts it with PROPOSAL_REQUESTED.',
+        'label': 'Show a start form?',
+        'synonyms': 'start form, input box, manual start',
+        'tier': 'presentation',
+        'type': 'boolean',
+      },
+      'startLabel': {
+        'default': 'Propose',
+        'label': 'Start button',
+        'tier': 'presentation',
+        'type': 'string',
+      },
+      'summaryHeading': {
+        'default': 'Summary',
+        'label': 'Summary heading',
+        'tier': 'presentation',
+        'type': 'string',
+      },
+      'title': {
+        'default': 'Proposal',
+        'label': 'Panel heading',
+        'tier': 'presentation',
+        'type': 'string',
+      },
+      'tools': {
+        'default': [
+          {
+            'event': 'AgentProposalWorkflow.PROPOSE',
+          },
+        ],
+        'description': 'The declared inputs it may fire and the entities it may read, as the signed-in person. An importing app restates the list with PROPOSE addressed by its local orbital name, which the agent can never propose without.',
+        'items': {
+          'properties': {
+            'AgentToolInput': {
+              'name': 'AgentToolInput',
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': true,
+                  'type': 'EventAddress',
+                },
+              },
+              'type': 'object',
+            },
+            'AgentToolRead': {
+              'name': 'AgentToolRead',
+              'properties': {
+                'read': {
+                  'name': 'read',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'AgentToolScope': {
+              'name': 'AgentToolScope',
+              'properties': {
+                'scope': {
+                  'name': 'scope',
+                  'required': true,
+                  'type': 'string',
+                  'values': [
+                    'declared',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
+          },
+          'type': 'union',
+          'values': [
+            'AgentToolScope',
+            'AgentToolInput',
+            'AgentToolRead',
+          ],
+        },
+        'label': 'What may the agent do?',
+        'synonyms': 'allowlist, abilities, permissions',
+        'tier': 'domain',
+        'type': '[AgentTool]',
+      },
+      'workingLabel': {
+        'default': 'Working out a proposal…',
+        'label': 'While the agent works',
+        'tier': 'presentation',
+        'type': 'string',
+      },
+    },
     traits: [
       {
         'category': 'interaction',

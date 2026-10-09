@@ -390,6 +390,36 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["quote", "[\\">\\",\\"\\\\\\\\u0040payload.amount\\",0]"]',
   },
 
+  quasiquote: {
+    visual: { form: 'template' },
+    module: 'core',
+    category: 'control',
+    minArity: 1,
+    maxArity: null,
+    description: 'A quoted template with live holes: the template is held as data like `quote`, and each `(unquote e)` inside it is replaced by the value of `e` (a program built from values the trait holds, for `program/eval`)',
+    hasSideEffects: false,
+    returnType: 'sexpr',
+    params: [
+      { name: 'body', type: STRING, description: 'The template as canonical JSON text with every @ written as \\u0040 and each hole i written as ["unquote", i] (the .lolo parser encodes `(quasiquote x)`)' },
+      { name: 'holes', type: SEXPR, description: 'The unquoted expressions, in canonical order; hole i fills marker i' },
+    ],
+    example: '["quasiquote", "[\\"set\\",\\"\\\\\\\\u0040entity.a\\",[\\"unquote\\",0]]", "@payload.v"]',
+  },
+
+  unquote: {
+    module: 'core',
+    category: 'control',
+    minArity: 1,
+    maxArity: 1,
+    description: 'A live hole inside `(quasiquote …)`: its expression is evaluated and spliced into the template. Legal only inside a quasiquote',
+    hasSideEffects: false,
+    returnType: 'any',
+    params: [
+      { name: 'expr', type: SEXPR, description: 'The expression whose value fills the hole' },
+    ],
+    example: '["quasiquote", "[\\"unquote\\",0]", "@entity.widget"]',
+  },
+
   // --- effect -----------------------------------------------------------------
 
   set: {

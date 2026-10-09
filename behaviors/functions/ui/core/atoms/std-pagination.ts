@@ -70,6 +70,9 @@ export interface StdPaginationParams {
   entityName: string;
   /** Extra fields to add to the orbital-scoped entity clone. */
   fields?: EntityField[];
+  /** Entity persistence mode. Defaults to `persistent` when omitted.
+   *  See @almadar/core EntityPersistence: persistent | runtime. */
+  persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
   /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
@@ -116,7 +119,8 @@ export function stdPagination(params: StdPaginationParams): OrbitalDefinition {
   const entity: Entity = {
     name: params.entityName,
     fields: params.fields ?? [],
-    persistence: 'runtime',
+    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
+    ...(params.persistence === 'persistent' ? { collection: `${params.entityName.toLowerCase()}s` } : {}),
   };
   return makeOrbitalWithUses({
     name: 'PagedItemOrbital',
@@ -146,7 +150,9 @@ type _StdPaginationListenTraitName = 'PagedItemPagination';
  * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
  *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
  *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
  *                    `events`, `name`, `emitsScope`, `listens`.
  *                    `effects` is NOT exposed — `.lolo` removed it
@@ -158,8 +164,12 @@ export interface StdPaginationPagedItemOrbitalParams {
   fields?: EntityField[];
   /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
   /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
   entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
    * Per-imported-trait override surface keyed on each imported
    * trait's canonical `name`. Accepts every override `.lolo`
@@ -183,7 +193,8 @@ export function stdPaginationPagedItemOrbital(params: StdPaginationPagedItemOrbi
     uses: [],
     entity: {
       name: 'PagedItem',
-      persistence: 'runtime',
+      ...(params.persistence === 'persistent' ? { collection: params.collection ?? `${(params.entityName ?? 'PagedItem').toLowerCase()}s` } : {}),
+      persistence: params.persistence ?? 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
@@ -560,9 +571,19 @@ export const StdPaginationPagedItemOrbitalManifest = {
       'description': 'URL override for the orbital first page.',
     },
     {
+      'name': 'persistence',
+      'type': '\'persistent\' | \'runtime\'',
+      'description': 'Override the canonical entity persistence mode.',
+    },
+    {
       'name': 'entityName',
       'type': 'string',
       'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'collection',
+      'type': 'string',
+      'description': 'Override derived collection key. Defaults to plural(entityName).toLowerCase().',
     },
     {
       'name': 'traitOverrides',

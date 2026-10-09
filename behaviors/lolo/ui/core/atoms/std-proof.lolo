@@ -1,0 +1,271 @@
+app std-proof [
+  version: "1.0.0",
+  description: "std-proof — a marketing section that shows evidence: who uses it, what was made with it, who backs it. `proofLook` picks how: testimonials (portrait, quote, name and role in cards), portfolio (image-led case-study cards that link to the work), logos (a static row of client, sponsor, partner or technology logos), marquee (the same logos or wordmarks with icons gliding past in a continuous strip that pauses on hover and stands still for reduced motion) or badges (name chips, for technologies or certifications without logo images). One `entries` list feeds every look; the heading says what the items are. Carries the same band knobs as the other site sections. Pick for landing, product and campaign pages."
+]
+type ProofItem = { name : string!, icon : string, quote : string, role : string, avatar : string, logo : string, image : string, imageAlt : string, href : string, linkLabel : string, badge : string }
+
+orbital ProofOrbital {
+  entity ProofView [runtime] {
+    id : string!
+  }
+
+  uses CardGrid from "std/behaviors/std-card-grid"
+
+  trait ProofTestimonials = CardGrid.traits.CardGridRender -> ProofView {
+    config {
+      look: profile
+      heading: @config.heading
+      lede: @config.lede
+      alignment: @config.alignment
+      columns: @config.columns
+      surface: @config.surface
+      edgeTop: @config.edgeTop
+      edgeBottom: @config.edgeBottom
+      edgeColor: @config.edgeColor
+      texture: @config.texture
+      items: (array/map @config.entries (fn item { title: (object/get @item name ""), description: (object/get @item quote ""), avatar: (object/get @item avatar ""), meta: (object/get @item role ""), badge: (object/get @item badge "") }))
+    }
+  }
+
+  trait ProofPortfolio = CardGrid.traits.CardGridRender -> ProofView {
+    config {
+      look: media
+      heading: @config.heading
+      lede: @config.lede
+      alignment: @config.alignment
+      columns: @config.columns
+      surface: @config.surface
+      edgeTop: @config.edgeTop
+      edgeBottom: @config.edgeBottom
+      edgeColor: @config.edgeColor
+      texture: @config.texture
+      items: (array/map @config.entries (fn item { title: (object/get @item name ""), description: (object/get @item quote ""), image: (object/get @item image ""), imageAlt: (object/get @item imageAlt ""), href: (object/get @item href ""), linkLabel: (object/get @item linkLabel ""), badge: (object/get @item badge ""), meta: (object/get @item role "") }))
+    }
+  }
+
+  trait ProofRender -> @rebindable ProofView [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (if (== @config.proofLook testimonials)
+          (render-ui main @trait.ProofTestimonials)
+          (if (== @config.proofLook portfolio)
+            (render-ui main @trait.ProofPortfolio)
+            (if (== @config.proofLook marquee)
+              (render-ui main @config.marqueeContent)
+              (render-ui main @config.markContent))))
+    }
+
+    config {
+      proofLook : "testimonials" | "portfolio" | "logos" | "marquee" | "badges" = testimonials
+        @label "Proof look"
+        @description "testimonials = quote cards with portrait, name and role; portfolio = image cards linking to the work; logos = a static row of client, sponsor, partner or technology logos; marquee = the same as a moving strip of large wordmarks with icons (or logo images); badges = name chips (technologies or certifications without logos)"
+        @synonyms "testimonials, reviews, quotes, case studies, portfolio, our work, clients, customers, sponsors, partners, backed by, technologies, built with, tech stack, trusted by"
+        @tier "presentation"
+      heading : string = "What people say"
+        @label "Heading"
+        @description "Says what the items are: Trusted by, Our sponsors, Built with, Recent work"
+        @tier "presentation"
+      lede : string = ""
+        @label "Supporting text"
+        @description "One sentence under the heading; empty hides it"
+        @tier "presentation"
+      alignment : "center" | "start" = center
+        @label "Alignment"
+        @tier "presentation"
+      columns : number = 3
+        @label "Columns"
+        @description "testimonials and portfolio: cards per row on wide screens"
+        @tier "presentation"
+      entries : [ProofItem] = [{ name: "Avery Chen", role: "Head of Operations", quote: "We replaced three tools with this in a week, and nobody wants to go back." }, { name: "Jordan Patel", role: "Founder", quote: "The first product our whole team actually enjoys using." }, { name: "Sam Rivera", role: "Studio Manager", quote: "Setup took an afternoon. Support answers in minutes." }]
+        @label "Items"
+        @description "One entry per testimonial, project, logo or badge: name, plus quote and role (testimonials), image and link (portfolio), logo (logos)"
+        @tier "domain"
+      markIcon : string = building-2
+        @label "Default mark icon"
+        @description "marquee: icon shown before a name that has no logo image and no icon of its own"
+        @tier "presentation"
+      surface : "plain" | "muted" | "accent" | "inverse" = plain
+        @label "Surface"
+        @description "Background behind the section: plain, muted, a soft theme gradient (accent), or inverted colors (inverse)"
+        @tier "presentation"
+      edgeTop : "none" | "curve" | "wave" | "arc" | "tilt" | "step" | "scallop" = none
+        @label "Top edge"
+        @description "Shape cut into the top of the section; curve uses the theme's shape"
+        @tier "presentation"
+      edgeBottom : "none" | "curve" | "wave" | "arc" | "tilt" | "step" | "scallop" = none
+        @label "Bottom edge"
+        @description "Shape cut into the bottom of the section; curve uses the theme's shape"
+        @tier "presentation"
+      edgeColor : "background" | "muted" | "surface" | "gradient" | "inverse" = background
+        @label "Edge fill"
+        @description "The surface of the neighbouring section, which fills the cut"
+        @tier "presentation"
+      texture : boolean = false
+        @label "Texture"
+        @description "Lay the theme's texture over the section"
+        @tier "presentation"
+      marqueeContent : render-ui = {
+        type: box
+        paddingY: xl
+        bg: (if (== @config.surface muted) muted (if (== @config.surface accent) gradient (if (== @config.surface inverse) inverse transparent)))
+        edgeTop: @config.edgeTop
+        edgeBottom: @config.edgeBottom
+        edgeColor: @config.edgeColor
+        texture: @config.texture
+        fullWidth: true
+        children: [{
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{
+            type: container
+            size: xl
+            maxWidth: xl
+            padding: lg
+            children: [{
+              type: stack
+              direction: vertical
+              gap: sm
+              align: (if (== @config.alignment center) center start)
+              children: [{
+                type: typography
+                content: @config.heading
+                variant: h2
+                align: (if (== @config.alignment center) center left)
+                className: (if (== @config.heading "") hidden "text-balance")
+              }, {
+                type: typography
+                content: @config.lede
+                variant: body
+                color: muted
+                align: (if (== @config.alignment center) center left)
+                className: (if (== @config.lede "") hidden "max-w-2xl text-pretty")
+              }]
+            }]
+          }, {
+            type: box
+            fullWidth: true
+            className: "proof-marquee motion-reduce:[mask-image:none]"
+            children: [{
+              type: box
+              className: "proof-marquee-track animate-almadar-marquee hover:[animation-play-state:paused] motion-reduce:animate-none motion-reduce:w-auto motion-reduce:flex-wrap motion-reduce:justify-center"
+              children: [{
+                type: stack
+                direction: horizontal
+                gap: none
+                align: center
+                children: (array/map @config.entries (fn item {
+                type: stack
+                direction: horizontal
+                gap: sm
+                align: center
+                className: "shrink-0 px-8"
+                children: [{
+                  type: image
+                  src: (object/get @item logo "")
+                  alt: (object/get @item name "")
+                  fit: contain
+                  rounded: none
+                  className: "h-10 w-auto"
+                }, {
+                  type: icon
+                  name: (object/get @item icon @config.markIcon)
+                  size: lg
+                  color: primary
+                  className: (if (== (object/get @item logo "") "") "" hidden)
+                }, {
+                  type: typography
+                  variant: h3
+                  content: (object/get @item name "")
+                  className: "whitespace-nowrap"
+                }]
+              }))
+              }, {
+                type: stack
+                direction: horizontal
+                gap: none
+                align: center
+                className: "motion-reduce:hidden"
+                aria-hidden: true
+                children: (array/map @config.entries (fn item {
+                type: stack
+                direction: horizontal
+                gap: sm
+                align: center
+                className: "shrink-0 px-8"
+                children: [{
+                  type: image
+                  src: (object/get @item logo "")
+                  alt: (object/get @item name "")
+                  fit: contain
+                  rounded: none
+                  className: "h-10 w-auto"
+                }, {
+                  type: icon
+                  name: (object/get @item icon @config.markIcon)
+                  size: lg
+                  color: primary
+                  className: (if (== (object/get @item logo "") "") "" hidden)
+                }, {
+                  type: typography
+                  variant: h3
+                  content: (object/get @item name "")
+                  className: "whitespace-nowrap"
+                }]
+              }))
+              }]
+            }]
+          }]
+        }]
+      }
+        @label "Marquee body"
+        @tier "internal"
+      markContent : render-ui = {
+        type: box
+        paddingY: xl
+        bg: (if (== @config.surface muted) muted (if (== @config.surface accent) gradient (if (== @config.surface inverse) inverse transparent)))
+        edgeTop: @config.edgeTop
+        edgeBottom: @config.edgeBottom
+        edgeColor: @config.edgeColor
+        texture: @config.texture
+        fullWidth: true
+        children: [{
+          type: container
+          size: xl
+          maxWidth: xl
+          padding: lg
+          children: [{
+            type: stack
+            direction: vertical
+            gap: lg
+            align: (if (== @config.alignment center) center start)
+            children: [{
+              type: typography
+              content: @config.heading
+              variant: h2
+              align: (if (== @config.alignment center) center left)
+              className: (if (== @config.heading "") hidden "text-balance")
+            }, {
+              type: typography
+              content: @config.lede
+              variant: body
+              color: muted
+              align: (if (== @config.alignment center) center left)
+              className: (if (== @config.lede "") hidden "max-w-2xl text-pretty")
+            }, {
+              type: social-proof
+              variant: (if (== @config.proofLook badges) badges logos)
+              items: (array/map @config.entries (fn item { name: (object/get @item name ""), logo: (object/get @item logo "") }))
+            }]
+          }]
+        }]
+      }
+        @label "Logos and badges body"
+        @tier "internal"
+    }
+  }
+
+  page "/proof" as ProofPage -> ProofRender
+}

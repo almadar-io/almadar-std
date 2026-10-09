@@ -1,5 +1,7 @@
-app ui-animated-reveal "1.0.0"
-"AnimatedReveal — UI factory (1:1 with the @almadar/ui animated-reveal pattern)."
+app ui-animated-reveal [
+  version: "1.0.0",
+  description: "AnimatedReveal — UI factory (1:1 with the @almadar/ui animated-reveal pattern)."
+]
 ;; @pattern "animated-reveal"
 orbital AnimatedRevealOrbital {
   entity AnimatedRevealItem [runtime] {
@@ -18,6 +20,7 @@ orbital AnimatedRevealOrbital {
           duration: @config.duration
           delay: @config.delay
           threshold: @config.threshold
+          revealEvent: @config.revealEvent
           once: @config.once
           animate: @config.animate
           easing: @config.easing
@@ -41,6 +44,12 @@ orbital AnimatedRevealOrbital {
           tabIndex: @config.tabIndex
           type: animated-reveal
         })
+    }
+
+    emits {
+      @config.revealEvent -> external { }
+        @description "scroll trigger: event emitted once (as UI:{revealEvent}) the first time the element scrolls into view; never under reduced motion"
+        @tier "essential"
     }
 
     config {
@@ -67,6 +76,10 @@ orbital AnimatedRevealOrbital {
       threshold : number = 0.15
         @label "Threshold"
         @description "How much of the element must be visible before triggering, 0-1 (default: 0.15)"
+        @tier "presentation"
+      revealEvent : event = "REVEAL"
+        @label "Reveal Event"
+        @description "scroll trigger: event emitted once (as UI:{revealEvent}) the first time the element scrolls into view; never under reduced motion"
         @tier "presentation"
       once : boolean = true
         @label "Once"

@@ -431,11 +431,6 @@ import {
   isStdRatingReviewRatingReviewOrbitalParams,
 } from './ui/core/atoms/std-rating-review.js';
 import {
-  stdRecordDetailRecordItemOrbital,
-  StdRecordDetailRecordItemOrbitalManifest,
-  isStdRecordDetailRecordItemOrbitalParams,
-} from './ui/core/atoms/std-record-detail.js';
-import {
   stdRecurrenceRecurrenceOrbital,
   StdRecurrenceRecurrenceOrbitalManifest,
   isStdRecurrenceRecurrenceOrbitalParams,
@@ -1439,15 +1434,6 @@ REGISTRY_MUT.set('std-rating-review::RatingReviewOrbital', {
     return stdRatingReviewRatingReviewOrbital(p);
   },
   manifest: StdRatingReviewRatingReviewOrbitalManifest,
-});
-REGISTRY_MUT.set('std-record-detail::RecordItemOrbital', {
-  factory: (p: object): OrbitalDefinition => {
-    if (!isStdRecordDetailRecordItemOrbitalParams(p)) {
-      throw new TypeError('Invalid params for std-record-detail::RecordItemOrbital');
-    }
-    return stdRecordDetailRecordItemOrbital(p);
-  },
-  manifest: StdRecordDetailRecordItemOrbitalManifest,
 });
 REGISTRY_MUT.set('std-recurrence::RecurrenceOrbital', {
   factory: (p: object): OrbitalDefinition => {

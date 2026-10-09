@@ -114,6 +114,9 @@ export interface StdScopedListParams {
   entityName: string;
   /** Extra fields to add to the orbital-scoped entity clone. */
   fields?: EntityField[];
+  /** Entity persistence mode. Defaults to `persistent` when omitted.
+   *  See @almadar/core EntityPersistence: persistent | runtime. */
+  persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
   /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
@@ -160,7 +163,8 @@ export function stdScopedList(params: StdScopedListParams): OrbitalDefinition {
   const entity: Entity = {
     name: params.entityName,
     fields: params.fields ?? [],
-    persistence: 'runtime',
+    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
+    ...(params.persistence === 'persistent' ? { collection: `${params.entityName.toLowerCase()}s` } : {}),
   };
   return makeOrbitalWithUses({
     name: 'ScopedListOrbital',

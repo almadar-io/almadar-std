@@ -1,15 +1,24 @@
-app std-agent-fix-loop "1.0.0"
-"Agent fix-loop molecule — validate an orbital, generate a repair prompt if errors, apply fix."
+app std-agent-fix-loop [
+  version: "2.0.0",
+  description: "Agent fix loop — evaluate a program and, when it does not validate, ask the model for a repair. VALIDATE_PROGRAM { program } runs `program/eval` (the 0-error / 0-warning gate, written to the workspace's orbitals/ on success): a valid program emits PROGRAM_VALID { behavior }; an invalid one hands the validator's issues to `call-service llm generate` and emits FIX_PROPOSED { issues, fix } with the model's repair instructions. Headless apart from a status line."
+]
+;; @capabilities "program repair, fix validation errors, evaluate a program, repair suggestion"
 
-type ValidationError = { orbitalName: string, message: string!, code: string!, severity: string }
+type FixIssue = {
+  code : string!
+  message : string!
+}
+type Evaluated = {
+  behavior : string!
+}
 
 orbital AgentFixLoopOrbital {
 
   entity FixLoop [runtime] {
-    orbitalName : string = ""
-    errors : [ValidationError] = []
-    fixPrompt : string = ""
-    status : "idle" | "validating" | "fixing" | "fixed" | "valid" = idle
+    id : string!
+    issues : [FixIssue] = []
+    fix : string = ""
+    status : "idle" | "validating" | "fixing" | "fixed" | "valid" | "failed" = idle
   }
 
   trait FixLoopExecution -> FixLoop [lifecycle, instance] {
@@ -17,70 +26,96 @@ orbital AgentFixLoopOrbital {
 
     state idle {
       INIT -> idle
-        (set @entity.orbitalName "")
-        (set @entity.errors [])
-        (set @entity.fixPrompt "")
         (set @entity.status idle)
-      VALIDATE_ORBITAL -> generating_prompt
-        (set @entity.orbitalName ?orbitalName)
-        (validate/validate @entity.orbitalName)
-        (llm/generate @entity.orbitalName { emit: { success: PROMPT_GENERATED, failure: PROMPT_GENERATION_FAILED } })
+        (render-ui main <typography content="Waiting for a program." variant="caption" />)
+      VALIDATE_PROGRAM -> validating
+        (set @entity.status validating)
+        (program/eval ?program {
+          emit: { failure: PROGRAM_INVALID, success: PROGRAM_EVALUATED }
+        })
     }
 
-    state generating_prompt {
-      PROMPT_GENERATED -> fixed
-        (set @entity.fixPrompt ?result)
+    state validating {
+      PROGRAM_EVALUATED -> valid
+        (set @entity.status valid)
+        (render-ui main <typography content={(str/concat "Valid: " (object/get ?result behavior))} variant="caption" />)
+        (emit PROGRAM_VALID { behavior: (object/get ?result behavior) })
+      PROGRAM_INVALID -> fixing
+        (set @entity.issues ?errors)
+        (set @entity.status fixing)
+        (render-ui main <typography content={(str/concat "Does not validate: " ?error)} variant="caption" />)
+        (call-service llm generate {
+          userPrompt: (str/concat "This program does not validate. Explain, step by step, how to fix it. Issues:\n" (str/join (array/map ?errors (fn issue (str/concat (object/get @issue code) ": " (object/get @issue message)))) "\n"))
+        } {
+          emit: { failure: FIX_FAILED, success: FIX_GENERATED }
+        })
+    }
+
+    state fixing {
+      FIX_GENERATED -> fixed
+        (set @entity.fix ?content)
         (set @entity.status fixed)
-        (emit FIX_APPLIED { orbitalName: @entity.orbitalName, fixPrompt: @entity.fixPrompt })
-      PROMPT_GENERATION_FAILED -> fixed
-        (set @entity.fixPrompt "")
-        (set @entity.status fixed)
+        (render-ui main <typography content="Repair proposed." variant="caption" />)
+        (emit FIX_PROPOSED { issues: @entity.issues, fix: ?content })
+      FIX_FAILED -> failed
+        (set @entity.status failed)
+        (render-ui main <typography content={(str/concat "No repair: " ?error)} variant="caption" />)
+    }
+
+    state valid {
+      INIT -> valid
+        (set @entity.status valid)
+      RESET -> idle
+        (set @entity.status idle)
+        (render-ui main <typography content="Waiting for a program." variant="caption" />)
     }
 
     state fixed {
       INIT -> fixed
         (set @entity.status fixed)
       RESET -> idle
+        (set @entity.status idle)
+        (render-ui main <typography content="Waiting for a program." variant="caption" />)
+    }
+
+    state failed {
+      INIT -> failed
+        (set @entity.status failed)
+      RESET -> idle
+        (set @entity.status idle)
+        (render-ui main <typography content="Waiting for a program." variant="caption" />)
+    }
 
     emits {
-      FIX_APPLIED {
-        orbitalName : string!
-        fixPrompt : string!
+      PROGRAM_VALID -> external {
+        behavior : string!
       }
-      PROMPT_GENERATED {
-        result : string!
+      FIX_PROPOSED -> external {
+        issues : [FixIssue]!
+        fix : string!
+      }
+      PROGRAM_EVALUATED {
+        result : Evaluated!
+      }
+      PROGRAM_INVALID {
+        error : string!
+        errors : [FixIssue]!
+      }
+      FIX_GENERATED {
+        content : string!
+      }
+      FIX_FAILED {
+        error : string!
       }
     }
 
     listens {
-      VALIDATE_ORBITAL {
-        orbitalName : string!
+      VALIDATE_PROGRAM -> external {
+        program : SExpr!
       }
-    }
-  }
-
-  trait FixLoopListener -> FixLoop [lifecycle, instance] {
-    initial: waiting
-
-    state waiting {
-      INIT -> waiting
-        (set @entity.status idle)
-      FIX_APPLIED -> resolved
-        (set @entity.status fixed)
-    }
-
-    state resolved {
-      INIT -> resolved
-        (set @entity.status fixed)
-      RESET -> waiting
-        (set @entity.status idle)
-    }
-
-    listens {
-      FixLoopExecution.FIX_APPLIED -> FIX_APPLIED
       RESET
     }
   }
 
-  page "/agent-fix-loop" as AgentFixLoopPage -> FixLoopExecution, FixLoopListener
+  page "/agent-fix-loop" as AgentFixLoopPage -> FixLoopExecution
 }

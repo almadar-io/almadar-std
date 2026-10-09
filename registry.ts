@@ -48,6 +48,7 @@ import { SESSION_OPERATORS } from './modules/session.js';
 import { MEMORY_OPERATORS } from './modules/memory.js';
 import { TRACE_OPERATORS } from './modules/trace.js';
 import { BEHAVIOR_OPERATORS } from './modules/behavior.js';
+import { PROGRAM_OPERATORS } from './modules/program.js';
 import { INTEGRATION_OPERATORS } from './modules/integration.js';
 
 // ============================================================================
@@ -93,6 +94,7 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
   ...MEMORY_OPERATORS,
   ...TRACE_OPERATORS,
   ...BEHAVIOR_OPERATORS,
+  ...PROGRAM_OPERATORS,
   ...INTEGRATION_OPERATORS,
 };
 
@@ -140,6 +142,7 @@ export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorM
   memory: MEMORY_OPERATORS,
   trace: TRACE_OPERATORS,
   behavior: BEHAVIOR_OPERATORS,
+  program: PROGRAM_OPERATORS,
   integration: INTEGRATION_OPERATORS,
 };
 

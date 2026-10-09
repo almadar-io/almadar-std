@@ -59,14 +59,23 @@ export interface StdUiBoxConfig {
   ariaLive?: 'off' | 'polite' | 'assertive';
   ariaPressed?: 'true' | 'false' | 'mixed';
   ariaSelected?: boolean;
+  backdrop?: PatternValue;
   /** Default: `"transparent"` */
-  bg?: 'transparent' | 'primary' | 'secondary' | 'muted' | 'accent' | 'surface' | 'overlay';
+  bg?: 'transparent' | 'primary' | 'secondary' | 'muted' | 'accent' | 'surface' | 'overlay' | 'gradient' | 'inverse';
   /** Default: `true` */
   border?: boolean;
   children?: PatternValue;
   className?: string;
   dir?: 'ltr' | 'rtl' | 'auto';
   display?: 'block' | 'inline' | 'inline-block' | 'flex' | 'inline-flex' | 'grid';
+  /** Default: `"none"` */
+  edgeBottom?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
+  /** Default: `"background"` */
+  edgeColor?: 'background' | 'muted' | 'surface' | 'gradient' | 'inverse';
+  /** Default: `false` */
+  edgeFlip?: boolean;
+  /** Default: `"none"` */
+  edgeTop?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
   enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   enterDelay?: number;
   /** Default: `false` */
@@ -95,6 +104,8 @@ export interface StdUiBoxConfig {
   tabIndex?: number;
   /** Default: `true` */
   tapReveal?: boolean;
+  /** Default: `false` */
+  texture?: boolean;
 }
 
 /**

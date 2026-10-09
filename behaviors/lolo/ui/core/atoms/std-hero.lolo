@@ -1,5 +1,7 @@
-app std-hero "1.0.0"
-"std-hero — the headline block at the top of a page, or a call-to-action banner further down. Optional eyebrow badge, headline, supporting text, up to two link actions, an optional copyable command, optional media below or beside the copy, and an optional backdrop scene behind it all. `look: banner` turns it into a contained call-to-action card. Links follow `href` (in-app path, #anchor, or absolute URL); each click also emits CTA_PRIMARY / CTA_SECONDARY with the href. Pick for landing, product, pricing and campaign pages."
+app std-hero [
+  version: "1.0.0",
+  description: "std-hero — the headline block at the top of a page, or a call-to-action banner further down. Optional eyebrow badge, headline, supporting text, up to two link actions, an optional copyable command, optional media below or beside the copy, and an optional backdrop scene behind it all. `look: banner` turns it into a contained call-to-action card. Links follow `href` (in-app path, #anchor, or absolute URL); each click also emits CTA_PRIMARY / CTA_SECONDARY with the href. Pick for landing, product, pricing and campaign pages."
+]
 orbital HeroOrbital {
   entity HeroView [runtime] {
     id : string!
@@ -48,9 +50,9 @@ orbital HeroOrbital {
     }
 
     config {
-      look : "hero" | "banner" = hero
+      look : "hero" | "banner" | "header" = hero
         @label "Look"
-        @description "hero = full-width page opener with an h1; banner = contained call-to-action card with an h2"
+        @description "hero = full-width page opener with an h1; banner = contained call-to-action card with an h2; header = compact opener at the top of an app page"
         @synonyms "cta banner, call to action, callout, page header, masthead"
         @tier "presentation"
       eyebrow : string = ""
@@ -101,13 +103,43 @@ orbital HeroOrbital {
       mediaAlt : string = ""
         @label "Media alt text"
         @tier "presentation"
+      illustration : string = ""
+        @label "Illustration"
+        @description "Inline SVG shown beside or below the copy instead of the media image; empty uses the media image"
+        @synonyms "artwork, graphic, drawing, svg"
+        @tier "presentation"
+      backgroundSrc : string = ""
+        @label "Background photo"
+        @description "Photo URL filling the block behind the copy when the surface is image"
+        @synonyms "background image, hero photo, cover photo"
+        @tier "presentation"
+      backgroundPosition : "center" | "top" | "bottom" | "left" | "right" = center
+        @label "Background photo focus"
+        @description "Which part of the photo stays visible when it is cropped"
+        @tier "presentation"
+      edgeTop : "none" | "curve" | "wave" | "arc" | "tilt" | "step" | "scallop" = none
+        @label "Top edge"
+        @description "Shape cut into the top of the block; curve uses the theme's shape"
+        @tier "presentation"
+      edgeBottom : "none" | "curve" | "wave" | "arc" | "tilt" | "step" | "scallop" = none
+        @label "Bottom edge"
+        @description "Shape cut into the bottom of the block; curve uses the theme's shape"
+        @tier "presentation"
+      edgeColor : "background" | "muted" | "surface" | "gradient" | "inverse" = background
+        @label "Edge fill"
+        @description "The surface of the neighbouring section, which fills the cut"
+        @tier "presentation"
+      texture : boolean = false
+        @label "Texture"
+        @description "Lay the theme's texture over the block"
+        @tier "presentation"
       mediaPosition : "below" | "side" = below
         @label "Media position"
         @description "Below the copy, or beside it on wide screens"
         @tier "presentation"
-      surface : "plain" | "muted" = plain
+      surface : "plain" | "muted" | "accent" | "inverse" | "image" = plain
         @label "Surface"
-        @description "Background behind the block"
+        @description "Background behind the block: plain, muted, a soft theme gradient (accent), inverted colors (inverse), or a photo (image, set Background photo)"
         @tier "presentation"
       height : "auto" | "tall" = auto
         @label "Height"
@@ -133,7 +165,7 @@ orbital HeroOrbital {
         }, {
           type: typography
           content: @config.headline
-          variant: (if (== @config.look banner) h2 h1)
+          variant: (if (== @config.look hero) h1 h2)
           weight: bold
           align: (if (== @config.alignment center) center left)
           className: "tracking-tight text-balance"
@@ -141,7 +173,7 @@ orbital HeroOrbital {
           type: typography
           content: @config.lede
           variant: large
-          color: muted
+          color: (if (== @config.look header) primary muted)
           align: (if (== @config.alignment center) center left)
           className: (if (== @config.lede "") hidden "max-w-2xl text-pretty")
         }, {
@@ -195,10 +227,26 @@ orbital HeroOrbital {
       }
         @label "Media block"
         @tier "internal"
+      illustrationContent : render-ui = {
+        type: animated-graphic
+        svgContent: @config.illustration
+        animation: draw
+        animate: true
+        width: "100%"
+        height: (if (== @config.look header) 200 380)
+        alt: ""
+      }
+        @label "Illustration block"
+        @tier "internal"
       stackedContent : render-ui = {
         type: box
-        paddingY: (if (== @config.look banner) xl "2xl")
-        bg: (if (== @config.surface muted) muted transparent)
+        paddingY: (if (== @config.look hero) "2xl" (if (== @config.look banner) xl lg))
+        bg: (if (== @config.surface muted) muted (if (== @config.surface accent) gradient (if (or (== @config.surface inverse) (== @config.surface image)) inverse transparent)))
+        rounded: (if (== @config.look header) "2xl" none)
+        edgeTop: @config.edgeTop
+        edgeBottom: @config.edgeBottom
+        edgeColor: @config.edgeColor
+        texture: @config.texture
         fullWidth: true
         position: relative
         overflow: hidden
@@ -208,7 +256,18 @@ orbital HeroOrbital {
           position: absolute
           className: "inset-0 pointer-events-none"
           aria-hidden: true
-          children: [@config.backdropContent]
+          children: [{
+            type: image
+            src: @config.backgroundSrc
+            alt: ""
+            fit: cover
+            position: @config.backgroundPosition
+            priority: (== @config.look hero)
+            className: "h-full"
+          }, {
+            type: box
+            className: (if (== @config.surface image) "band-scrim" "hidden")
+          }, @config.backdropContent]
         }, {
           type: box
           position: relative
@@ -229,7 +288,7 @@ orbital HeroOrbital {
                   direction: vertical
                   gap: "2xl"
                   align: (if (== @config.alignment center) center stretch)
-                  children: [@config.copyContent, @config.mediaContent]
+                  children: [@config.copyContent, (if (== @config.illustration "") @config.mediaContent @config.illustrationContent)]
                 }]
               }]
           }]
@@ -239,8 +298,13 @@ orbital HeroOrbital {
         @tier "internal"
       sideContent : render-ui = {
         type: box
-        paddingY: (if (== @config.look banner) xl "2xl")
-        bg: (if (== @config.surface muted) muted transparent)
+        paddingY: (if (== @config.look hero) "2xl" (if (== @config.look banner) xl lg))
+        bg: (if (== @config.surface muted) muted (if (== @config.surface accent) gradient (if (or (== @config.surface inverse) (== @config.surface image)) inverse transparent)))
+        rounded: (if (== @config.look header) "2xl" none)
+        edgeTop: @config.edgeTop
+        edgeBottom: @config.edgeBottom
+        edgeColor: @config.edgeColor
+        texture: @config.texture
         fullWidth: true
         position: relative
         overflow: hidden
@@ -250,7 +314,18 @@ orbital HeroOrbital {
           position: absolute
           className: "inset-0 pointer-events-none"
           aria-hidden: true
-          children: [@config.backdropContent]
+          children: [{
+            type: image
+            src: @config.backgroundSrc
+            alt: ""
+            fit: cover
+            position: @config.backgroundPosition
+            priority: (== @config.look hero)
+            className: "h-full"
+          }, {
+            type: box
+            className: (if (== @config.surface image) "band-scrim" "hidden")
+          }, @config.backdropContent]
         }, {
           type: box
           position: relative
@@ -271,7 +346,7 @@ orbital HeroOrbital {
                   ratio: "1:1"
                   gap: xl
                   align: center
-                  children: [@config.copyContent, @config.mediaContent]
+                  children: [@config.copyContent, (if (== @config.illustration "") @config.mediaContent @config.illustrationContent)]
                 }]
               }]
           }]

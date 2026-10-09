@@ -309,6 +309,55 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                       'required': true,
                       'type': 'EventAddress',
                     },
+                    'payload': {
+                      'items': {
+                        'properties': {
+                          'description': {
+                            'name': 'description',
+                            'required': false,
+                            'type': 'string',
+                          },
+                          'name': {
+                            'name': 'name',
+                            'required': true,
+                            'type': 'string',
+                          },
+                          'properties': {
+                            'items': {
+                              'type': 'union',
+                              'values': [
+                                'AgentToolField',
+                              ],
+                            },
+                            'name': 'properties',
+                            'required': false,
+                            'type': 'array',
+                          },
+                          'required': {
+                            'name': 'required',
+                            'required': false,
+                            'type': 'boolean',
+                          },
+                          'type': {
+                            'name': 'type',
+                            'required': true,
+                            'type': 'string',
+                          },
+                          'values': {
+                            'items': {
+                              'type': 'string',
+                            },
+                            'name': 'values',
+                            'required': false,
+                            'type': 'array',
+                          },
+                        },
+                        'type': 'object',
+                      },
+                      'name': 'payload',
+                      'required': false,
+                      'type': 'array',
+                    },
                   },
                   'type': 'object',
                 },
@@ -403,6 +452,9 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                         'name': 'type',
                         'required': true,
                         'type': 'string',
+                        'values': [
+                          'tool_call',
+                        ],
                       },
                       {
                         'name': 'tool',
@@ -411,7 +463,12 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                       },
                       {
                         'name': 'kind',
-                        'type': 'AgentToolKind',
+                        'type': 'string',
+                        'values': [
+                          'input',
+                          'read',
+                          'invalid',
+                        ],
                       },
                       {
                         'name': 'argsText',
@@ -437,6 +494,9 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                         'name': 'type',
                         'required': true,
                         'type': 'string',
+                        'values': [
+                          'tool_result',
+                        ],
                       },
                       {
                         'name': 'tool',
@@ -445,7 +505,12 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                       },
                       {
                         'name': 'kind',
-                        'type': 'AgentToolKind',
+                        'type': 'string',
+                        'values': [
+                          'input',
+                          'read',
+                          'invalid',
+                        ],
                       },
                       {
                         'name': 'success',
@@ -480,6 +545,9 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                         'name': 'type',
                         'required': true,
                         'type': 'string',
+                        'values': [
+                          'llm_response',
+                        ],
                       },
                       {
                         'name': 'content',
@@ -708,6 +776,10 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                     {
                       'name': 'role',
                       'type': 'string',
+                      'values': [
+                        'user',
+                        'assistant',
+                      ],
                     },
                     {
                       'name': 'content',
@@ -814,6 +886,9 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                           'name': 'type',
                           'required': true,
                           'type': 'string',
+                          'values': [
+                            'tool_call',
+                          ],
                         },
                         {
                           'name': 'tool',
@@ -822,7 +897,12 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                         },
                         {
                           'name': 'kind',
-                          'type': 'AgentToolKind',
+                          'type': 'string',
+                          'values': [
+                            'input',
+                            'read',
+                            'invalid',
+                          ],
                         },
                         {
                           'name': 'argsText',
@@ -848,6 +928,9 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                           'name': 'type',
                           'required': true,
                           'type': 'string',
+                          'values': [
+                            'tool_result',
+                          ],
                         },
                         {
                           'name': 'tool',
@@ -856,7 +939,12 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                         },
                         {
                           'name': 'kind',
-                          'type': 'AgentToolKind',
+                          'type': 'string',
+                          'values': [
+                            'input',
+                            'read',
+                            'invalid',
+                          ],
                         },
                         {
                           'name': 'success',
@@ -891,6 +979,9 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                           'name': 'type',
                           'required': true,
                           'type': 'string',
+                          'values': [
+                            'llm_response',
+                          ],
                         },
                         {
                           'name': 'content',

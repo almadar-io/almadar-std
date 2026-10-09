@@ -1,11 +1,22 @@
-app std-agent-tool-loop "2.0.0"
-"std-agent-tool-loop — answers a conversation by operating the running app as the caller, through `call-service llm call-tools`. Its `tools` are `{ scope: declared }` (every declared external input plus a read over every persisted entity), or named declared inputs (addressed like a listens source: `Trait.EVENT`, `Orbital.Trait.EVENT`) and entities to read; each input fires as the signed-in user through the ordinary dispatch (guards and entity policies apply) and each read returns only the rows the caller may read. Headless: the conversation UI (std-agent-session) shows the reply; a failure shows as a toast, unless `quiet` is on (a background run nobody is watching: no live steps and no toast). CONVERSE carries the conversation (and optionally what std-agent-memory recalled); ASSISTANT_STEP carries each step live while it works (a model call, a tool it used, what the app answered) to the asking tab; ASSISTANT_REPLIED carries the reply, every step and the token usage; ASSISTANT_REPLY_FAILED carries the error. These names are the assistant contract std-agent-session's conversation hears from any orbital. Compose with std-agent-session (the conversation) and std-agent-trace (the step record)."
+app std-agent-tool-loop [
+  version: "2.0.0",
+  description: "std-agent-tool-loop — answers a conversation by operating the running app as the caller, through `call-service llm call-tools`. Its `tools` are `{ scope: declared }` (every declared external input plus a read over every persisted entity), or named declared inputs (addressed like a listens source: `Trait.EVENT`, `Orbital.Trait.EVENT`) and entities to read; each input fires as the signed-in user through the ordinary dispatch (guards and entity policies apply) and each read returns only the rows the caller may read. Headless: the conversation UI (std-agent-session) shows the reply; a failure shows as a toast, unless `quiet` is on (a background run nobody is watching: no live steps and no toast). CONVERSE carries the conversation (and optionally what std-agent-memory recalled); ASSISTANT_STEP carries each step live while it works (a model call, a tool it used, what the app answered) to the asking tab; ASSISTANT_REPLIED carries the reply, every step and the token usage; ASSISTANT_REPLY_FAILED carries the error. These names are the assistant contract std-agent-session's conversation hears from any orbital. Compose with std-agent-session (the conversation) and std-agent-trace (the step record)."
+]
 
 type AgentToolScope = {
   scope : "declared"!
 }
+type AgentToolField = {
+  name : string!
+  type : string!
+  required : boolean
+  values : [string]
+  properties : [AgentToolField]
+  description : string
+}
 type AgentToolInput = {
   event : EventAddress!
+  payload : [AgentToolField]
 }
 type AgentToolRead = {
   read : string!

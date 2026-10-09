@@ -584,7 +584,7 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                 'when': {
                   'name': 'when',
                   'required': false,
-                  'type': 'object',
+                  'type': 'SExpr',
                 },
               },
               'type': 'object',

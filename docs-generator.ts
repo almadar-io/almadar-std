@@ -222,9 +222,15 @@ export const MODULE_DESCRIPTIONS: Record<StdModule, ModuleInfo> = {
     },
     behavior: {
         name: 'Behavior',
-        displayName: 'Behavior Composition',
-        description: 'Orbital behavior composition, instantiation, validation, and lolo emission.',
+        displayName: 'Behavior Values',
+        description: 'Behaviors as first-class values: apply overrides to a trait value, list installed behaviors by registry folder, describe a trait, read its source.',
         icon: '🔧',
+    },
+    program: {
+        name: 'Program',
+        displayName: 'Programs as Data',
+        description: 'Read .lolo text into a quoted program, print one back, and evaluate one (validate, then instantiate).',
+        icon: '🧬',
     },
     integration: {
         name: 'Integration',

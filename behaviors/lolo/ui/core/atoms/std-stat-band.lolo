@@ -1,5 +1,7 @@
-app std-stat-band "1.0.0"
-"std-stat-band — a band of headline figures from a config list: each item a big value (a number or short text such as '99.9%', '3x' or 'Open source') over a short label, centered in a row that wraps on small screens, under an optional heading. Display only — for figures computed from data use std-stats. Pick for 'by the numbers' strips on landing, about and product pages."
+app std-stat-band [
+  version: "1.0.0",
+  description: "std-stat-band — a band of headline figures from a config list: each item a big value (a number or short text such as '99.9%', '3x' or 'Open source') over a short label, centered in a row that wraps on small screens, under an optional heading. Display only — for figures computed from data use std-stats. Pick for 'by the numbers' strips on landing, about and product pages."
+]
 type StatBandItem = { value : string!, label : string! }
 orbital StatBandOrbital {
 
@@ -15,7 +17,11 @@ orbital StatBandOrbital {
         (render-ui main {
           type: box
           paddingY: xl
-          bg: (if (== @config.surface muted) muted transparent)
+          bg: (if (== @config.surface muted) muted (if (== @config.surface accent) gradient (if (== @config.surface inverse) inverse transparent)))
+          edgeTop: @config.edgeTop
+          edgeBottom: @config.edgeBottom
+          edgeColor: @config.edgeColor
+          texture: @config.texture
           fullWidth: true
           children: [{
             type: container
@@ -73,8 +79,24 @@ orbital StatBandOrbital {
         @description "One entry per figure: value (number or short text) and label"
         @synonyms "stats, numbers, metrics, kpis, by the numbers"
         @tier "presentation"
-      surface : "plain" | "muted" = plain
+      surface : "plain" | "muted" | "accent" | "inverse" = plain
         @label "Surface"
+        @tier "presentation"
+      edgeTop : "none" | "curve" | "wave" | "arc" | "tilt" | "step" | "scallop" = none
+        @label "Top edge"
+        @description "Shape cut into the top of the section; curve uses the theme's shape"
+        @tier "presentation"
+      edgeBottom : "none" | "curve" | "wave" | "arc" | "tilt" | "step" | "scallop" = none
+        @label "Bottom edge"
+        @description "Shape cut into the bottom of the section; curve uses the theme's shape"
+        @tier "presentation"
+      edgeColor : "background" | "muted" | "surface" | "gradient" | "inverse" = background
+        @label "Edge fill"
+        @description "The surface of the neighbouring section, which fills the cut"
+        @tier "presentation"
+      texture : boolean = false
+        @label "Texture"
+        @description "Lay the theme's texture over the section"
         @tier "presentation"
     }
   }

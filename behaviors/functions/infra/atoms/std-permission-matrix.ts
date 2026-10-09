@@ -567,7 +567,7 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                 'when': {
                   'name': 'when',
                   'required': false,
-                  'type': 'object',
+                  'type': 'SExpr',
                 },
               },
               'type': 'object',

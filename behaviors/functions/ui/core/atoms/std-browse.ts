@@ -66,6 +66,9 @@ export interface StdBrowseParams {
   entityName: string;
   /** Extra fields to add to the orbital-scoped entity clone. */
   fields?: EntityField[];
+  /** Entity persistence mode. Defaults to `persistent` when omitted.
+   *  See @almadar/core EntityPersistence: persistent | runtime. */
+  persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
   /** Per-key event rename map (atom key → caller key). */
@@ -127,7 +130,8 @@ export function stdBrowse(params: StdBrowseParams): OrbitalDefinition {
   const entity: Entity = {
     name: params.entityName,
     fields: params.fields ?? [],
-    persistence: 'runtime',
+    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
+    ...(params.persistence === 'persistent' ? { collection: `${params.entityName.toLowerCase()}s` } : {}),
   };
   return makeOrbitalWithUses({
     name: 'BrowseItemOrbital',
@@ -158,7 +162,9 @@ type _StdBrowseListenTraitName = 'MasterListView' | 'BrowseItemBrowse';
  * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
  *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
  *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
  *                    `events`, `name`, `emitsScope`, `listens`.
  *                    `effects` is NOT exposed — `.lolo` removed it
@@ -170,8 +176,12 @@ export interface StdBrowseBrowseItemOrbitalParams {
   fields?: EntityField[];
   /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
   /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
   entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
    * Per-imported-trait override surface keyed on each imported
    * trait's canonical `name`. Accepts every override `.lolo`
@@ -209,7 +219,8 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
     ],
     entity: {
       name: 'BrowseItem',
-      persistence: 'runtime',
+      ...(params.persistence === 'persistent' ? { collection: params.collection ?? `${(params.entityName ?? 'BrowseItem').toLowerCase()}s` } : {}),
+      persistence: params.persistence ?? 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
@@ -759,7 +770,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                 'when': {
                   'name': 'when',
                   'required': false,
-                  'type': 'object',
+                  'type': 'SExpr',
                 },
               },
               'type': 'object',
@@ -1452,7 +1463,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                 'when': {
                   'name': 'when',
                   'required': false,
-                  'type': 'object',
+                  'type': 'SExpr',
                 },
               },
               'type': 'object',
@@ -1712,6 +1723,14 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
             'synonyms': 'inline actions limit, overflow threshold, max buttons per row',
             'tier': 'presentation',
             'type': 'number',
+          },
+          'orderBy': {
+            'default': '',
+            'description': 'A field name, or field:desc for newest or largest first (e.g. createdAt:desc). Applied before paging. Empty keeps the stored order.',
+            'label': 'Which field orders the list?',
+            'synonyms': 'sort, sort by, order by, newest first, latest first, sort order',
+            'tier': 'presentation',
+            'type': 'string',
           },
           'pageSize': {
             'default': 10,
@@ -2442,6 +2461,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                     'include': '@config.include',
                     'limit': '@config.pageSize',
                     'offset': 0,
+                    'orderBy': '@config.orderBy',
                   },
                 ],
                 [
@@ -2649,6 +2669,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                     'include': '@config.include',
                     'limit': '@config.pageSize',
                     'offset': 0,
+                    'orderBy': '@config.orderBy',
                   },
                 ],
               ],
@@ -2706,6 +2727,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                     'include': '@config.include',
                     'limit': '@config.pageSize',
                     'offset': 0,
+                    'orderBy': '@config.orderBy',
                   },
                 ],
               ],
@@ -2763,6 +2785,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                     'include': '@config.include',
                     'limit': '@config.pageSize',
                     'offset': 0,
+                    'orderBy': '@config.orderBy',
                   },
                 ],
               ],
@@ -2808,6 +2831,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                       ],
                       '@config.pageSize',
                     ],
+                    'orderBy': '@config.orderBy',
                   },
                 ],
               ],
@@ -2997,6 +3021,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                     'include': '@config.include',
                     'limit': '@config.pageSize',
                     'offset': 0,
+                    'orderBy': '@config.orderBy',
                   },
                 ],
                 [
@@ -3129,9 +3154,19 @@ export const StdBrowseBrowseItemOrbitalManifest = {
       'description': 'URL override for the orbital first page.',
     },
     {
+      'name': 'persistence',
+      'type': '\'persistent\' | \'runtime\'',
+      'description': 'Override the canonical entity persistence mode.',
+    },
+    {
       'name': 'entityName',
       'type': 'string',
       'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'collection',
+      'type': 'string',
+      'description': 'Override derived collection key. Defaults to plural(entityName).toLowerCase().',
     },
     {
       'name': 'traitOverrides',

@@ -596,7 +596,7 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                 'when': {
                   'name': 'when',
                   'required': false,
-                  'type': 'object',
+                  'type': 'SExpr',
                 },
               },
               'type': 'object',

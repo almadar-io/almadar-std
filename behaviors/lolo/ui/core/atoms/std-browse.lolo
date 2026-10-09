@@ -1,5 +1,7 @@
-app std-browse "2.5.0"
-"std-browse as a Function — single primitive: data-grid. Owns the fetch + REFETCH (query/filter/page) state machine. Consumers configure fields/imageField/itemActions/cols/gap/variant; the atom renders the grid. Each `fields[]` entry accepts `{ name, label, variant }` plus optional `referenceEntity` + `displayField` to render a foreign-key column as the joined entity's display value (data-grid resolves @list[referenceEntity] at render time when both keys are present). `browseLook` (table default / dense / feed / gallery / master-detail / triage) selects one of six render bodies; dense/feed/gallery were folded in from std-browse-dense/-feed/-gallery (Phase 5.B); master-detail (split record view driven by the guarded VIEW/CLOSE self-transitions) and triage (inbox rows) were folded in 2026-07-26. Consumers retarget by setting browseLook."
+app std-browse [
+  version: "2.5.0",
+  description: "std-browse as a Function — single primitive: data-grid. Owns the fetch + REFETCH (query/filter/page) state machine. Consumers configure fields/imageField/itemActions/cols/gap/variant; the atom renders the grid. Each `fields[]` entry accepts `{ name, label, variant }` plus optional `referenceEntity` + `displayField` to render a foreign-key column as the joined entity's display value (data-grid resolves @list[referenceEntity] at render time when both keys are present). `browseLook` (table default / dense / feed / gallery / master-detail / triage) selects one of six render bodies; dense/feed/gallery were folded in from std-browse-dense/-feed/-gallery (Phase 5.B); master-detail (split record view driven by the guarded VIEW/CLOSE self-transitions) and triage (inbox rows) were folded in 2026-07-26. Consumers retarget by setting browseLook."
+]
 type BadgeColor = "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "error" | "info" | "neutral" | "destructive"
 type FieldSpec = { name : string!, label : string, variant : h3 | h4 | overline | avatar | body | caption | badge | small | progress, icon : string, format : date | time | datetime | currency | number | boolean | percent, key : string, header : string, colorMap : Map string BadgeColor, labels : Map string string }
 type ItemAction = { label : string!, event : event, navigatesTo : string, variant : primary | secondary | ghost | danger, icon : string, roles : [string], when : SExpr }
@@ -69,6 +71,7 @@ orbital BrowseItemOrbital {
           filter: (and (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id]) (or ["=", @config.initialFilterField, ""] ["=", (object/get @entity @config.initialFilterField), @config.initialFilterValue]))
           include: @config.include
           limit: @config.pageSize
+          orderBy: @config.orderBy
           offset: 0
         })
         (if ["=", @config.browseLook, gallery]
@@ -103,6 +106,7 @@ orbital BrowseItemOrbital {
           filter: (and (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id]) (or ["=", @config.initialFilterField, ""] ["=", (object/get @entity @config.initialFilterField), @config.initialFilterValue]))
           include: @config.include
           limit: @config.pageSize
+          orderBy: @config.orderBy
           offset: 0
         })
       ;; REFETCH_* stays in `browsing` and DOES NOT replace the data-grid
@@ -117,6 +121,7 @@ orbital BrowseItemOrbital {
           filter: (and (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id]) (or ["=", ?searchTerm, ""] (str/includes (object/get @entity @config.searchField) ?searchTerm)))
           include: @config.include
           limit: @config.pageSize
+          orderBy: @config.orderBy
           offset: 0
         })
       REFETCH_FILTER -> browsing
@@ -125,6 +130,7 @@ orbital BrowseItemOrbital {
           filter: (and (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id]) (or ["=", ?value, ""] ["=", (object/get @entity ?field), ?value]))
           include: @config.include
           limit: @config.pageSize
+          orderBy: @config.orderBy
           offset: 0
         })
       REFETCH_PAGE -> browsing
@@ -133,6 +139,7 @@ orbital BrowseItemOrbital {
           filter: (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id])
           include: @config.include
           limit: @config.pageSize
+          orderBy: @config.orderBy
           offset: ["*", ["-", ?page, 1], @config.pageSize]
         })
       ;; master-detail only: opening a row re-renders the split view with the
@@ -168,6 +175,7 @@ orbital BrowseItemOrbital {
           filter: (and (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id]) (or ["=", @config.initialFilterField, ""] ["=", (object/get @entity @config.initialFilterField), @config.initialFilterValue]))
           include: @config.include
           limit: @config.pageSize
+          orderBy: @config.orderBy
           offset: 0
         })
         (if ["=", @config.browseLook, gallery]
@@ -313,6 +321,11 @@ orbital BrowseItemOrbital {
         @label "How many rows to fetch per page?"
         @description "Records fetched from the server per page request."
         @synonyms "fetch limit, records per page, batch size, page limit"
+        @tier "presentation"
+      orderBy : string = ""
+        @label "Which field orders the list?"
+        @description "A field name, or field:desc for newest or largest first (e.g. createdAt:desc). Applied before paging. Empty keeps the stored order."
+        @synonyms "sort, sort by, order by, newest first, latest first, sort order"
         @tier "presentation"
       displayPageSize : number = 10
         @label "How many rows to show at once?"

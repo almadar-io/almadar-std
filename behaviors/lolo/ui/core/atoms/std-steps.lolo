@@ -1,5 +1,7 @@
-app std-steps "1.0.0"
-"std-steps — a numbered 'how it works' sequence from a config list: a numbered marker (or icon), a title and a short description per step, laid out as a row of columns or a vertical list, under an optional heading. Display only — for an interactive stepper use std-step-flow or std-wizard. Pick for onboarding explainers, process overviews and learning paths."
+app std-steps [
+  version: "1.0.0",
+  description: "std-steps — a numbered 'how it works' sequence from a config list: a numbered marker (or icon), a title and a short description per step, laid out as a row of columns or a vertical list, under an optional heading. Display only — for an interactive stepper use std-step-flow or std-wizard. Pick for onboarding explainers, process overviews and learning paths."
+]
 type StepItem = { title : string!, description : string, icon : string }
 orbital StepsOrbital {
 
@@ -15,7 +17,11 @@ orbital StepsOrbital {
         (render-ui main {
           type: box
           paddingY: xl
-          bg: (if (== @config.surface muted) muted transparent)
+          bg: (if (== @config.surface muted) muted (if (== @config.surface accent) gradient (if (== @config.surface inverse) inverse transparent)))
+          edgeTop: @config.edgeTop
+          edgeBottom: @config.edgeBottom
+          edgeColor: @config.edgeColor
+          texture: @config.texture
           fullWidth: true
           children: [{
             type: container
@@ -77,7 +83,8 @@ orbital StepsOrbital {
                   children: [{
                     type: typography
                     content: (object/get @step title "")
-                    variant: h5
+                    variant: (if (== @config.heading "") h2 h3)
+                    size: lg
                     weight: semibold
                   }, {
                     type: typography
@@ -114,8 +121,24 @@ orbital StepsOrbital {
         @label "Layout"
         @description "row = side-by-side columns, vertical = a top-to-bottom list"
         @tier "presentation"
-      surface : "plain" | "muted" = plain
+      surface : "plain" | "muted" | "accent" | "inverse" = plain
         @label "Surface"
+        @tier "presentation"
+      edgeTop : "none" | "curve" | "wave" | "arc" | "tilt" | "step" | "scallop" = none
+        @label "Top edge"
+        @description "Shape cut into the top of the section; curve uses the theme's shape"
+        @tier "presentation"
+      edgeBottom : "none" | "curve" | "wave" | "arc" | "tilt" | "step" | "scallop" = none
+        @label "Bottom edge"
+        @description "Shape cut into the bottom of the section; curve uses the theme's shape"
+        @tier "presentation"
+      edgeColor : "background" | "muted" | "surface" | "gradient" | "inverse" = background
+        @label "Edge fill"
+        @description "The surface of the neighbouring section, which fills the cut"
+        @tier "presentation"
+      texture : boolean = false
+        @label "Texture"
+        @description "Lay the theme's texture over the section"
         @tier "presentation"
     }
   }

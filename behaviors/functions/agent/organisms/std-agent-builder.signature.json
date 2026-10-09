@@ -14,27 +14,27 @@
             "required": false
           },
           {
-            "name": "plan",
-            "type": "string",
-            "required": false
-          },
-          {
             "name": "orbitalName",
             "type": "string",
             "required": false
           },
           {
-            "name": "spec",
-            "type": "object",
+            "name": "queryVector",
+            "type": "array",
             "required": false
           },
           {
-            "name": "validationResult",
+            "name": "pick",
             "type": "string",
             "required": false
           },
           {
-            "name": "fixPrompt",
+            "name": "behavior",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "error",
             "type": "string",
             "required": false
           },
@@ -52,7 +52,11 @@
         "name": "BuilderPipeline",
         "emittedEvents": [
           "BUILD_COMPLETE",
-          "PLANNED"
+          "BUILD_REJECTED",
+          "REQUEST_EMBEDDED",
+          "CATALOG_LISTED",
+          "BUILT",
+          "BUILD_FAILED"
         ],
         "listenedEvents": [],
         "events": [
@@ -61,7 +65,23 @@
             "direction": "emit"
           },
           {
-            "name": "PLANNED",
+            "name": "BUILD_REJECTED",
+            "direction": "emit"
+          },
+          {
+            "name": "REQUEST_EMBEDDED",
+            "direction": "emit"
+          },
+          {
+            "name": "CATALOG_LISTED",
+            "direction": "emit"
+          },
+          {
+            "name": "BUILT",
+            "direction": "emit"
+          },
+          {
+            "name": "BUILD_FAILED",
             "direction": "emit"
           },
           {
@@ -73,43 +93,67 @@
             "direction": "listen"
           },
           {
-            "name": "PLAN_FAILED",
-            "direction": "listen"
-          },
-          {
             "name": "RESET",
-            "direction": "listen"
-          },
-          {
-            "name": "RETRY",
             "direction": "listen"
           }
         ],
-        "overridableConfigKeys": [],
+        "overridableConfigKeys": [
+          {
+            "key": "scope",
+            "type": "[string]",
+            "default": [
+              "almadar-std/ui/core/molecules"
+            ],
+            "label": "Where to look for building blocks",
+            "description": "Registry folders (`<prefix>/<topic>[/<tier>]`) the builder may pick from.",
+            "tier": "domain",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
         "capabilities": [],
         "linkedEntity": "BuilderProcess",
         "transitionEvents": [
+          "BUILD_FAILED",
+          "BUILT",
+          "CATALOG_LISTED",
           "INIT",
-          "PLANNED",
-          "PLAN_FAILED",
+          "REQUEST_EMBEDDED",
           "RESET",
           "START"
         ],
         "definerKnobs": [],
         "effectRow": [
           {
-            "kind": "behavior/instantiate"
+            "kind": "behavior/catalog"
+          },
+          {
+            "kind": "call-service",
+            "resource": "llm.embed"
           },
           {
             "kind": "emit",
             "resource": "BUILD_COMPLETE"
           },
           {
-            "kind": "llm/generate"
+            "kind": "emit",
+            "resource": "BUILD_REJECTED"
+          },
+          {
+            "kind": "program/eval"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "main"
           },
           {
             "kind": "set",
-            "resource": "@entity.fixPrompt"
+            "resource": "@entity.behavior"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.error"
           },
           {
             "kind": "set",
@@ -117,55 +161,16 @@
           },
           {
             "kind": "set",
-            "resource": "@entity.plan"
+            "resource": "@entity.pick"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.queryVector"
           },
           {
             "kind": "set",
             "resource": "@entity.request"
           },
-          {
-            "kind": "set",
-            "resource": "@entity.status"
-          },
-          {
-            "kind": "set",
-            "resource": "@entity.validationResult"
-          },
-          {
-            "kind": "validate/validate"
-          }
-        ]
-      },
-      {
-        "name": "BuilderListener",
-        "emittedEvents": [],
-        "listenedEvents": [
-          "BUILD_COMPLETE"
-        ],
-        "events": [
-          {
-            "name": "INIT",
-            "direction": "listen"
-          },
-          {
-            "name": "BUILD_COMPLETE",
-            "direction": "listen"
-          },
-          {
-            "name": "RESET",
-            "direction": "listen"
-          }
-        ],
-        "overridableConfigKeys": [],
-        "capabilities": [],
-        "linkedEntity": "BuilderProcess",
-        "transitionEvents": [
-          "BUILD_COMPLETE",
-          "INIT",
-          "RESET"
-        ],
-        "definerKnobs": [],
-        "effectRow": [
           {
             "kind": "set",
             "resource": "@entity.status"
@@ -182,13 +187,16 @@
     ],
     "emittedEvents": [
       "BUILD_COMPLETE",
-      "PLANNED"
+      "BUILD_FAILED",
+      "BUILD_REJECTED",
+      "BUILT",
+      "CATALOG_LISTED",
+      "REQUEST_EMBEDDED"
     ],
-    "listenedEvents": [
-      "BUILD_COMPLETE"
-    ],
+    "listenedEvents": [],
     "exposure": "internal",
     "provenance": "authored",
+    "capabilities": "build an orbital from a request, pick a behavior by meaning, generate a page, program evaluation",
     "sourceValid": true
   }
 ]

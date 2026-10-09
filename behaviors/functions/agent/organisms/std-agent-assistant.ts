@@ -143,6 +143,184 @@ export function stdAgentAssistantAgentAssistantOrbital(params: StdAgentAssistant
         return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
       })(),
     } as Entity,
+    config: {
+      'appName': {
+        'default': 'Assistant',
+        'description': 'Pass the app\'s own name so the assistant page matches the rest of the app.',
+        'label': 'App name in the assistant page\'s header',
+        'tier': 'presentation',
+        'type': 'string',
+      },
+      'instructions': {
+        'default': 'You operate this app for the signed-in user. Use the tools to act and to look things up; when a tool reports that something was refused or denied, say so plainly.',
+        'description': 'Standing instructions sent with every request.',
+        'label': 'How should the assistant behave?',
+        'synonyms': 'system prompt, persona, guidance',
+        'tier': 'domain',
+        'type': 'string',
+      },
+      'keepMessages': {
+        'default': 12,
+        'label': 'Turns kept verbatim',
+        'tier': 'policy',
+        'type': 'number',
+      },
+      'links': {
+        'default': [
+          {
+            'href': '/assistant/runs',
+            'label': 'Run history',
+          },
+        ],
+        'description': 'Related pages, e.g. the assistant\'s run history.',
+        'items': {
+          'properties': {
+            'href': {
+              'name': 'href',
+              'required': true,
+              'type': 'string',
+            },
+            'label': {
+              'name': 'label',
+              'required': true,
+              'type': 'string',
+            },
+          },
+          'type': 'object',
+        },
+        'label': 'Links above the conversation',
+        'tier': 'presentation',
+        'type': '[AgentLink]',
+      },
+      'maxSteps': {
+        'default': 8,
+        'label': 'Model round-trips per request',
+        'tier': 'policy',
+        'type': 'number',
+      },
+      'navItems': {
+        'default': [],
+        'description': 'Pass the app\'s own navItems so the assistant page keeps the app\'s sidebar.',
+        'items': {
+          'properties': {
+            'badge': {
+              'name': 'badge',
+              'required': false,
+              'type': 'string',
+            },
+            'children': {
+              'items': {
+                'type': 'union',
+                'values': [
+                  'NavItem',
+                ],
+              },
+              'name': 'children',
+              'required': false,
+              'type': 'array',
+            },
+            'href': {
+              'name': 'href',
+              'required': true,
+              'type': 'string',
+            },
+            'icon': {
+              'name': 'icon',
+              'required': false,
+              'type': 'string',
+            },
+            'label': {
+              'name': 'label',
+              'required': true,
+              'type': 'string',
+            },
+            'roles': {
+              'items': {
+                'type': 'string',
+              },
+              'name': 'roles',
+              'required': false,
+              'type': 'array',
+            },
+          },
+          'type': 'object',
+        },
+        'label': 'Sidebar navigation on the assistant page',
+        'tier': 'presentation',
+        'type': '[NavItem]',
+      },
+      'recallLimit': {
+        'default': 3,
+        'label': 'Memories recalled per request',
+        'tier': 'policy',
+        'type': 'number',
+      },
+      'tools': {
+        'default': [
+          {
+            'scope': 'declared',
+          },
+        ],
+        'description': 'As the signed-in user: `{ scope: declared }` (the default) gives it every external input the program declares and a read over every persisted entity, so each building block\'s declared inputs become its abilities; or list them — `{ event: Orbital.Trait.EVENT }` for one input, `{ read: Entity }` for one entity.',
+        'items': {
+          'properties': {
+            'AgentToolInput': {
+              'name': 'AgentToolInput',
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': true,
+                  'type': 'EventAddress',
+                },
+              },
+              'type': 'object',
+            },
+            'AgentToolRead': {
+              'name': 'AgentToolRead',
+              'properties': {
+                'read': {
+                  'name': 'read',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'AgentToolScope': {
+              'name': 'AgentToolScope',
+              'properties': {
+                'scope': {
+                  'name': 'scope',
+                  'required': true,
+                  'type': 'string',
+                  'values': [
+                    'declared',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
+          },
+          'type': 'union',
+          'values': [
+            'AgentToolScope',
+            'AgentToolInput',
+            'AgentToolRead',
+          ],
+        },
+        'label': 'What may the assistant do?',
+        'synonyms': 'allowlist, abilities, actions, permissions',
+        'tier': 'domain',
+        'type': '[AgentTool]',
+      },
+      'viewerRole': {
+        'default': '',
+        'description': 'The role the assistant page\'s sidebar items and their `roles` are checked against. Bind `@user.role` in an app whose identity carries a role; left empty, only items with no `roles` show.',
+        'label': 'Viewer role on the assistant page',
+        'tier': 'policy',
+        'type': 'string',
+      },
+    },
     traits: [
       makeTraitRef({
         'events': {

@@ -421,7 +421,7 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                 'when': {
                   'name': 'when',
                   'required': false,
-                  'type': 'object',
+                  'type': 'SExpr',
                 },
               },
               'type': 'object',

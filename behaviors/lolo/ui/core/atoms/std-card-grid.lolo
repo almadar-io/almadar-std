@@ -1,5 +1,7 @@
-app std-card-grid "1.0.0"
-"std-card-grid — a titled grid of content cards from a config list. Each card can carry an image (screenshots, portfolio, case studies), a portrait (team members), an icon, a badge, a title, a description and a link. `look` picks media cards, centered profile cards, or plain text cards. Pick for showcases, team pages, case studies, service catalogs and testimonials."
+app std-card-grid [
+  version: "1.0.0",
+  description: "std-card-grid — a titled grid of content cards from a config list. Each card can carry an image (screenshots, portfolio, case studies), a portrait (team members), an icon, a badge, a title, a description and a link. `look` picks media cards, centered profile cards, or plain text cards. Pick for showcases, team pages, case studies, service catalogs and testimonials."
+]
 type CardItem = { title : string!, description : string, image : string, imageAlt : string, avatar : string, icon : string, badge : string, meta : string, href : string, linkLabel : string }
 orbital CardGridOrbital {
 
@@ -15,7 +17,11 @@ orbital CardGridOrbital {
         (render-ui main {
           type: box
           paddingY: xl
-          bg: (if (== @config.surface muted) muted transparent)
+          bg: (if (== @config.surface muted) muted (if (== @config.surface accent) gradient (if (== @config.surface inverse) inverse transparent)))
+          edgeTop: @config.edgeTop
+          edgeBottom: @config.edgeBottom
+          edgeColor: @config.edgeColor
+          texture: @config.texture
           fullWidth: true
           children: [{
             type: container
@@ -82,7 +88,8 @@ orbital CardGridOrbital {
                   }, {
                     type: typography
                     content: (object/get @item title "")
-                    variant: h4
+                    variant: (if (== @config.heading "") h2 h3)
+                    size: xl
                     weight: semibold
                     align: (if (== @config.look profile) center left)
                     className: (if (== (object/get @item href "") "") "" hidden)
@@ -170,9 +177,25 @@ orbital CardGridOrbital {
       columns : number = 3
         @label "Max columns"
         @tier "presentation"
-      surface : "plain" | "muted" = plain
+      surface : "plain" | "muted" | "accent" | "inverse" = plain
         @label "Surface"
-        @description "Background behind the section"
+        @description "Background behind the section: plain, muted, a soft theme gradient (accent), or inverted colors (inverse)"
+        @tier "presentation"
+      edgeTop : "none" | "curve" | "wave" | "arc" | "tilt" | "step" | "scallop" = none
+        @label "Top edge"
+        @description "Shape cut into the top of the section; curve uses the theme's shape"
+        @tier "presentation"
+      edgeBottom : "none" | "curve" | "wave" | "arc" | "tilt" | "step" | "scallop" = none
+        @label "Bottom edge"
+        @description "Shape cut into the bottom of the section; curve uses the theme's shape"
+        @tier "presentation"
+      edgeColor : "background" | "muted" | "surface" | "gradient" | "inverse" = background
+        @label "Edge fill"
+        @description "The surface of the neighbouring section, which fills the cut"
+        @tier "presentation"
+      texture : boolean = false
+        @label "Texture"
+        @description "Lay the theme's texture over the section"
         @tier "presentation"
     }
   }

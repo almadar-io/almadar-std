@@ -76,6 +76,30 @@
             "tier": "presentation"
           },
           {
+            "key": "backgroundPosition",
+            "type": "string",
+            "default": "center",
+            "label": "Background photo focus",
+            "description": "Which part of the photo stays visible when it is cropped",
+            "tier": "presentation",
+            "enumValues": [
+              "center",
+              "top",
+              "bottom",
+              "left",
+              "right"
+            ]
+          },
+          {
+            "key": "backgroundSrc",
+            "type": "string",
+            "default": "",
+            "label": "Background photo",
+            "description": "Photo URL filling the block behind the copy when the surface is image",
+            "synonyms": "background image, hero photo, cover photo",
+            "tier": "presentation"
+          },
+          {
             "key": "command",
             "type": "string",
             "default": "",
@@ -124,10 +148,10 @@
                     [
                       "==",
                       "@config.look",
-                      "banner"
+                      "hero"
                     ],
-                    "h2",
-                    "h1"
+                    "h1",
+                    "h2"
                   ],
                   "weight": "bold"
                 },
@@ -152,7 +176,16 @@
                     "hidden",
                     "max-w-2xl text-pretty"
                   ],
-                  "color": "muted",
+                  "color": [
+                    "if",
+                    [
+                      "==",
+                      "@config.look",
+                      "header"
+                    ],
+                    "primary",
+                    "muted"
+                  ],
                   "content": "@config.lede",
                   "type": "typography",
                   "variant": "large"
@@ -268,6 +301,55 @@
             "tier": "internal"
           },
           {
+            "key": "edgeBottom",
+            "type": "string",
+            "default": "none",
+            "label": "Bottom edge",
+            "description": "Shape cut into the bottom of the block; curve uses the theme's shape",
+            "tier": "presentation",
+            "enumValues": [
+              "none",
+              "curve",
+              "wave",
+              "arc",
+              "tilt",
+              "step",
+              "scallop"
+            ]
+          },
+          {
+            "key": "edgeColor",
+            "type": "string",
+            "default": "background",
+            "label": "Edge fill",
+            "description": "The surface of the neighbouring section, which fills the cut",
+            "tier": "presentation",
+            "enumValues": [
+              "background",
+              "muted",
+              "surface",
+              "gradient",
+              "inverse"
+            ]
+          },
+          {
+            "key": "edgeTop",
+            "type": "string",
+            "default": "none",
+            "label": "Top edge",
+            "description": "Shape cut into the top of the block; curve uses the theme's shape",
+            "tier": "presentation",
+            "enumValues": [
+              "none",
+              "curve",
+              "wave",
+              "arc",
+              "tilt",
+              "step",
+              "scallop"
+            ]
+          },
+          {
             "key": "eyebrow",
             "type": "string",
             "default": "",
@@ -298,6 +380,39 @@
             ]
           },
           {
+            "key": "illustration",
+            "type": "string",
+            "default": "",
+            "label": "Illustration",
+            "description": "Inline SVG shown beside or below the copy instead of the media image; empty uses the media image",
+            "synonyms": "artwork, graphic, drawing, svg",
+            "tier": "presentation"
+          },
+          {
+            "key": "illustrationContent",
+            "type": "render-ui",
+            "default": {
+              "alt": "",
+              "animate": true,
+              "animation": "draw",
+              "height": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "header"
+                ],
+                200,
+                380
+              ],
+              "svgContent": "@config.illustration",
+              "type": "animated-graphic",
+              "width": "100%"
+            },
+            "label": "Illustration block",
+            "tier": "internal"
+          },
+          {
             "key": "lede",
             "type": "string",
             "default": "",
@@ -311,12 +426,13 @@
             "type": "string",
             "default": "hero",
             "label": "Look",
-            "description": "hero = full-width page opener with an h1; banner = contained call-to-action card with an h2",
+            "description": "hero = full-width page opener with an h1; banner = contained call-to-action card with an h2; header = compact opener at the top of an app page",
             "synonyms": "cta banner, call to action, callout, page header, masthead",
             "tier": "presentation",
             "enumValues": [
               "hero",
-              "banner"
+              "banner",
+              "header"
             ]
           },
           {
@@ -405,12 +521,64 @@
                   "muted"
                 ],
                 "muted",
-                "transparent"
+                [
+                  "if",
+                  [
+                    "==",
+                    "@config.surface",
+                    "accent"
+                  ],
+                  "gradient",
+                  [
+                    "if",
+                    [
+                      "or",
+                      [
+                        "==",
+                        "@config.surface",
+                        "inverse"
+                      ],
+                      [
+                        "==",
+                        "@config.surface",
+                        "image"
+                      ]
+                    ],
+                    "inverse",
+                    "transparent"
+                  ]
+                ]
               ],
               "children": [
                 {
                   "aria-hidden": true,
                   "children": [
+                    {
+                      "alt": "",
+                      "className": "h-full",
+                      "fit": "cover",
+                      "position": "@config.backgroundPosition",
+                      "priority": [
+                        "==",
+                        "@config.look",
+                        "hero"
+                      ],
+                      "src": "@config.backgroundSrc",
+                      "type": "image"
+                    },
+                    {
+                      "className": [
+                        "if",
+                        [
+                          "==",
+                          "@config.surface",
+                          "image"
+                        ],
+                        "band-scrim",
+                        "hidden"
+                      ],
+                      "type": "box"
+                    },
                     "@config.backdropContent"
                   ],
                   "className": "inset-0 pointer-events-none",
@@ -442,7 +610,16 @@
                               "align": "center",
                               "children": [
                                 "@config.copyContent",
-                                "@config.mediaContent"
+                                [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@config.illustration",
+                                    ""
+                                  ],
+                                  "@config.mediaContent",
+                                  "@config.illustrationContent"
+                                ]
                               ],
                               "gap": "xl",
                               "ratio": "1:1",
@@ -493,6 +670,9 @@
                 "flex min-h-[80vh] items-center",
                 ""
               ],
+              "edgeBottom": "@config.edgeBottom",
+              "edgeColor": "@config.edgeColor",
+              "edgeTop": "@config.edgeTop",
               "fullWidth": true,
               "overflow": "hidden",
               "paddingY": [
@@ -500,12 +680,32 @@
                 [
                   "==",
                   "@config.look",
-                  "banner"
+                  "hero"
                 ],
-                "xl",
-                "2xl"
+                "2xl",
+                [
+                  "if",
+                  [
+                    "==",
+                    "@config.look",
+                    "banner"
+                  ],
+                  "xl",
+                  "lg"
+                ]
               ],
               "position": "relative",
+              "rounded": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "header"
+                ],
+                "2xl",
+                "none"
+              ],
+              "texture": "@config.texture",
               "type": "box"
             },
             "label": "Side-by-side body",
@@ -523,12 +723,64 @@
                   "muted"
                 ],
                 "muted",
-                "transparent"
+                [
+                  "if",
+                  [
+                    "==",
+                    "@config.surface",
+                    "accent"
+                  ],
+                  "gradient",
+                  [
+                    "if",
+                    [
+                      "or",
+                      [
+                        "==",
+                        "@config.surface",
+                        "inverse"
+                      ],
+                      [
+                        "==",
+                        "@config.surface",
+                        "image"
+                      ]
+                    ],
+                    "inverse",
+                    "transparent"
+                  ]
+                ]
               ],
               "children": [
                 {
                   "aria-hidden": true,
                   "children": [
+                    {
+                      "alt": "",
+                      "className": "h-full",
+                      "fit": "cover",
+                      "position": "@config.backgroundPosition",
+                      "priority": [
+                        "==",
+                        "@config.look",
+                        "hero"
+                      ],
+                      "src": "@config.backgroundSrc",
+                      "type": "image"
+                    },
+                    {
+                      "className": [
+                        "if",
+                        [
+                          "==",
+                          "@config.surface",
+                          "image"
+                        ],
+                        "band-scrim",
+                        "hidden"
+                      ],
+                      "type": "box"
+                    },
                     "@config.backdropContent"
                   ],
                   "className": "inset-0 pointer-events-none",
@@ -569,7 +821,16 @@
                               ],
                               "children": [
                                 "@config.copyContent",
-                                "@config.mediaContent"
+                                [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@config.illustration",
+                                    ""
+                                  ],
+                                  "@config.mediaContent",
+                                  "@config.illustrationContent"
+                                ]
                               ],
                               "direction": "vertical",
                               "gap": "2xl",
@@ -620,6 +881,9 @@
                 "flex min-h-[80vh] items-center",
                 ""
               ],
+              "edgeBottom": "@config.edgeBottom",
+              "edgeColor": "@config.edgeColor",
+              "edgeTop": "@config.edgeTop",
               "fullWidth": true,
               "overflow": "hidden",
               "paddingY": [
@@ -627,12 +891,32 @@
                 [
                   "==",
                   "@config.look",
-                  "banner"
+                  "hero"
                 ],
-                "xl",
-                "2xl"
+                "2xl",
+                [
+                  "if",
+                  [
+                    "==",
+                    "@config.look",
+                    "banner"
+                  ],
+                  "xl",
+                  "lg"
+                ]
               ],
               "position": "relative",
+              "rounded": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "header"
+                ],
+                "2xl",
+                "none"
+              ],
+              "texture": "@config.texture",
               "type": "box"
             },
             "label": "Stacked body",
@@ -643,12 +927,23 @@
             "type": "string",
             "default": "plain",
             "label": "Surface",
-            "description": "Background behind the block",
+            "description": "Background behind the block: plain, muted, a soft theme gradient (accent), inverted colors (inverse), or a photo (image, set Background photo)",
             "tier": "presentation",
             "enumValues": [
               "plain",
-              "muted"
+              "muted",
+              "accent",
+              "inverse",
+              "image"
             ]
+          },
+          {
+            "key": "texture",
+            "type": "boolean",
+            "default": false,
+            "label": "Texture",
+            "description": "Lay the theme's texture over the block",
+            "tier": "presentation"
           }
         ],
         "capabilities": [],

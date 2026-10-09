@@ -1,5 +1,7 @@
-app std-media-section "1.0.0"
-"std-media-section — content rows that pair copy with a screenshot or illustration: each row has an eyebrow, heading, body text, a short bullet list and an optional link action on one side and its media on the other, and consecutive rows alternate sides. A row without media sits alone at reading width. Stacks on small screens. Pick for 'how it works', product tours and feature-detail pages."
+app std-media-section [
+  version: "1.0.0",
+  description: "std-media-section — content rows that pair copy with a screenshot or illustration: each row has an eyebrow, heading, body text, a short bullet list and an optional link action on one side and its media on the other, and consecutive rows alternate sides. A row without media sits alone at reading width. Stacks on small screens. Pick for 'how it works', product tours and feature-detail pages."
+]
 type MediaRow = { eyebrow : string, heading : string!, body : string, bullets : [string], mediaSrc : string, mediaAlt : string, actionLabel : string, actionHref : string }
 orbital MediaSectionOrbital {
   entity MediaSectionView [runtime] {
@@ -14,7 +16,11 @@ orbital MediaSectionOrbital {
         (render-ui main {
           type: box
           paddingY: xl
-          bg: (if (== @config.surface muted) muted transparent)
+          bg: (if (== @config.surface muted) muted (if (== @config.surface accent) gradient (if (== @config.surface inverse) inverse transparent)))
+          edgeTop: @config.edgeTop
+          edgeBottom: @config.edgeBottom
+          edgeColor: @config.edgeColor
+          texture: @config.texture
           fullWidth: true
           children: [{
             type: container
@@ -143,9 +149,25 @@ orbital MediaSectionOrbital {
         @description "Which side the first row's media sits on; later rows alternate"
         @synonyms "image position, image left, image right, flip"
         @tier "presentation"
-      surface : "plain" | "muted" = plain
+      surface : "plain" | "muted" | "accent" | "inverse" = plain
         @label "Surface"
-        @description "Background behind the rows"
+        @description "Background behind the section: plain, muted, a soft theme gradient (accent), or inverted colors (inverse)"
+        @tier "presentation"
+      edgeTop : "none" | "curve" | "wave" | "arc" | "tilt" | "step" | "scallop" = none
+        @label "Top edge"
+        @description "Shape cut into the top of the section; curve uses the theme's shape"
+        @tier "presentation"
+      edgeBottom : "none" | "curve" | "wave" | "arc" | "tilt" | "step" | "scallop" = none
+        @label "Bottom edge"
+        @description "Shape cut into the bottom of the section; curve uses the theme's shape"
+        @tier "presentation"
+      edgeColor : "background" | "muted" | "surface" | "gradient" | "inverse" = background
+        @label "Edge fill"
+        @description "The surface of the neighbouring section, which fills the cut"
+        @tier "presentation"
+      texture : boolean = false
+        @label "Texture"
+        @description "Lay the theme's texture over the section"
         @tier "presentation"
     }
   }

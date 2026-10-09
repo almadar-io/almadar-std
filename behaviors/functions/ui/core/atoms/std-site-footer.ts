@@ -53,10 +53,18 @@ export interface StdSiteFooterConfig {
   columns?: EntityRow[];
   /** Default: `"© Almadar"` */
   copyright?: string;
+  /** Default: `"background"` */
+  edgeColor?: 'background' | 'muted' | 'surface' | 'gradient' | 'inverse';
+  /** Default: `"none"` */
+  edgeTop?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
   /** Default: `[]` */
   legalLinks?: EntityRow[];
+  /** Default: `"plain"` */
+  surface?: 'plain' | 'inverse';
   /** Default: `""` */
   tagline?: string;
+  /** Default: `false` */
+  texture?: boolean;
 }
 
 /**

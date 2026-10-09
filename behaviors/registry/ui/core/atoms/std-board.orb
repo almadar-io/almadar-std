@@ -414,14 +414,15 @@
           "config": {
             "addPlacement": {
               "default": "floating",
-              "description": "Where the add-item button sits: 'floating' (default) pins a floating action button to the screen corner; 'inline' renders an ordinary Add button above the columns, for a board embedded in a card or panel.",
+              "description": "Where the add-item button sits: 'floating' (default) pins a floating action button to the screen corner; 'inline' renders an ordinary Add button above the columns, for a board embedded in a card or panel.; none hides the add button (a read-only board)",
               "label": "Add button placement",
               "synonyms": "add button position, floating add, inline add, add item button placement. user phrases: 'put the add button inside the board' / 'no floating button' -> inline",
               "tier": "presentation",
               "type": "string",
               "values": [
                 "floating",
-                "inline"
+                "inline",
+                "none"
               ]
             },
             "boardLook": {
@@ -559,13 +560,16 @@
                   ],
                   {
                     "cols": "@config.gridCols",
-                    "dndRoot": true,
+                    "dndRoot": "@config.draggable",
                     "entity": "@entity.boards",
                     "fields": [],
                     "gap": "md",
                     "renderItem": [
                       "fn",
-                      "col",
+                      [
+                        "col",
+                        "colIndex"
+                      ],
                       {
                         "children": [
                           {
@@ -578,7 +582,23 @@
                                     "type": "icon"
                                   },
                                   {
-                                    "content": "@col.label",
+                                    "content": [
+                                      "if",
+                                      [
+                                        "==",
+                                        [
+                                          "array/len",
+                                          "@config.columnLabels"
+                                        ],
+                                        0.0
+                                      ],
+                                      "@col.label",
+                                      [
+                                        "array/nth",
+                                        "@config.columnLabels",
+                                        "@colIndex"
+                                      ]
+                                    ],
                                     "type": "typography",
                                     "variant": "h4"
                                   },
@@ -593,12 +613,23 @@
                                 "type": "stack"
                               },
                               {
-                                "accepts": "*",
-                                "dragGroup": "@col.key",
+                                "accepts": [
+                                  "if",
+                                  "@config.draggable",
+                                  "*",
+                                  ""
+                                ],
+                                "dragGroup": [
+                                  "if",
+                                  "@config.draggable",
+                                  "@col.key",
+                                  ""
+                                ],
                                 "dropEvent": "MOVE_CARD",
                                 "entity": "@col.items",
                                 "fields": [],
                                 "gap": "sm",
+                                "itemEnter": "@config.cardEnter",
                                 "positionEvent": "REORDER_POSITION",
                                 "renderItem": [
                                   "fn",
@@ -652,7 +683,7 @@
                                   }
                                 ],
                                 "reorderEvent": "REORDER_CARD",
-                                "sortable": true,
+                                "sortable": "@config.draggable",
                                 "type": "data-list"
                               }
                             ],
@@ -828,6 +859,20 @@
               "tier": "presentation",
               "type": "string"
             },
+            "cardEnter": {
+              "default": "none",
+              "description": "Animation a card plays when it appears in a column, so a moved card visibly arrives",
+              "label": "Card entrance",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "none",
+                "fade",
+                "rise",
+                "scale",
+                "slide"
+              ]
+            },
             "cardIdBinding": {
               "default": "@item.id",
               "description": "Per-card binding for the id used in action payloads.",
@@ -871,6 +916,16 @@
               "label": "Card title binding",
               "tier": "presentation",
               "type": "string"
+            },
+            "columnLabels": {
+              "default": [],
+              "description": "Optional labels in the same order as the columns, used only where the board is drawn, so they may be translated; empty shows each column's own label",
+              "items": {
+                "type": "string"
+              },
+              "label": "Column labels",
+              "tier": "presentation",
+              "type": "[string]"
             },
             "columns": {
               "default": [
@@ -922,6 +977,13 @@
               "label": "Columns",
               "tier": "domain",
               "type": "[ColumnSpec]"
+            },
+            "draggable": {
+              "default": true,
+              "description": "Let people drag cards between columns and reorder them; off shows the board read-only to the pointer (moves still work through events)",
+              "label": "Drag cards",
+              "tier": "presentation",
+              "type": "boolean"
             },
             "filterBarLook": {
               "default": "toolbar",
@@ -1136,14 +1198,17 @@
                   ],
                   {
                     "className": "w-full pb-2",
-                    "dndRoot": true,
+                    "dndRoot": "@config.draggable",
                     "entity": "@entity.boards",
                     "fields": [],
                     "gap": "lg",
                     "minCardWidth": 300.0,
                     "renderItem": [
                       "fn",
-                      "col",
+                      [
+                        "col",
+                        "colIndex"
+                      ],
                       {
                         "children": [
                           {
@@ -1157,7 +1222,23 @@
                                   },
                                   {
                                     "className": "flex-1",
-                                    "content": "@col.label",
+                                    "content": [
+                                      "if",
+                                      [
+                                        "==",
+                                        [
+                                          "array/len",
+                                          "@config.columnLabels"
+                                        ],
+                                        0.0
+                                      ],
+                                      "@col.label",
+                                      [
+                                        "array/nth",
+                                        "@config.columnLabels",
+                                        "@colIndex"
+                                      ]
+                                    ],
                                     "type": "typography",
                                     "variant": "h4"
                                   },
@@ -1174,13 +1255,24 @@
                                 "type": "stack"
                               },
                               {
-                                "accepts": "*",
+                                "accepts": [
+                                  "if",
+                                  "@config.draggable",
+                                  "*",
+                                  ""
+                                ],
                                 "className": "p-card-md min-h-[120px]",
-                                "dragGroup": "@col.key",
+                                "dragGroup": [
+                                  "if",
+                                  "@config.draggable",
+                                  "@col.key",
+                                  ""
+                                ],
                                 "dropEvent": "MOVE_CARD",
                                 "entity": "@col.items",
                                 "fields": [],
                                 "gap": "sm",
+                                "itemEnter": "@config.cardEnter",
                                 "positionEvent": "REORDER_POSITION",
                                 "renderItem": [
                                   "fn",
@@ -1247,7 +1339,7 @@
                                   }
                                 ],
                                 "reorderEvent": "REORDER_CARD",
-                                "sortable": true,
+                                "sortable": "@config.draggable",
                                 "type": "data-list"
                               }
                             ],
@@ -2385,7 +2477,10 @@
                           "gap": "sm",
                           "renderItem": [
                             "fn",
-                            "col",
+                            [
+                              "col",
+                              "colIndex"
+                            ],
                             {
                               "action": "MOVE_CARD",
                               "actionPayload": {
@@ -2393,7 +2488,23 @@
                                 "targetGroup": "@col.key"
                               },
                               "icon": "@col.icon",
-                              "label": "@col.label",
+                              "label": [
+                                "if",
+                                [
+                                  "==",
+                                  [
+                                    "array/len",
+                                    "@config.columnLabels"
+                                  ],
+                                  0.0
+                                ],
+                                "@col.label",
+                                [
+                                  "array/nth",
+                                  "@config.columnLabels",
+                                  "@colIndex"
+                                ]
+                              ],
                               "type": "button",
                               "variant": "secondary"
                             }

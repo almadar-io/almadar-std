@@ -98,6 +98,52 @@
         {
           "category": "interaction",
           "config": {
+            "edgeBottom": {
+              "default": "none",
+              "description": "Shape cut into the bottom of the section; curve uses the theme's shape",
+              "label": "Bottom edge",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "none",
+                "curve",
+                "wave",
+                "arc",
+                "tilt",
+                "step",
+                "scallop"
+              ]
+            },
+            "edgeColor": {
+              "default": "background",
+              "description": "The surface of the neighbouring section, which fills the cut",
+              "label": "Edge fill",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "background",
+                "muted",
+                "surface",
+                "gradient",
+                "inverse"
+              ]
+            },
+            "edgeTop": {
+              "default": "none",
+              "description": "Shape cut into the top of the section; curve uses the theme's shape",
+              "label": "Top edge",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "none",
+                "curve",
+                "wave",
+                "arc",
+                "tilt",
+                "step",
+                "scallop"
+              ]
+            },
             "firstMediaSide": {
               "default": "end",
               "description": "Which side the first row's media sits on; later rows alternate",
@@ -178,14 +224,23 @@
             },
             "surface": {
               "default": "plain",
-              "description": "Background behind the rows",
+              "description": "Background behind the section: plain, muted, a soft theme gradient (accent), or inverted colors (inverse)",
               "label": "Surface",
               "tier": "presentation",
               "type": "string",
               "values": [
                 "plain",
-                "muted"
+                "muted",
+                "accent",
+                "inverse"
               ]
+            },
+            "texture": {
+              "default": false,
+              "description": "Lay the theme's texture over the section",
+              "label": "Texture",
+              "tier": "presentation",
+              "type": "boolean"
             }
           },
           "effectRow": [
@@ -281,7 +336,25 @@
                           "muted"
                         ],
                         "muted",
-                        "transparent"
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@config.surface",
+                            "accent"
+                          ],
+                          "gradient",
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@config.surface",
+                              "inverse"
+                            ],
+                            "inverse",
+                            "transparent"
+                          ]
+                        ]
                       ],
                       "children": [
                         {
@@ -666,8 +739,12 @@
                           "type": "container"
                         }
                       ],
+                      "edgeBottom": "@config.edgeBottom",
+                      "edgeColor": "@config.edgeColor",
+                      "edgeTop": "@config.edgeTop",
                       "fullWidth": true,
                       "paddingY": "xl",
+                      "texture": "@config.texture",
                       "type": "box"
                     }
                   ]

@@ -1,0 +1,311 @@
+app std-home [
+  version: "1.0.0",
+  description: "std-home — the home page of an app: a welcome header, then an actionable overview gathered from the app's other pages. `homeLook` picks one of five layouts. Every look puts the headline figures directly under the greeting. For staff running the business: command (then actions, sections and shortcut tiles), briefing (then sections in the main column with actions and shortcut links in a side rail), launchpad (then big shortcut tiles before the sections). For customers: spotlight (a photo or gradient hero with a curved edge, then actions, shortcut tiles and their own items) and concierge (a centred greeting, then a grid of shortcut tiles and their items). Everything is actionable: `shortcuts` are links to other pages, `actions` are the organism's own operation triggers (open a create form, start a flow), and `sections` are lists whose rows act. When there are no sections yet the page shows an empty state that still offers every shortcut. Pick as the first page of any back office or customer experience."
+]
+type HomeShortcut = { label : string!, href : string!, icon : string, description : string, actionLabel : string, primary : boolean }
+
+orbital HomeOrbital {
+  entity HomeView [runtime] {
+    id : string!
+  }
+
+  uses Hero from "std/behaviors/std-hero"
+
+  trait HomeHeader = Hero.traits.HeroRender -> HomeView {
+    config {
+      look: header
+      alignment: start
+      surface: plain
+      texture: true
+      headline: @config.greeting
+      lede: @config.summary
+      primaryLabel: @config.primaryActionLabel
+      primaryHref: @config.primaryActionHref
+    }
+  }
+
+  trait HomeHero = Hero.traits.HeroRender -> HomeView {
+    config {
+      look: hero
+      alignment: start
+      surface: @config.heroSurface
+      backgroundSrc: @config.backgroundSrc
+      backgroundPosition: @config.backgroundPosition
+      illustration: @config.illustration
+      mediaPosition: side
+      edgeBottom: curve
+      edgeColor: background
+      headline: @config.greeting
+      lede: @config.summary
+      primaryLabel: @config.primaryActionLabel
+      primaryHref: @config.primaryActionHref
+    }
+  }
+
+  trait HomeWelcome = Hero.traits.HeroRender -> HomeView {
+    config {
+      look: banner
+      alignment: center
+      surface: accent
+      illustration: @config.illustration
+      headline: @config.greeting
+      lede: @config.summary
+      primaryLabel: @config.primaryActionLabel
+      primaryHref: @config.primaryActionHref
+    }
+  }
+
+  trait HomeRender -> @rebindable HomeView [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (if (== @config.homeLook briefing)
+          (render-ui main @config.briefingContent)
+          (if (== @config.homeLook launchpad)
+            (render-ui main @config.launchpadContent)
+            (if (== @config.homeLook spotlight)
+              (render-ui main @config.spotlightContent)
+              (if (== @config.homeLook concierge)
+                (render-ui main @config.conciergeContent)
+                (render-ui main @config.commandContent)))))
+    }
+
+    config {
+      homeLook : "command" | "briefing" | "launchpad" | "spotlight" | "concierge" = command
+        @label "Home look"
+        @description "Figures always sit right under the greeting. Staff: command = then actions and sections; briefing = then sections in the main column with actions and shortcut links in a side rail; launchpad = then big shortcut tiles. Customers: spotlight = photo or gradient hero, then actions, tiles and their items; concierge = centred greeting, then shortcut tiles."
+        @synonyms "dashboard style, home layout, overview layout, admin home, customer home"
+        @tier "presentation"
+      greeting : string = "Welcome back"
+        @label "Greeting"
+        @description "Headline at the top of the home page"
+        @synonyms "welcome, title, headline"
+        @tier "presentation"
+      summary : string = ""
+        @label "Summary"
+        @description "One sentence under the greeting; empty hides it"
+        @tier "presentation"
+      primaryActionLabel : string = ""
+        @label "Main action"
+        @description "Label of the one most important thing to do next, shown in the header; empty hides it"
+        @synonyms "cta, primary button, get started"
+        @tier "presentation"
+      primaryActionHref : string = ""
+        @label "Main action link"
+        @description "Page the main action opens (in-app path or #anchor)"
+        @tier "presentation"
+      heroSurface : "accent" | "image" = accent
+        @label "Hero background"
+        @description "spotlight only: accent = the theme's gradient; image = the hero photo under a scrim"
+        @tier "presentation"
+      backgroundSrc : string = ""
+        @label "Hero photo"
+        @description "spotlight only: photo URL behind the greeting when the hero background is image"
+        @synonyms "hero image, cover photo, background image"
+        @tier "presentation"
+      backgroundPosition : "center" | "top" | "bottom" | "left" | "right" = center
+        @label "Hero photo focus"
+        @description "Which part of the photo stays visible when it is cropped"
+        @tier "presentation"
+      illustration : string = ""
+        @label "Illustration"
+        @description "spotlight and concierge: inline SVG beside the greeting; empty hides it"
+        @tier "presentation"
+      shortcuts : [HomeShortcut] = []
+        @label "Shortcuts"
+        @description "Links to the pages people go to most: label, href, optional icon, one-line description, button label and whether it is the primary one"
+        @synonyms "quick links, go to, jump to, navigation tiles"
+        @tier "domain"
+      actions : [trait] = []
+        @label "Actions"
+        @description "The organism's own operation triggers, such as a button that opens a create form; each entry is a @trait reference"
+        @synonyms "quick actions, create, new, start"
+        @tier "domain"
+      kpis : [trait] = []
+        @label "Headline figures"
+        @description "Stat tiles summarising the app, most important first (keep to about five); each entry is a @trait reference"
+        @synonyms "kpis, metrics, stats, numbers"
+        @tier "domain"
+      sections : [trait] = []
+        @label "Overview sections"
+        @description "Short actionable lists and panels gathered from the app's pages (needs attention, recent, upcoming); each entry is a @trait reference"
+        @synonyms "widgets, panels, recent, upcoming, activity, needs attention"
+        @tier "domain"
+      emptyTitle : string = "Nothing here yet"
+        @label "Empty title"
+        @description "Shown in place of the sections while there are none"
+        @tier "presentation"
+      emptyDescription : string = "Start with one of the shortcuts above."
+        @label "Empty description"
+        @description "Tells people what will appear here and how to start"
+        @tier "presentation"
+      shortcutTiles : render-ui = {
+        type: simple-grid
+        minChildWidth: "220px"
+        gap: md
+        className: (if (== (array/len @config.shortcuts) 0) hidden "")
+        children: (array/map @config.shortcuts (fn s {
+          type: card
+          padding: lg
+          children: [{
+            type: stack
+            direction: vertical
+            gap: sm
+            align: start
+            children: [{
+              type: icon
+              name: (object/get @s icon "arrow-right")
+              size: lg
+              color: primary
+            }, {
+              type: typography
+              variant: h4
+              content: (object/get @s label "")
+            }, {
+              type: typography
+              variant: body2
+              color: muted
+              content: (object/get @s description "")
+            }, {
+              type: button
+              label: (object/get @s actionLabel "Open")
+              href: (object/get @s href "#")
+              variant: (if (object/get @s primary false) primary secondary)
+              size: sm
+              iconRight: arrow-right
+            }]
+          }]
+        }))
+      }
+        @label "Shortcut tiles"
+        @tier "internal"
+      shortcutList : render-ui = {
+        type: stack
+        direction: vertical
+        gap: xs
+        className: (if (== (array/len @config.shortcuts) 0) hidden "")
+        children: (array/map @config.shortcuts (fn s {
+          type: button
+          label: (object/get @s label "")
+          href: (object/get @s href "#")
+          icon: (object/get @s icon "arrow-right")
+          variant: (if (object/get @s primary false) primary ghost)
+          size: md
+        }))
+      }
+        @label "Shortcut list"
+        @tier "internal"
+      actionRow : render-ui = {
+        type: stack
+        direction: horizontal
+        gap: sm
+        wrap: true
+        className: (if (== (array/len @config.actions) 0) hidden "")
+        children: @config.actions
+      }
+        @label "Action row"
+        @tier "internal"
+      kpiRow : render-ui = {
+        type: simple-grid
+        minChildWidth: "180px"
+        gap: md
+        className: (if (== (array/len @config.kpis) 0) hidden "")
+        children: @config.kpis
+      }
+        @label "Figures row"
+        @tier "internal"
+      sectionGrid : render-ui = {
+        type: box
+        fullWidth: true
+        children: [{
+          type: empty-state
+          icon: layout-dashboard
+          title: @config.emptyTitle
+          description: @config.emptyDescription
+          className: (if (== (array/len @config.sections) 0) "" hidden)
+        }, {
+          type: simple-grid
+        minChildWidth: "360px"
+          gap: lg
+          className: (if (== (array/len @config.sections) 0) hidden "")
+          children: @config.sections
+        }]
+      }
+        @label "Sections grid"
+        @tier "internal"
+      sectionColumn : render-ui = {
+        type: box
+        fullWidth: true
+        children: [{
+          type: empty-state
+          icon: layout-dashboard
+          title: @config.emptyTitle
+          description: @config.emptyDescription
+          className: (if (== (array/len @config.sections) 0) "" hidden)
+        }, {
+          type: stack
+        direction: vertical
+          gap: lg
+          className: (if (== (array/len @config.sections) 0) hidden "")
+          children: @config.sections
+        }]
+      }
+        @label "Sections column"
+        @tier "internal"
+      commandContent : render-ui = {
+        type: stack
+        direction: vertical
+        gap: lg
+        children: [@trait.HomeHeader, @config.kpiRow, @config.actionRow, @config.sectionGrid, @config.shortcutTiles]
+      }
+        @label "Command layout"
+        @tier "internal"
+      briefingContent : render-ui = {
+        type: stack
+        direction: vertical
+        gap: lg
+        children: [@trait.HomeHeader, @config.kpiRow, {
+          type: split
+          ratio: "2:1"
+          gap: lg
+          align: start
+          children: [@config.sectionColumn, {
+            type: stack
+            direction: vertical
+            gap: lg
+            children: [@config.actionRow, @config.shortcutList]
+          }]
+        }]
+      }
+        @label "Briefing layout"
+        @tier "internal"
+      launchpadContent : render-ui = {
+        type: stack
+        direction: vertical
+        gap: lg
+        children: [@trait.HomeHeader, @config.kpiRow, @config.actionRow, @config.shortcutTiles, @config.sectionGrid]
+      }
+        @label "Launchpad layout"
+        @tier "internal"
+      spotlightContent : render-ui = {
+        type: stack
+        direction: vertical
+        gap: lg
+        children: [@trait.HomeHero, @config.kpiRow, @config.actionRow, @config.shortcutTiles, @config.sectionGrid]
+      }
+        @label "Spotlight layout"
+        @tier "internal"
+      conciergeContent : render-ui = {
+        type: stack
+        direction: vertical
+        gap: lg
+        children: [@trait.HomeWelcome, @config.kpiRow, @config.shortcutTiles, @config.actionRow, @config.sectionGrid]
+      }
+        @label "Concierge layout"
+        @tier "internal"
+    }
+  }
+
+  page "/home" as HomePage -> HomeRender
+}

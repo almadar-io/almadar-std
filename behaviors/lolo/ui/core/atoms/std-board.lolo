@@ -1,5 +1,7 @@
-app std-board "1.3.0"
-"std-board — generic N-column board primitive. `config.columns` is an array of column definitions ({ key, label, icon, variant }); the trait `array/map`s them on `BoardItemsLoaded` into `@entity.boards` where each board carries its filtered items + a count. The render is a `data-grid` over `@entity.boards` (one card per column) whose `renderItem` lambda nests a `data-list` over `@col.items` (the cards in that stage). N is config-driven — pass any number of columns; the outer `data-grid`'s `cols` is bound to `@config.gridCols` so the grid wraps if you exceed it. Topology = loading / viewing_board / viewing_card / adding / error — distinct from the cookie-cutter `loading/browsing/viewing_single/error` CRUD shape. App-level atoms (e.g. std-pipeline) compose std-board via `uses` and add a sibling persistor + extended source entity. `config.boardLook` switches the board body between the default N-column grid ('columns') and a Trello-style wide-column kanban ('kanban-classic'). `viewing_board` listens for REFETCH_QUERY/REFETCH_FILTER/REFETCH_PAGE (the std-search/std-filter/std-pagination wiring targets, no render on refetch — @entity.boards is bound reactively) and can optionally render its own search box (config.bodySearch, default false) and filter bar (config.filters, default []); no pagination control is rendered — a board's columns are not a paged list."
+app std-board [
+  version: "1.3.0",
+  description: "std-board — generic N-column board primitive. `config.columns` is an array of column definitions ({ key, label, icon, variant }); the trait `array/map`s them on `BoardItemsLoaded` into `@entity.boards` where each board carries its filtered items + a count. The render is a `data-grid` over `@entity.boards` (one card per column) whose `renderItem` lambda nests a `data-list` over `@col.items` (the cards in that stage). N is config-driven — pass any number of columns; the outer `data-grid`'s `cols` is bound to `@config.gridCols` so the grid wraps if you exceed it. Topology = loading / viewing_board / viewing_card / adding / error — distinct from the cookie-cutter `loading/browsing/viewing_single/error` CRUD shape. App-level atoms (e.g. std-pipeline) compose std-board via `uses` and add a sibling persistor + extended source entity. `config.boardLook` switches the board body between the default N-column grid ('columns') and a Trello-style wide-column kanban ('kanban-classic'). `viewing_board` listens for REFETCH_QUERY/REFETCH_FILTER/REFETCH_PAGE (the std-search/std-filter/std-pagination wiring targets, no render on refetch — @entity.boards is bound reactively) and can optionally render its own search box (config.bodySearch, default false) and filter bar (config.filters, default []); no pagination control is rendered — a board's columns are not a paged list."
+]
 type ObjectSpec = { id : string, label : string, value : string }
 type ColumnSpec = { key : string!, label : string!, icon : string, variant : string }
 type ItemAction = { label : string!, event : event, variant : primary | secondary | ghost | danger, icon : string, roles : [string] }
@@ -161,11 +163,11 @@ orbital BoardOrbital {
             entity: @entity.boards
             fields: []
             gap: sm
-            renderItem: (fn col {
+            renderItem: (fn (col colIndex) {
               action: MOVE_CARD
               actionPayload: { id: @entity.currentId, targetGroup: @col.key }
               icon: @col.icon
-              label: @col.label
+              label: (if (== (array/len @config.columnLabels) 0) @col.label (array/nth @config.columnLabels @colIndex))
               type: button
               variant: secondary
             })
@@ -546,6 +548,18 @@ orbital BoardOrbital {
         @label "Columns"
         @description "Board columns; each row's stage maps to a column key"
         @tier "domain"
+      cardEnter : "none" | "fade" | "rise" | "scale" | "slide" = none
+        @label "Card entrance"
+        @description "Animation a card plays when it appears in a column, so a moved card visibly arrives"
+        @tier "presentation"
+      draggable : boolean = true
+        @label "Drag cards"
+        @description "Let people drag cards between columns and reorder them; off shows the board read-only to the pointer (moves still work through events)"
+        @tier "presentation"
+      columnLabels : [string] = []
+        @label "Column labels"
+        @description "Optional labels in the same order as the columns, used only where the board is drawn, so they may be translated; empty shows each column's own label"
+        @tier "presentation"
       gridCols : number = 3
         @label "Grid columns"
         @description "Outer grid column count before the board wraps"
@@ -587,9 +601,9 @@ orbital BoardOrbital {
         @label "Group-by field"
         @description "Entity field whose value matches a column key — items are filtered into columns by it. Default 'stage'; set to 'status' (or any field) for entities that track state under a different name."
         @tier "presentation"
-      addPlacement : "floating" | "inline" = floating
+      addPlacement : "floating" | "inline" | "none" = floating
         @label "Add button placement"
-        @description "Where the add-item button sits: 'floating' (default) pins a floating action button to the screen corner; 'inline' renders an ordinary Add button above the columns, for a board embedded in a card or panel."
+        @description "Where the add-item button sits: 'floating' (default) pins a floating action button to the screen corner; 'inline' renders an ordinary Add button above the columns, for a board embedded in a card or panel.; none hides the add button (a read-only board)"
         @synonyms "add button position, floating add, inline add, add item button placement. user phrases: 'put the add button inside the board' / 'no floating button' -> inline"
         @tier "presentation"
       boardLook : "columns" | "kanban-classic" = columns
@@ -720,16 +734,16 @@ orbital BoardOrbital {
           type: stack
         }), {
           cols: @config.gridCols
-          dndRoot: true
+          dndRoot: @config.draggable
           entity: @entity.boards
           fields: []
           gap: md
-          renderItem: (fn col {
+          renderItem: (fn (col colIndex) {
             children: [{
               children: [{
                 align: center
                 children: [{ name: @col.icon, type: icon }, {
-                  content: @col.label
+                  content: (if (== (array/len @config.columnLabels) 0) @col.label (array/nth @config.columnLabels @colIndex))
                   type: typography
                   variant: h4
                 }, {
@@ -741,8 +755,8 @@ orbital BoardOrbital {
                 gap: xs
                 type: stack
               }, {
-                accepts: "*"
-                dragGroup: @col.key
+                accepts: (if @config.draggable "*" "")
+                dragGroup: (if @config.draggable @col.key "")
                 dropEvent: MOVE_CARD
                 entity: @col.items
                 fields: []
@@ -781,7 +795,8 @@ orbital BoardOrbital {
                   type: card
                 })
                 reorderEvent: REORDER_CARD
-                sortable: true
+                sortable: @config.draggable
+                itemEnter: @config.cardEnter
                 type: data-list
               }]
               direction: vertical
@@ -882,18 +897,18 @@ orbital BoardOrbital {
           type: stack
         }), {
           className: "w-full pb-2"
-          dndRoot: true
+          dndRoot: @config.draggable
           entity: @entity.boards
           fields: []
           gap: lg
           minCardWidth: 300
-          renderItem: (fn col {
+          renderItem: (fn (col colIndex) {
             children: [{
               children: [{
                 align: center
                 children: [{ name: @col.icon, type: icon }, {
                   className: flex-1
-                  content: @col.label
+                  content: (if (== (array/len @config.columnLabels) 0) @col.label (array/nth @config.columnLabels @colIndex))
                   type: typography
                   variant: h4
                 }, {
@@ -907,9 +922,9 @@ orbital BoardOrbital {
                 gap: sm
                 type: stack
               }, {
-                accepts: "*"
+                accepts: (if @config.draggable "*" "")
                 className: "p-card-md min-h-[120px]"
-                dragGroup: @col.key
+                dragGroup: (if @config.draggable @col.key "")
                 dropEvent: MOVE_CARD
                 entity: @col.items
                 fields: []
@@ -960,7 +975,8 @@ orbital BoardOrbital {
                   type: card
                 })
                 reorderEvent: REORDER_CARD
-                sortable: true
+                sortable: @config.draggable
+                itemEnter: @config.cardEnter
                 type: data-list
               }]
               direction: vertical

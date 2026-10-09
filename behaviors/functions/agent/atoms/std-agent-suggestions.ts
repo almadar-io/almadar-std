@@ -289,6 +289,195 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
         return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
       })(),
     } as Entity,
+    config: {
+      'acceptLabel': {
+        'default': 'Accept',
+        'label': 'Accept button',
+        'tier': 'presentation',
+        'type': 'string',
+      },
+      'actions': {
+        'default': [],
+        'description': 'When listed, a proposal carrying any other action, or none, is refused (SUGGESTION_REJECTED). Empty accepts any action.',
+        'items': {
+          'type': 'string',
+        },
+        'label': 'Which actions may a suggestion carry?',
+        'tier': 'domain',
+        'type': '[string]',
+      },
+      'analyzeLabel': {
+        'default': 'Look for suggestions',
+        'description': 'Shown in the empty inbox; asks the agent to look again.',
+        'label': 'Look-again button',
+        'tier': 'presentation',
+        'type': 'string',
+      },
+      'closeLabel': {
+        'default': 'Close',
+        'label': 'Close button',
+        'tier': 'presentation',
+        'type': 'string',
+      },
+      'cooldownMinutes': {
+        'default': 60,
+        'description': 'A trigger starts a run only when this long has passed since the person\'s last run. 0 runs on every trigger.',
+        'label': 'Minutes between proactive runs',
+        'tier': 'policy',
+        'type': 'number',
+      },
+      'dismissLabel': {
+        'default': 'Dismiss',
+        'label': 'Dismiss button',
+        'tier': 'presentation',
+        'type': 'string',
+      },
+      'emptyDescription': {
+        'default': '',
+        'label': 'Empty inbox hint',
+        'tier': 'presentation',
+        'type': 'string',
+      },
+      'emptyTitle': {
+        'default': 'No suggestions right now',
+        'label': 'Empty inbox title',
+        'tier': 'presentation',
+        'type': 'string',
+      },
+      'historyHref': {
+        'default': '/agent-suggestions/history',
+        'description': 'The page the inbox links to for accepted and dismissed suggestions; empty hides the link. The history page of an app that imports this orbital is its own page over its retargeted entity.',
+        'label': 'Where past suggestions are listed',
+        'tier': 'presentation',
+        'type': 'string',
+      },
+      'historyLabel': {
+        'default': 'Past suggestions',
+        'label': 'Past-suggestions link',
+        'tier': 'presentation',
+        'type': 'string',
+      },
+      'icon': {
+        'default': 'lightbulb',
+        'label': 'Inbox icon',
+        'tier': 'presentation',
+        'type': 'string',
+      },
+      'instructions': {
+        'default': 'You propose next steps to the signed-in person. Look things up with the tools, then call the proposal tool once for each suggestion worth making, with the reason in its body. When a proposal is refused as a duplicate or the pending limit is reached, do not propose again. Propose nothing when nothing is worth suggesting.',
+        'description': 'Standing instructions sent with every proactive run.',
+        'label': 'How should the agent behave?',
+        'tier': 'domain',
+        'type': 'string',
+      },
+      'kinds': {
+        'default': [],
+        'description': 'When listed, a proposal of any other kind is refused (SUGGESTION_REJECTED). Empty accepts any kind.',
+        'items': {
+          'type': 'string',
+        },
+        'label': 'Which kinds may be proposed?',
+        'tier': 'domain',
+        'type': '[string]',
+      },
+      'maxPending': {
+        'default': 5,
+        'description': 'A proposal is refused (SUGGESTION_LIMIT_REACHED) while this many are pending. 0 refuses every proposal.',
+        'label': 'How many suggestions may wait at once?',
+        'tier': 'policy',
+        'type': 'number',
+      },
+      'maxSteps': {
+        'default': 8,
+        'label': 'Model round-trips per run',
+        'tier': 'policy',
+        'type': 'number',
+      },
+      'panelSlot': {
+        'default': 'main',
+        'description': '`main` for the content of a launcher or page; `modal` or `drawer` for an overlay opened with OPEN (a notification bell).',
+        'label': 'Where the inbox renders',
+        'tier': 'presentation',
+        'type': 'slot',
+      },
+      'prompt': {
+        'default': 'Look at what I have been doing and propose what I could do next, one suggestion at a time.',
+        'description': 'The request each proactive run answers.',
+        'label': 'What does the agent look into?',
+        'tier': 'domain',
+        'type': 'string',
+      },
+      'startOpen': {
+        'default': true,
+        'description': 'Off for an overlay that waits for OPEN.',
+        'label': 'Show the inbox as soon as it mounts?',
+        'tier': 'presentation',
+        'type': 'boolean',
+      },
+      'title': {
+        'default': 'Suggestions',
+        'label': 'Inbox heading',
+        'tier': 'presentation',
+        'type': 'string',
+      },
+      'tools': {
+        'default': [
+          {
+            'event': 'AgentSuggestionProposer.PROPOSE_SUGGESTION',
+          },
+        ],
+        'description': 'The declared inputs it may fire and the entities it may read, as the signed-in person. An importing app restates the list with the proposal input addressed by its local orbital name (`{ event: Suggestions.AgentSuggestionProposer.PROPOSE_SUGGESTION }`), which the agent can never propose without.',
+        'items': {
+          'properties': {
+            'AgentToolInput': {
+              'name': 'AgentToolInput',
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': true,
+                  'type': 'EventAddress',
+                },
+              },
+              'type': 'object',
+            },
+            'AgentToolRead': {
+              'name': 'AgentToolRead',
+              'properties': {
+                'read': {
+                  'name': 'read',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'AgentToolScope': {
+              'name': 'AgentToolScope',
+              'properties': {
+                'scope': {
+                  'name': 'scope',
+                  'required': true,
+                  'type': 'string',
+                  'values': [
+                    'declared',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
+          },
+          'type': 'union',
+          'values': [
+            'AgentToolScope',
+            'AgentToolInput',
+            'AgentToolRead',
+          ],
+        },
+        'label': 'What may the agent do?',
+        'tier': 'domain',
+        'type': '[AgentTool]',
+      },
+    },
     traits: [
       {
         'category': 'lifecycle',

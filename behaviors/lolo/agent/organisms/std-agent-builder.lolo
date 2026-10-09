@@ -1,105 +1,164 @@
-app std-agent-builder "1.0.0"
-"Agent builder organism — plan, build, validate, fix a single orbital end-to-end."
+app std-agent-builder [
+  version: "2.0.0",
+  description: "Agent builder — turns a request into a working orbital built from an installed behavior. START { request, orbitalName } embeds the request with `call-service llm embed`, lists the installed behaviors under the `scope` registry folders (`behavior/catalog`), ranks them by cosine similarity to the request, and builds a program that mounts the best match's trait as the orbital's page (`quasiquote` + `program/eval`, written to the workspace's orbitals/). BUILD_COMPLETE { orbitalName, behavior } carries where the program was written; BUILD_FAILED { error, errors } carries the validator's issues as data. Headless apart from a status line."
+]
+;; @capabilities "build an orbital from a request, pick a behavior by meaning, generate a page, program evaluation"
 
-type OrbitalSpec = { orbitalName: string!, organism: string!, method: string!, deltaPrompt: string! }
+type CatalogHit = {
+  behavior : string!
+  traits : [trait]!
+  vectors : Map string [number]
+}
+type Built = {
+  behavior : string!
+}
+type BuildIssue = {
+  code : string!
+  message : string!
+}
 
 orbital AgentBuilderOrbital {
 
   entity BuilderProcess [runtime] {
+    id : string!
     request : string = ""
-    plan : string = ""
     orbitalName : string = ""
-    spec : OrbitalSpec = {}
-    validationResult : string = ""
-    fixPrompt : string = ""
-    status : "idle" | "done" = idle
+    queryVector : [number] = []
+    pick : trait = none
+    behavior : string = ""
+    error : string = ""
+    status : "idle" | "searching" | "building" | "done" | "failed" = idle
   }
 
   trait BuilderPipeline -> BuilderProcess [lifecycle, instance] {
+    config {
+      scope : [string] = ["almadar-std/ui/core/molecules"]
+        @label "Where to look for building blocks"
+        @description "Registry folders (`<prefix>/<topic>[/<tier>]`) the builder may pick from."
+        @tier "domain"
+    }
     initial: idle
 
     state idle {
       INIT -> idle
-        (set @entity.request "")
-        (set @entity.plan "")
-        (set @entity.orbitalName "")
-        (set @entity.validationResult "")
-        (set @entity.fixPrompt "")
         (set @entity.status idle)
-      START -> planning
+        (render-ui main <typography content="Ready to build." variant="caption" />)
+      START -> searching
         (set @entity.request ?request)
         (set @entity.orbitalName ?orbitalName)
-        (llm/generate @entity.request { emit: { success: PLANNED, failure: PLAN_FAILED } })
+        (set @entity.status searching)
+        (call-service llm embed { texts: [?request] } {
+          emit: { failure: BUILD_FAILED, success: REQUEST_EMBEDDED }
+        })
     }
 
-    state planning {
-      PLANNED -> done
-        (set @entity.plan ?result)
-        (behavior/instantiate @entity.orbitalName @entity.plan)
-        (validate/validate @entity.orbitalName)
+    state searching {
+      REQUEST_EMBEDDED -> searching when (> (array/len ?embeddings) 0)
+        (set @entity.queryVector (array/first ?embeddings))
+        (behavior/catalog { paths: @config.scope } {
+          emit: { failure: BUILD_FAILED, success: CATALOG_LISTED }
+        })
+      REQUEST_EMBEDDED -> failed when (= (array/len ?embeddings) 0)
+        (set @entity.error "The model returned no embedding")
+        (set @entity.status failed)
+        (render-ui main <typography content="Build failed: the model returned no embedding." variant="caption" />)
+        (emit BUILD_REJECTED { error: "The model returned no embedding", errors: [] })
+      CATALOG_LISTED -> building when (> (array/len ?result) 0)
+        (set @entity.pick (object/get (array/first (array/sort (array/map ?result (fn entry { trait: (array/first @entry.traits), score: (array/cosine (object/get @entry.vectors description) @entity.queryVector) })) score desc)) trait))
+        (set @entity.status building)
+        (program/eval (quasiquote {
+          name: (unquote @entity.orbitalName)
+          orbitals: [{
+            name: (unquote @entity.orbitalName)
+            entity: { name: "BuiltView", persistence: "runtime", fields: [{ name: "id", type: "string" }] }
+            traits: [{
+              name: "BuiltFrame"
+              scope: "instance"
+              linkedEntity: "BuiltView"
+              stateMachine: {
+                states: [{ name: "idle", isInitial: true }]
+                events: [{ key: "INIT", name: "Init" }]
+                transitions: [{ from: "idle", to: "idle", event: "INIT", effects: [["render-ui", "main", { type: "stack", children: [(unquote @entity.pick)] }]] }]
+              }
+            }]
+            pages: [{ name: "Built", path: "/", traits: [{ ref: "BuiltFrame" }] }]
+          }]
+        }) {
+          emit: { failure: BUILD_FAILED, success: BUILT }
+        })
+      CATALOG_LISTED -> failed when (= (array/len ?result) 0)
+        (set @entity.error "No building block in scope")
+        (set @entity.status failed)
+        (render-ui main <typography content="No building block in scope." variant="caption" />)
+      BUILD_FAILED -> failed
+        (set @entity.error ?error)
+        (set @entity.status failed)
+        (render-ui main <typography content={(str/concat "Build failed: " ?error)} variant="caption" />)
+    }
+
+    state building {
+      BUILT -> done
+        (set @entity.behavior (object/get ?result behavior))
         (set @entity.status done)
-        (emit BUILD_COMPLETE { orbitalName: @entity.orbitalName, plan: @entity.plan })
-      PLAN_FAILED -> done
-        (set @entity.plan "")
-        (behavior/instantiate @entity.orbitalName @entity.plan)
-        (validate/validate @entity.orbitalName)
-        (set @entity.status done)
-        (emit BUILD_COMPLETE { orbitalName: @entity.orbitalName, plan: @entity.plan })
+        (render-ui main <typography content={(str/concat "Built " (object/get ?result behavior))} variant="caption" />)
+        (emit BUILD_COMPLETE { orbitalName: @entity.orbitalName, behavior: (object/get ?result behavior) })
+      BUILD_FAILED -> failed
+        (set @entity.error ?error)
+        (set @entity.status failed)
+        (render-ui main <typography content={(str/concat "Build failed: " ?error)} variant="caption" />)
+        (emit BUILD_REJECTED { error: ?error, errors: ?errors })
     }
 
     state done {
       INIT -> done
         (set @entity.status done)
       RESET -> idle
-        (set @entity.request "")
-        (set @entity.plan "")
-        (set @entity.orbitalName "")
-        (set @entity.validationResult "")
-        (set @entity.fixPrompt "")
         (set @entity.status idle)
+        (set @entity.pick null)
+        (render-ui main <typography content="Ready to build." variant="caption" />)
+    }
+
+    state failed {
+      INIT -> failed
+        (set @entity.status failed)
+      RESET -> idle
+        (set @entity.status idle)
+        (set @entity.pick null)
+        (render-ui main <typography content="Ready to build." variant="caption" />)
     }
 
     emits {
-      BUILD_COMPLETE {
+      BUILD_COMPLETE -> external {
         orbitalName : string!
-        plan : string!
+        behavior : string!
       }
-      PLANNED {
-        result : string!
+      BUILD_REJECTED -> external {
+        error : string!
+        errors : [BuildIssue]
+      }
+      REQUEST_EMBEDDED {
+        embeddings : [[number]]!
+      }
+      CATALOG_LISTED {
+        result : [CatalogHit]!
+      }
+      BUILT {
+        result : Built!
+      }
+      BUILD_FAILED {
+        error : string!
+        errors : [BuildIssue]
       }
     }
 
     listens {
-      START {
+      START -> external {
         request : string!
         orbitalName : string!
       }
-      RETRY
-    }
-  }
-
-  trait BuilderListener -> BuilderProcess [lifecycle, instance] {
-    initial: waiting
-
-    state waiting {
-      INIT -> waiting
-        (set @entity.status idle)
-      BUILD_COMPLETE -> resolved
-        (set @entity.status done)
-    }
-
-    state resolved {
-      INIT -> resolved
-        (set @entity.status done)
-      RESET -> waiting
-        (set @entity.status idle)
-    }
-
-    listens {
-      BuilderPipeline.BUILD_COMPLETE -> BUILD_COMPLETE
       RESET
     }
   }
 
-  page "/agent-builder" as AgentBuilderPage -> BuilderPipeline, BuilderListener
+  page "/agent-builder" as AgentBuilderPage -> BuilderPipeline
 }

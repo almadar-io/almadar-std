@@ -46,12 +46,20 @@ export interface StdMediaSectionSectionActionClickedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMediaSectionConfig {
+  /** Default: `"none"` */
+  edgeBottom?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
+  /** Default: `"background"` */
+  edgeColor?: 'background' | 'muted' | 'surface' | 'gradient' | 'inverse';
+  /** Default: `"none"` */
+  edgeTop?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
   /** Default: `"end"` */
   firstMediaSide?: 'start' | 'end';
   /** Default: `[{"body":"Say what you want and see it take shape.","bullets":["Fast","Verified","Yours"],"heading":"Everything in one place"}]` */
   rows?: EntityRow[];
   /** Default: `"plain"` */
-  surface?: 'plain' | 'muted';
+  surface?: 'plain' | 'muted' | 'accent' | 'inverse';
+  /** Default: `false` */
+  texture?: boolean;
 }
 
 /**

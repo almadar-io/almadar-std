@@ -9,17 +9,12 @@
         "name": "FixLoop",
         "fields": [
           {
-            "name": "orbitalName",
-            "type": "string",
-            "required": false
-          },
-          {
-            "name": "errors",
+            "name": "issues",
             "type": "array",
             "required": false
           },
           {
-            "name": "fixPrompt",
+            "name": "fix",
             "type": "string",
             "required": false
           },
@@ -36,17 +31,37 @@
       {
         "name": "FixLoopExecution",
         "emittedEvents": [
-          "FIX_APPLIED",
-          "PROMPT_GENERATED"
+          "PROGRAM_VALID",
+          "FIX_PROPOSED",
+          "PROGRAM_EVALUATED",
+          "PROGRAM_INVALID",
+          "FIX_GENERATED",
+          "FIX_FAILED"
         ],
         "listenedEvents": [],
         "events": [
           {
-            "name": "FIX_APPLIED",
+            "name": "PROGRAM_VALID",
             "direction": "emit"
           },
           {
-            "name": "PROMPT_GENERATED",
+            "name": "FIX_PROPOSED",
+            "direction": "emit"
+          },
+          {
+            "name": "PROGRAM_EVALUATED",
+            "direction": "emit"
+          },
+          {
+            "name": "PROGRAM_INVALID",
+            "direction": "emit"
+          },
+          {
+            "name": "FIX_GENERATED",
+            "direction": "emit"
+          },
+          {
+            "name": "FIX_FAILED",
             "direction": "emit"
           },
           {
@@ -54,11 +69,7 @@
             "direction": "listen"
           },
           {
-            "name": "VALIDATE_ORBITAL",
-            "direction": "listen"
-          },
-          {
-            "name": "PROMPT_GENERATION_FAILED",
+            "name": "VALIDATE_PROGRAM",
             "direction": "listen"
           },
           {
@@ -70,72 +81,43 @@
         "capabilities": [],
         "linkedEntity": "FixLoop",
         "transitionEvents": [
+          "FIX_FAILED",
+          "FIX_GENERATED",
           "INIT",
-          "PROMPT_GENERATED",
-          "PROMPT_GENERATION_FAILED",
+          "PROGRAM_EVALUATED",
+          "PROGRAM_INVALID",
           "RESET",
-          "VALIDATE_ORBITAL"
+          "VALIDATE_PROGRAM"
         ],
         "definerKnobs": [],
         "effectRow": [
+          {
+            "kind": "call-service",
+            "resource": "llm.generate"
+          },
           {
             "kind": "emit",
-            "resource": "FIX_APPLIED"
+            "resource": "FIX_PROPOSED"
           },
           {
-            "kind": "llm/generate"
+            "kind": "emit",
+            "resource": "PROGRAM_VALID"
           },
           {
-            "kind": "set",
-            "resource": "@entity.errors"
+            "kind": "program/eval"
           },
           {
-            "kind": "set",
-            "resource": "@entity.fixPrompt"
-          },
-          {
-            "kind": "set",
-            "resource": "@entity.orbitalName"
+            "kind": "render-ui",
+            "resource": "main"
           },
           {
             "kind": "set",
-            "resource": "@entity.status"
+            "resource": "@entity.fix"
           },
           {
-            "kind": "validate/validate"
-          }
-        ]
-      },
-      {
-        "name": "FixLoopListener",
-        "emittedEvents": [],
-        "listenedEvents": [
-          "FIX_APPLIED"
-        ],
-        "events": [
-          {
-            "name": "INIT",
-            "direction": "listen"
+            "kind": "set",
+            "resource": "@entity.issues"
           },
-          {
-            "name": "FIX_APPLIED",
-            "direction": "listen"
-          },
-          {
-            "name": "RESET",
-            "direction": "listen"
-          }
-        ],
-        "overridableConfigKeys": [],
-        "capabilities": [],
-        "linkedEntity": "FixLoop",
-        "transitionEvents": [
-          "FIX_APPLIED",
-          "INIT",
-          "RESET"
-        ],
-        "definerKnobs": [],
-        "effectRow": [
           {
             "kind": "set",
             "resource": "@entity.status"
@@ -151,14 +133,17 @@
       }
     ],
     "emittedEvents": [
-      "FIX_APPLIED",
-      "PROMPT_GENERATED"
+      "FIX_FAILED",
+      "FIX_GENERATED",
+      "FIX_PROPOSED",
+      "PROGRAM_EVALUATED",
+      "PROGRAM_INVALID",
+      "PROGRAM_VALID"
     ],
-    "listenedEvents": [
-      "FIX_APPLIED"
-    ],
+    "listenedEvents": [],
     "exposure": "both",
     "provenance": "authored",
+    "capabilities": "program repair, fix validation errors, evaluate a program, repair suggestion",
     "sourceValid": true
   }
 ]
