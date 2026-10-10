@@ -18,11 +18,15 @@
 
 import { resolveStdDataDir } from './data-dir.js';
 
+/** Each knob's vector as int8, all views over one shared buffer — the on-disk
+ *  bytes, never widened to a float per dimension (that was 8× the memory and
+ *  OOM-killed the builder server). The per-vector scale is dropped, so a
+ *  vector here is a direction: compare it with cosine similarity only. */
 export interface KnobEmbeddingsManifest {
   version: string;
   model: string;
   dimensions: number;
-  vectors: Record<string, ReadonlyArray<number>>;
+  vectors: Readonly<Record<string, Int8Array>>;
 }
 
 /** Int8-quantized vector: `d` = base64 of one signed byte per dimension,
@@ -56,33 +60,67 @@ export interface StoredKnobEmbeddingsFile {
 // concurrent-first-load race.
 let pending: Promise<KnobEmbeddingsManifest | null> | null = null;
 
-function decodeVector(stored: StoredKnobVector): ReadonlyArray<number> {
-  if (!('d' in stored)) return stored;
-  const bytes = Buffer.from(stored.d, 'base64');
-  const out = new Array<number>(bytes.length);
-  for (let i = 0; i < bytes.length; i++) {
-    out[i] = (bytes.readInt8(i) * stored.s) / 127;
+/** Write `stored` into `slot` as int8; false when its length is not `slot.length`. */
+function writeVector(stored: StoredKnobVector, slot: Int8Array): boolean {
+  if ('d' in stored) {
+    const bytes = Buffer.from(stored.d, 'base64');
+    if (bytes.length !== slot.length) return false;
+    slot.set(new Int8Array(bytes.buffer, bytes.byteOffset, bytes.length));
+    return true;
   }
-  return out;
+  if (stored.length !== slot.length) return false;
+  let maxAbs = 0;
+  for (const v of stored) maxAbs = Math.max(maxAbs, Math.abs(v));
+  for (let i = 0; i < stored.length; i++) {
+    slot[i] = maxAbs === 0 ? 0 : Math.round((stored[i] * 127) / maxAbs);
+  }
+  return true;
 }
 
-/** Reconstruct the public `key → vector` map from either on-disk shape.
- *  Interned table entries are decoded ONCE and shared across every key that
- *  points at them. */
-function reconstructVectors(parsed: StoredKnobEmbeddingsFile): Record<string, ReadonlyArray<number>> {
-  const vectors: Record<string, ReadonlyArray<number>> = {};
-  if (parsed.table && parsed.keys) {
-    const decoded = parsed.table.map(decodeVector);
-    for (const [key, idx] of Object.entries(parsed.keys)) {
-      const vec = decoded[idx];
-      if (vec) vectors[key] = vec;
+/**
+ * Decode a parsed `knob-embeddings.json` into int8 vectors over one buffer
+ * sized (stored vectors × dimensions). Interned table entries are written
+ * once and shared by every key that points at them. Returns `null` for a
+ * file missing its model, dimensions or vectors, or holding a vector whose
+ * length is not `dimensions`.
+ */
+export function decodeKnobEmbeddingsFile(parsed: Partial<StoredKnobEmbeddingsFile>): KnobEmbeddingsManifest | null {
+  const interned = typeof parsed?.table === 'object' && typeof parsed?.keys === 'object';
+  const nonInterned = typeof parsed?.vectors === 'object' && parsed.vectors !== null;
+  if (typeof parsed?.model !== 'string' || typeof parsed?.dimensions !== 'number' || (!interned && !nonInterned)) {
+    return null;
+  }
+  const dims = parsed.dimensions;
+  const stored: StoredKnobVector[] = interned ? (parsed.table ?? []) : Object.values(parsed.vectors ?? {});
+  const backing = new Int8Array(stored.length * dims);
+  const slots: Int8Array[] = [];
+  for (let i = 0; i < stored.length; i++) {
+    const slot = backing.subarray(i * dims, (i + 1) * dims);
+    if (!writeVector(stored[i], slot)) return null;
+    slots.push(slot);
+  }
+  const vectors: Record<string, Int8Array> = {};
+  if (interned) {
+    for (const [key, idx] of Object.entries(parsed.keys ?? {})) {
+      const slot = slots[idx];
+      if (slot) vectors[key] = slot;
     }
-    return vectors;
+  } else {
+    Object.keys(parsed.vectors ?? {}).forEach((key, i) => {
+      vectors[key] = slots[i];
+    });
   }
-  for (const [key, stored] of Object.entries(parsed.vectors ?? {})) {
-    vectors[key] = decodeVector(stored);
+  return { version: parsed.version ?? '', model: parsed.model, dimensions: dims, vectors };
+}
+
+/** Read and decode a `knob-embeddings.json` at `path`; `null` when it is missing or invalid. */
+export async function readKnobEmbeddingsFile(path: string): Promise<KnobEmbeddingsManifest | null> {
+  try {
+    const { readFileSync } = await import('fs');
+    return decodeKnobEmbeddingsFile(JSON.parse(readFileSync(path, 'utf-8')) as Partial<StoredKnobEmbeddingsFile>);
+  } catch {
+    return null;
   }
-  return vectors;
 }
 
 function loadManifest(): Promise<KnobEmbeddingsManifest | null> {
@@ -94,26 +132,8 @@ function loadManifest(): Promise<KnobEmbeddingsManifest | null> {
 }
 
 async function loadManifestUncached(): Promise<KnobEmbeddingsManifest | null> {
-  try {
-    const { readFileSync } = await import('fs');
-    const { resolve } = await import('path');
-    const dir = await resolveStdDataDir();
-    const raw = readFileSync(resolve(dir, 'knob-embeddings.json'), 'utf-8');
-    const parsed = JSON.parse(raw) as StoredKnobEmbeddingsFile;
-    const interned = typeof parsed?.table === 'object' && typeof parsed?.keys === 'object';
-    const nonInterned = typeof parsed?.vectors === 'object' && parsed.vectors !== null;
-    if (typeof parsed?.model !== 'string' || typeof parsed?.dimensions !== 'number' || (!interned && !nonInterned)) {
-      return null;
-    }
-    return {
-      version: parsed.version,
-      model: parsed.model,
-      dimensions: parsed.dimensions,
-      vectors: reconstructVectors(parsed),
-    };
-  } catch {
-    return null;
-  }
+  const { resolve } = await import('path');
+  return readKnobEmbeddingsFile(resolve(await resolveStdDataDir(), 'knob-embeddings.json'));
 }
 
 /**
