@@ -30,13 +30,20 @@ const ALIAS = 'UiImportSourcePicker';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiImportSourcePickerEventKey = 'INIT' | 'SELECT';
+export type StdUiImportSourcePickerEventKey = 'FILES_SELECTED' | 'INIT' | 'SELECT';
 
 /**
  * Payload shape for the `SELECT` event.
  */
 export interface StdUiImportSourcePickerSelectPayload {
   sourceId?: string;
+}
+
+/**
+ * Payload shape for the `FILES_SELECTED` event.
+ */
+export interface StdUiImportSourcePickerFilesSelectedPayload {
+  files?: EntityRow[];
 }
 
 /**
@@ -62,6 +69,8 @@ export interface StdUiImportSourcePickerConfig {
   enterDelay?: number;
   lang?: string;
   moreSources?: PatternValue;
+  /** Default: `"FILES_SELECTED"` */
+  onFilesSelected?: string;
   /** Default: `"SELECT"` */
   onSelect?: string;
   role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';

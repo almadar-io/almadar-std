@@ -27,6 +27,7 @@ orbital TreeNodeOrbital {
         })
       INIT -> loading
         (fetch TreeNode {
+          filter: (or ["=", @config.initialFilterField, ""] ["=", (object/get @entity @config.initialFilterField), @config.initialFilterValue])
           emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
         })
         (render-ui main {
@@ -144,6 +145,7 @@ orbital TreeNodeOrbital {
     state browsing {
       INIT -> loading
         (fetch TreeNode {
+          filter: (or ["=", @config.initialFilterField, ""] ["=", (object/get @entity @config.initialFilterField), @config.initialFilterValue])
           emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
         })
         (render-ui main {
@@ -289,6 +291,7 @@ orbital TreeNodeOrbital {
     state error {
       INIT -> loading
         (fetch TreeNode {
+          filter: (or ["=", @config.initialFilterField, ""] ["=", (object/get @entity @config.initialFilterField), @config.initialFilterValue])
           emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
         })
         (render-ui main {
@@ -301,6 +304,7 @@ orbital TreeNodeOrbital {
       ;; delivers it, so the affordance must target a first-class user event
       RETRY -> loading
         (fetch TreeNode {
+          filter: (or ["=", @config.initialFilterField, ""] ["=", (object/get @entity @config.initialFilterField), @config.initialFilterValue])
           emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
         })
         (render-ui main {
@@ -393,6 +397,15 @@ orbital TreeNodeOrbital {
         @label "Section title"
         @description "Heading shown above the tree"
         @tier "presentation"
+      initialFilterField : string = ""
+        @label "Which field does the first load filter on?"
+        @description "Name the field the initial load filters on, paired with initialFilterValue; blank loads every node. REFETCH_FILTER then supplies later selections."
+        @synonyms "initial filter, first load filter, start filtered"
+        @tier "domain"
+      initialFilterValue : string = ""
+        @label "What value does the first load filter for?"
+        @description "The value initialFilterField must equal on the first load"
+        @tier "domain"
       labelField : string = name
         @label "Label column"
         @description "Entity field rendered as each node's label. Config-driven on purpose: the trait-level `fields {}` remap is compiled-path-only (the JS runtime never applies it), so a rebind names its columns here and both execution paths agree."

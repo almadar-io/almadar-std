@@ -935,6 +935,31 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
             {
               'effects': [
                 [
+                  'fetch',
+                  ('Signature' satisfies _StdSignatureCaptureEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SignatureLoadFailed',
+                      'success': 'SignatureLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'skeleton',
+                    'variant': 'card',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'submitting',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
                   'render-ui',
                   'main',
                   {

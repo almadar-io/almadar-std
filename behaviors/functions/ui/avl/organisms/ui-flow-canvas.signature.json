@@ -1,0 +1,1077 @@
+[
+  {
+    "organism": "ui-flow-canvas",
+    "orbital": "FlowCanvasOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ui/avl/organisms/ui-flow-canvas.ts",
+    "entities": [
+      {
+        "name": "FlowCanvasItem",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "FlowCanvasRender",
+        "emittedEvents": [
+          "NODE_CLICK",
+          "TRAIT_VIEW_CHANGE",
+          "OPEN_BEHAVIOR",
+          "FOCUS_CHANGE",
+          "SCHEMA_CHANGE",
+          "PATTERN_DELETE",
+          "EVENT_WIRE",
+          "ORBITAL_HOVER",
+          "NODE_SELECT",
+          "ZOOM_CHANGE",
+          "POSITIONS_CHANGE",
+          "SELECTED_NODE_CHANGE",
+          "SELECTED_PATTERN_CHANGE"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "NODE_CLICK",
+            "direction": "emit",
+            "description": "onNodeClick prop",
+            "tier": "essential"
+          },
+          {
+            "name": "TRAIT_VIEW_CHANGE",
+            "direction": "emit",
+            "description": "onTraitViewChange prop",
+            "tier": "essential"
+          },
+          {
+            "name": "OPEN_BEHAVIOR",
+            "direction": "emit",
+            "description": "Dependencies lens: emits UI:{openBehaviorEvent} with { name } to open a selected behavior's source.",
+            "tier": "essential"
+          },
+          {
+            "name": "FOCUS_CHANGE",
+            "direction": "emit",
+            "description": "Fired when the focused orbital, the scope, or the focused card's state changes.",
+            "tier": "essential"
+          },
+          {
+            "name": "SCHEMA_CHANGE",
+            "direction": "emit",
+            "description": "Called when the user edits the schema via the inspector.",
+            "tier": "essential"
+          },
+          {
+            "name": "PATTERN_DELETE",
+            "direction": "emit",
+            "description": "Called when the user presses Delete/Backspace with patterns selected (all of a multi-select).",
+            "tier": "essential"
+          },
+          {
+            "name": "EVENT_WIRE",
+            "direction": "emit",
+            "description": "Called when the user drags from a source handle to a target handle (event wiring).",
+            "tier": "essential"
+          },
+          {
+            "name": "ORBITAL_HOVER",
+            "direction": "emit",
+            "description": "Hover handler for overview-level orbital nodes. Fires with the orbital name on enter and `null` on leave. Reserved for the upcoming trace tooltip: consumers will use it to anchor a popover that shows the subagent's live trace + reasoning for the hovered orbital.",
+            "tier": "essential"
+          },
+          {
+            "name": "NODE_SELECT",
+            "direction": "emit",
+            "description": "Called when the user clicks a node in overview level (for composition hints).",
+            "tier": "essential"
+          },
+          {
+            "name": "ZOOM_CHANGE",
+            "direction": "emit",
+            "description": "onZoomChange prop",
+            "tier": "essential"
+          },
+          {
+            "name": "POSITIONS_CHANGE",
+            "direction": "emit",
+            "description": "Fired on node drag-stop and card resize with the full {id → placement} map of the current node set, so the consumer can persist the arrangement.",
+            "tier": "essential"
+          },
+          {
+            "name": "SELECTED_NODE_CHANGE",
+            "direction": "emit",
+            "description": "Fired whenever the internal `selectedNode` changes — select, clear-on- escape, clear-on-level-change, and pattern-selection sync all route through this. Lets a consumer mirror selection into a persistent properties panel rendered outside the canvas (see `externalInspector`).",
+            "tier": "essential"
+          },
+          {
+            "name": "SELECTED_PATTERN_CHANGE",
+            "direction": "emit",
+            "description": "Fired whenever the in-node pattern selection changes (a pattern click inside `OrbPreviewNode`, cleared on background click / Escape / pattern delete). `PatternSelectionContext` is internal to this component's own render tree, so an externally-rendered `OrbInspector` (see `externalInspector`) has no other way to learn which pattern the user picked — pass this straight through to `OrbInspector`'s `selectedPattern` prop to keep Design-tab prop editing working outside the canvas.",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "animated",
+            "type": "boolean",
+            "label": "Animated",
+            "description": "animated prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "behaviorMeta",
+            "type": "Map<string,FlowCanvasBehaviorMetaValue>",
+            "default": {
+              "item": {
+                "layer": "Layer"
+              }
+            },
+            "label": "Behavior Meta",
+            "description": "Behavior layer metadata for node styling (layer color bands).",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "layer": {
+                  "name": "layer",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "label": "Class Name",
+            "description": "className prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "color",
+            "type": "string",
+            "label": "Color",
+            "description": "color prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "editable",
+            "type": "boolean",
+            "label": "Editable",
+            "description": "Enable editing in the inspector. When true, fields become inputs.",
+            "tier": "presentation"
+          },
+          {
+            "key": "enter",
+            "type": "string",
+            "label": "Enter",
+            "description": "How this element animates in when it mounts (theme-styled); overrides the theme's default slot entry. `none` opts out.",
+            "tier": "presentation",
+            "enumValues": [
+              "none",
+              "fade",
+              "rise",
+              "scale",
+              "slide"
+            ]
+          },
+          {
+            "key": "enterDelay",
+            "type": "number",
+            "label": "Enter Delay",
+            "description": "Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.",
+            "tier": "presentation"
+          },
+          {
+            "key": "externalInspector",
+            "type": "boolean",
+            "default": false,
+            "label": "External Inspector",
+            "description": "When true, FlowCanvas does not render its inline `OrbInspector` — the consumer is expected to render one externally, fed by `onSelectedNodeChange` + `onSelectedPatternChange`. Selection highlighting, keyboard delete, and every other behavior is unchanged. Default `false` preserves the built-in inline panel.",
+            "tier": "presentation"
+          },
+          {
+            "key": "focusTarget",
+            "type": "FlowCanvasFocusTarget",
+            "label": "Focus Target",
+            "description": "focusTarget prop",
+            "tier": "presentation",
+            "properties": {
+              "name": {
+                "name": "name",
+                "required": true,
+                "type": "string"
+              },
+              "type": {
+                "name": "type",
+                "required": true,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "focusedOrbital",
+            "type": "string",
+            "label": "Focused Orbital",
+            "description": "Focus this orbital (e.g. picked in a Layers panel); changing it moves the focus without remounting.",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "scalar",
+            "default": 500,
+            "label": "Height",
+            "description": "height prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "initialLevel",
+            "type": "string",
+            "label": "Initial Level",
+            "description": "`trait-expanded`: one card per trait of `initialOrbital` (cosmic). Default: orbital cards.",
+            "tier": "presentation",
+            "enumValues": [
+              "overview",
+              "trait-expanded",
+              "system"
+            ]
+          },
+          {
+            "key": "initialOrbital",
+            "type": "string",
+            "label": "Initial Orbital",
+            "description": "The orbital cards open on (local view) — or, with `initialLevel='trait-expanded'`, the orbital whose traits are shown.",
+            "tier": "presentation"
+          },
+          {
+            "key": "initialSelectedNode",
+            "type": "FlowCanvasInitialSelectedNode",
+            "label": "Initial Selected Node",
+            "description": "Pre-select a node on mount (opens OrbInspector).",
+            "tier": "presentation",
+            "properties": {
+              "_fullSchema": {
+                "name": "_fullSchema",
+                "required": false,
+                "type": "SExpr"
+              },
+              "bandCount": {
+                "name": "bandCount",
+                "required": false,
+                "type": "number"
+              },
+              "bandKind": {
+                "name": "bandKind",
+                "required": false,
+                "type": "string",
+                "values": [
+                  "connected",
+                  "standalone"
+                ]
+              },
+              "cardLabel": {
+                "name": "cardLabel",
+                "required": false,
+                "type": "string",
+                "values": [
+                  "screen"
+                ]
+              },
+              "cardWidth": {
+                "name": "cardWidth",
+                "required": false,
+                "type": "number"
+              },
+              "dependencyColumn": {
+                "name": "dependencyColumn",
+                "required": false,
+                "type": "string",
+                "values": [
+                  "app",
+                  "own",
+                  "io",
+                  "std",
+                  "primitive",
+                  "unknown",
+                  "client",
+                  "host",
+                  "service",
+                  "store",
+                  "external"
+                ]
+              },
+              "dependencyRole": {
+                "name": "dependencyRole",
+                "required": false,
+                "type": "string",
+                "values": [
+                  "selected",
+                  "upstream",
+                  "downstream",
+                  "both",
+                  "dim"
+                ]
+              },
+              "effectTypes": {
+                "name": "effectTypes",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "emits": {
+                "name": "emits",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "enteredBy": {
+                "name": "enteredBy",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "entityName": {
+                "name": "entityName",
+                "required": false,
+                "type": "string"
+              },
+              "eventSources": {
+                "name": "eventSources",
+                "required": true,
+                "type": "array",
+                "items": {
+                  "properties": {
+                    "event": {
+                      "name": "event",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "label": {
+                      "name": "label",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "path": {
+                      "name": "path",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "patternType": {
+                      "name": "patternType",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "payloadFields": {
+                      "name": "payloadFields",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "properties": {
+                          "name": {
+                            "name": "name",
+                            "required": true,
+                            "type": "string"
+                          },
+                          "required": {
+                            "name": "required",
+                            "required": false,
+                            "type": "boolean"
+                          },
+                          "type": {
+                            "name": "type",
+                            "required": true,
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "positionHint": {
+                      "name": "positionHint",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "fieldCount": {
+                "name": "fieldCount",
+                "required": false,
+                "type": "number"
+              },
+              "flowRenderPieces": {
+                "name": "flowRenderPieces",
+                "required": false,
+                "type": "number"
+              },
+              "flowTraits": {
+                "name": "flowTraits",
+                "required": false,
+                "type": "number"
+              },
+              "focused": {
+                "name": "focused",
+                "required": false,
+                "type": "boolean"
+              },
+              "fromState": {
+                "name": "fromState",
+                "required": false,
+                "type": "string"
+              },
+              "guard": {
+                "name": "guard",
+                "required": false,
+                "type": "SExpr"
+              },
+              "kind": {
+                "name": "kind",
+                "required": false,
+                "type": "string",
+                "values": [
+                  "trait-card",
+                  "system-orbital",
+                  "system-band",
+                  "dependency",
+                  "dependency-column"
+                ]
+              },
+              "layer": {
+                "name": "layer",
+                "required": false,
+                "type": "string"
+              },
+              "linkedEntity": {
+                "name": "linkedEntity",
+                "required": false,
+                "type": "string"
+              },
+              "listens": {
+                "name": "listens",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "orbitalName": {
+                "name": "orbitalName",
+                "required": true,
+                "type": "string"
+              },
+              "pageRoutes": {
+                "name": "pageRoutes",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "patterns": {
+                "name": "patterns",
+                "required": true,
+                "type": "array",
+                "items": {
+                  "properties": {
+                    "pattern": {
+                      "name": "pattern",
+                      "required": true,
+                      "type": "SExpr"
+                    },
+                    "slot": {
+                      "name": "slot",
+                      "required": true,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "persistence": {
+                "name": "persistence",
+                "required": false,
+                "type": "string"
+              },
+              "sourceSchemaName": {
+                "name": "sourceSchemaName",
+                "required": false,
+                "type": "string"
+              },
+              "stateName": {
+                "name": "stateName",
+                "required": false,
+                "type": "string"
+              },
+              "stateRole": {
+                "name": "stateRole",
+                "required": false,
+                "type": "string",
+                "values": [
+                  "initial",
+                  "terminal",
+                  "hub",
+                  "default"
+                ]
+              },
+              "status": {
+                "name": "status",
+                "required": false,
+                "type": "string",
+                "values": [
+                  "idle",
+                  "running",
+                  "success",
+                  "error"
+                ]
+              },
+              "toState": {
+                "name": "toState",
+                "required": false,
+                "type": "string"
+              },
+              "traitCount": {
+                "name": "traitCount",
+                "required": false,
+                "type": "number"
+              },
+              "traitName": {
+                "name": "traitName",
+                "required": false,
+                "type": "string"
+              },
+              "transitionEvent": {
+                "name": "transitionEvent",
+                "required": false,
+                "type": "string"
+              },
+              "transitions": {
+                "name": "transitions",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "properties": {
+                    "event": {
+                      "name": "event",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "fromState": {
+                      "name": "fromState",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "toState": {
+                      "name": "toState",
+                      "required": true,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "unitMetric": {
+                "name": "unitMetric",
+                "required": false,
+                "type": "string"
+              },
+              "unitStatus": {
+                "name": "unitStatus",
+                "required": false,
+                "type": "string",
+                "values": [
+                  "ok",
+                  "degraded",
+                  "down",
+                  "idle"
+                ]
+              },
+              "wireEvents": {
+                "name": "wireEvents",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
+            "key": "initialTrait",
+            "type": "string",
+            "label": "Initial Trait",
+            "description": "initialTrait prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "layoutHint",
+            "type": "string",
+            "label": "Layout Hint",
+            "description": "Layout hint: 'pipeline' renders nodes left-to-right, 'grid' (default) uses sqrt-based grid.",
+            "tier": "presentation",
+            "enumValues": [
+              "pipeline",
+              "grid"
+            ]
+          },
+          {
+            "key": "nodePositions",
+            "type": "Map<string,FlowCanvasNodePositionsValue>",
+            "default": {
+              "item": {
+                "width": 1,
+                "x": 1,
+                "y": 1
+              }
+            },
+            "label": "Node Positions",
+            "description": "Persisted node positions keyed by node id. When the node set changes (level/schema switch), any id present here overrides the computed layout position, restoring a user's manual drag arrangement. Node ids are unique per view level, so a single flat map covers overview + expanded. A saved `width` restores a card frame the designer resized.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "width": {
+                  "name": "width",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "onEventWire",
+            "type": "event",
+            "default": "EVENT_WIRE",
+            "label": "On Event Wire",
+            "description": "Called when the user drags from a source handle to a target handle (event wiring).",
+            "tier": "presentation"
+          },
+          {
+            "key": "onFocusChange",
+            "type": "event",
+            "default": "FOCUS_CHANGE",
+            "label": "On Focus Change",
+            "description": "Fired when the focused orbital, the scope, or the focused card's state changes.",
+            "tier": "presentation"
+          },
+          {
+            "key": "onNodeClick",
+            "type": "event",
+            "default": "NODE_CLICK",
+            "label": "On Node Click",
+            "description": "onNodeClick prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "onNodeSelect",
+            "type": "event",
+            "default": "NODE_SELECT",
+            "label": "On Node Select",
+            "description": "Called when the user clicks a node in overview level (for composition hints).",
+            "tier": "presentation"
+          },
+          {
+            "key": "onOrbitalHover",
+            "type": "event",
+            "default": "ORBITAL_HOVER",
+            "label": "On Orbital Hover",
+            "description": "Hover handler for overview-level orbital nodes. Fires with the orbital name on enter and `null` on leave. Reserved for the upcoming trace tooltip: consumers will use it to anchor a popover that shows the subagent's live trace + reasoning for the hovered orbital.",
+            "tier": "presentation"
+          },
+          {
+            "key": "onPatternDelete",
+            "type": "event",
+            "default": "PATTERN_DELETE",
+            "label": "On Pattern Delete",
+            "description": "Called when the user presses Delete/Backspace with patterns selected (all of a multi-select).",
+            "tier": "presentation"
+          },
+          {
+            "key": "onPositionsChange",
+            "type": "event",
+            "default": "POSITIONS_CHANGE",
+            "label": "On Positions Change",
+            "description": "Fired on node drag-stop and card resize with the full {id → placement} map of the current node set, so the consumer can persist the arrangement.",
+            "tier": "presentation"
+          },
+          {
+            "key": "onSchemaChange",
+            "type": "event",
+            "default": "SCHEMA_CHANGE",
+            "label": "On Schema Change",
+            "description": "Called when the user edits the schema via the inspector.",
+            "tier": "presentation"
+          },
+          {
+            "key": "onSelectedNodeChange",
+            "type": "event",
+            "default": "SELECTED_NODE_CHANGE",
+            "label": "On Selected Node Change",
+            "description": "Fired whenever the internal `selectedNode` changes — select, clear-on- escape, clear-on-level-change, and pattern-selection sync all route through this. Lets a consumer mirror selection into a persistent properties panel rendered outside the canvas (see `externalInspector`).",
+            "tier": "presentation"
+          },
+          {
+            "key": "onSelectedPatternChange",
+            "type": "event",
+            "default": "SELECTED_PATTERN_CHANGE",
+            "label": "On Selected Pattern Change",
+            "description": "Fired whenever the in-node pattern selection changes (a pattern click inside `OrbPreviewNode`, cleared on background click / Escape / pattern delete). `PatternSelectionContext` is internal to this component's own render tree, so an externally-rendered `OrbInspector` (see `externalInspector`) has no other way to learn which pattern the user picked — pass this straight through to `OrbInspector`'s `selectedPattern` prop to keep Design-tab prop editing working outside the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "onTraitViewChange",
+            "type": "event",
+            "default": "TRAIT_VIEW_CHANGE",
+            "label": "On Trait View Change",
+            "description": "onTraitViewChange prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "onZoomChange",
+            "type": "event",
+            "default": "ZOOM_CHANGE",
+            "label": "On Zoom Change",
+            "description": "onZoomChange prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "openBehaviorEvent",
+            "type": "event",
+            "default": "OPEN_BEHAVIOR",
+            "label": "Open Behavior Event",
+            "description": "Dependencies lens: emits UI:{openBehaviorEvent} with { name } to open a selected behavior's source.",
+            "tier": "presentation"
+          },
+          {
+            "key": "orbitalStatus",
+            "type": "Map<string,string>",
+            "default": {},
+            "label": "Orbital Status",
+            "description": "Per-orbital generation status. Keyed by orbital name. Drives the spinner + accent border treatment on the overview node and (future) the hover trace surface. Defaults to `'idle'` for missing entries. Consumers derive this from agent subagent_start/complete SSE events.",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "scene",
+            "type": "FlowCanvasScene",
+            "label": "Scene",
+            "description": "With `initialLevel='trait-expanded'`: played steps lighting each trait card's state machine.",
+            "tier": "presentation",
+            "properties": {
+              "cursor": {
+                "name": "cursor",
+                "required": true,
+                "type": "number"
+              },
+              "steps": {
+                "name": "steps",
+                "required": true,
+                "type": "array",
+                "items": {
+                  "properties": {
+                    "from": {
+                      "name": "from",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "orbital": {
+                      "name": "orbital",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "trait": {
+                      "name": "trait",
+                      "required": true,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            }
+          },
+          {
+            "key": "schema",
+            "type": "SExpr",
+            "label": "Schema",
+            "description": "schema prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "skeleton",
+            "type": "string",
+            "label": "Skeleton",
+            "description": "Skeleton shown while this element's server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.",
+            "tier": "presentation",
+            "enumValues": [
+              "header",
+              "table",
+              "list",
+              "grid",
+              "detail",
+              "stats",
+              "form",
+              "card",
+              "text",
+              "none"
+            ]
+          },
+          {
+            "key": "stateCoverage",
+            "type": "Map<string,string>",
+            "default": {
+              "item": "Item"
+            },
+            "label": "State Coverage",
+            "description": "stateCoverage prop",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "systemDependencies",
+            "type": "FlowCanvasSystemDependencies",
+            "label": "System Dependencies",
+            "description": "With `initialLevel='system'`: the app's imports, for the Dependencies lens (absent: Events only).",
+            "tier": "presentation",
+            "properties": {
+              "behaviors": {
+                "name": "behaviors",
+                "required": true,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "imports": {
+                      "name": "imports",
+                      "required": true,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "layer": {
+                      "name": "layer",
+                      "required": true,
+                      "type": "string",
+                      "values": [
+                        "io",
+                        "std",
+                        "primitive",
+                        "unknown"
+                      ]
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "orbitals": {
+                "name": "orbitals",
+                "required": true,
+                "type": "object",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "key": "systemMap",
+            "type": "FlowCanvasSystemMap",
+            "label": "System Map",
+            "description": "With `initialLevel='system'`: what an orbital chip does (drill in, hover preview, open code, preview).",
+            "tier": "presentation",
+            "properties": {
+              "highlighted": {
+                "name": "highlighted",
+                "required": false,
+                "type": "string"
+              },
+              "openCodeEvent": {
+                "name": "openCodeEvent",
+                "required": false,
+                "type": "string"
+              },
+              "previewEvent": {
+                "name": "previewEvent",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "tools",
+            "type": "[string]",
+            "default": [],
+            "label": "Tools",
+            "description": "Editing tools the canvas turns on (a persona's shell manifest declares them); all by default.",
+            "tier": "presentation",
+            "items": {
+              "type": "string",
+              "values": [
+                "multiSelect",
+                "clipboard",
+                "inlineText",
+                "zoomToSelection",
+                "designHandles",
+                "autoLayout",
+                "sizeLimits",
+                "absolute",
+                "guides",
+                "measure"
+              ]
+            }
+          },
+          {
+            "key": "traitView",
+            "type": "FlowCanvasTraitView",
+            "label": "Trait View",
+            "description": "Trait level: which lens (and trait filter) shows — pass with `onTraitViewChange` to keep it across remounts.",
+            "tier": "presentation",
+            "properties": {
+              "filter": {
+                "name": "filter",
+                "required": false,
+                "properties": {
+                  "traits": {
+                    "name": "traits",
+                    "required": true,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "unit": {
+                    "name": "unit",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "lens": {
+                "name": "lens",
+                "required": true,
+                "type": "string",
+                "values": [
+                  "flow",
+                  "traits"
+                ]
+              }
+            }
+          },
+          {
+            "key": "userType",
+            "type": "string",
+            "default": "builder",
+            "label": "User Type",
+            "description": "Studio persona viewing the canvas. Drives `OrbInspector` tab/section visibility — designers and builders hide the raw `code` tab and the architect-only Entity / raw-guard / raw-effects sections; architects see everything. Default `'builder'` preserves pre-Phase-2 behavior.",
+            "tier": "presentation",
+            "enumValues": [
+              "builder",
+              "designer",
+              "architect"
+            ]
+          },
+          {
+            "key": "verify",
+            "type": "FlowCanvasVerify",
+            "label": "Verify",
+            "description": "A host that verifies from the canvas: cards show verify controls and the trait's verdict, and follow `UI:CANVAS_SHOW_STATE` to the states a run reaches.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "scalar",
+            "default": "100%",
+            "label": "Width",
+            "description": "width prop",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "FlowCanvasItem",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": [
+          "onEventWire",
+          "onFocusChange",
+          "onNodeClick",
+          "onNodeSelect",
+          "onOrbitalHover",
+          "onPatternDelete",
+          "onPositionsChange",
+          "onSchemaChange",
+          "onSelectedNodeChange",
+          "onSelectedPatternChange",
+          "onTraitViewChange",
+          "onZoomChange",
+          "openBehaviorEvent"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        },
+        "effectRow": [
+          {
+            "kind": "render-ui",
+            "resource": "main"
+          }
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "FlowCanvasPage",
+        "defaultPath": "/flow-canvas",
+        "primaryEntity": "FlowCanvasItem"
+      }
+    ],
+    "emittedEvents": [
+      "EVENT_WIRE",
+      "FOCUS_CHANGE",
+      "NODE_CLICK",
+      "NODE_SELECT",
+      "OPEN_BEHAVIOR",
+      "ORBITAL_HOVER",
+      "PATTERN_DELETE",
+      "POSITIONS_CHANGE",
+      "SCHEMA_CHANGE",
+      "SELECTED_NODE_CHANGE",
+      "SELECTED_PATTERN_CHANGE",
+      "TRAIT_VIEW_CHANGE",
+      "ZOOM_CHANGE"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

@@ -990,14 +990,155 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
               'to': 'comparing',
             },
             {
+              'effects': [
+                [
+                  'fetch',
+                  ('KnowledgeClaim' satisfies _StdKnowledgeLoopEntityName),
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      '@trait.LoopTitle',
+                      '@trait.LoopDivider',
+                      {
+                        'entity': '@entity',
+                        'fields': [
+                          'title',
+                          'candidateStructure',
+                          'survivedFalsification',
+                          'independentChecksAgree',
+                          'reliabilityScore',
+                          'nextTarget',
+                        ],
+                        'title': 'Current claim',
+                        'type': 'detail-panel',
+                      },
+                      {
+                        'entity': {},
+                        'fields': [
+                          'title',
+                          'candidateStructure',
+                        ],
+                        'mode': 'create',
+                        'submitEvent': 'CHANGE_CONDITION',
+                        'type': 'form-section',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'comparing',
+              'to': 'varying',
+            },
+            {
               'event': 'MEASURE_DIFFERENCE',
               'from': 'comparing',
               'to': 'hypothesizing',
             },
             {
+              'effects': [
+                [
+                  'fetch',
+                  ('KnowledgeClaim' satisfies _StdKnowledgeLoopEntityName),
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      '@trait.LoopTitle',
+                      '@trait.LoopDivider',
+                      {
+                        'entity': '@entity',
+                        'fields': [
+                          'title',
+                          'candidateStructure',
+                          'survivedFalsification',
+                          'independentChecksAgree',
+                          'reliabilityScore',
+                          'nextTarget',
+                        ],
+                        'title': 'Current claim',
+                        'type': 'detail-panel',
+                      },
+                      {
+                        'entity': {},
+                        'fields': [
+                          'title',
+                          'candidateStructure',
+                        ],
+                        'mode': 'create',
+                        'submitEvent': 'CHANGE_CONDITION',
+                        'type': 'form-section',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'hypothesizing',
+              'to': 'varying',
+            },
+            {
               'event': 'FORM_GUESS',
               'from': 'hypothesizing',
               'to': 'predicting',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('KnowledgeClaim' satisfies _StdKnowledgeLoopEntityName),
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      '@trait.LoopTitle',
+                      '@trait.LoopDivider',
+                      {
+                        'entity': '@entity',
+                        'fields': [
+                          'title',
+                          'candidateStructure',
+                          'survivedFalsification',
+                          'independentChecksAgree',
+                          'reliabilityScore',
+                          'nextTarget',
+                        ],
+                        'title': 'Current claim',
+                        'type': 'detail-panel',
+                      },
+                      {
+                        'entity': {},
+                        'fields': [
+                          'title',
+                          'candidateStructure',
+                        ],
+                        'mode': 'create',
+                        'submitEvent': 'CHANGE_CONDITION',
+                        'type': 'form-section',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'predicting',
+              'to': 'varying',
             },
             {
               'effects': [
@@ -1046,6 +1187,53 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
               'event': 'EXTRAPOLATE',
               'from': 'predicting',
               'to': 'falsifying',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('KnowledgeClaim' satisfies _StdKnowledgeLoopEntityName),
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      '@trait.LoopTitle',
+                      '@trait.LoopDivider',
+                      {
+                        'entity': '@entity',
+                        'fields': [
+                          'title',
+                          'candidateStructure',
+                          'survivedFalsification',
+                          'independentChecksAgree',
+                          'reliabilityScore',
+                          'nextTarget',
+                        ],
+                        'title': 'Current claim',
+                        'type': 'detail-panel',
+                      },
+                      {
+                        'entity': {},
+                        'fields': [
+                          'title',
+                          'candidateStructure',
+                        ],
+                        'mode': 'create',
+                        'submitEvent': 'CHANGE_CONDITION',
+                        'type': 'form-section',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'falsifying',
+              'to': 'varying',
             },
             {
               'effects': [
@@ -1137,6 +1325,53 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
             {
               'effects': [
                 [
+                  'fetch',
+                  ('KnowledgeClaim' satisfies _StdKnowledgeLoopEntityName),
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      '@trait.LoopTitle',
+                      '@trait.LoopDivider',
+                      {
+                        'entity': '@entity',
+                        'fields': [
+                          'title',
+                          'candidateStructure',
+                          'survivedFalsification',
+                          'independentChecksAgree',
+                          'reliabilityScore',
+                          'nextTarget',
+                        ],
+                        'title': 'Current claim',
+                        'type': 'detail-panel',
+                      },
+                      {
+                        'entity': {},
+                        'fields': [
+                          'title',
+                          'candidateStructure',
+                        ],
+                        'mode': 'create',
+                        'submitEvent': 'CHANGE_CONDITION',
+                        'type': 'form-section',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'verifying',
+              'to': 'varying',
+            },
+            {
+              'effects': [
+                [
                   'set',
                   '@entity.independentChecksAgree',
                   true,
@@ -1159,14 +1394,155 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
               'to': 'hypothesizing',
             },
             {
+              'effects': [
+                [
+                  'fetch',
+                  ('KnowledgeClaim' satisfies _StdKnowledgeLoopEntityName),
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      '@trait.LoopTitle',
+                      '@trait.LoopDivider',
+                      {
+                        'entity': '@entity',
+                        'fields': [
+                          'title',
+                          'candidateStructure',
+                          'survivedFalsification',
+                          'independentChecksAgree',
+                          'reliabilityScore',
+                          'nextTarget',
+                        ],
+                        'title': 'Current claim',
+                        'type': 'detail-panel',
+                      },
+                      {
+                        'entity': {},
+                        'fields': [
+                          'title',
+                          'candidateStructure',
+                        ],
+                        'mode': 'create',
+                        'submitEvent': 'CHANGE_CONDITION',
+                        'type': 'form-section',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'generalizing',
+              'to': 'varying',
+            },
+            {
               'event': 'STRIP_TO_ESSENTIALS',
               'from': 'generalizing',
               'to': 'isolating',
             },
             {
+              'effects': [
+                [
+                  'fetch',
+                  ('KnowledgeClaim' satisfies _StdKnowledgeLoopEntityName),
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      '@trait.LoopTitle',
+                      '@trait.LoopDivider',
+                      {
+                        'entity': '@entity',
+                        'fields': [
+                          'title',
+                          'candidateStructure',
+                          'survivedFalsification',
+                          'independentChecksAgree',
+                          'reliabilityScore',
+                          'nextTarget',
+                        ],
+                        'title': 'Current claim',
+                        'type': 'detail-panel',
+                      },
+                      {
+                        'entity': {},
+                        'fields': [
+                          'title',
+                          'candidateStructure',
+                        ],
+                        'mode': 'create',
+                        'submitEvent': 'CHANGE_CONDITION',
+                        'type': 'form-section',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'isolating',
+              'to': 'varying',
+            },
+            {
               'event': 'FIND_AND_CONTROL_CAUSE',
               'from': 'isolating',
               'to': 'composing',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('KnowledgeClaim' satisfies _StdKnowledgeLoopEntityName),
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      '@trait.LoopTitle',
+                      '@trait.LoopDivider',
+                      {
+                        'entity': '@entity',
+                        'fields': [
+                          'title',
+                          'candidateStructure',
+                          'survivedFalsification',
+                          'independentChecksAgree',
+                          'reliabilityScore',
+                          'nextTarget',
+                        ],
+                        'title': 'Current claim',
+                        'type': 'detail-panel',
+                      },
+                      {
+                        'entity': {},
+                        'fields': [
+                          'title',
+                          'candidateStructure',
+                        ],
+                        'mode': 'create',
+                        'submitEvent': 'CHANGE_CONDITION',
+                        'type': 'form-section',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'composing',
+              'to': 'varying',
             },
             {
               'effects': [
@@ -1205,6 +1581,53 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
               'event': 'COMBINE_WITH_TRUSTED',
               'from': 'composing',
               'to': 'calibrating',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('KnowledgeClaim' satisfies _StdKnowledgeLoopEntityName),
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      '@trait.LoopTitle',
+                      '@trait.LoopDivider',
+                      {
+                        'entity': '@entity',
+                        'fields': [
+                          'title',
+                          'candidateStructure',
+                          'survivedFalsification',
+                          'independentChecksAgree',
+                          'reliabilityScore',
+                          'nextTarget',
+                        ],
+                        'title': 'Current claim',
+                        'type': 'detail-panel',
+                      },
+                      {
+                        'entity': {},
+                        'fields': [
+                          'title',
+                          'candidateStructure',
+                        ],
+                        'mode': 'create',
+                        'submitEvent': 'CHANGE_CONDITION',
+                        'type': 'form-section',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'calibrating',
+              'to': 'varying',
             },
             {
               'effects': [
@@ -1327,6 +1750,53 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
               'event': 'CANCEL_SCORE',
               'from': 'calibrating',
               'to': 'calibrating',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('KnowledgeClaim' satisfies _StdKnowledgeLoopEntityName),
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      '@trait.LoopTitle',
+                      '@trait.LoopDivider',
+                      {
+                        'entity': '@entity',
+                        'fields': [
+                          'title',
+                          'candidateStructure',
+                          'survivedFalsification',
+                          'independentChecksAgree',
+                          'reliabilityScore',
+                          'nextTarget',
+                        ],
+                        'title': 'Current claim',
+                        'type': 'detail-panel',
+                      },
+                      {
+                        'entity': {},
+                        'fields': [
+                          'title',
+                          'candidateStructure',
+                        ],
+                        'mode': 'create',
+                        'submitEvent': 'CHANGE_CONDITION',
+                        'type': 'form-section',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'selecting',
+              'to': 'varying',
             },
             {
               'effects': [

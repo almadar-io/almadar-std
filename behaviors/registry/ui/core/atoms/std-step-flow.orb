@@ -307,6 +307,12 @@
         {
           "category": "interaction",
           "config": {
+            "backLabel": {
+              "default": "Back",
+              "label": "Back label",
+              "tier": "presentation",
+              "type": "string"
+            },
             "bodyContent": {
               "default": {
                 "children": [
@@ -331,7 +337,61 @@
                   {
                     "allowNavigation": false,
                     "currentStep": "@entity.currentStepIndex",
-                    "steps": "@entity.wizardSteps",
+                    "steps": [
+                      "if",
+                      [
+                        "=",
+                        [
+                          "array/len",
+                          "@config.stepLabels"
+                        ],
+                        0.0
+                      ],
+                      "@entity.wizardSteps",
+                      [
+                        "array/map",
+                        "@entity.wizardSteps",
+                        [
+                          "fn",
+                          "step",
+                          {
+                            "description": [
+                              "if",
+                              [
+                                "=",
+                                [
+                                  "array/len",
+                                  "@config.stepDescriptions"
+                                ],
+                                0.0
+                              ],
+                              [
+                                "object/get",
+                                "@step",
+                                "description",
+                                ""
+                              ],
+                              [
+                                "array/nth",
+                                "@config.stepDescriptions",
+                                "@index"
+                              ]
+                            ],
+                            "id": [
+                              "object/get",
+                              "@step",
+                              "id",
+                              ""
+                            ],
+                            "title": [
+                              "array/nth",
+                              "@config.stepLabels",
+                              "@index"
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
                     "type": "wizard-progress"
                   },
                   {
@@ -349,13 +409,45 @@
                               {
                                 "children": [
                                   {
-                                    "content": "@entity.currentStepLabel",
+                                    "content": [
+                                      "if",
+                                      [
+                                        "=",
+                                        [
+                                          "array/len",
+                                          "@config.stepLabels"
+                                        ],
+                                        0.0
+                                      ],
+                                      "@entity.currentStepLabel",
+                                      [
+                                        "array/nth",
+                                        "@config.stepLabels",
+                                        "@entity.currentStepIndex"
+                                      ]
+                                    ],
                                     "type": "typography",
                                     "variant": "h2"
                                   },
                                   {
                                     "color": "muted",
-                                    "content": "@entity.currentStepDescription",
+                                    "content": [
+                                      "if",
+                                      [
+                                        "=",
+                                        [
+                                          "array/len",
+                                          "@config.stepDescriptions"
+                                        ],
+                                        0.0
+                                      ],
+                                      "@entity.currentStepDescription",
+                                      [
+                                        "array/nth",
+                                        "@config.stepDescriptions",
+                                        "@entity.currentStepIndex"
+                                      ]
+                                    ],
                                     "type": "typography",
                                     "variant": "body"
                                   }
@@ -388,7 +480,7 @@
                         },
                         "disabled": "@entity.isFirstStep",
                         "icon": "chevron-left",
-                        "label": "Back",
+                        "label": "@config.backLabel",
                         "type": "button",
                         "variant": "ghost"
                       },
@@ -398,7 +490,7 @@
                           "id": "@entity.id"
                         },
                         "icon": "x",
-                        "label": "Reject",
+                        "label": "@config.rejectLabel",
                         "type": "button",
                         "variant": "ghost"
                       },
@@ -408,7 +500,7 @@
                           "id": "@entity.id"
                         },
                         "icon": "alert-triangle",
-                        "label": "Escalate",
+                        "label": "@config.escalateLabel",
                         "type": "button",
                         "variant": "ghost"
                       },
@@ -418,7 +510,20 @@
                           "id": "@entity.id"
                         },
                         "icon": "@entity.primaryActionIcon",
-                        "label": "@entity.primaryActionLabel",
+                        "label": [
+                          "if",
+                          [
+                            "=",
+                            "@entity.currentStepIndex",
+                            [
+                              "-",
+                              "@entity.totalSteps",
+                              1.0
+                            ]
+                          ],
+                          "@config.finishLabel",
+                          "@config.continueLabel"
+                        ],
                         "type": "button",
                         "variant": "primary"
                       }
@@ -453,6 +558,69 @@
                 "chip",
                 "tile-image-first"
               ]
+            },
+            "completedText": {
+              "default": "All review steps completed successfully.",
+              "label": "Completed text",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "continueLabel": {
+              "default": "Approve & Continue",
+              "label": "Continue label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "escalateLabel": {
+              "default": "Escalate",
+              "label": "Escalate label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "escalatedText": {
+              "default": "This item has been escalated for further review.",
+              "label": "Escalated text",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "finishLabel": {
+              "default": "Finalize Approval",
+              "description": "The primary button on the last step",
+              "label": "Finish label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "rejectLabel": {
+              "default": "Reject",
+              "label": "Reject label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "restartLabel": {
+              "default": "Start a new review",
+              "label": "Restart label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "stepDescriptions": {
+              "default": [],
+              "description": "In step order: the description shown for each step, in place of its `steps` description (render-only, so it may be translated)",
+              "items": {
+                "type": "string"
+              },
+              "label": "Step descriptions",
+              "tier": "presentation",
+              "type": "[string]"
+            },
+            "stepLabels": {
+              "default": [],
+              "description": "In step order: the label shown for each step, in place of its `steps` label (render-only, so it may be translated)",
+              "items": {
+                "type": "string"
+              },
+              "label": "Step labels",
+              "tier": "presentation",
+              "type": "[string]"
             },
             "steps": {
               "default": [
@@ -1563,14 +1731,68 @@
                         {
                           "align": "center",
                           "color": "muted",
-                          "content": "All review steps completed successfully.",
+                          "content": "@config.completedText",
                           "type": "typography",
                           "variant": "body"
                         },
                         {
                           "allowNavigation": false,
                           "currentStep": "@entity.totalSteps",
-                          "steps": "@entity.wizardSteps",
+                          "steps": [
+                            "if",
+                            [
+                              "=",
+                              [
+                                "array/len",
+                                "@config.stepLabels"
+                              ],
+                              0.0
+                            ],
+                            "@entity.wizardSteps",
+                            [
+                              "array/map",
+                              "@entity.wizardSteps",
+                              [
+                                "fn",
+                                "step",
+                                {
+                                  "description": [
+                                    "if",
+                                    [
+                                      "=",
+                                      [
+                                        "array/len",
+                                        "@config.stepDescriptions"
+                                      ],
+                                      0.0
+                                    ],
+                                    [
+                                      "object/get",
+                                      "@step",
+                                      "description",
+                                      ""
+                                    ],
+                                    [
+                                      "array/nth",
+                                      "@config.stepDescriptions",
+                                      "@index"
+                                    ]
+                                  ],
+                                  "id": [
+                                    "object/get",
+                                    "@step",
+                                    "id",
+                                    ""
+                                  ],
+                                  "title": [
+                                    "array/nth",
+                                    "@config.stepLabels",
+                                    "@index"
+                                  ]
+                                }
+                              ]
+                            ]
+                          ],
                           "type": "wizard-progress"
                         },
                         {
@@ -1579,7 +1801,7 @@
                             "id": "@entity.id"
                           },
                           "icon": "rotate-ccw",
-                          "label": "Start a new review",
+                          "label": "@config.restartLabel",
                           "type": "button",
                           "variant": "secondary"
                         }
@@ -1916,7 +2138,7 @@
                             "id": "@entity.id"
                           },
                           "icon": "rotate-ccw",
-                          "label": "Start a new review",
+                          "label": "@config.restartLabel",
                           "type": "button",
                           "variant": "secondary"
                         }
@@ -1959,7 +2181,7 @@
                         {
                           "align": "center",
                           "color": "muted",
-                          "content": "This item has been escalated for further review.",
+                          "content": "@config.escalatedText",
                           "type": "typography",
                           "variant": "body"
                         },
@@ -1969,7 +2191,7 @@
                             "id": "@entity.id"
                           },
                           "icon": "rotate-ccw",
-                          "label": "Start a new review",
+                          "label": "@config.restartLabel",
                           "type": "button",
                           "variant": "secondary"
                         }
@@ -1984,6 +2206,32 @@
                 "eventId": "evt_01KXG04HPTX8WX5MK01DKR1VR1",
                 "from": "running",
                 "to": "escalated"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "StepFlowView",
+                    {
+                      "emit": {
+                        "failure": "StepItemsLoadFailed",
+                        "success": "StepItemsLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "skeleton",
+                      "variant": "card"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KXG04HPRCHSZVZR67C8MZ9PY",
+                "from": "approved",
+                "to": "loading"
               },
               {
                 "effects": [
@@ -2019,6 +2267,32 @@
                 "event": "RESTART",
                 "eventId": "evt_01KXG04HPTCRYK1W5S67JZQWNT",
                 "from": "approved",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "StepFlowView",
+                    {
+                      "emit": {
+                        "failure": "StepItemsLoadFailed",
+                        "success": "StepItemsLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "skeleton",
+                      "variant": "card"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KXG04HPRCHSZVZR67C8MZ9PY",
+                "from": "rejected",
                 "to": "loading"
               },
               {
@@ -2060,6 +2334,32 @@
                 "event": "RESTART",
                 "eventId": "evt_01KXG04HPTCRYK1W5S67JZQWNT",
                 "from": "rejected",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "StepFlowView",
+                    {
+                      "emit": {
+                        "failure": "StepItemsLoadFailed",
+                        "success": "StepItemsLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "skeleton",
+                      "variant": "card"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KXG04HPRCHSZVZR67C8MZ9PY",
+                "from": "escalated",
                 "to": "loading"
               },
               {

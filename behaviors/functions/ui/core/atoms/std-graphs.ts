@@ -43,6 +43,8 @@ export interface StdGraphsConfig {
   aggregation?: 'count' | 'sum' | 'avg' | 'min' | 'max';
   /** Default: `"status"` */
   categoryField?: string;
+  /** Default: `{}` */
+  categoryLabels?: Record<string, TraitConfig>;
   /** Default: `"bar"` */
   chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'histogram' | 'scatter';
   /** Default: `""` */
@@ -284,6 +286,16 @@ export function stdGraphsGraphItemOrbital(params: StdGraphsGraphItemOrbitalParam
             'synonyms': 'regroup / rebucket / categorize / breakdown by / split by / segment by. user phrases: \'group by status\' -> categoryField=status; \'group by region\' / \'by region\' -> categoryField=region; \'group by category\' / \'by category\' -> categoryField=category; \'group by product\' / \'by product\' -> categoryField=product; \'group by month\' / \'by month\' -> categoryField=month (when explicitly requested as a category, not a time bucket); \'split by X\' / \'break down by X\' / \'segment by X\' / \'bucket by X\' -> categoryField=X',
             'tier': 'presentation',
             'type': 'string',
+          },
+          'categoryLabels': {
+            'default': {},
+            'description': 'Display name for each category key (such as a stage key to its translated name); read only when rendering, so the names may be translated. A key without an entry shows as itself',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Category labels',
+            'tier': 'presentation',
+            'type': 'Map<string,string>',
           },
           'chartType': {
             'default': 'bar',
@@ -580,7 +592,23 @@ export function stdGraphsGraphItemOrbital(params: StdGraphsGraphItemOrbitalParam
                   'main',
                   {
                     'chartType': '@config.chartType',
-                    'data': '@entity.chartData',
+                    'data': [
+                      'array/map',
+                      '@entity.chartData',
+                      [
+                        'fn',
+                        'p',
+                        {
+                          'label': [
+                            'object/get',
+                            '@config.categoryLabels',
+                            '@p.label',
+                            '@p.label',
+                          ],
+                          'value': '@p.value',
+                        },
+                      ],
+                    ],
                     'drillEvent': '@config.drillEvent',
                     'height': '@config.height',
                     'period': '@config.period',
@@ -879,7 +907,23 @@ export function stdGraphsGraphItemOrbital(params: StdGraphsGraphItemOrbitalParam
                   'main',
                   {
                     'chartType': '@config.chartType',
-                    'data': '@entity.chartData',
+                    'data': [
+                      'array/map',
+                      '@entity.chartData',
+                      [
+                        'fn',
+                        'p',
+                        {
+                          'label': [
+                            'object/get',
+                            '@config.categoryLabels',
+                            '@p.label',
+                            '@p.label',
+                          ],
+                          'value': '@p.value',
+                        },
+                      ],
+                    ],
                     'drillEvent': '@config.drillEvent',
                     'height': '@config.height',
                     'period': '@config.period',

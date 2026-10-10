@@ -39,15 +39,17 @@ export type StdStatsEventKey = 'INIT' | 'ITEMS_LOADED';
  * without modifying its state-machine topology.
  */
 export interface StdStatsConfig {
-  /** Default: `{"children":[["if",["!=","@config.title",""],{"content":"@config.title","type":"typography","variant":"h3"},{"children":[],"gap":"none","type":"stack"}],{"entity":"@entity.cards","fields":[],"renderItem":["fn","card",{"clickEvent":"@card.clickEvent","format":"@card.format","icon":"@card.icon","label":"@card.label","look":"@config.statLook","max":"@card.max","prefix":"@card.prefix","sparklineData":"@card.sparklineData","suffix":"@card.suffix","target":"@card.target","trend":"@card.trend","trendFormat":"@card.trendFormat","trendPolarity":"@card.trendPolarity","type":"stat-display","value":"@card.value","variant":"@card.variant"}],"type":"@config.viewPattern"}],"data-theme":"@config.theme","type":"box"}` */
+  /** Default: `{"children":[["if",["!=","@config.title",""],{"content":"@config.title","type":"typography","variant":"h3"},{"children":[],"gap":"none","type":"stack"}],{"entity":"@entity.cards","fields":[],"renderItem":["fn","card",{"clickEvent":"@card.clickEvent","format":"@card.format","icon":"@card.icon","label":["if",["=",["array/len","@config.metricLabels"],0],"@card.label",["array/nth","@config.metricLabels","@card.position"]],"look":"@config.statLook","max":"@card.max","prefix":"@card.prefix","sparklineData":"@card.sparklineData","suffix":"@card.suffix","target":"@card.target","trend":"@card.trend","trendFormat":"@card.trendFormat","trendPolarity":"@card.trendPolarity","type":"stat-display","value":"@card.value","variant":"@card.variant"}],"type":"@config.viewPattern"}],"data-theme":"@config.theme","type":"box"}` */
   bodyContent?: unknown;
-  /** Default: `{"children":[["if",["!=","@config.title",""],{"content":"@config.title","type":"typography","variant":"h3"},{"children":[],"gap":"none","type":"stack"}],{"entity":"@entity.cards","fields":[],"gap":"none","renderItem":["fn","card",{"children":[{"children":[{"align":"center","children":[{"align":"center","children":[{"color":"muted","name":"@card.icon","size":"md","type":"icon"},{"className":"uppercase tracking-widest","color":"muted","content":"@card.label","type":"typography","variant":"overline","weight":"bold"}],"direction":"horizontal","gap":"sm","justify":"center","type":"stack"},{"align":"baseline","children":[{"color":"muted","content":"@card.prefix","type":"typography","variant":"h2","weight":"normal"},{"className":"text-7xl md:text-8xl font-bold tracking-tighter tabular-nums text-[var(--color-foreground)]","format":"@card.format","type":"animated-counter","value":"@card.value"},{"color":"muted","content":"@card.suffix","type":"typography","variant":"h2","weight":"normal"}],"className":"py-section","direction":"horizontal","gap":"xs","justify":"center","type":"stack"},{"showValue":true,"size":"md","type":"trend-indicator","value":"@card.trend"}],"className":"relative z-10 w-full max-w-2xl mx-auto text-center","direction":"vertical","gap":"md","type":"stack"},{"className":"absolute inset-x-0 bottom-0 w-full opacity-10 pointer-events-none","color":"auto","data":"@card.sparklineData","fill":true,"height":96,"strokeWidth":1,"type":"sparkline"}],"look":"elevated","padding":"lg","type":"card"}],"className":"relative w-full rounded-xl shadow-lg overflow-hidden","direction":"vertical","gap":"none","type":"stack"}],"type":"data-list"}],"data-theme":"@config.theme","type":"box"}` */
+  /** Default: `{"children":[["if",["!=","@config.title",""],{"content":"@config.title","type":"typography","variant":"h3"},{"children":[],"gap":"none","type":"stack"}],{"entity":"@entity.cards","fields":[],"gap":"none","renderItem":["fn","card",{"children":[{"children":[{"align":"center","children":[{"align":"center","children":[{"color":"muted","name":"@card.icon","size":"md","type":"icon"},{"className":"uppercase tracking-widest","color":"muted","content":["if",["=",["array/len","@config.metricLabels"],0],"@card.label",["array/nth","@config.metricLabels","@card.position"]],"type":"typography","variant":"overline","weight":"bold"}],"direction":"horizontal","gap":"sm","justify":"center","type":"stack"},{"align":"baseline","children":[{"color":"muted","content":"@card.prefix","type":"typography","variant":"h2","weight":"normal"},{"className":"text-7xl md:text-8xl font-bold tracking-tighter tabular-nums text-[var(--color-foreground)]","format":"@card.format","type":"animated-counter","value":"@card.value"},{"color":"muted","content":"@card.suffix","type":"typography","variant":"h2","weight":"normal"}],"className":"py-section","direction":"horizontal","gap":"xs","justify":"center","type":"stack"},{"showValue":true,"size":"md","type":"trend-indicator","value":"@card.trend"}],"className":"relative z-10 w-full max-w-2xl mx-auto text-center","direction":"vertical","gap":"md","type":"stack"},{"className":"absolute inset-x-0 bottom-0 w-full opacity-10 pointer-events-none","color":"auto","data":"@card.sparklineData","fill":true,"height":96,"strokeWidth":1,"type":"sparkline"}],"look":"elevated","padding":"lg","type":"card"}],"className":"relative w-full rounded-xl shadow-lg overflow-hidden","direction":"vertical","gap":"none","type":"stack"}],"type":"data-list"}],"data-theme":"@config.theme","type":"box"}` */
   heroMetricBodyContent?: unknown;
-  /** Default: `{"children":[["if",["!=","@config.title",""],{"content":"@config.title","type":"typography","variant":"h3"},{"children":[],"gap":"none","type":"stack"}],{"className":"w-full","entity":"@entity.cards","fields":[],"gap":"lg","minCardWidth":220,"renderItem":["fn","card",{"children":[{"align":"center","children":[{"className":"uppercase tracking-wide","color":"muted","content":"@card.label","type":"typography","variant":"caption","weight":"medium"},{"color":"muted","name":"@card.icon","size":"sm","type":"icon"}],"direction":"horizontal","gap":"xs","justify":"between","type":"stack"},{"align":"baseline","children":[{"color":"muted","content":"@card.prefix","type":"typography","variant":"caption"},{"className":"text-4xl font-bold tracking-tight","format":"@card.format","type":"animated-counter","value":"@card.value"},{"color":"muted","content":"@card.suffix","type":"typography","variant":"caption"}],"direction":"horizontal","gap":"xs","type":"stack"},{"align":"center","children":[{"showValue":true,"size":"sm","type":"trend-indicator","value":"@card.trend"},{"className":"flex-1","color":"auto","data":"@card.sparklineData","fill":true,"height":24,"type":"sparkline"}],"direction":"horizontal","gap":"sm","type":"stack"}],"className":"rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-card-lg shadow-elevation-sm hover:shadow-elevation-md transition-shadow","direction":"vertical","gap":"sm","type":"stack"}],"type":"data-grid"}],"data-theme":"@config.theme","type":"box"}` */
+  /** Default: `{"children":[["if",["!=","@config.title",""],{"content":"@config.title","type":"typography","variant":"h3"},{"children":[],"gap":"none","type":"stack"}],{"className":"w-full","entity":"@entity.cards","fields":[],"gap":"lg","minCardWidth":220,"renderItem":["fn","card",{"children":[{"align":"center","children":[{"className":"uppercase tracking-wide","color":"muted","content":["if",["=",["array/len","@config.metricLabels"],0],"@card.label",["array/nth","@config.metricLabels","@card.position"]],"type":"typography","variant":"caption","weight":"medium"},{"color":"muted","name":"@card.icon","size":"sm","type":"icon"}],"direction":"horizontal","gap":"xs","justify":"between","type":"stack"},{"align":"baseline","children":[{"color":"muted","content":"@card.prefix","type":"typography","variant":"caption"},{"className":"text-4xl font-bold tracking-tight","format":"@card.format","type":"animated-counter","value":"@card.value"},{"color":"muted","content":"@card.suffix","type":"typography","variant":"caption"}],"direction":"horizontal","gap":"xs","type":"stack"},{"align":"center","children":[{"showValue":true,"size":"sm","type":"trend-indicator","value":"@card.trend"},{"className":"flex-1","color":"auto","data":"@card.sparklineData","fill":true,"height":24,"type":"sparkline"}],"direction":"horizontal","gap":"sm","type":"stack"}],"className":"rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-card-lg shadow-elevation-sm hover:shadow-elevation-md transition-shadow","direction":"vertical","gap":"sm","type":"stack"}],"type":"data-grid"}],"data-theme":"@config.theme","type":"box"}` */
   kpiTilesBodyContent?: unknown;
+  /** Default: `[]` */
+  metricLabels?: string[];
   /** Default: `[{"aggregation":"count","format":"number","icon":"list","label":"Total Items","sparklineData":[2,4,3,6,5,8,7],"variant":"primary"},{"aggregation":"count","format":"number","icon":"check-circle","label":"Active","sparklineData":[1,3,2,4,6,5,7],"variant":"success"},{"aggregation":"avg","field":"value","format":"number","icon":"trending-up","label":"Avg Value","sparklineData":[5,4,6,3,5,7,6],"variant":"info"}]` */
   metrics?: EntityRow[];
-  /** Default: `{"children":[["if",["!=","@config.title",""],{"content":"@config.title","type":"typography","variant":"h3"},{"children":[],"gap":"none","type":"stack"}],{"className":"w-full","entity":"@entity.cards","fields":[],"gap":"md","minCardWidth":260,"renderItem":["fn","card",{"children":[{"align":"center","children":[{"color":"muted","name":"@card.icon","size":"xs","type":"icon"},{"className":"uppercase tracking-wide truncate","color":"muted","content":"@card.label","type":"typography","variant":"overline","weight":"semibold"}],"direction":"horizontal","gap":"xs","type":"stack"},{"className":"w-full","color":"auto","data":"@card.sparklineData","fill":true,"height":64,"strokeWidth":2,"type":"sparkline"},{"align":"baseline","children":[{"align":"baseline","children":[{"color":"muted","content":"@card.prefix","type":"typography","variant":"caption"},{"className":"text-2xl font-semibold tabular-nums","format":"@card.format","type":"animated-counter","value":"@card.value"},{"color":"muted","content":"@card.suffix","type":"typography","variant":"caption"}],"direction":"horizontal","gap":"xs","type":"stack"},{"showValue":true,"size":"sm","type":"trend-indicator","value":"@card.trend"}],"direction":"horizontal","gap":"sm","justify":"between","type":"stack"}],"className":"surface-content p-card-md hover:shadow-elevation-dialog transition-shadow min-h-[180px]","direction":"vertical","gap":"sm","type":"stack"}],"type":"data-grid"}],"data-theme":"@config.theme","type":"box"}` */
+  /** Default: `{"children":[["if",["!=","@config.title",""],{"content":"@config.title","type":"typography","variant":"h3"},{"children":[],"gap":"none","type":"stack"}],{"className":"w-full","entity":"@entity.cards","fields":[],"gap":"md","minCardWidth":260,"renderItem":["fn","card",{"children":[{"align":"center","children":[{"color":"muted","name":"@card.icon","size":"xs","type":"icon"},{"className":"uppercase tracking-wide truncate","color":"muted","content":["if",["=",["array/len","@config.metricLabels"],0],"@card.label",["array/nth","@config.metricLabels","@card.position"]],"type":"typography","variant":"overline","weight":"semibold"}],"direction":"horizontal","gap":"xs","type":"stack"},{"className":"w-full","color":"auto","data":"@card.sparklineData","fill":true,"height":64,"strokeWidth":2,"type":"sparkline"},{"align":"baseline","children":[{"align":"baseline","children":[{"color":"muted","content":"@card.prefix","type":"typography","variant":"caption"},{"className":"text-2xl font-semibold tabular-nums","format":"@card.format","type":"animated-counter","value":"@card.value"},{"color":"muted","content":"@card.suffix","type":"typography","variant":"caption"}],"direction":"horizontal","gap":"xs","type":"stack"},{"showValue":true,"size":"sm","type":"trend-indicator","value":"@card.trend"}],"direction":"horizontal","gap":"sm","justify":"between","type":"stack"}],"className":"surface-content p-card-md hover:shadow-elevation-dialog transition-shadow min-h-[180px]","direction":"vertical","gap":"sm","type":"stack"}],"type":"data-grid"}],"data-theme":"@config.theme","type":"box"}` */
   sparklineRowBodyContent?: unknown;
   /** Default: `"elevated"` */
   statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
@@ -229,6 +231,11 @@ export function stdStatsStatsItemOrbital(params: StdStatsStatsItemOrbitalParams 
                   'required': false,
                   'type': 'number',
                 },
+                'position': {
+                  'name': 'position',
+                  'required': false,
+                  'type': 'number',
+                },
                 'prefix': {
                   'name': 'prefix',
                   'required': false,
@@ -342,7 +349,23 @@ export function stdStatsStatsItemOrbital(params: StdStatsStatsItemOrbitalParams 
                       'clickEvent': '@card.clickEvent',
                       'format': '@card.format',
                       'icon': '@card.icon',
-                      'label': '@card.label',
+                      'label': [
+                        'if',
+                        [
+                          '=',
+                          [
+                            'array/len',
+                            '@config.metricLabels',
+                          ],
+                          0,
+                        ],
+                        '@card.label',
+                        [
+                          'array/nth',
+                          '@config.metricLabels',
+                          '@card.position',
+                        ],
+                      ],
                       'look': '@config.statLook',
                       'max': '@card.max',
                       'prefix': '@card.prefix',
@@ -415,7 +438,23 @@ export function stdStatsStatsItemOrbital(params: StdStatsStatsItemOrbitalParams 
                                     {
                                       'className': 'uppercase tracking-widest',
                                       'color': 'muted',
-                                      'content': '@card.label',
+                                      'content': [
+                                        'if',
+                                        [
+                                          '=',
+                                          [
+                                            'array/len',
+                                            '@config.metricLabels',
+                                          ],
+                                          0,
+                                        ],
+                                        '@card.label',
+                                        [
+                                          'array/nth',
+                                          '@config.metricLabels',
+                                          '@card.position',
+                                        ],
+                                      ],
                                       'type': 'typography',
                                       'variant': 'overline',
                                       'weight': 'bold',
@@ -538,7 +577,23 @@ export function stdStatsStatsItemOrbital(params: StdStatsStatsItemOrbitalParams 
                             {
                               'className': 'uppercase tracking-wide',
                               'color': 'muted',
-                              'content': '@card.label',
+                              'content': [
+                                'if',
+                                [
+                                  '=',
+                                  [
+                                    'array/len',
+                                    '@config.metricLabels',
+                                  ],
+                                  0,
+                                ],
+                                '@card.label',
+                                [
+                                  'array/nth',
+                                  '@config.metricLabels',
+                                  '@card.position',
+                                ],
+                              ],
                               'type': 'typography',
                               'variant': 'caption',
                               'weight': 'medium',
@@ -620,6 +675,16 @@ export function stdStatsStatsItemOrbital(params: StdStatsStatsItemOrbitalParams 
             'label': 'KPI tiles body content tree',
             'tier': 'internal',
             'type': 'render-ui',
+          },
+          'metricLabels': {
+            'default': [],
+            'description': 'In metric order: the label shown on each card, in place of its `metrics` label (render-only, so it may be translated)',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Metric labels',
+            'tier': 'presentation',
+            'type': '[string]',
           },
           'metrics': {
             'default': [
@@ -840,7 +905,23 @@ export function stdStatsStatsItemOrbital(params: StdStatsStatsItemOrbitalParams 
                             {
                               'className': 'uppercase tracking-wide truncate',
                               'color': 'muted',
-                              'content': '@card.label',
+                              'content': [
+                                'if',
+                                [
+                                  '=',
+                                  [
+                                    'array/len',
+                                    '@config.metricLabels',
+                                  ],
+                                  0,
+                                ],
+                                '@card.label',
+                                [
+                                  'array/nth',
+                                  '@config.metricLabels',
+                                  '@card.position',
+                                ],
+                              ],
                               'type': 'typography',
                               'variant': 'overline',
                               'weight': 'semibold',
@@ -1075,6 +1156,7 @@ export function stdStatsStatsItemOrbital(params: StdStatsStatsItemOrbitalParams 
                           'max',
                           0,
                         ],
+                        'position': '@index',
                         'prefix': [
                           'object/get',
                           '@metric',
@@ -1222,6 +1304,7 @@ export function stdStatsStatsItemOrbital(params: StdStatsStatsItemOrbitalParams 
                           'max',
                           0,
                         ],
+                        'position': '@index',
                         'prefix': [
                           'object/get',
                           '@metric',

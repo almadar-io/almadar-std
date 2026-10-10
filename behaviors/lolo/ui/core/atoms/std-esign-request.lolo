@@ -105,6 +105,16 @@ orbital ESignRequestOrbital {
     }
 
     state browsing {
+      INIT -> loading
+        (fetch ESignRequest {
+          emit: { failure: ESignRequestLoadFailed, success: ESignRequestLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: grid, rows: 6 }]
+        })
       SEND_REQUEST -> browsing
         (set @entity.id ?id)
         (notify success "Signature request sent")

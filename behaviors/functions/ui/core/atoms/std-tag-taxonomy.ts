@@ -1443,6 +1443,67 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
             {
               'effects': [
                 [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'set',
+                  '@entity.id',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.parentId',
+                  '',
+                ],
+                [
+                  'fetch',
+                  ('Tag' satisfies _StdTagTaxonomyEntityName),
+                  {
+                    'emit': {
+                      'failure': 'TagLoadFailed',
+                      'success': 'TagLoaded',
+                    },
+                    'filter': [
+                      '=',
+                      [
+                        'object/get',
+                        '@entity',
+                        'parentId',
+                      ],
+                      '',
+                    ],
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'grid',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'creating',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
                   'persist',
                   'create',
                   ('Tag' satisfies _StdTagTaxonomyEntityName),

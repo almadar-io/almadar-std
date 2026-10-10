@@ -47,6 +47,11 @@
             "name": "shown",
             "type": "number",
             "required": false
+          },
+          {
+            "name": "offscreenPaused",
+            "type": "boolean",
+            "required": false
           }
         ],
         "persistence": "runtime"
@@ -271,7 +276,7 @@
           {
             "name": "TOUR_PLAY",
             "direction": "emit",
-            "description": "The demo scrolled into view with playWhenVisible on: starts the composed transport's clock.",
+            "description": "Toggles the composed transport's clock: the demo scrolled into view with playWhenVisible on, or it left the view while playing (paused) and came back (resumed).",
             "tier": "internal"
           },
           {
@@ -300,6 +305,14 @@
           },
           {
             "name": "TOUR_VISIBLE",
+            "direction": "listen"
+          },
+          {
+            "name": "TOUR_HIDDEN",
+            "direction": "listen"
+          },
+          {
+            "name": "TOUR_SHOWN",
             "direction": "listen"
           },
           {
@@ -344,6 +357,22 @@
             "label": "Demo",
             "description": "The running behavior the tour plays, as a @trait reference",
             "tier": "domain"
+          },
+          {
+            "key": "demoTheme",
+            "type": "string",
+            "default": "",
+            "label": "Demo theme",
+            "description": "Theme the running demo is shown in (a theme name with its mode, such as almadar-dark), so a live demo stands apart from the page around it; empty keeps the page's theme",
+            "tier": "presentation"
+          },
+          {
+            "key": "desktopFrame",
+            "type": "boolean",
+            "default": false,
+            "label": "Desktop frame",
+            "description": "Show the demo as a whole app window: rendered at desktop size (1280 by 800) in a browser-style frame and scaled down to fit, so a full page keeps its real layout at any width",
+            "tier": "presentation"
           },
           {
             "key": "doneLabel",
@@ -484,13 +513,73 @@
                   "animation": "none",
                   "children": [
                     {
+                      "animateChanges": true,
                       "children": [
-                        "@config.demo"
+                        [
+                          "if",
+                          "@config.desktopFrame",
+                          {
+                            "children": [
+                              {
+                                "align": "center",
+                                "aria-hidden": true,
+                                "children": [
+                                  {
+                                    "className": "w-2.5 h-2.5 rounded-full bg-error",
+                                    "type": "box"
+                                  },
+                                  {
+                                    "className": "w-2.5 h-2.5 rounded-full bg-warning",
+                                    "type": "box"
+                                  },
+                                  {
+                                    "className": "w-2.5 h-2.5 rounded-full bg-success",
+                                    "type": "box"
+                                  }
+                                ],
+                                "className": "px-3 py-2 bg-muted border-b border-border",
+                                "direction": "horizontal",
+                                "gap": "xs",
+                                "type": "stack"
+                              },
+                              {
+                                "children": [
+                                  {
+                                    "children": [
+                                      "@config.demo"
+                                    ],
+                                    "className": "w-[1280px] h-[800px] overflow-hidden bg-background",
+                                    "type": "box"
+                                  }
+                                ],
+                                "type": "scaled-diagram"
+                              }
+                            ],
+                            "direction": "vertical",
+                            "gap": "none",
+                            "type": "stack"
+                          },
+                          {
+                            "children": [
+                              "@config.demo"
+                            ],
+                            "padding": "md",
+                            "type": "card"
+                          }
+                        ]
                       ],
-                      "padding": "lg",
-                      "type": "card"
+                      "className": [
+                        "if",
+                        "@config.desktopFrame",
+                        "rounded-container overflow-hidden border border-border shadow-elevation-popover bg-background",
+                        "rounded-container"
+                      ],
+                      "data-theme": "@config.demoTheme",
+                      "type": "box"
                     }
                   ],
+                  "enterEvent": "TOUR_SHOWN",
+                  "leaveEvent": "TOUR_HIDDEN",
                   "revealEvent": [
                     "if",
                     "@config.playWhenVisible",
@@ -502,54 +591,60 @@
                   "type": "animated-reveal"
                 },
                 {
-                  "align": "start",
+                  "animateChanges": true,
                   "children": [
                     {
-                      "color": "primary",
-                      "name": "message-square-text",
-                      "size": "md",
-                      "type": "icon"
-                    },
-                    {
-                      "content": [
+                      "align": "start",
+                      "children": [
+                        {
+                          "color": "primary",
+                          "name": "message-square-text",
+                          "size": "md",
+                          "type": "icon"
+                        },
+                        {
+                          "content": [
+                            "if",
+                            [
+                              "<",
+                              "@entity.shown",
+                              0
+                            ],
+                            "@config.introCaption",
+                            [
+                              "array/nth",
+                              "@config.captions",
+                              "@entity.shown"
+                            ]
+                          ],
+                          "type": "typography",
+                          "variant": "body"
+                        }
+                      ],
+                      "className": [
                         "if",
                         [
-                          "<",
-                          "@entity.shown",
-                          0
+                          "and",
+                          [
+                            "<",
+                            "@entity.shown",
+                            0
+                          ],
+                          [
+                            "==",
+                            "@config.introCaption",
+                            ""
+                          ]
                         ],
-                        "@config.introCaption",
-                        [
-                          "array/nth",
-                          "@config.captions",
-                          "@entity.shown"
-                        ]
+                        "hidden",
+                        ""
                       ],
-                      "type": "typography",
-                      "variant": "body"
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack"
                     }
                   ],
-                  "className": [
-                    "if",
-                    [
-                      "and",
-                      [
-                        "<",
-                        "@entity.shown",
-                        0
-                      ],
-                      [
-                        "==",
-                        "@config.introCaption",
-                        ""
-                      ]
-                    ],
-                    "hidden",
-                    ""
-                  ],
-                  "direction": "horizontal",
-                  "gap": "sm",
-                  "type": "stack"
+                  "type": "box"
                 },
                 "@trait.TourTransport"
               ],
@@ -567,6 +662,8 @@
           "INIT",
           "LEARN_RESET",
           "LEARN_STEP",
+          "TOUR_HIDDEN",
+          "TOUR_SHOWN",
           "TOUR_VISIBLE"
         ],
         "definerKnobs": [],
@@ -579,6 +676,7 @@
           "provides": [
             "cursor",
             "done",
+            "offscreenPaused",
             "shown"
           ]
         },
@@ -606,6 +704,10 @@
           {
             "kind": "set",
             "resource": "@entity.done"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.offscreenPaused"
           },
           {
             "kind": "set",

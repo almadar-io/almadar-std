@@ -2365,6 +2365,76 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
             {
               'effects': [
                 [
+                  'fetch',
+                  ('ThreadPost' satisfies _StdThreadEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ThreadPostLoadFailed',
+                      'success': 'ThreadPostLoaded',
+                    },
+                    'filter': [
+                      'and',
+                      [
+                        'or',
+                        [
+                          '=',
+                          [
+                            'str/default',
+                            '@entity.replyRootId',
+                            '@config.threadRootId',
+                          ],
+                          '',
+                        ],
+                        [
+                          '=',
+                          [
+                            'object/get',
+                            '@entity',
+                            'threadRootId',
+                          ],
+                          [
+                            'str/default',
+                            '@entity.replyRootId',
+                            '@config.threadRootId',
+                          ],
+                        ],
+                      ],
+                      [
+                        '=',
+                        [
+                          'str/default',
+                          [
+                            'object/get',
+                            '@entity',
+                            'parentId',
+                          ],
+                          '',
+                        ],
+                        '',
+                      ],
+                    ],
+                    'include': [
+                      'replies',
+                    ],
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'rows': 6,
+                    'type': 'skeleton',
+                    'variant': 'list',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'replying',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
                   'set',
                   '@entity.replyDraft',
                   '@payload.value',

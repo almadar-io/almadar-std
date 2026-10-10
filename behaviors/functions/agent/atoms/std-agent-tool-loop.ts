@@ -1338,6 +1338,18 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
             {
               'effects': [
                 [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'thinking',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
                   'cancel-call',
                   '@config.cancelKey',
                 ],

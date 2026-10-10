@@ -369,6 +369,11 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'active',
+                      'inactive',
+                      'pending',
+                    ],
                   },
                   {
                     'name': 'createdAt',
@@ -450,6 +455,11 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'active',
+                        'inactive',
+                        'pending',
+                      ],
                     },
                     {
                       'name': 'createdAt',
@@ -517,6 +527,11 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'active',
+                        'inactive',
+                        'pending',
+                      ],
                     },
                     {
                       'name': 'createdAt',
@@ -671,6 +686,18 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
               'from': 'idle',
               'guard': '@payload.row',
               'to': 'confirming',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'confirming',
+              'to': 'idle',
             },
             {
               'effects': [

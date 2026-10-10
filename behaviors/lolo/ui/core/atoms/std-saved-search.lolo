@@ -206,6 +206,16 @@ orbital SavedSearchOrbital {
     }
 
     state editing {
+      INIT -> loading
+        (fetch SavedSearch {
+          emit: { failure: SavedSearchLoadFailed, success: SavedSearchLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: grid, rows: 6 }]
+        })
       RENAME -> editing
         (set @entity.name ?value)
       CHANGE_FREQUENCY -> editing

@@ -1,6 +1,6 @@
 app std-behavior-tour [
   version: "1.0.0",
-  description: "std-behavior-tour — plays a real behavior through a scripted sequence so people can watch it work: a guided demo on a website, or a step-by-step tutorial. The composing program embeds the running behavior in the `demo` slot and lists `events` (the event each step sends) and `captions` (what is shown while it plays; only ever rendered, so they may be translated). The composed std-learn-transport owns Play / Pause / Step / Reset and the clock; on every step the tour emits TOUR_STEP { index, event } and shows that step's caption, and the program routes TOUR_STEP to the behavior's own events with a filtered listen (`Tour.TOUR_STEP -> MOVE when (= ?event \"MOVE\")`). Reset emits TOUR_RESET. `loop` quietly resets the demo after the last step (TOUR_RESET, intro caption) and plays again. `playWhenVisible` starts it the first time it scrolls into view (never under reduced motion), and `compact` keeps only Play / Pause and Reset. Pick to demonstrate or teach a behavior."
+  description: "std-behavior-tour — plays a real behavior through a scripted sequence so people can watch it work: a guided demo on a website, or a step-by-step tutorial. The composing program embeds the running behavior in the `demo` slot and lists `events` (the event each step sends) and `captions` (what is shown while it plays; only ever rendered, so they may be translated). The composed std-learn-transport owns Play / Pause / Step / Reset and the clock; on every step the tour emits TOUR_STEP { index, event } and shows that step's caption, and the program routes TOUR_STEP to the behavior's own events with a filtered listen (`Tour.TOUR_STEP -> MOVE when (= ?event \"MOVE\")`). Reset emits TOUR_RESET. `loop` quietly resets the demo after the last step (TOUR_RESET, intro caption) and plays again. `playWhenVisible` starts it the first time it scrolls into view (never under reduced motion), and `compact` keeps only Play / Pause and Reset, and `demoTheme` shows the demo in its own theme so it stands apart from the page. Pick to demonstrate or teach a behavior."
 ]
 
 orbital BehaviorTourOrbital {
@@ -14,6 +14,7 @@ orbital BehaviorTourOrbital {
     done : boolean = false
     cursor : int = 0
     shown : int = -1
+    offscreenPaused : boolean = false
   }
 
   uses LearnTransport from "std/behaviors/std-learn-transport"
@@ -90,6 +91,12 @@ orbital BehaviorTourOrbital {
       TOUR_VISIBLE -> idle when (and (== @entity.active true) (not (== @entity.running true)) (not (== @entity.done true)))
         (emit TOUR_PLAY { })
         (render-ui main @config.tourContent)
+      TOUR_HIDDEN -> idle when (and (== @entity.active true) (== @entity.running true) (not (== @entity.done true)))
+        (set @entity.offscreenPaused true)
+        (emit TOUR_PLAY { })
+      TOUR_SHOWN -> idle when (and (== @entity.offscreenPaused true) (not (== @entity.running true)))
+        (set @entity.offscreenPaused false)
+        (emit TOUR_PLAY { })
       LEARN_RESET -> idle
         (set @entity.cursor 0)
         (set @entity.done false)
@@ -101,7 +108,7 @@ orbital BehaviorTourOrbital {
     emits {
       TOUR_PLAY {
       }
-        @description "The demo scrolled into view with playWhenVisible on: starts the composed transport's clock."
+        @description "Toggles the composed transport's clock: the demo scrolled into view with playWhenVisible on, or it left the view while playing (paused) and came back (resumed)."
         @tier "internal"
       TOUR_STEP -> external {
         index : int
@@ -169,6 +176,14 @@ orbital BehaviorTourOrbital {
         @label "Play when visible"
         @description "Start playing the first time the tour scrolls into view (never under reduced motion)"
         @tier "presentation"
+      demoTheme : string = ""
+        @label "Demo theme"
+        @description "Theme the running demo is shown in (a theme name with its mode, such as almadar-dark), so a live demo stands apart from the page around it; empty keeps the page's theme"
+        @tier "presentation"
+      desktopFrame : boolean = false
+        @label "Desktop frame"
+        @description "Show the demo as a whole app window: rendered at desktop size (1280 by 800) in a browser-style frame and scaled down to fit, so a full page keeps its real layout at any width"
+        @tier "presentation"
       compact : boolean = true
         @label "Compact controls"
         @description "Show only Play / Pause and Reset"
@@ -217,26 +232,58 @@ orbital BehaviorTourOrbital {
           animation: none
           threshold: 0.4
           revealEvent: (if @config.playWhenVisible TOUR_VISIBLE "")
+          enterEvent: TOUR_SHOWN
+          leaveEvent: TOUR_HIDDEN
           children: [{
-            type: card
-            padding: lg
-            children: [@config.demo]
+            type: box
+            data-theme: @config.demoTheme
+            animateChanges: true
+            className: (if @config.desktopFrame "rounded-container overflow-hidden border border-border shadow-elevation-popover bg-background" "rounded-container")
+            children: [(if @config.desktopFrame {
+              type: stack
+              direction: vertical
+              gap: none
+              children: [{
+                type: stack
+                direction: horizontal
+                gap: xs
+                align: center
+                className: "px-3 py-2 bg-muted border-b border-border"
+                aria-hidden: true
+                children: [{ type: box, className: "w-2.5 h-2.5 rounded-full bg-error" }, { type: box, className: "w-2.5 h-2.5 rounded-full bg-warning" }, { type: box, className: "w-2.5 h-2.5 rounded-full bg-success" }]
+              }, {
+                type: scaled-diagram
+                children: [{
+                  type: box
+                  className: "w-[1280px] h-[800px] overflow-hidden bg-background"
+                  children: [@config.demo]
+                }]
+              }]
+            } {
+              type: card
+              padding: md
+              children: [@config.demo]
+            })]
           }]
         }, {
-          type: stack
-          direction: horizontal
-          gap: sm
-          align: start
-          className: (if (and (< @entity.shown 0) (== @config.introCaption "")) hidden "")
+          type: box
+          animateChanges: true
           children: [{
-            type: icon
-            name: message-square-text
-            size: md
-            color: primary
-          }, {
-            type: typography
-            variant: body
-            content: (if (< @entity.shown 0) @config.introCaption (array/nth @config.captions @entity.shown))
+            type: stack
+            direction: horizontal
+            gap: sm
+            align: start
+            className: (if (and (< @entity.shown 0) (== @config.introCaption "")) hidden "")
+            children: [{
+              type: icon
+              name: message-square-text
+              size: md
+              color: primary
+            }, {
+              type: typography
+              variant: body
+              content: (if (< @entity.shown 0) @config.introCaption (array/nth @config.captions @entity.shown))
+            }]
           }]
         }, @trait.TourTransport]
       }

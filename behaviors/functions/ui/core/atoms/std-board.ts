@@ -2987,6 +2987,32 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'viewing_card',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('BoardView' satisfies _StdBoardEntityName),
+                  {
+                    'emit': {
+                      'failure': 'BoardItemsLoadFailed',
+                      'success': 'BoardItemsLoaded',
+                    },
+                    'include': '@config.include',
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'skeleton',
+                    'variant': 'card',
+                  },
+                ],
+              ],
               'event': 'CLOSE_CARD',
               'from': 'viewing_card',
               'to': 'loading',
@@ -3038,6 +3064,32 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
               ],
               'event': 'DELETE_CARD',
               'from': 'viewing_card',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('BoardView' satisfies _StdBoardEntityName),
+                  {
+                    'emit': {
+                      'failure': 'BoardItemsLoadFailed',
+                      'success': 'BoardItemsLoaded',
+                    },
+                    'include': '@config.include',
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'skeleton',
+                    'variant': 'card',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'adding',
               'to': 'loading',
             },
             {

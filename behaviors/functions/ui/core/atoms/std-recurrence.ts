@@ -1371,6 +1371,47 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
             {
               'effects': [
                 [
+                  'fetch',
+                  ('RecurrenceView' satisfies _StdRecurrenceEntityName),
+                  {
+                    'emit': {
+                      'failure': 'RecurrenceLoadFailed',
+                      'success': 'RecurrenceLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'viewing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
                   'render-ui',
                   'main',
                   {
@@ -1581,6 +1622,47 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
             {
               'effects': [
                 [
+                  'fetch',
+                  ('RecurrenceView' satisfies _StdRecurrenceEntityName),
+                  {
+                    'emit': {
+                      'failure': 'RecurrenceLoadFailed',
+                      'success': 'RecurrenceLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'defining_rule',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
                   'persist',
                   'update',
                   ('RecurrenceView' satisfies _StdRecurrenceEntityName),
@@ -1636,6 +1718,47 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
               ],
               'event': 'CANCEL_RULE',
               'from': 'defining_rule',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('RecurrenceView' satisfies _StdRecurrenceEntityName),
+                  {
+                    'emit': {
+                      'failure': 'RecurrenceLoadFailed',
+                      'success': 'RecurrenceLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'awaiting_exception_decision',
               'to': 'loading',
             },
             {
@@ -1735,6 +1858,47 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
               ],
               'event': 'CLOSE_EXCEPTION',
               'from': 'awaiting_exception_decision',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('RecurrenceView' satisfies _StdRecurrenceEntityName),
+                  {
+                    'emit': {
+                      'failure': 'RecurrenceLoadFailed',
+                      'success': 'RecurrenceLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'cancelled',
               'to': 'loading',
             },
             {

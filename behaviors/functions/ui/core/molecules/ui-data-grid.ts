@@ -109,6 +109,7 @@ export interface StdUiDataGridConfig {
   itemActions?: EntityRow[];
   /** Default: `"ITEM_CLICK"` */
   itemClickEvent?: string;
+  itemEnter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   lang?: string;
   /** Default: `"LOAD_MORE"` */
   loadMoreEvent?: string;

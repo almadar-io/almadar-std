@@ -142,19 +142,19 @@ orbital StepFlowOrbital {
           }, {
             align: center
             color: muted
-            content: "All review steps completed successfully."
+            content: @config.completedText
             type: typography
             variant: body
           }, {
             allowNavigation: false
             currentStep: @entity.totalSteps
-            steps: @entity.wizardSteps
+            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (array/nth @config.stepLabels @index), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (array/nth @config.stepDescriptions @index)) })))
             type: wizard-progress
           }, {
             action: RESTART
             actionPayload: { id: @entity.id }
             icon: rotate-ccw
-            label: "Start a new review"
+            label: @config.restartLabel
             type: button
             variant: secondary
           }]
@@ -221,7 +221,7 @@ orbital StepFlowOrbital {
             action: RESTART
             actionPayload: { id: @entity.id }
             icon: rotate-ccw
-            label: "Start a new review"
+            label: @config.restartLabel
             type: button
             variant: secondary
           }]
@@ -245,14 +245,14 @@ orbital StepFlowOrbital {
           }, {
             align: center
             color: muted
-            content: "This item has been escalated for further review."
+            content: @config.escalatedText
             type: typography
             variant: body
           }, {
             action: RESTART
             actionPayload: { id: @entity.id }
             icon: rotate-ccw
-            label: "Start a new review"
+            label: @config.restartLabel
             type: button
             variant: secondary
           }]
@@ -263,6 +263,11 @@ orbital StepFlowOrbital {
     }
 
     state approved {
+      INIT -> loading
+        (fetch StepFlowView {
+          emit: { failure: StepItemsLoadFailed, success: StepItemsLoaded }
+        })
+        (render-ui main { type: skeleton, variant: card })
       RESTART -> loading
         (set @entity.finalStatus "")
         (set @entity.currentStepIndex 0)
@@ -273,6 +278,11 @@ orbital StepFlowOrbital {
     }
 
     state rejected {
+      INIT -> loading
+        (fetch StepFlowView {
+          emit: { failure: StepItemsLoadFailed, success: StepItemsLoaded }
+        })
+        (render-ui main { type: skeleton, variant: card })
       RESTART -> loading
         (set @entity.finalStatus "")
         (set @entity.currentStepIndex 0)
@@ -284,6 +294,11 @@ orbital StepFlowOrbital {
     }
 
     state escalated {
+      INIT -> loading
+        (fetch StepFlowView {
+          emit: { failure: StepItemsLoadFailed, success: StepItemsLoaded }
+        })
+        (render-ui main { type: skeleton, variant: card })
       RESTART -> loading
         (set @entity.finalStatus "")
         (set @entity.currentStepIndex 0)
@@ -411,9 +426,42 @@ orbital StepFlowOrbital {
     }
 
     config {
+      continueLabel : string = "Approve & Continue"
+        @label "Continue label"
+        @tier "presentation"
+      finishLabel : string = "Finalize Approval"
+        @label "Finish label"
+        @description "The primary button on the last step"
+        @tier "presentation"
+      backLabel : string = "Back"
+        @label "Back label"
+        @tier "presentation"
+      rejectLabel : string = "Reject"
+        @label "Reject label"
+        @tier "presentation"
+      escalateLabel : string = "Escalate"
+        @label "Escalate label"
+        @tier "presentation"
+      restartLabel : string = "Start a new review"
+        @label "Restart label"
+        @tier "presentation"
+      completedText : string = "All review steps completed successfully."
+        @label "Completed text"
+        @tier "presentation"
+      escalatedText : string = "This item has been escalated for further review."
+        @label "Escalated text"
+        @tier "presentation"
       title : string = Review
         @label "Flow title"
         @description "Heading shown above the step progress bar"
+        @tier "presentation"
+      stepLabels : [string] = []
+        @label "Step labels"
+        @description "In step order: the label shown for each step, in place of its `steps` label (render-only, so it may be translated)"
+        @tier "presentation"
+      stepDescriptions : [string] = []
+        @label "Step descriptions"
+        @description "In step order: the description shown for each step, in place of its `steps` description (render-only, so it may be translated)"
         @tier "presentation"
       steps : [StepSpec] = [{
         description: "Initial review by direct manager"
@@ -452,7 +500,7 @@ orbital StepFlowOrbital {
         }, {
           allowNavigation: false
           currentStep: @entity.currentStepIndex
-          steps: @entity.wizardSteps
+          steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (array/nth @config.stepLabels @index), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (array/nth @config.stepDescriptions @index)) })))
           type: wizard-progress
         }, {
           children: [{
@@ -464,12 +512,12 @@ orbital StepFlowOrbital {
                 type: icon
               }, {
                 children: [{
-                  content: @entity.currentStepLabel
+                  content: (if (= (array/len @config.stepLabels) 0) @entity.currentStepLabel (array/nth @config.stepLabels @entity.currentStepIndex))
                   type: typography
                   variant: h2
                 }, {
                   color: muted
-                  content: @entity.currentStepDescription
+                  content: (if (= (array/len @config.stepDescriptions) 0) @entity.currentStepDescription (array/nth @config.stepDescriptions @entity.currentStepIndex))
                   type: typography
                   variant: body
                 }]
@@ -494,28 +542,28 @@ orbital StepFlowOrbital {
             actionPayload: { id: @entity.id }
             disabled: @entity.isFirstStep
             icon: chevron-left
-            label: Back
+            label: @config.backLabel
             type: button
             variant: ghost
           }, {
             action: REJECT
             actionPayload: { id: @entity.id }
             icon: x
-            label: Reject
+            label: @config.rejectLabel
             type: button
             variant: ghost
           }, {
             action: ESCALATE
             actionPayload: { id: @entity.id }
             icon: alert-triangle
-            label: Escalate
+            label: @config.escalateLabel
             type: button
             variant: ghost
           }, {
             action: ADVANCE
             actionPayload: { id: @entity.id }
             icon: @entity.primaryActionIcon
-            label: @entity.primaryActionLabel
+            label: (if ["=", @entity.currentStepIndex, ["-", @entity.totalSteps, 1]] @config.finishLabel @config.continueLabel)
             type: button
             variant: primary
           }]

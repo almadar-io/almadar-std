@@ -2032,6 +2032,27 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'open',
+              'to': 'closed',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'overlay',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'action': 'OPEN',
+                    'label': 'Open Subagent-trace-panel',
+                    'type': 'button',
+                  },
+                ],
+              ],
               'event': 'CLOSE',
               'from': 'open',
               'to': 'closed',

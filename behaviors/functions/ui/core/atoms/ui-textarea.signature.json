@@ -7,7 +7,14 @@
     "entities": [
       {
         "name": "TextareaItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "value",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          }
+        ],
         "persistence": "runtime"
       }
     ],
@@ -350,11 +357,20 @@
             "label": "Tab Index",
             "description": "0 puts the element in the Tab order; -1 makes it focusable only programmatically.",
             "tier": "presentation"
+          },
+          {
+            "key": "value",
+            "type": "string",
+            "label": "Value",
+            "description": "Controlled value, for a field the program fills or clears.",
+            "tier": "presentation"
           }
         ],
         "capabilities": [],
         "linkedEntity": "TextareaItem",
         "transitionEvents": [
+          "ACTION",
+          "CHANGE",
           "INIT"
         ],
         "definerKnobs": [
@@ -364,12 +380,18 @@
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "value"
+          ]
         },
         "effectRow": [
           {
             "kind": "render-ui",
             "resource": "main"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.value"
           }
         ]
       }

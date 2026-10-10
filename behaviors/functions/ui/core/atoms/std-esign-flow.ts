@@ -30,7 +30,7 @@ const ALIAS = 'EsignFlow';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdEsignFlowEventKey = 'CHECK_ENVELOPE_STATUS' | 'CREATE' | 'INIT' | 'REQUEST_DELETE' | 'RESEND_REQUEST' | 'RETRY' | 'SignatureSessionLoadFailed' | 'SignatureSessionLoaded';
+export type StdEsignFlowEventKey = 'CHECK_ENVELOPE_STATUS' | 'CREATE' | 'INIT' | 'REQUEST_DELETE' | 'RESEND_REQUEST' | 'RETRY' | 'SEND_FOR_SIGNATURE' | 'SignatureSessionLoadFailed' | 'SignatureSessionLoaded';
 
 /**
  * Closed set of event keys this trait listens for —
@@ -50,6 +50,14 @@ export interface StdEsignFlowResendRequestPayload {
  * Payload shape for the `CHECK_ENVELOPE_STATUS` event.
  */
 export interface StdEsignFlowCheckEnvelopeStatusPayload {
+  id: string;
+  row?: EntityRow;
+}
+
+/**
+ * Payload shape for the `SEND_FOR_SIGNATURE` event.
+ */
+export interface StdEsignFlowSendForSignaturePayload {
   id: string;
   row?: EntityRow;
 }
@@ -84,7 +92,7 @@ export interface StdEsignFlowSignatureSessionLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdEsignFlowConfig {
-  /** Default: `[{"event":"RESEND_REQUEST","label":"Resend","variant":"primary"},{"event":"REQUEST_DELETE","label":"Cancel","variant":"danger"},{"event":"CHECK_ENVELOPE_STATUS","label":"Refresh status","variant":"secondary"}]` */
+  /** Default: `[{"event":"SEND_FOR_SIGNATURE","label":"Send for signature","variant":"primary"},{"event":"RESEND_REQUEST","label":"Resend","variant":"primary"},{"event":"REQUEST_DELETE","label":"Cancel","variant":"danger"},{"event":"CHECK_ENVELOPE_STATUS","label":"Refresh status","variant":"secondary"}]` */
   itemActions?: EntityRow[];
   /** Default: `""` */
   viewerRole?: string;
@@ -180,6 +188,21 @@ export function stdEsignFlowSignatureSessionPersistorTrait(params: StdEsignFlowP
   });
 }
 
+/** Trait descriptor: `EsignFlow.traits.EnvelopeSendDialog`. */
+export function stdEsignFlowEnvelopeSendDialogTrait(params: StdEsignFlowParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.EnvelopeSendDialog`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
 /** Trait descriptor: `EsignFlow.traits.EnvelopeDispatcher`. */
 export function stdEsignFlowEnvelopeDispatcherTrait(params: StdEsignFlowParams): TraitReference {
   return makeTraitRef({
@@ -221,6 +244,7 @@ export function stdEsignFlow(params: StdEsignFlowParams): OrbitalDefinition {
       stdEsignFlowSignatureSessionCreateTrait(params),
       stdEsignFlowSignatureSessionDeleteTrait(params),
       stdEsignFlowSignatureSessionPersistorTrait(params),
+      stdEsignFlowEnvelopeSendDialogTrait(params),
       stdEsignFlowEnvelopeDispatcherTrait(params),
     ],
     pages: [
@@ -230,7 +254,7 @@ export function stdEsignFlow(params: StdEsignFlowParams): OrbitalDefinition {
 }
 
 type _StdEsignFlowEntityName = 'SignatureSession' | 'StoredFile' | 'ESignRequest' | 'ModalRecord' | 'ConfirmAction';
-type _StdEsignFlowListenTraitName = 'SignatureSessionBrowse' | 'SignatureSessionCreate' | 'SignatureSessionDelete' | 'SignatureSessionPersistor' | 'EnvelopeDispatcher';
+type _StdEsignFlowListenTraitName = 'SignatureSessionBrowse' | 'SignatureSessionCreate' | 'SignatureSessionDelete' | 'SignatureSessionPersistor' | 'EnvelopeSendDialog' | 'EnvelopeDispatcher';
 
 /**
  * Tunable params for the SignatureSessionOrbital orbital.
@@ -272,7 +296,7 @@ export interface StdEsignFlowSignatureSessionOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'SignatureSessionCreate' | 'SignatureSessionDelete' | 'SignatureSessionBrowse' | 'SignatureSessionPersistor' | 'EnvelopeDispatcher',
+    'SignatureSessionCreate' | 'SignatureSessionDelete' | 'SignatureSessionBrowse' | 'SignatureSessionPersistor' | 'EnvelopeSendDialog' | 'EnvelopeDispatcher',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -404,6 +428,11 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
           'itemActions': {
             'default': [
               {
+                'event': 'SEND_FOR_SIGNATURE',
+                'label': 'Send for signature',
+                'variant': 'primary',
+              },
+              {
                 'event': 'RESEND_REQUEST',
                 'label': 'Resend',
                 'variant': 'primary',
@@ -526,6 +555,13 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'draft',
+                      'sent',
+                      'viewed',
+                      'signed',
+                      'declined',
+                    ],
                   },
                   {
                     'name': 'sentAt',
@@ -594,6 +630,13 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'draft',
+                      'sent',
+                      'viewed',
+                      'signed',
+                      'declined',
+                    ],
                   },
                   {
                     'name': 'sentAt',
@@ -616,6 +659,81 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
               },
             ],
             'synonyms': 'refresh status, check signature, poll envelope',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Open the send step for this request: attach the document and dispatch it for signature.',
+            'event': 'SEND_FOR_SIGNATURE',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'entity': 'SignatureSession',
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'documentId',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'documentName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'recipientName',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'recipientEmail',
+                    'required': true,
+                    'type': 'email',
+                  },
+                  {
+                    'name': 'requesterName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                    'values': [
+                      'draft',
+                      'sent',
+                      'viewed',
+                      'signed',
+                      'declined',
+                    ],
+                  },
+                  {
+                    'name': 'sentAt',
+                    'type': 'datetime',
+                  },
+                  {
+                    'name': 'signedAt',
+                    'type': 'datetime',
+                  },
+                  {
+                    'name': 'envelopeId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'pendingId',
+                    'type': 'string',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'send for signature, dispatch, send envelope',
             'tier': 'domain',
           },
           {
@@ -662,6 +780,13 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'draft',
+                      'sent',
+                      'viewed',
+                      'signed',
+                      'declined',
+                    ],
                   },
                   {
                     'name': 'sentAt',
@@ -725,6 +850,13 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'draft',
+                      'sent',
+                      'viewed',
+                      'signed',
+                      'declined',
+                    ],
                   },
                   {
                     'name': 'sentAt',
@@ -843,6 +975,13 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'draft',
+                        'sent',
+                        'viewed',
+                        'signed',
+                        'declined',
+                      ],
                     },
                     {
                       'name': 'sentAt',
@@ -940,6 +1079,13 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'draft',
+                        'sent',
+                        'viewed',
+                        'signed',
+                        'declined',
+                      ],
                     },
                     {
                       'name': 'sentAt',
@@ -1009,6 +1155,13 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'draft',
+                        'sent',
+                        'viewed',
+                        'signed',
+                        'declined',
+                      ],
                     },
                     {
                       'name': 'sentAt',
@@ -1031,6 +1184,82 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                 },
               ],
               'synonyms': 'refresh status, check signature, poll envelope',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Open the send step for this request: attach the document and dispatch it for signature.',
+              'key': 'SEND_FOR_SIGNATURE',
+              'name': 'Send For Signature',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'entity': 'SignatureSession',
+                  'name': 'row',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'documentId',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'documentName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'recipientName',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'recipientEmail',
+                      'required': true,
+                      'type': 'email',
+                    },
+                    {
+                      'name': 'requesterName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                      'values': [
+                        'draft',
+                        'sent',
+                        'viewed',
+                        'signed',
+                        'declined',
+                      ],
+                    },
+                    {
+                      'name': 'sentAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'signedAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'envelopeId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'pendingId',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'send for signature, dispatch, send envelope',
               'tier': 'domain',
             },
             {
@@ -1078,6 +1307,13 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'draft',
+                        'sent',
+                        'viewed',
+                        'signed',
+                        'declined',
+                      ],
                     },
                     {
                       'name': 'sentAt',
@@ -1742,6 +1978,333 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
         },
       } satisfies Trait,
       {
+        'category': 'interaction',
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'modal',
+          },
+        ],
+        'linkedEntity': 'SignatureSession',
+        'listens': [
+          {
+            'event': 'SEND_FOR_SIGNATURE',
+            'source': {
+              'kind': 'trait',
+              'trait': ('SignatureSessionBrowse' satisfies _StdEsignFlowListenTraitName),
+            },
+            'triggers': 'REQUEST_SEND',
+          },
+        ],
+        'name': 'EnvelopeSendDialog',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'A request\'s send step was opened.',
+              'key': 'REQUEST_SEND',
+              'name': 'Request Send',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'entity': 'SignatureSession',
+                  'name': 'row',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'documentId',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'documentName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'recipientName',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'recipientEmail',
+                      'required': true,
+                      'type': 'email',
+                    },
+                    {
+                      'name': 'requesterName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                      'values': [
+                        'draft',
+                        'sent',
+                        'viewed',
+                        'signed',
+                        'declined',
+                      ],
+                    },
+                    {
+                      'name': 'sentAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'signedAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'envelopeId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'pendingId',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'open send, start send',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'The document was dropped; the request is being dispatched.',
+              'key': 'SEND_ENVELOPE',
+              'name': 'Send Envelope',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'entity': 'SignatureSession',
+                  'name': 'row',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'documentId',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'documentName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'recipientName',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'recipientEmail',
+                      'required': true,
+                      'type': 'email',
+                    },
+                    {
+                      'name': 'requesterName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                      'values': [
+                        'draft',
+                        'sent',
+                        'viewed',
+                        'signed',
+                        'declined',
+                      ],
+                    },
+                    {
+                      'name': 'sentAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'signedAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'envelopeId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'pendingId',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
+                },
+                {
+                  'name': 'files',
+                  'properties': [
+                    {
+                      'name': 'name',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'size',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'type',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'content',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': '[object]',
+                },
+              ],
+              'synonyms': 'send, dispatch',
+              'tier': 'presentation',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+              'tier': 'presentation',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'closed',
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'transitions': [
+            {
+              'event': 'INIT',
+              'from': 'closed',
+              'to': 'closed',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'children': [
+                      {
+                        'content': [
+                          'str/concat',
+                          'Send ',
+                          [
+                            'object/get',
+                            '@payload.row',
+                            'documentName',
+                          ],
+                          ' for signature',
+                        ],
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': [
+                          'str/concat',
+                          'The signer ',
+                          [
+                            'object/get',
+                            '@payload.row',
+                            'recipientName',
+                          ],
+                          ' receives it by email.',
+                        ],
+                        'type': 'typography',
+                        'variant': 'body',
+                      },
+                      {
+                        'accept': '.pdf',
+                        'action': 'SEND_ENVELOPE',
+                        'actionPayload': {
+                          'id': '@payload.id',
+                          'row': '@payload.row',
+                        },
+                        'description': 'PDF, one file',
+                        'icon': 'file-up',
+                        'label': 'Drop the document to send',
+                        'maxFiles': 1,
+                        'type': 'upload-drop-zone',
+                      },
+                      {
+                        'action': 'CLOSE',
+                        'label': 'Cancel',
+                        'type': 'button',
+                        'variant': 'ghost',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'REQUEST_SEND',
+              'from': 'closed',
+              'to': 'open',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'open',
+              'to': 'closed',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+              ],
+              'event': 'SEND_ENVELOPE',
+              'from': 'open',
+              'to': 'closed',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+              ],
+              'event': 'CLOSE',
+              'from': 'open',
+              'to': 'closed',
+            },
+          ],
+        },
+      } satisfies Trait,
+      {
         'category': 'lifecycle',
         'effectRow': [
           {
@@ -1870,7 +2433,7 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
         'stateMachine': {
           'events': [
             {
-              'description': 'Dispatch this session as a real e-sign envelope; `file.content` is the document as a base64 data URL (UploadDropZone shape).',
+              'description': 'Dispatch this session as a real e-sign envelope; the first of `files` is the document, its `content` a base64 data URL (UploadDropZone shape).',
               'key': 'SEND_ENVELOPE',
               'name': 'Send Envelope',
               'payloadSchema': [
@@ -1914,6 +2477,13 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'draft',
+                        'sent',
+                        'viewed',
+                        'signed',
+                        'declined',
+                      ],
                     },
                     {
                       'name': 'sentAt',
@@ -1935,7 +2505,7 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   'type': 'object',
                 },
                 {
-                  'name': 'file',
+                  'name': 'files',
                   'properties': [
                     {
                       'name': 'name',
@@ -1954,7 +2524,7 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                       'type': 'string',
                     },
                   ],
-                  'type': 'object',
+                  'type': '[object]',
                 },
               ],
               'synonyms': 'send envelope, dispatch signature, send for signing',
@@ -2005,6 +2575,13 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'draft',
+                        'sent',
+                        'viewed',
+                        'signed',
+                        'declined',
+                      ],
                     },
                     {
                       'name': 'sentAt',
@@ -2149,7 +2726,10 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   {
                     'documentContent': [
                       'object/get',
-                      '@payload.file',
+                      [
+                        'array/first',
+                        '@payload.files',
+                      ],
                       'content',
                     ],
                     'documentName': [
@@ -2461,6 +3041,9 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
             'ref': 'SignatureSessionPersistor',
           },
           {
+            'ref': 'EnvelopeSendDialog',
+          },
+          {
             'ref': 'EnvelopeDispatcher',
           },
         ],
@@ -2547,6 +3130,7 @@ export const StdEsignFlowSignatureSessionOrbitalManifest = {
   inlineTraitNames: [
     'SignatureSessionBrowse',
     'SignatureSessionPersistor',
+    'EnvelopeSendDialog',
     'EnvelopeDispatcher',
   ] as const,
 };

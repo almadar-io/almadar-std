@@ -238,6 +238,16 @@ orbital BillableHourOrbital {
     }
 
     state viewing_single {
+      INIT -> loading
+        (fetch BillableHour {
+          emit: { failure: BillableHourLoadFailed, success: BillableHourLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: table, rows: 6 }]
+        })
       CLOSE_VIEW -> loading
         (fetch BillableHour {
           emit: { failure: BillableHourLoadFailed, success: BillableHourLoaded }

@@ -130,6 +130,16 @@ orbital UploadedImageOrbital {
     }
 
     state uploading {
+      INIT -> loading
+        (fetch UploadedImage {
+          emit: { failure: UploadedImageLoadFailed, success: UploadedImageLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: grid, rows: 6 }]
+        })
       ;; The storage service owns the bytes; rows persist only the returned
       ;; addresses — ?items is shaped for this bulk create (url/name/sizeBytes/mimeType).
       UploadedImageStored -> uploading
@@ -166,6 +176,16 @@ orbital UploadedImageOrbital {
     }
 
     state error {
+      INIT -> loading
+        (fetch UploadedImage {
+          emit: { failure: UploadedImageLoadFailed, success: UploadedImageLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: grid, rows: 6 }]
+        })
       UploadedImageLoaded -> browsing
         (render-ui main {
           children: [{

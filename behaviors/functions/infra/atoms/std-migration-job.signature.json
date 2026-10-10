@@ -87,6 +87,7 @@
         "name": "MigrationJobLifecycle",
         "emittedEvents": [
           "DOCUMENTS_LISTED",
+          "MIGRATION_STAGED",
           "DOCUMENT_FETCHED",
           "COMMITTED",
           "MIGRATION_CALL_FAILED",
@@ -102,6 +103,12 @@
             "name": "DOCUMENTS_LISTED",
             "direction": "emit",
             "description": "migration.listDocuments service result, flattened onto the payload by the call-service effect executor",
+            "tier": "secondary"
+          },
+          {
+            "name": "MIGRATION_STAGED",
+            "direction": "emit",
+            "description": "migration.stage service result, flattened onto the payload by the call-service effect executor",
             "tier": "secondary"
           },
           {
@@ -172,12 +179,6 @@
             "name": "FETCH_DOCUMENT",
             "direction": "listen",
             "description": "Fetch one document's full content from the source during staging",
-            "tier": "internal"
-          },
-          {
-            "name": "MIGRATION_STAGED",
-            "direction": "listen",
-            "description": "Host staging finished — units are staged and validated; stats summarize staged/skipped counts for the preview. units/skipped/validationErrors optionally carry the full staged rows (server ImportPreview shape) so reviewing can render an ImportPreviewTree instead of staying headless.",
             "tier": "internal"
           },
           {
@@ -300,6 +301,10 @@
             "resource": "migration.listDocuments"
           },
           {
+            "kind": "call-service",
+            "resource": "migration.stage"
+          },
+          {
             "kind": "emit",
             "resource": "MIGRATION_COMPLETED"
           },
@@ -402,7 +407,8 @@
       "MIGRATION_DOCUMENT",
       "MIGRATION_FAILED",
       "MIGRATION_FETCHED",
-      "MIGRATION_REVIEW_READY"
+      "MIGRATION_REVIEW_READY",
+      "MIGRATION_STAGED"
     ],
     "listenedEvents": [],
     "exposure": "both",

@@ -1511,6 +1511,43 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                   'required': true,
                   'type': 'string',
                 },
+                'relation': {
+                  'name': 'relation',
+                  'properties': {
+                    'cardinality': {
+                      'name': 'cardinality',
+                      'required': false,
+                      'type': 'string',
+                      'values': [
+                        'one',
+                        'many',
+                        'one-to-many',
+                        'many-to-one',
+                        'many-to-many',
+                      ],
+                    },
+                    'entity': {
+                      'name': 'entity',
+                      'required': true,
+                      'type': 'string',
+                    },
+                  },
+                  'required': false,
+                  'type': 'object',
+                },
+                'type': {
+                  'name': 'type',
+                  'required': false,
+                  'type': 'string',
+                },
+                'values': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'values',
+                  'required': false,
+                  'type': 'array',
+                },
                 'variant': {
                   'name': 'variant',
                   'required': false,

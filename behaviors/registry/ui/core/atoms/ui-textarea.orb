@@ -37,6 +37,24 @@
         "parent": "trt_01KXG04MCKWWGCMEKTH9PS8M5J",
         "renames": []
       },
+      "evt_01M4GV8CBWAB6XKATCGYTHXNF2": {
+        "bakedName": "CHANGE",
+        "curName": "CHANGE",
+        "id": "evt_01M4GV8CBWAB6XKATCGYTHXNF2",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04MCKWWGCMEKTH9PS8M5J",
+        "renames": []
+      },
+      "evt_01M4GV8CBWQ25PWNYE5V50JWB5": {
+        "bakedName": "ACTION",
+        "curName": "ACTION",
+        "id": "evt_01M4GV8CBWQ25PWNYE5V50JWB5",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04MCKWWGCMEKTH9PS8M5J",
+        "renames": []
+      },
       "orb_01KXG04MCKHKW95HQC6PSRPNE7": {
         "bakedName": "TextareaOrbital",
         "curName": "TextareaOrbital",
@@ -72,6 +90,11 @@
           {
             "name": "id",
             "required": true,
+            "type": "string"
+          },
+          {
+            "intrinsic": true,
+            "name": "value",
             "type": "string"
           }
         ],
@@ -385,12 +408,22 @@
               "label": "Tab Index",
               "tier": "presentation",
               "type": "number"
+            },
+            "value": {
+              "description": "Controlled value, for a field the program fills or clears.",
+              "label": "Value",
+              "tier": "presentation",
+              "type": "string"
             }
           },
           "effectRow": [
             {
               "kind": "render-ui",
               "resource": "main"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.value"
             }
           ],
           "emits": [
@@ -426,7 +459,9 @@
             }
           ],
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "value"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -444,6 +479,30 @@
                 "id": "evt_01KXG04MCKB2ER4TBZH1H61PB8",
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "id": "evt_01M4GV8CBWQ25PWNYE5V50JWB5",
+                "key": "ACTION",
+                "name": "Action",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M4GV8CBWAB6XKATCGYTHXNF2",
+                "key": "CHANGE",
+                "name": "Change",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "description": "Declarative event: fires on ⌘/Ctrl+Enter with `{ value }`.",
@@ -484,6 +543,11 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.value",
+                    "@config.value"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
@@ -512,12 +576,105 @@
                       "rows": "@config.rows",
                       "skeleton": "@config.skeleton",
                       "tabIndex": "@config.tabIndex",
-                      "type": "textarea"
+                      "type": "textarea",
+                      "value": "@entity.value"
                     }
                   ]
                 ],
                 "event": "INIT",
                 "eventId": "evt_01KXG04MCKB2ER4TBZH1H61PB8",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.value",
+                    "@payload.value"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "@config.action",
+                      "aria-busy": "@config.ariaBusy",
+                      "aria-current": "@config.ariaCurrent",
+                      "aria-describedby": "@config.ariaDescribedby",
+                      "aria-expanded": "@config.ariaExpanded",
+                      "aria-hidden": "@config.ariaHidden",
+                      "aria-label": "@config.ariaLabel",
+                      "aria-labelledby": "@config.ariaLabelledby",
+                      "aria-live": "@config.ariaLive",
+                      "aria-pressed": "@config.ariaPressed",
+                      "aria-selected": "@config.ariaSelected",
+                      "className": "@config.className",
+                      "dir": "@config.dir",
+                      "enter": "@config.enter",
+                      "enterDelay": "@config.enterDelay",
+                      "error": "@config.error",
+                      "helperText": "@config.helperText",
+                      "label": "@config.label",
+                      "lang": "@config.lang",
+                      "onChange": "@config.onChange",
+                      "placeholder": "@config.placeholder",
+                      "role": "@config.role",
+                      "rows": "@config.rows",
+                      "skeleton": "@config.skeleton",
+                      "tabIndex": "@config.tabIndex",
+                      "type": "textarea",
+                      "value": "@entity.value"
+                    }
+                  ]
+                ],
+                "event": "ACTION",
+                "eventId": "evt_01M4GV8CBWQ25PWNYE5V50JWB5",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.value",
+                    "@payload.value"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "@config.action",
+                      "aria-busy": "@config.ariaBusy",
+                      "aria-current": "@config.ariaCurrent",
+                      "aria-describedby": "@config.ariaDescribedby",
+                      "aria-expanded": "@config.ariaExpanded",
+                      "aria-hidden": "@config.ariaHidden",
+                      "aria-label": "@config.ariaLabel",
+                      "aria-labelledby": "@config.ariaLabelledby",
+                      "aria-live": "@config.ariaLive",
+                      "aria-pressed": "@config.ariaPressed",
+                      "aria-selected": "@config.ariaSelected",
+                      "className": "@config.className",
+                      "dir": "@config.dir",
+                      "enter": "@config.enter",
+                      "enterDelay": "@config.enterDelay",
+                      "error": "@config.error",
+                      "helperText": "@config.helperText",
+                      "label": "@config.label",
+                      "lang": "@config.lang",
+                      "onChange": "@config.onChange",
+                      "placeholder": "@config.placeholder",
+                      "role": "@config.role",
+                      "rows": "@config.rows",
+                      "skeleton": "@config.skeleton",
+                      "tabIndex": "@config.tabIndex",
+                      "type": "textarea",
+                      "value": "@entity.value"
+                    }
+                  ]
+                ],
+                "event": "CHANGE",
+                "eventId": "evt_01M4GV8CBWAB6XKATCGYTHXNF2",
                 "from": "idle",
                 "to": "idle"
               }

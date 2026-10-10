@@ -640,6 +640,11 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'active',
+                      'inactive',
+                      'pending',
+                    ],
                   },
                   {
                     'name': 'createdAt',
@@ -683,6 +688,11 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'active',
+                      'inactive',
+                      'pending',
+                    ],
                   },
                   {
                     'name': 'createdAt',
@@ -756,6 +766,11 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'active',
+                        'inactive',
+                        'pending',
+                      ],
                     },
                     {
                       'name': 'createdAt',
@@ -876,6 +891,11 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'active',
+                        'inactive',
+                        'pending',
+                      ],
                     },
                     {
                       'name': 'createdAt',
@@ -1323,6 +1343,43 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
               'event': 'VIEW',
               'from': 'browsing',
               'to': 'viewing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'fetch',
+                  ('GalleryItem' satisfies _StdGalleryEntityName),
+                  {
+                    'emit': {
+                      'failure': 'GalleryItemLoadFailed',
+                      'success': 'GalleryItemLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      '@trait.ReloadSpinner',
+                      '@trait.ReloadCaption',
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'viewing',
+              'to': 'loading',
             },
             {
               'effects': [

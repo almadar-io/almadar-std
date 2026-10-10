@@ -4,8 +4,24 @@ app ui-code-runner-panel [
 ]
 ;; @pattern "code-runner-panel"
 orbital CodeRunnerPanelOrbital {
+  type CodeRunnerPanelOutput = {
+    stdout : string!
+    stderr : string!
+    exitCode : number!
+    testResults : [CodeRunnerPanelOutputTestResultsItem]!
+  }
+  type CodeRunnerPanelOutputTestResultsItem = {
+    input : string!
+    expectedOutput : string!
+    actualOutput : string!
+    passed : boolean!
+  }
+
   entity CodeRunnerPanelItem [runtime] {
     id : string!
+    code : string @intrinsic = ""
+    language : string @intrinsic = ""
+    runId : string @intrinsic
   }
 
   trait CodeRunnerPanelRender -> @rebindable CodeRunnerPanelItem [interaction, instance] {
@@ -13,11 +29,85 @@ orbital CodeRunnerPanelOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.code @config.code)
+        (set @entity.language @config.language)
+        (set @entity.runId @config.runId)
         (render-ui main {
-          code: @config.code
-          language: @config.language
+          code: @entity.code
+          language: @entity.language
           runnable: @config.runnable
           runEvent: @config.runEvent
+          resetEvent: @config.resetEvent
+          runId: @entity.runId
+          output: @config.output
+          running: @config.running
+          error: @config.error
+          className: @config.className
+          enter: @config.enter
+          enterDelay: @config.enterDelay
+          skeleton: @config.skeleton
+          aria-label: @config.ariaLabel
+          aria-labelledby: @config.ariaLabelledby
+          aria-describedby: @config.ariaDescribedby
+          aria-live: @config.ariaLive
+          aria-current: @config.ariaCurrent
+          aria-pressed: @config.ariaPressed
+          aria-expanded: @config.ariaExpanded
+          aria-selected: @config.ariaSelected
+          aria-hidden: @config.ariaHidden
+          aria-busy: @config.ariaBusy
+          role: @config.role
+          lang: @config.lang
+          dir: @config.dir
+          tabIndex: @config.tabIndex
+          type: code-runner-panel
+        })
+      RUN -> idle
+        (set @entity.code ?code)
+        (set @entity.language ?language)
+        (set @entity.runId ?runId)
+        (render-ui main {
+          code: @entity.code
+          language: @entity.language
+          runnable: @config.runnable
+          runEvent: @config.runEvent
+          resetEvent: @config.resetEvent
+          runId: @entity.runId
+          output: @config.output
+          running: @config.running
+          error: @config.error
+          className: @config.className
+          enter: @config.enter
+          enterDelay: @config.enterDelay
+          skeleton: @config.skeleton
+          aria-label: @config.ariaLabel
+          aria-labelledby: @config.ariaLabelledby
+          aria-describedby: @config.ariaDescribedby
+          aria-live: @config.ariaLive
+          aria-current: @config.ariaCurrent
+          aria-pressed: @config.ariaPressed
+          aria-expanded: @config.ariaExpanded
+          aria-selected: @config.ariaSelected
+          aria-hidden: @config.ariaHidden
+          aria-busy: @config.ariaBusy
+          role: @config.role
+          lang: @config.lang
+          dir: @config.dir
+          tabIndex: @config.tabIndex
+          type: code-runner-panel
+        })
+      RESET -> idle
+        (set @entity.runId ?runId)
+        (render-ui main {
+          code: @entity.code
+          language: @entity.language
+          runnable: @config.runnable
+          runEvent: @config.runEvent
+          resetEvent: @config.resetEvent
+          runId: @entity.runId
+          output: @config.output
+          running: @config.running
+          error: @config.error
           className: @config.className
           enter: @config.enter
           enterDelay: @config.enterDelay
@@ -40,6 +130,32 @@ orbital CodeRunnerPanelOrbital {
         })
     }
 
+    emits {
+      @config.runEvent -> external {
+        code : string!
+        language : string!
+        runId : string!
+      }
+        @description "Event emitted on Run as `UI:<runEvent>` with `{ code, language, runId }`. Defaults to 'RUN_CODE'."
+        @tier "essential"
+      @config.resetEvent -> external {
+        runId : string!
+      }
+        @description "Event emitted on Reset as `UI:<resetEvent>` with `{ runId }`; Reset only restores the code when absent."
+        @tier "essential"
+    }
+
+    listens {
+      RUN {
+        code : string!
+        language : string!
+        runId : string!
+      }
+      RESET {
+        runId : string!
+      }
+    }
+
     config {
       code : string = ""
         @label "Code"
@@ -49,13 +165,33 @@ orbital CodeRunnerPanelOrbital {
         @label "Language"
         @description "Programming language for syntax highlighting"
         @tier "presentation"
-      runnable : boolean = true
+      runnable : boolean = false
         @label "Runnable"
-        @description "Whether the panel allows running (false = read-only code block)"
+        @description "Whether the panel is editable and runnable (default false = read-only code block)"
         @tier "presentation"
-      runEvent : string = "RUN_CODE"
+      runEvent : event = "RUN"
         @label "Run Event"
-        @description "Event name to emit on run (emitted as `UI:<runEvent>`). Defaults to 'RUN_CODE'."
+        @description "Event emitted on Run as `UI:<runEvent>` with `{ code, language, runId }`. Defaults to 'RUN_CODE'."
+        @tier "presentation"
+      resetEvent : event = "RESET"
+        @label "Reset Event"
+        @description "Event emitted on Reset as `UI:<resetEvent>` with `{ runId }`; Reset only restores the code when absent."
+        @tier "presentation"
+      runId : string
+        @label "Run Id"
+        @description "Identifies this panel in its run/reset payloads (e.g. a lesson segment); empty when one panel stands alone."
+        @tier "presentation"
+      output : CodeRunnerPanelOutput
+        @label "Output"
+        @description "The program's result for the last run, bound back into the panel."
+        @tier "presentation"
+      running : boolean = false
+        @label "Running"
+        @description "True while the program is running the code."
+        @tier "presentation"
+      error : string
+        @label "Error"
+        @description "A run failure message from the program; replaces the output body."
         @tier "presentation"
       className : string
         @label "Class Name"

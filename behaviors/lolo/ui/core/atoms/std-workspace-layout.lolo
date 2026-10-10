@@ -1,0 +1,149 @@
+app std-workspace-layout [
+  version: "1.0.0",
+  description: "std-workspace-layout — an IDE-style workspace frame: an optional full-width top bar over one dock-layout whose regions are filled by embedded traits. mainTrait fills the centre (required); the far-left rail (an icon activity bar), the resizable left sidebar, the bottom panel, the status strip, the right sidebar and a floating strip centred over the main area are optional, each turned on by its show knob and filled by its trait knob. On a narrow screen the right sidebar and the bottom panel collapse behind top-bar buttons labelled by their label/icon knobs. Use for editors, designers and builders: the consumer composes each region from its own traits and the frame stays the same."
+]
+;; @capabilities "ide layout, editor workspace, workspace shell, dock layout, panels layout, code editor frame, designer workspace"
+orbital WorkspaceLayoutOrbital {
+  entity WorkspaceLayoutData [runtime] {
+    id : string!
+  }
+
+  trait EmptyRegion -> @rebindable WorkspaceLayoutData [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main null)
+    }
+  }
+
+  trait WorkspaceLayout -> @rebindable WorkspaceLayoutData [interaction, instance] {
+    initial: composing
+
+    state composing {
+      INIT -> composing
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: none
+          className: "h-full min-h-0"
+          children: [(if @config.showTopBar @config.topBarTrait null), {
+          type: dock-layout
+          className: "flex-1 min-h-0"
+          rail: (if @config.showRail @config.railTrait null)
+          sidebar: (if @config.showSidebar @config.sidebarTrait null)
+          sidebarMinSize: @config.sidebarMinSize
+          main: {
+            type: box
+            className: "relative h-full"
+            children: [@config.mainTrait, (if @config.showFloating { type: box, className: "pointer-events-none absolute inset-x-0 top-2 z-30 flex justify-center", children: [{ type: box, className: "pointer-events-auto", children: [@config.floatingTrait] }] } null)]
+          }
+          bottomPanel: (if @config.showBottomPanel @config.bottomPanelTrait null)
+          bottomPanelLabel: @config.bottomPanelLabel
+          bottomPanelIcon: @config.bottomPanelIcon
+          statusBar: (if @config.showStatusBar @config.statusBarTrait null)
+          secondarySidebar: (if @config.showSecondarySidebar @config.secondarySidebarTrait null)
+          secondarySidebarLabel: @config.secondarySidebarLabel
+          secondarySidebarIcon: @config.secondarySidebarIcon
+          secondarySidebarWidth: @config.secondarySidebarWidth
+          }]
+        })
+    }
+
+    config {
+      mainTrait : trait
+        @label "Main area"
+        @description "Trait rendered in the centre of the workspace (the editor, canvas or preview)."
+        @synonyms "editor area, canvas, centre panel, main panel"
+        @tier "presentation"
+      showRail : boolean = false
+        @label "Show an activity rail?"
+        @description "A narrow far-left strip, usually an icon bar that switches the sidebar's view."
+        @synonyms "activity bar, icon rail, nav rail"
+        @tier "presentation"
+      railTrait : trait = @trait.EmptyRegion
+        @label "Rail"
+        @description "Trait rendered in the far-left rail when showRail is on."
+        @tier "presentation"
+      showSidebar : boolean = true
+        @label "Show the left sidebar?"
+        @description "The collapsible, resizable left sidebar (an explorer, page list or chat)."
+        @synonyms "left panel, explorer, side panel"
+        @tier "presentation"
+      sidebarTrait : trait = @trait.EmptyRegion
+        @label "Left sidebar"
+        @description "Trait rendered in the left sidebar when showSidebar is on."
+        @tier "presentation"
+      sidebarMinSize : number = 240
+        @label "Narrowest left sidebar"
+        @description "Minimum width of the left sidebar in pixels."
+        @tier "presentation"
+      showBottomPanel : boolean = false
+        @label "Show a bottom panel?"
+        @description "A collapsible panel under the main area (problems, output, terminal)."
+        @synonyms "bottom drawer, output panel, problems panel, terminal"
+        @tier "presentation"
+      bottomPanelTrait : trait = @trait.EmptyRegion
+        @label "Bottom panel"
+        @description "Trait rendered in the bottom panel when showBottomPanel is on."
+        @tier "presentation"
+      bottomPanelLabel : string = Panel
+        @label "Bottom panel button"
+        @description "On a narrow screen, the top-bar button that opens the bottom panel."
+        @tier "presentation"
+      bottomPanelIcon : icon = "panel-bottom-open"
+        @label "Bottom panel icon"
+        @tier "presentation"
+      showStatusBar : boolean = false
+        @label "Show a status bar?"
+        @description "A slim strip pinned to the bottom of the frame."
+        @synonyms "status line, footer strip"
+        @tier "presentation"
+      statusBarTrait : trait = @trait.EmptyRegion
+        @label "Status bar"
+        @description "Trait rendered in the status bar when showStatusBar is on."
+        @tier "presentation"
+      showSecondarySidebar : boolean = false
+        @label "Show a right sidebar?"
+        @description "A collapsible right sidebar (an inspector or a chat)."
+        @synonyms "right panel, inspector, right dock"
+        @tier "presentation"
+      secondarySidebarTrait : trait = @trait.EmptyRegion
+        @label "Right sidebar"
+        @description "Trait rendered in the right sidebar when showSecondarySidebar is on."
+        @tier "presentation"
+      secondarySidebarLabel : string = Inspector
+        @label "Right sidebar button"
+        @description "On a narrow screen, the top-bar button that opens the right sidebar."
+        @tier "presentation"
+      secondarySidebarIcon : icon = "panel-right-open"
+        @label "Right sidebar icon"
+        @tier "presentation"
+      showTopBar : boolean = false
+        @label "Show a top bar above the workspace?"
+        @description "A full-width strip above every region (the project name, view toggles and actions)."
+        @synonyms "workspace header, toolbar strip, top strip"
+        @tier "presentation"
+      topBarTrait : trait = @trait.EmptyRegion
+        @label "Top bar"
+        @description "Trait rendered in the top bar when showTopBar is on."
+        @tier "presentation"
+      secondarySidebarWidth : number = 280
+        @label "Right sidebar width"
+        @description "Width of the right sidebar in pixels."
+        @tier "presentation"
+      showFloating : boolean = false
+        @label "Show a floating strip over the main area?"
+        @description "A strip centred at the top of the main area, over its content (a toolbar or a status pill)."
+        @synonyms "floating toolbar, top bar over canvas, overlay strip"
+        @tier "presentation"
+      floatingTrait : trait = @trait.EmptyRegion
+        @label "Floating strip"
+        @description "Trait rendered in the floating strip when showFloating is on."
+        @tier "presentation"
+    }
+  }
+
+
+  page "/workspace-layout" as WorkspaceLayoutPage -> WorkspaceLayout
+}

@@ -109,6 +109,11 @@ orbital ModQueueItemOrbital {
     }
 
     state loading {
+      INIT -> idle
+        (render-ui @config.reviewSlot null)
+        (fetch ModQueueItem {
+          emit: { failure: ModQueueItemLoadFailed, success: ModQueueItemLoaded }
+        })
       ModQueueItemLoaded -> loading when [">", (array/len (array/filter ?data (fn row (and ["=", (object/get @row "status"), pending] [">=", (object/get @row "flagCount"), @config.autoEscalateThreshold])))), 0]
         (set @entity.id (object/get (array/first (array/filter ?data (fn row (and ["=", (object/get @row "status"), pending] [">=", (object/get @row "flagCount"), @config.autoEscalateThreshold])))) id))
         (persist update ModQueueItem { id: @entity.id, status: escalated } {
@@ -180,6 +185,11 @@ orbital ModQueueItemOrbital {
     }
 
     state reviewing {
+      INIT -> idle
+        (render-ui @config.reviewSlot null)
+        (fetch ModQueueItem {
+          emit: { failure: ModQueueItemLoadFailed, success: ModQueueItemLoaded }
+        })
       APPROVE -> reviewing
         (persist update ModQueueItem { id: ?row.id, status: approved } {
           emit: { failure: ModQueueItemReviewFailed, success: ModQueueItemReviewed }
@@ -209,6 +219,11 @@ orbital ModQueueItemOrbital {
     }
 
     state error {
+      INIT -> idle
+        (render-ui @config.reviewSlot null)
+        (fetch ModQueueItem {
+          emit: { failure: ModQueueItemLoadFailed, success: ModQueueItemLoaded }
+        })
       OPEN -> loading
         (fetch ModQueueItem {
           emit: { failure: ModQueueItemLoadFailed, success: ModQueueItemLoaded }

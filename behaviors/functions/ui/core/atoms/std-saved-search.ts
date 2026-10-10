@@ -574,6 +574,11 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                   {
                     'name': 'alertFrequency',
                     'type': 'string',
+                    'values': [
+                      'instant',
+                      'daily',
+                      'weekly',
+                    ],
                   },
                   {
                     'name': 'userId',
@@ -665,6 +670,11 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                   {
                     'name': 'alertFrequency',
                     'type': 'string',
+                    'values': [
+                      'instant',
+                      'daily',
+                      'weekly',
+                    ],
                   },
                   {
                     'name': 'userId',
@@ -731,6 +741,11 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
               {
                 'name': 'alertFrequency',
                 'type': 'string',
+                'values': [
+                  'instant',
+                  'daily',
+                  'weekly',
+                ],
               },
               {
                 'name': 'userId',
@@ -779,6 +794,11 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
               {
                 'name': 'alertFrequency',
                 'type': 'string',
+                'values': [
+                  'instant',
+                  'daily',
+                  'weekly',
+                ],
               },
               {
                 'name': 'userId',
@@ -854,6 +874,11 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                     {
                       'name': 'alertFrequency',
                       'type': 'string',
+                      'values': [
+                        'instant',
+                        'daily',
+                        'weekly',
+                      ],
                     },
                     {
                       'name': 'userId',
@@ -1008,6 +1033,11 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                 {
                   'name': 'alertFrequency',
                   'type': 'string',
+                  'values': [
+                    'instant',
+                    'daily',
+                    'weekly',
+                  ],
                 },
                 {
                   'name': 'userId',
@@ -1070,6 +1100,11 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                 {
                   'name': 'alertFrequency',
                   'type': 'string',
+                  'values': [
+                    'instant',
+                    'daily',
+                    'weekly',
+                  ],
                 },
                 {
                   'name': 'userId',
@@ -1628,6 +1663,43 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
               'event': 'SavedSearchLoadFailed',
               'from': 'browsing',
               'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('SavedSearch' satisfies _StdSavedSearchEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SavedSearchLoadFailed',
+                      'success': 'SavedSearchLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'grid',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'editing',
+              'to': 'loading',
             },
             {
               'effects': [

@@ -127,7 +127,7 @@ orbital EventLogOrbital {
           }), {
             activeTab: @entity.filterKind
             tabChangeEvent: APPLY_FILTER
-            tabs: @entity.filterChips
+            tabs: (array/map @entity.filterChips (fn chip { id: (object/get @chip id ""), icon: (object/get @chip icon list), label: (if (= @index 0) @config.allLabel (if (= (array/len @config.kindLabels) 0) (object/get @chip label "") (array/nth @config.kindLabels (- @index 1)))) }))
             type: tabs
           }, {
             entity: @entity.entries
@@ -229,7 +229,7 @@ orbital EventLogOrbital {
           }), {
             activeTab: @entity.filterKind
             tabChangeEvent: APPLY_FILTER
-            tabs: @entity.filterChips
+            tabs: (array/map @entity.filterChips (fn chip { id: (object/get @chip id ""), icon: (object/get @chip icon list), label: (if (= @index 0) @config.allLabel (if (= (array/len @config.kindLabels) 0) (object/get @chip label "") (array/nth @config.kindLabels (- @index 1)))) }))
             type: tabs
           }, {
             entity: @entity.entries
@@ -348,7 +348,7 @@ orbital EventLogOrbital {
           }), {
             activeTab: @entity.filterKind
             tabChangeEvent: APPLY_FILTER
-            tabs: @entity.filterChips
+            tabs: (array/map @entity.filterChips (fn chip { id: (object/get @chip id ""), icon: (object/get @chip icon list), label: (if (= @index 0) @config.allLabel (if (= (array/len @config.kindLabels) 0) (object/get @chip label "") (array/nth @config.kindLabels (- @index 1)))) }))
             type: tabs
           }, {
             entity: @entity.entries
@@ -405,6 +405,16 @@ orbital EventLogOrbital {
     }
 
     state backfilling {
+      INIT -> loading
+        (fetch EventLogView {
+          emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
+        })
       SAVE_BACKFILL -> loading
         (persist create EventLogView ?data {
           emit: { failure: EventLogSaveFailed, success: EventLogSaved }
@@ -460,7 +470,7 @@ orbital EventLogOrbital {
           }), {
             activeTab: @entity.filterKind
             tabChangeEvent: APPLY_FILTER
-            tabs: @entity.filterChips
+            tabs: (array/map @entity.filterChips (fn chip { id: (object/get @chip id ""), icon: (object/get @chip icon list), label: (if (= @index 0) @config.allLabel (if (= (array/len @config.kindLabels) 0) (object/get @chip label "") (array/nth @config.kindLabels (- @index 1)))) }))
             type: tabs
           }, {
             entity: @entity.entries
@@ -618,6 +628,14 @@ orbital EventLogOrbital {
         @description "Name the field on this entity the kind filter compares against (the values of kindOptions). An entity whose kind lives under another column (e.g. status) sets it here, or the kind filter can never match an entry."
         @synonyms "kind column, type field, category column, filter by kind"
         @tier "policy"
+      kindLabels : [string] = []
+        @label "Kind labels"
+        @description "In kindOptions order: the label shown on each kind's filter chip, in place of its kindOptions label (render-only, so it may be translated)"
+        @tier "presentation"
+      allLabel : string = "All"
+        @label "All label"
+        @description "Label of the chip that shows every kind"
+        @tier "presentation"
       kindOptions : [KindOption] = [{
         icon: plus-circle
         key: created

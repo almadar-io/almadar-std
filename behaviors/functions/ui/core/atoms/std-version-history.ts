@@ -1526,49 +1526,117 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
             {
               'effects': [
                 [
-                  'set',
-                  '@entity.id',
-                  '@payload.row.id',
-                ],
-                [
-                  'set',
-                  '@entity.documentId',
-                  '@payload.row.documentId',
-                ],
-                [
-                  'set',
-                  '@entity.documentType',
-                  '@payload.row.documentType',
-                ],
-                [
-                  'set',
-                  '@entity.versionNumber',
-                  '@payload.row.versionNumber',
-                ],
-                [
-                  'set',
-                  '@entity.authorId',
-                  '@payload.row.authorId',
-                ],
-                [
-                  'set',
-                  '@entity.authorName',
-                  '@payload.row.authorName',
-                ],
-                [
-                  'set',
-                  '@entity.content',
-                  '@payload.row.content',
-                ],
-                [
-                  'set',
-                  '@entity.summary',
-                  '@payload.row.summary',
-                ],
-                [
-                  'set',
-                  '@entity.createdAt',
-                  '@payload.row.createdAt',
+                  'let',
+                  [
+                    [
+                      'rev',
+                      [
+                        'or',
+                        '@payload.row',
+                        [
+                          'array/find',
+                          '@entity.revisions',
+                          [
+                            'fn',
+                            'x',
+                            [
+                              '=',
+                              [
+                                'object/get',
+                                '@x',
+                                'id',
+                              ],
+                              '@payload.id',
+                            ],
+                          ],
+                        ],
+                      ],
+                    ],
+                  ],
+                  [
+                    'do',
+                    [
+                      'set',
+                      '@entity.id',
+                      [
+                        'object/get',
+                        '@rev',
+                        'id',
+                      ],
+                    ],
+                    [
+                      'set',
+                      '@entity.documentId',
+                      [
+                        'object/get',
+                        '@rev',
+                        'documentId',
+                      ],
+                    ],
+                    [
+                      'set',
+                      '@entity.documentType',
+                      [
+                        'object/get',
+                        '@rev',
+                        'documentType',
+                      ],
+                    ],
+                    [
+                      'set',
+                      '@entity.versionNumber',
+                      [
+                        'object/get',
+                        '@rev',
+                        'versionNumber',
+                      ],
+                    ],
+                    [
+                      'set',
+                      '@entity.authorId',
+                      [
+                        'object/get',
+                        '@rev',
+                        'authorId',
+                      ],
+                    ],
+                    [
+                      'set',
+                      '@entity.authorName',
+                      [
+                        'object/get',
+                        '@rev',
+                        'authorName',
+                      ],
+                    ],
+                    [
+                      'set',
+                      '@entity.content',
+                      [
+                        'object/get',
+                        '@rev',
+                        'content',
+                      ],
+                    ],
+                    [
+                      'set',
+                      '@entity.summary',
+                      [
+                        'object/get',
+                        '@rev',
+                        'summary',
+                      ],
+                    ],
+                    [
+                      'set',
+                      '@entity.createdAt',
+                      [
+                        'object/get',
+                        '@rev',
+                        'createdAt',
+                      ],
+                    ],
+                  ],
                 ],
                 [
                   'render-ui',
@@ -1888,6 +1956,78 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
             {
               'effects': [
                 [
+                  'set',
+                  '@entity.scopeKey',
+                  [
+                    'str/default',
+                    '@payload.id',
+                    '',
+                  ],
+                ],
+                [
+                  'fetch',
+                  ('Revision' satisfies _StdVersionHistoryEntityName),
+                  {
+                    'emit': {
+                      'failure': 'RevisionLoadFailed',
+                      'success': 'RevisionLoaded',
+                    },
+                    'filter': [
+                      'or',
+                      [
+                        '=',
+                        '@config.scopeField',
+                        '',
+                      ],
+                      [
+                        '=',
+                        [
+                          'str/default',
+                          '@payload.id',
+                          '',
+                        ],
+                        '',
+                      ],
+                      [
+                        '=',
+                        [
+                          'object/get',
+                          '@entity',
+                          '@config.scopeField',
+                        ],
+                        '@payload.id',
+                      ],
+                    ],
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'grid',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'viewing_single',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
                   'fetch',
                   ('Revision' satisfies _StdVersionHistoryEntityName),
                   {
@@ -2185,6 +2325,78 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
               ],
               'event': 'SHOW_HISTORY',
               'from': 'viewing_single',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.scopeKey',
+                  [
+                    'str/default',
+                    '@payload.id',
+                    '',
+                  ],
+                ],
+                [
+                  'fetch',
+                  ('Revision' satisfies _StdVersionHistoryEntityName),
+                  {
+                    'emit': {
+                      'failure': 'RevisionLoadFailed',
+                      'success': 'RevisionLoaded',
+                    },
+                    'filter': [
+                      'or',
+                      [
+                        '=',
+                        '@config.scopeField',
+                        '',
+                      ],
+                      [
+                        '=',
+                        [
+                          'str/default',
+                          '@payload.id',
+                          '',
+                        ],
+                        '',
+                      ],
+                      [
+                        '=',
+                        [
+                          'object/get',
+                          '@entity',
+                          '@config.scopeField',
+                        ],
+                        '@payload.id',
+                      ],
+                    ],
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'grid',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'comparing',
               'to': 'loading',
             },
             {

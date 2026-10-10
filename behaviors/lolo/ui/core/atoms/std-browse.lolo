@@ -411,6 +411,11 @@ orbital BrowseItemOrbital {
         @description "Domain icon shown when there are no rows."
         @synonyms "empty icon, no data icon"
         @tier "presentation"
+      itemEnter : "none" | "fade" | "rise" | "scale" | "slide" = none
+        @label "Row entrance"
+        @description "How a row arrives in the list; a row that changes place glides there (dense, feed, gallery and triage looks)"
+        @synonyms "animate rows, row animation, list motion"
+        @tier "presentation"
       browseLook : "table" | "dense" | "feed" | "gallery" | "master-detail" | "triage" = table
         @label "Browse look"
         @description "Layer 2 visual treatment for the whole browse surface. table = the default data-grid (bodyContent); dense = spreadsheet-style table with toolbar search (denseBodyContent); feed = chronological card stream (feedBodyContent); gallery = image-first responsive card grid (galleryBodyContent); master-detail = record-work split view — dense list left, clicked record's detail right (masterDetailBodyContent); triage = inbox-register compact rows for queue work (triageBodyContent). Selecting a non-table look swaps which body tree renders after rows load; any body may still be overridden directly at the call site for a one-off layout."
@@ -492,6 +497,7 @@ orbital BrowseItemOrbital {
           emptyTitle: @config.emptyTitle
           surface: @config.surface
           type: data-grid
+          itemEnter: @config.itemEnter
         }]
         direction: vertical
         gap: md
@@ -609,6 +615,7 @@ orbital BrowseItemOrbital {
           pageSize: @config.displayPageSize
           surface: (if ["=", @config.feedSurface, "plain"] none @config.surface)
           type: data-list
+          itemEnter: @config.itemEnter
           variant: (if ["=", @config.feedSurface, "divided"] card default)
         }]
         className: w-full
@@ -668,6 +675,7 @@ orbital BrowseItemOrbital {
           emptyTitle: @config.emptyTitle
           surface: @config.surface
           type: data-grid
+          itemEnter: @config.itemEnter
         }]
         className: w-full
         direction: vertical
@@ -723,6 +731,7 @@ orbital BrowseItemOrbital {
             pageSize: @config.displayPageSize
             surface: none
             type: data-list
+            itemEnter: @config.itemEnter
             variant: compact
           }]
           className: overflow-x-auto

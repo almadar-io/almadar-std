@@ -49,6 +49,8 @@ export interface StdUiBoxConfig {
   /** Default: `"ACTION"` */
   action?: string;
   actionPayload?: unknown;
+  /** Default: `false` */
+  animateChanges?: boolean;
   ariaBusy?: boolean;
   ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
   ariaDescribedby?: string;

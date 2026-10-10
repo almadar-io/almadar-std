@@ -373,6 +373,28 @@ export function stdAgentCompletionAgentCompletionOrbital(params: StdAgentComplet
               'effects': [
                 [
                   'set',
+                  '@entity.prompt',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.response',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'generating',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
                   '@entity.response',
                   '@payload.result',
                 ],

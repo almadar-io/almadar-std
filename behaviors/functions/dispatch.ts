@@ -91,6 +91,11 @@ import {
   isStdAgentTraceAgentTraceOrbitalParams,
 } from './agent/atoms/std-agent-trace.js';
 import {
+  stdAnalyticsAnalyticsOrbital,
+  StdAnalyticsAnalyticsOrbitalManifest,
+  isStdAnalyticsAnalyticsOrbitalParams,
+} from './infra/atoms/std-analytics.js';
+import {
   stdAnimTickAnimTickOrbital,
   StdAnimTickAnimTickOrbitalManifest,
   isStdAnimTickAnimTickOrbitalParams,
@@ -431,6 +436,11 @@ import {
   isStdRatingReviewRatingReviewOrbitalParams,
 } from './ui/core/atoms/std-rating-review.js';
 import {
+  stdRecordStoreRecordStoreOrbital,
+  StdRecordStoreRecordStoreOrbitalManifest,
+  isStdRecordStoreRecordStoreOrbitalParams,
+} from './infra/atoms/std-record-store.js';
+import {
   stdRecurrenceRecurrenceOrbital,
   StdRecurrenceRecurrenceOrbitalManifest,
   isStdRecurrenceRecurrenceOrbitalParams,
@@ -596,6 +606,11 @@ import {
   isStdUiDrawerSlotDrawerSlotOrbitalParams,
 } from './ui/core/organisms/ui-drawer-slot.js';
 import {
+  stdUiFlowCanvasFlowCanvasOrbital,
+  StdUiFlowCanvasFlowCanvasOrbitalManifest,
+  isStdUiFlowCanvasFlowCanvasOrbitalParams,
+} from './ui/avl/organisms/ui-flow-canvas.js';
+import {
   stdUiFormFormOrbital,
   StdUiFormFormOrbitalManifest,
   isStdUiFormFormOrbitalParams,
@@ -605,6 +620,11 @@ import {
   StdUiFormSectionFormSectionOrbitalManifest,
   isStdUiFormSectionFormSectionOrbitalParams,
 } from './ui/core/organisms/ui-form-section.js';
+import {
+  stdUiLayersPanelLayersPanelOrbital,
+  StdUiLayersPanelLayersPanelOrbitalManifest,
+  isStdUiLayersPanelLayersPanelOrbitalParams,
+} from './ui/avl/organisms/ui-layers-panel.js';
 import {
   stdUiMasterDetailLayoutMasterDetailLayoutOrbital,
   StdUiMasterDetailLayoutMasterDetailLayoutOrbitalManifest,
@@ -620,6 +640,11 @@ import {
   StdUiModalSlotModalSlotOrbitalManifest,
   isStdUiModalSlotModalSlotOrbitalParams,
 } from './ui/core/organisms/ui-modal-slot.js';
+import {
+  stdUiOrbInspectorOrbInspectorOrbital,
+  StdUiOrbInspectorOrbInspectorOrbitalManifest,
+  isStdUiOrbInspectorOrbInspectorOrbitalParams,
+} from './ui/avl/organisms/ui-orb-inspector.js';
 import {
   stdUiRuntimeDebuggerRuntimeDebuggerOrbital,
   StdUiRuntimeDebuggerRuntimeDebuggerOrbitalManifest,
@@ -822,6 +847,15 @@ REGISTRY_MUT.set('std-agent-trace::AgentTraceOrbital', {
     return stdAgentTraceAgentTraceOrbital(p);
   },
   manifest: StdAgentTraceAgentTraceOrbitalManifest,
+});
+REGISTRY_MUT.set('std-analytics::AnalyticsOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdAnalyticsAnalyticsOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-analytics::AnalyticsOrbital');
+    }
+    return stdAnalyticsAnalyticsOrbital(p);
+  },
+  manifest: StdAnalyticsAnalyticsOrbitalManifest,
 });
 REGISTRY_MUT.set('std-anim-tick::AnimTickOrbital', {
   factory: (p: object): OrbitalDefinition => {
@@ -1435,6 +1469,15 @@ REGISTRY_MUT.set('std-rating-review::RatingReviewOrbital', {
   },
   manifest: StdRatingReviewRatingReviewOrbitalManifest,
 });
+REGISTRY_MUT.set('std-record-store::RecordStoreOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdRecordStoreRecordStoreOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-record-store::RecordStoreOrbital');
+    }
+    return stdRecordStoreRecordStoreOrbital(p);
+  },
+  manifest: StdRecordStoreRecordStoreOrbitalManifest,
+});
 REGISTRY_MUT.set('std-recurrence::RecurrenceOrbital', {
   factory: (p: object): OrbitalDefinition => {
     if (!isStdRecurrenceRecurrenceOrbitalParams(p)) {
@@ -1732,6 +1775,15 @@ REGISTRY_MUT.set('ui-drawer-slot::DrawerSlotOrbital', {
   },
   manifest: StdUiDrawerSlotDrawerSlotOrbitalManifest,
 });
+REGISTRY_MUT.set('ui-flow-canvas::FlowCanvasOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiFlowCanvasFlowCanvasOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-flow-canvas::FlowCanvasOrbital');
+    }
+    return stdUiFlowCanvasFlowCanvasOrbital(p);
+  },
+  manifest: StdUiFlowCanvasFlowCanvasOrbitalManifest,
+});
 REGISTRY_MUT.set('ui-form::FormOrbital', {
   factory: (p: object): OrbitalDefinition => {
     if (!isStdUiFormFormOrbitalParams(p)) {
@@ -1749,6 +1801,15 @@ REGISTRY_MUT.set('ui-form-section::FormSectionOrbital', {
     return stdUiFormSectionFormSectionOrbital(p);
   },
   manifest: StdUiFormSectionFormSectionOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-layers-panel::LayersPanelOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiLayersPanelLayersPanelOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-layers-panel::LayersPanelOrbital');
+    }
+    return stdUiLayersPanelLayersPanelOrbital(p);
+  },
+  manifest: StdUiLayersPanelLayersPanelOrbitalManifest,
 });
 REGISTRY_MUT.set('ui-master-detail-layout::MasterDetailLayoutOrbital', {
   factory: (p: object): OrbitalDefinition => {
@@ -1776,6 +1837,15 @@ REGISTRY_MUT.set('ui-modal-slot::ModalSlotOrbital', {
     return stdUiModalSlotModalSlotOrbital(p);
   },
   manifest: StdUiModalSlotModalSlotOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-orb-inspector::OrbInspectorOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiOrbInspectorOrbInspectorOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-orb-inspector::OrbInspectorOrbital');
+    }
+    return stdUiOrbInspectorOrbInspectorOrbital(p);
+  },
+  manifest: StdUiOrbInspectorOrbInspectorOrbitalManifest,
 });
 REGISTRY_MUT.set('ui-runtime-debugger::RuntimeDebuggerOrbital', {
   factory: (p: object): OrbitalDefinition => {

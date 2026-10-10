@@ -1,0 +1,263 @@
+app ui-orb-inspector [
+  version: "1.0.0",
+  description: "OrbInspector — UI factory (1:1 with the @almadar/ui orb-inspector pattern)."
+]
+;; @pattern "orb-inspector"
+orbital OrbInspectorOrbital {
+  type OrbInspectorNode = {
+    orbitalName : string!
+    traitName : string
+    stateName : string
+    transitionEvent : string
+    fromState : string
+    toState : string
+    cardWidth : number
+    cardLabel : "screen"
+    enteredBy : [string]
+    patterns : [OrbInspectorNodePatternsItem]!
+    eventSources : [OrbInspectorNodeEventSourcesItem]!
+    layer : string
+    stateRole : "initial" | "terminal" | "hub" | "default"
+    effectTypes : [string]
+    guard : SExpr
+    entityName : string
+    persistence : string
+    fieldCount : number
+    traitCount : number
+    pageRoutes : [string]
+    status : "idle" | "running" | "success" | "error"
+    sourceSchemaName : string
+    focused : boolean
+    kind : "trait-card" | "system-orbital" | "system-band" | "dependency" | "dependency-column"
+    dependencyColumn : "app" | "own" | "io" | "std" | "primitive" | "unknown" | "client" | "host" | "service" | "store" | "external"
+    dependencyRole : "selected" | "upstream" | "downstream" | "both" | "dim"
+    flowTraits : number
+    flowRenderPieces : number
+    unitStatus : "ok" | "degraded" | "down" | "idle"
+    unitMetric : string
+    bandKind : "connected" | "standalone"
+    bandCount : number
+    wireEvents : [string]
+    transitions : [OrbInspectorNodeTransitionsItem]
+    emits : [string]
+    listens : [string]
+    linkedEntity : string
+    _fullSchema : SExpr
+  }
+  type OrbInspectorNodePatternsItem = {
+    slot : string!
+    pattern : SExpr!
+  }
+  type OrbInspectorNodeEventSourcesItem = {
+    event : string!
+    patternType : string!
+    label : string
+    path : string!
+    positionHint : number!
+    payloadFields : [OrbInspectorNodeEventSourcesItemPayloadFieldsItem]
+  }
+  type OrbInspectorNodeEventSourcesItemPayloadFieldsItem = {
+    name : string!
+    type : string!
+    required : boolean
+  }
+  type OrbInspectorNodeTransitionsItem = {
+    event : string!
+    fromState : string!
+    toState : string!
+  }
+  type OrbInspectorSelectedPattern = {
+    patternType : string!
+    patternId : string
+    nodeData : OrbInspectorSelectedPatternNodeData!
+    sourceTrait : string
+    rect : OrbInspectorSelectedPatternRect
+    selection : [string]
+    offsetInParent : OrbInspectorSelectedPatternOffsetInParent
+    focus : OrbInspectorSelectedPatternFocus
+    elements : [OrbInspectorSelectedPatternElementsItem]
+  }
+  type OrbInspectorSelectedPatternNodeData = {
+    orbitalName : string!
+    traitName : string
+    stateName : string
+    transitionEvent : string
+    fromState : string
+    toState : string
+    cardWidth : number
+    cardLabel : "screen"
+    enteredBy : [string]
+    patterns : [OrbInspectorSelectedPatternNodeDataPatternsItem]!
+    eventSources : [OrbInspectorSelectedPatternNodeDataEventSourcesItem]!
+    layer : string
+    stateRole : "initial" | "terminal" | "hub" | "default"
+    effectTypes : [string]
+    guard : SExpr
+    entityName : string
+    persistence : string
+    fieldCount : number
+    traitCount : number
+    pageRoutes : [string]
+    status : "idle" | "running" | "success" | "error"
+    sourceSchemaName : string
+    focused : boolean
+    kind : "trait-card" | "system-orbital" | "system-band" | "dependency" | "dependency-column"
+    dependencyColumn : "app" | "own" | "io" | "std" | "primitive" | "unknown" | "client" | "host" | "service" | "store" | "external"
+    dependencyRole : "selected" | "upstream" | "downstream" | "both" | "dim"
+    flowTraits : number
+    flowRenderPieces : number
+    unitStatus : "ok" | "degraded" | "down" | "idle"
+    unitMetric : string
+    bandKind : "connected" | "standalone"
+    bandCount : number
+    wireEvents : [string]
+    transitions : [OrbInspectorSelectedPatternNodeDataTransitionsItem]
+    emits : [string]
+    listens : [string]
+    linkedEntity : string
+    _fullSchema : SExpr
+  }
+  type OrbInspectorSelectedPatternNodeDataPatternsItem = {
+    slot : string!
+    pattern : SExpr!
+  }
+  type OrbInspectorSelectedPatternNodeDataEventSourcesItem = {
+    event : string!
+    patternType : string!
+    label : string
+    path : string!
+    positionHint : number!
+    payloadFields : [OrbInspectorSelectedPatternNodeDataEventSourcesItemPayloadFieldsItem]
+  }
+  type OrbInspectorSelectedPatternNodeDataEventSourcesItemPayloadFieldsItem = {
+    name : string!
+    type : string!
+    required : boolean
+  }
+  type OrbInspectorSelectedPatternNodeDataTransitionsItem = {
+    event : string!
+    fromState : string!
+    toState : string!
+  }
+  type OrbInspectorSelectedPatternRect = {
+    top : number!
+    left : number!
+    width : number!
+    height : number!
+  }
+  type OrbInspectorSelectedPatternOffsetInParent = {
+    left : number!
+    top : number!
+    right : number!
+    bottom : number!
+    parentWidth : number!
+    parentHeight : number!
+  }
+  type OrbInspectorSelectedPatternFocus = {
+    level : "node" | "slot" | "field" | "effect" | "trait" | "page" | "orbital"!
+    orbital : string!
+    trait : string
+    transition : string
+    state : string
+    slot : string
+    path : string
+    patternType : string
+    entity : string
+    source : string
+    label : string!
+  }
+  type OrbInspectorSelectedPatternElementsItem = {
+    level : "node" | "slot" | "field" | "effect" | "trait" | "page" | "orbital"!
+    orbital : string!
+    trait : string
+    transition : string
+    state : string
+    slot : string
+    path : string
+    patternType : string
+    entity : string
+    source : string
+    label : string!
+  }
+
+  entity OrbInspectorItem [runtime] {
+    id : string!
+  }
+
+  trait OrbInspectorRender -> @rebindable OrbInspectorItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          node: @config.node
+          schema: @config.schema
+          editable: @config.editable
+          userType: @config.userType
+          defaultTab: @config.defaultTab
+          onTabChange: @config.onTabChange
+          onSchemaChange: @config.onSchemaChange
+          onClose: @config.onClose
+          selectedPattern: @config.selectedPattern
+          type: orb-inspector
+        })
+    }
+
+    emits {
+      @config.onTabChange -> external {
+        tab : string
+      }
+        @description "Fires whenever the tab-bar selection changes."
+        @tier "essential"
+      @config.onSchemaChange -> external {
+        schema : SExpr
+      }
+        @description "onSchemaChange prop"
+        @tier "essential"
+      @config.onClose -> external { }
+        @description "onClose prop"
+        @tier "essential"
+    }
+
+    config {
+      node : OrbInspectorNode = { orbitalName: "Orbital Name", traitName: "Trait Name", stateName: "State Name", transitionEvent: "Transition Event", fromState: "From State", toState: "To State", cardWidth: 1, cardLabel: screen, enteredBy: ["Item", "Item 2"], patterns: [{ slot: "Slot", pattern: {} }, { slot: "Slot 2", pattern: {} }], eventSources: [{ event: "Event", patternType: "Pattern Type", label: "Label", path: "Path", positionHint: 1, payloadFields: [{ name: "Name", type: "Type", required: false }, { name: "Name 2", type: "Type 2", required: true }] }, { event: "Event 2", patternType: "Pattern Type 2", label: "Label 2", path: "Path 2", positionHint: 2, payloadFields: [{ name: "Name", type: "Type", required: false }, { name: "Name 2", type: "Type 2", required: true }] }], layer: "Layer", stateRole: initial, effectTypes: ["Item", "Item 2"], entityName: "Entity Name", persistence: "Persistence", fieldCount: 1, traitCount: 1, pageRoutes: ["Item", "Item 2"], status: idle, sourceSchemaName: "Source Schema Name", focused: false, kind: "trait-card", dependencyColumn: app, dependencyRole: selected, flowTraits: 1, flowRenderPieces: 1, unitStatus: ok, unitMetric: "Unit Metric", bandKind: connected, bandCount: 1, wireEvents: ["Item", "Item 2"], transitions: [{ event: "Event", fromState: "From State", toState: "To State" }, { event: "Event 2", fromState: "From State 2", toState: "To State 2" }], emits: ["Item", "Item 2"], listens: ["Item", "Item 2"], linkedEntity: "Linked Entity" }
+        @label "Node"
+        @description "node prop"
+        @tier "presentation"
+      schema : SExpr
+        @label "Schema"
+        @description "schema prop"
+        @tier "presentation"
+      editable : boolean = false
+        @label "Editable"
+        @description "editable prop"
+        @tier "presentation"
+      userType : "builder" | "designer" | "architect" = builder
+        @label "User Type"
+        @description "Studio persona viewing the inspector. Controls tab visibility (Code is architect-only, Styles is universal) and section visibility (Entity, raw guard, raw effects are architect-only). Default `'builder'` matches pre-Phase-2 behavior except for the new Styles tab, which every persona gets."
+        @tier "presentation"
+      defaultTab : "inspector" | "design" | "prototype" | "code"
+        @label "Default Tab"
+        @description "Initial tab on mount. Local state still owns the active tab after that — this does not make the component controlled. Enables deep-linking into a specific tab (e.g. from a LayersPanel selection)."
+        @tier "presentation"
+      onTabChange : event = "TAB_CHANGE"
+        @label "On Tab Change"
+        @description "Fires whenever the tab-bar selection changes."
+        @tier "presentation"
+      onSchemaChange : event = "SCHEMA_CHANGE"
+        @label "On Schema Change"
+        @description "onSchemaChange prop"
+        @tier "presentation"
+      onClose : event = "CLOSE"
+        @label "On Close"
+        @description "onClose prop"
+        @tier "presentation"
+      selectedPattern : OrbInspectorSelectedPattern
+        @label "Selected Pattern"
+        @description "In-node pattern selection, when this inspector is rendered OUTSIDE `FlowCanvas` (see `FlowCanvas`'s `externalInspector` + `onSelectedPatternChange`). `PatternSelectionContext` only reaches descendants of `FlowCanvas`'s own render tree, so a standalone consumer has no other way to feed pattern-level selection in — pass `FlowCanvas`'s `onSelectedPatternChange` payload straight through here. When omitted (the inline, built-in-inspector usage), falls back to `PatternSelectionContext`, unchanged."
+        @tier "presentation"
+    }
+  }
+
+  page "/orb-inspector" as OrbInspectorPage -> OrbInspectorRender
+}

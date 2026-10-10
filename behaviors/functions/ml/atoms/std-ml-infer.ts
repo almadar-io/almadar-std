@@ -742,6 +742,48 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
               'effects': [
                 [
                   'set',
+                  '@entity.input',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.output',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.confidence',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.violations',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.reason',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.request',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'inferring',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
                   '@entity.output',
                   '@payload.output',
                 ],

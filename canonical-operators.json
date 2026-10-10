@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-08T16:52:49.550Z",
+  "generated": "2026-10-09T08:20:56.696Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -2113,8 +2113,8 @@
       "params": [
         {
           "name": "value",
-          "type": "trait",
-          "description": "The trait value"
+          "type": "any",
+          "description": "A trait value, an orbital value, or { behavior }"
         },
         {
           "name": "options",
@@ -2177,20 +2177,39 @@
       ],
       "docsSource": "generated"
     },
+    "behavior/ref": {
+      "category": "std-behavior-value",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "behavior",
+      "description": "A whole behavior as a value (`.lolo` type `behavior`), named by its specifier: `<prefix>/<name>`, `std/behaviors/<name>`, or a workspace-relative `./<dir>/<name>` (what `program/eval` wrote). A literal specifier is resolved when the program is checked; a computed one when the value is mounted. Embedding the value in a render tree runs the whole program in place, with its own pages.",
+      "module": "behavior",
+      "params": [
+        {
+          "name": "specifier",
+          "type": "string",
+          "description": "The behavior specifier"
+        }
+      ],
+      "examples": [
+        "(behavior/ref \"./orbitals/shop\")"
+      ],
+      "docsSource": "generated"
+    },
     "behavior/source": {
       "category": "std-behavior",
       "minArity": 1,
       "maxArity": 2,
       "returnType": "sexpr",
-      "description": "The behavior a trait value belongs to, as a quoted program.",
+      "description": "The behavior a trait value, an orbital value or `{ behavior }` names, as a quoted program.",
       "module": "behavior",
       "hasSideEffects": true,
       "runsOn": "server",
       "params": [
         {
           "name": "value",
-          "type": "trait",
-          "description": "The trait value"
+          "type": "any",
+          "description": "A trait value, an orbital value, or { behavior }"
         },
         {
           "name": "options",
@@ -6908,7 +6927,7 @@
       "minArity": 1,
       "maxArity": 3,
       "returnType": "EvaluatedProgram",
-      "description": "Validate a program (`.orb` IR) at the 0-error / 0-warning bar and write it into the workspace (default `orbitals/<name>.orb`, or the project named by `into`). Success carries `{ behavior, traits }` — the written program and its traits as values; failure carries the validator errors as data. A `prior` program keeps ids stable across a re-evaluation.",
+      "description": "Validate a program (`.orb` IR) at the 0-error / 0-warning bar and write it into the workspace (default `orbitals/<name>.orb`, or the project named by `into`). Success carries `{ behavior, traits, value }` — where the program was written, its traits as values, and the program itself as a behavior value; failure carries the validator errors as data. A `prior` program keeps ids stable across a re-evaluation.",
       "module": "program",
       "hasSideEffects": true,
       "runsOn": "server",

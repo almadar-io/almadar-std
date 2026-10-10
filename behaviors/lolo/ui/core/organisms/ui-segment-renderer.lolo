@@ -53,6 +53,18 @@ orbital SegmentRendererOrbital {
     reflectionNotes : [string]
     bloomAnswered : Map string boolean
   }
+  type SegmentRendererCodeOutputsValue = {
+    stdout : string!
+    stderr : string!
+    exitCode : number!
+    testResults : [SegmentRendererCodeOutputsValueTestResultsItem]!
+  }
+  type SegmentRendererCodeOutputsValueTestResultsItem = {
+    input : string!
+    expectedOutput : string!
+    actualOutput : string!
+    passed : boolean!
+  }
 
   entity SegmentRendererItem [runtime] {
     id : string!
@@ -78,6 +90,10 @@ orbital SegmentRendererOrbital {
           className: @config.className
           containerClassName: @config.containerClassName
           userProgress: @config.userProgress
+          runCodeEvent: @config.runCodeEvent
+          resetCodeEvent: @config.resetCodeEvent
+          codeOutputs: @config.codeOutputs
+          runningCode: @config.runningCode
           enter: @config.enter
           enterDelay: @config.enterDelay
           skeleton: @config.skeleton
@@ -131,6 +147,18 @@ orbital SegmentRendererOrbital {
         annotationId : string
       }
         @description "Event emitted when a highlighted passage is clicked (as `UI:<annotationEvent>`)"
+        @tier "essential"
+      @config.runCodeEvent -> external {
+        code : string!
+        language : string!
+        runId : string!
+      }
+        @description "Event a runnable code block emits on Run (`{ code, language, runId }`, runId = the segment index). Omit to render runnable blocks read-only."
+        @tier "essential"
+      @config.resetCodeEvent -> external {
+        runId : string!
+      }
+        @description "Event a runnable code block emits on Reset (`{ runId }`)."
         @tier "essential"
     }
 
@@ -190,6 +218,22 @@ orbital SegmentRendererOrbital {
       userProgress : SegmentRendererUserProgress
         @label "User Progress"
         @description "User progress for restoring activation/reflection state"
+        @tier "presentation"
+      runCodeEvent : event = "RUN_CODE"
+        @label "Run Code Event"
+        @description "Event a runnable code block emits on Run (`{ code, language, runId }`, runId = the segment index). Omit to render runnable blocks read-only."
+        @tier "presentation"
+      resetCodeEvent : event = "RESET_CODE"
+        @label "Reset Code Event"
+        @description "Event a runnable code block emits on Reset (`{ runId }`)."
+        @tier "presentation"
+      codeOutputs : Map string SegmentRendererCodeOutputsValue = { item: { stdout: "Stdout", stderr: "Stderr", exitCode: 1, testResults: [{ input: "Input", expectedOutput: "Expected Output", actualOutput: "Actual Output", passed: false }, { input: "Input 2", expectedOutput: "Expected Output 2", actualOutput: "Actual Output 2", passed: true }] } }
+        @label "Code Outputs"
+        @description "The program's run results, keyed by segment runId."
+        @tier "presentation"
+      runningCode : string
+        @label "Running Code"
+        @description "The runId the program is currently running."
         @tier "presentation"
       enter : "none" | "fade" | "rise" | "scale" | "slide"
         @label "Enter"

@@ -90,6 +90,7 @@
           "CREATE",
           "RESEND_REQUEST",
           "CHECK_ENVELOPE_STATUS",
+          "SEND_FOR_SIGNATURE",
           "REQUEST_DELETE",
           "SignatureSessionLoaded",
           "SignatureSessionLoadFailed"
@@ -119,6 +120,13 @@
             "direction": "emit",
             "description": "Pull the provider's current envelope status for this request.",
             "synonyms": "refresh status, check signature, poll envelope",
+            "tier": "domain"
+          },
+          {
+            "name": "SEND_FOR_SIGNATURE",
+            "direction": "emit",
+            "description": "Open the send step for this request: attach the document and dispatch it for signature.",
+            "synonyms": "send for signature, dispatch, send envelope",
             "tier": "domain"
           },
           {
@@ -156,6 +164,11 @@
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
+              {
+                "event": "SEND_FOR_SIGNATURE",
+                "label": "Send for signature",
+                "variant": "primary"
+              },
               {
                 "event": "RESEND_REQUEST",
                 "label": "Resend",
@@ -522,6 +535,54 @@
         ]
       },
       {
+        "name": "EnvelopeSendDialog",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "SEND_FOR_SIGNATURE"
+        ],
+        "events": [
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "REQUEST_SEND",
+            "direction": "listen",
+            "description": "A request's send step was opened.",
+            "synonyms": "open send, start send",
+            "tier": "presentation"
+          },
+          {
+            "name": "SEND_ENVELOPE",
+            "direction": "listen",
+            "description": "The document was dropped; the request is being dispatched.",
+            "synonyms": "send, dispatch",
+            "tier": "presentation"
+          },
+          {
+            "name": "CLOSE",
+            "direction": "listen",
+            "tier": "presentation"
+          }
+        ],
+        "overridableConfigKeys": [],
+        "capabilities": [],
+        "linkedEntity": "SignatureSession",
+        "transitionEvents": [
+          "CLOSE",
+          "INIT",
+          "REQUEST_SEND",
+          "SEND_ENVELOPE"
+        ],
+        "definerKnobs": [],
+        "effectRow": [
+          {
+            "kind": "render-ui",
+            "resource": "modal"
+          }
+        ]
+      },
+      {
         "name": "EnvelopeDispatcher",
         "emittedEvents": [
           "ENVELOPE_SENT",
@@ -574,7 +635,7 @@
           {
             "name": "SEND_ENVELOPE",
             "direction": "listen",
-            "description": "Dispatch this session as a real e-sign envelope; `file.content` is the document as a base64 data URL (UploadDropZone shape).",
+            "description": "Dispatch this session as a real e-sign envelope; the first of `files` is the document, its `content` a base64 data URL (UploadDropZone shape).",
             "synonyms": "send envelope, dispatch signature, send for signing",
             "tier": "domain"
           },
@@ -645,6 +706,7 @@
       "ENVELOPE_STATUS_LOADED",
       "REQUEST_DELETE",
       "RESEND_REQUEST",
+      "SEND_FOR_SIGNATURE",
       "SESSION_CREATED",
       "SESSION_DELETED",
       "SESSION_RESENT",
@@ -658,6 +720,7 @@
       "REQUEST_DELETE",
       "RESEND_REQUEST",
       "SAVE",
+      "SEND_FOR_SIGNATURE",
       "SESSION_CREATED",
       "SESSION_DELETED",
       "SESSION_RESENT"

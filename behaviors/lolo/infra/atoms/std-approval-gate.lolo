@@ -159,6 +159,12 @@ orbital ApprovalGateOrbital {
     }
 
     state loading {
+      INIT -> idle
+        (render-ui @config.reviewSlot null)
+        (fetch ApprovalRequest {
+          filter: ["=", (object/get @entity status), "pending"]
+          emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
+        })
       ApprovalRequestLoaded -> reviewing
         (render-ui @config.reviewSlot {
           children: [{
@@ -215,6 +221,12 @@ orbital ApprovalGateOrbital {
     }
 
     state reviewing {
+      INIT -> idle
+        (render-ui @config.reviewSlot null)
+        (fetch ApprovalRequest {
+          filter: ["=", (object/get @entity status), "pending"]
+          emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
+        })
       ;; The role guard IS the enforcement (both execution paths honor
       ;; transition guards, for the button and for a bus-delivered event
       ;; alike): empty approverRoles = ungated, otherwise the viewer's role
@@ -281,6 +293,12 @@ orbital ApprovalGateOrbital {
     }
 
     state denying {
+      INIT -> idle
+        (render-ui @config.reviewSlot null)
+        (fetch ApprovalRequest {
+          filter: ["=", (object/get @entity status), "pending"]
+          emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
+        })
       CONFIRM_DENY -> reviewing
         (set @entity.id (object/get ?data id))
         (set @entity.status denied)
@@ -311,6 +329,12 @@ orbital ApprovalGateOrbital {
     }
 
     state error {
+      INIT -> idle
+        (render-ui @config.reviewSlot null)
+        (fetch ApprovalRequest {
+          filter: ["=", (object/get @entity status), "pending"]
+          emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
+        })
       OPEN -> loading
         (fetch ApprovalRequest {
           filter: ["=", (object/get @entity status), "pending"]

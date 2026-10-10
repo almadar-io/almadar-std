@@ -149,6 +149,8 @@ orbital ModalEditorOrbital {
     }
 
     state INSERT {
+      INIT -> NORMAL
+        (set @entity.count 0)
       KEY -> NORMAL when ["=", ?key, "Escape"]
         (emit MOTION { editorId: ?editorId, motion: "left", count: 1 })
         (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block" })
@@ -159,6 +161,8 @@ orbital ModalEditorOrbital {
     }
 
     state VISUAL {
+      INIT -> NORMAL
+        (set @entity.count 0)
       KEY -> NORMAL when ["=", ?key, "Escape"]
         (set @entity.count 0)
         (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block" })
@@ -205,6 +209,8 @@ orbital ModalEditorOrbital {
     }
 
     state OPERATOR_PENDING {
+      INIT -> NORMAL
+        (set @entity.count 0)
       KEY -> NORMAL when (and ["=", ?key, @entity.operatorKey] ["=", @entity.operator, "goto"])
         (emit MOTION { editorId: ?editorId, motion: "doc-start", count: 1 })
         (set @entity.operator "")
@@ -279,6 +285,8 @@ orbital ModalEditorOrbital {
     }
 
     state COMMAND {
+      INIT -> NORMAL
+        (set @entity.count 0)
       KEY -> COMMAND when ["=", ?key, "Backspace"]
         (set @entity.cmdline (str/slice @entity.cmdline 0 (- (str/len @entity.cmdline) 1)))
 

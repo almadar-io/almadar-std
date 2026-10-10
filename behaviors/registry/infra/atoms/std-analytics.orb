@@ -1,0 +1,438 @@
+{
+  "description": "std-analytics — cookieless first-party analytics for one page: on entry it reports a pageview of `path` to the collector at `endpoint`, and each TRACK it hears reports a named event (a download, a sign-up) with its properties. Calls run in the browser through the `analytics` service; an empty `endpoint` or a local host sends nothing. Compose one per tracked page, listed in that page's traits.",
+  "ledger": {
+    "entries": {
+      "ent_01M4F518NMAG2SVYZVM5FT6GPY": {
+        "bakedName": "AnalyticsRecord",
+        "curName": "AnalyticsRecord",
+        "id": "ent_01M4F518NMAG2SVYZVM5FT6GPY",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01M4F518NM6RFJYHFRHJWJ63Q1": {
+        "bakedName": "TRACK",
+        "curName": "TRACK",
+        "id": "evt_01M4F518NM6RFJYHFRHJWJ63Q1",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M4F518NMEQBHZM9TSF962M0M",
+        "renames": []
+      },
+      "evt_01M4F518NMAEGM6G0RVSTQCH3C": {
+        "bakedName": "REPORT_FAILED",
+        "curName": "REPORT_FAILED",
+        "id": "evt_01M4F518NMAEGM6G0RVSTQCH3C",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M4F518NMEQBHZM9TSF962M0M",
+        "renames": []
+      },
+      "evt_01M4F518NMBRXSBX5N22J1C9D9": {
+        "bakedName": "REPORTED",
+        "curName": "REPORTED",
+        "id": "evt_01M4F518NMBRXSBX5N22J1C9D9",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M4F518NMEQBHZM9TSF962M0M",
+        "renames": []
+      },
+      "evt_01M4F518NMQHYK23AG6X2FEPKQ": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M4F518NMQHYK23AG6X2FEPKQ",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M4F518NMEQBHZM9TSF962M0M",
+        "renames": []
+      },
+      "orb_01M4F518NMSR06N615E6EHWYCP": {
+        "bakedName": "AnalyticsOrbital",
+        "curName": "AnalyticsOrbital",
+        "id": "orb_01M4F518NMSR06N615E6EHWYCP",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01M4F518NMTR4Z4CFW9C4M3JS2": {
+        "bakedName": "AnalyticsPage",
+        "curName": "AnalyticsPage",
+        "id": "pag_01M4F518NMTR4Z4CFW9C4M3JS2",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M4F518NMEQBHZM9TSF962M0M": {
+        "bakedName": "Analytics",
+        "curName": "Analytics",
+        "id": "trt_01M4F518NMEQBHZM9TSF962M0M",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "std-analytics",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "default": 0.0,
+            "description": "How many pageviews and events the collector accepted",
+            "name": "reported",
+            "synonyms": "sent, count, beacons",
+            "type": "number"
+          },
+          {
+            "default": "reporting",
+            "description": "What happened to the last report",
+            "name": "status",
+            "synonyms": "state, result",
+            "type": "string",
+            "values": [
+              "reporting",
+              "reported",
+              "skipped",
+              "failed"
+            ]
+          },
+          {
+            "default": "",
+            "description": "Why the last report failed; blank = none",
+            "name": "errorMessage",
+            "synonyms": "error, failure reason",
+            "type": "string"
+          }
+        ],
+        "id": "ent_01M4F518NMAG2SVYZVM5FT6GPY",
+        "name": "AnalyticsRecord",
+        "persistence": "runtime"
+      },
+      "id": "orb_01M4F518NMSR06N615E6EHWYCP",
+      "name": "AnalyticsOrbital",
+      "pages": [
+        {
+          "id": "pag_01M4F518NMTR4Z4CFW9C4M3JS2",
+          "name": "AnalyticsPage",
+          "path": "/analytics",
+          "traits": [
+            {
+              "ref": "Analytics",
+              "refId": "trt_01M4F518NMEQBHZM9TSF962M0M"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "config": {
+            "domain": {
+              "default": "",
+              "description": "The site id each report is recorded under; empty records the page's host",
+              "label": "Site",
+              "synonyms": "site id, hostname, property",
+              "tier": "domain",
+              "type": "string"
+            },
+            "endpoint": {
+              "default": "",
+              "description": "The analytics collector's ingest URL (`POST`); empty sends nothing",
+              "label": "Collector endpoint",
+              "synonyms": "analytics url, collector, stats endpoint, beacon url",
+              "tier": "domain",
+              "type": "string"
+            },
+            "path": {
+              "default": "/",
+              "description": "The path this page is reported under, starting with /",
+              "label": "Page path",
+              "synonyms": "url, route, page",
+              "tier": "domain",
+              "type": "string"
+            },
+            "statusSlot": {
+              "default": "main",
+              "description": "Where the atom shows its one-line status; a page running it in the background sends it to `system`",
+              "label": "Status slot",
+              "synonyms": "status area, slot",
+              "tier": "presentation",
+              "type": "slot"
+            }
+          },
+          "effectRow": [
+            {
+              "kind": "call-service",
+              "resource": "analytics.pageview"
+            },
+            {
+              "kind": "call-service",
+              "resource": "analytics.track"
+            },
+            {
+              "kind": "render-ui",
+              "resolved": false,
+              "resource": "@config.statusSlot"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.errorMessage"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.reported"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.status"
+            }
+          ],
+          "emits": [
+            {
+              "description": "The report was handed to the collector (`sent`), or skipped (no endpoint, or a local host)",
+              "event": "REPORTED",
+              "eventId": "evt_01M4F518NMBRXSBX5N22J1C9D9",
+              "payloadSchema": [
+                {
+                  "name": "sent",
+                  "required": true,
+                  "type": "boolean"
+                }
+              ],
+              "tier": "secondary"
+            },
+            {
+              "description": "The report could not be sent (a bad event name, or no analytics service on this host)",
+              "event": "REPORT_FAILED",
+              "eventId": "evt_01M4F518NMAEGM6G0RVSTQCH3C",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "secondary"
+            }
+          ],
+          "entityRefIds": {
+            "AnalyticsRecord": "ent_01M4F518NMAG2SVYZVM5FT6GPY"
+          },
+          "id": "trt_01M4F518NMEQBHZM9TSF962M0M",
+          "linkedEntity": "AnalyticsRecord",
+          "linkedEntityId": "ent_01M4F518NMAG2SVYZVM5FT6GPY",
+          "name": "Analytics",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M4F518NMQHYK23AG6X2FEPKQ",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Report a named event on this page, with its properties",
+                "external": true,
+                "id": "evt_01M4F518NM6RFJYHFRHJWJ63Q1",
+                "key": "TRACK",
+                "name": "Track",
+                "payloadSchema": [
+                  {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "props",
+                    "type": "Map<string,string>"
+                  }
+                ],
+                "synonyms": "track event, log event, record click, analytics event"
+              },
+              {
+                "description": "The report was handed to the collector (`sent`), or skipped (no endpoint, or a local host)",
+                "id": "evt_01M4F518NMBRXSBX5N22J1C9D9",
+                "key": "REPORTED",
+                "name": "Reported",
+                "payloadSchema": [
+                  {
+                    "name": "sent",
+                    "required": true,
+                    "type": "boolean"
+                  }
+                ],
+                "tier": "secondary"
+              },
+              {
+                "description": "The report could not be sent (a bad event name, or no analytics service on this host)",
+                "id": "evt_01M4F518NMAEGM6G0RVSTQCH3C",
+                "key": "REPORT_FAILED",
+                "name": "Report Failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "secondary"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "active"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "call-service",
+                    "analytics",
+                    "pageview",
+                    {
+                      "domain": "@config.domain",
+                      "endpoint": "@config.endpoint",
+                      "path": "@config.path"
+                    },
+                    {
+                      "emit": {
+                        "failure": "REPORT_FAILED",
+                        "success": "REPORTED"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "@config.statusSlot",
+                    {
+                      "content": "Reporting this visit…",
+                      "role": "status",
+                      "type": "typography",
+                      "variant": "caption"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M4F518NMQHYK23AG6X2FEPKQ",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "call-service",
+                    "analytics",
+                    "track",
+                    {
+                      "domain": "@config.domain",
+                      "endpoint": "@config.endpoint",
+                      "name": "@payload.name",
+                      "path": "@config.path",
+                      "props": "@payload.props"
+                    },
+                    {
+                      "emit": {
+                        "failure": "REPORT_FAILED",
+                        "success": "REPORTED"
+                      }
+                    }
+                  ]
+                ],
+                "event": "TRACK",
+                "eventId": "evt_01M4F518NM6RFJYHFRHJWJ63Q1",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    [
+                      "if",
+                      "@payload.sent",
+                      "reported",
+                      "skipped"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.reported",
+                    [
+                      "if",
+                      "@payload.sent",
+                      [
+                        "+",
+                        "@entity.reported",
+                        1.0
+                      ],
+                      "@entity.reported"
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "@config.statusSlot",
+                    {
+                      "content": [
+                        "if",
+                        "@payload.sent",
+                        "Visit reported",
+                        "Not reported here"
+                      ],
+                      "role": "status",
+                      "type": "typography",
+                      "variant": "caption"
+                    }
+                  ]
+                ],
+                "event": "REPORTED",
+                "eventId": "evt_01M4F518NMBRXSBX5N22J1C9D9",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "failed"
+                  ],
+                  [
+                    "set",
+                    "@entity.errorMessage",
+                    "@payload.error"
+                  ],
+                  [
+                    "render-ui",
+                    "@config.statusSlot",
+                    {
+                      "content": [
+                        "str/concat",
+                        "Not reported: ",
+                        "@payload.error"
+                      ],
+                      "role": "status",
+                      "type": "typography",
+                      "variant": "caption"
+                    }
+                  ]
+                ],
+                "event": "REPORT_FAILED",
+                "eventId": "evt_01M4F518NMAEGM6G0RVSTQCH3C",
+                "from": "active",
+                "to": "active"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}

@@ -46,6 +46,11 @@ orbital VoteOrbital {
     }
 
     state idle {
+      INIT -> loading
+        (fetch Vote {
+          emit: { failure: VoteLoadFailed, success: VoteLoaded }
+        })
+        (render-ui main { type: skeleton, variant: card })
       VOTE -> voting when (not ["=", ?next, @entity.direction])
         (set @entity.direction ?next)
         (set @entity.targetId ?targetId)
@@ -98,6 +103,11 @@ orbital VoteOrbital {
     }
 
     state voting {
+      INIT -> loading
+        (fetch Vote {
+          emit: { failure: VoteLoadFailed, success: VoteLoaded }
+        })
+        (render-ui main { type: skeleton, variant: card })
       VoteCasted -> idle
         (render-ui main {
           count: 0

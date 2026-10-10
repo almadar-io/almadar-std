@@ -684,6 +684,14 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   {
                     'name': 'reason',
                     'type': 'string',
+                    'values': [
+                      'spam',
+                      'abuse',
+                      'off-topic',
+                      'misinformation',
+                      'nsfw',
+                      'other',
+                    ],
                   },
                   {
                     'name': 'flagCount',
@@ -692,6 +700,12 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'pending',
+                      'approved',
+                      'rejected',
+                      'escalated',
+                    ],
                   },
                   {
                     'name': 'reviewedBy',
@@ -747,6 +761,14 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   {
                     'name': 'reason',
                     'type': 'string',
+                    'values': [
+                      'spam',
+                      'abuse',
+                      'off-topic',
+                      'misinformation',
+                      'nsfw',
+                      'other',
+                    ],
                   },
                   {
                     'name': 'flagCount',
@@ -755,6 +777,12 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'pending',
+                      'approved',
+                      'rejected',
+                      'escalated',
+                    ],
                   },
                   {
                     'name': 'reviewedBy',
@@ -810,6 +838,14 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   {
                     'name': 'reason',
                     'type': 'string',
+                    'values': [
+                      'spam',
+                      'abuse',
+                      'off-topic',
+                      'misinformation',
+                      'nsfw',
+                      'other',
+                    ],
                   },
                   {
                     'name': 'flagCount',
@@ -818,6 +854,12 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'pending',
+                      'approved',
+                      'rejected',
+                      'escalated',
+                    ],
                   },
                   {
                     'name': 'reviewedBy',
@@ -874,6 +916,14 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   {
                     'name': 'reason',
                     'type': 'string',
+                    'values': [
+                      'spam',
+                      'abuse',
+                      'off-topic',
+                      'misinformation',
+                      'nsfw',
+                      'other',
+                    ],
                   },
                   {
                     'name': 'flagCount',
@@ -882,6 +932,12 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'pending',
+                      'approved',
+                      'rejected',
+                      'escalated',
+                    ],
                   },
                   {
                     'name': 'reviewedBy',
@@ -945,6 +1001,14 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
               {
                 'name': 'reason',
                 'type': 'string',
+                'values': [
+                  'spam',
+                  'abuse',
+                  'off-topic',
+                  'misinformation',
+                  'nsfw',
+                  'other',
+                ],
               },
               {
                 'name': 'flagCount',
@@ -953,6 +1017,12 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
               {
                 'name': 'status',
                 'type': 'string',
+                'values': [
+                  'pending',
+                  'approved',
+                  'rejected',
+                  'escalated',
+                ],
               },
               {
                 'name': 'reviewedBy',
@@ -1028,6 +1098,14 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                     {
                       'name': 'reason',
                       'type': 'string',
+                      'values': [
+                        'spam',
+                        'abuse',
+                        'off-topic',
+                        'misinformation',
+                        'nsfw',
+                        'other',
+                      ],
                     },
                     {
                       'name': 'flagCount',
@@ -1036,6 +1114,12 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'pending',
+                        'approved',
+                        'rejected',
+                        'escalated',
+                      ],
                     },
                     {
                       'name': 'reviewedBy',
@@ -1108,6 +1192,14 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                 {
                   'name': 'reason',
                   'type': 'string',
+                  'values': [
+                    'spam',
+                    'abuse',
+                    'off-topic',
+                    'misinformation',
+                    'nsfw',
+                    'other',
+                  ],
                 },
                 {
                   'name': 'flagCount',
@@ -1116,6 +1208,12 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                 {
                   'name': 'status',
                   'type': 'string',
+                  'values': [
+                    'pending',
+                    'approved',
+                    'rejected',
+                    'escalated',
+                  ],
                 },
                 {
                   'name': 'reviewedBy',
@@ -1193,6 +1291,14 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                     {
                       'name': 'reason',
                       'type': 'string',
+                      'values': [
+                        'spam',
+                        'abuse',
+                        'off-topic',
+                        'misinformation',
+                        'nsfw',
+                        'other',
+                      ],
                     },
                     {
                       'name': 'flagCount',
@@ -1201,6 +1307,12 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'pending',
+                        'approved',
+                        'rejected',
+                        'escalated',
+                      ],
                     },
                     {
                       'name': 'reviewedBy',
@@ -1257,6 +1369,14 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                     {
                       'name': 'reason',
                       'type': 'string',
+                      'values': [
+                        'spam',
+                        'abuse',
+                        'off-topic',
+                        'misinformation',
+                        'nsfw',
+                        'other',
+                      ],
                     },
                     {
                       'name': 'flagCount',
@@ -1265,6 +1385,12 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'pending',
+                        'approved',
+                        'rejected',
+                        'escalated',
+                      ],
                     },
                     {
                       'name': 'reviewedBy',
@@ -1321,6 +1447,14 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                     {
                       'name': 'reason',
                       'type': 'string',
+                      'values': [
+                        'spam',
+                        'abuse',
+                        'off-topic',
+                        'misinformation',
+                        'nsfw',
+                        'other',
+                      ],
                     },
                     {
                       'name': 'flagCount',
@@ -1329,6 +1463,12 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'pending',
+                        'approved',
+                        'rejected',
+                        'escalated',
+                      ],
                     },
                     {
                       'name': 'reviewedBy',
@@ -1445,6 +1585,28 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
               'from': 'idle',
               'guard': '@config.enabled',
               'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  '@config.reviewSlot',
+                  null,
+                ],
+                [
+                  'fetch',
+                  ('ModQueueItem' satisfies _StdModQueueEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ModQueueItemLoadFailed',
+                      'success': 'ModQueueItemLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'loading',
+              'to': 'idle',
             },
             {
               'effects': [
@@ -1758,6 +1920,28 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
             {
               'effects': [
                 [
+                  'render-ui',
+                  '@config.reviewSlot',
+                  null,
+                ],
+                [
+                  'fetch',
+                  ('ModQueueItem' satisfies _StdModQueueEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ModQueueItemLoadFailed',
+                      'success': 'ModQueueItemLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'reviewing',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
                   'persist',
                   'update',
                   ('ModQueueItem' satisfies _StdModQueueEntityName),
@@ -1875,6 +2059,28 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
               ],
               'event': 'CLOSE',
               'from': 'reviewing',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  '@config.reviewSlot',
+                  null,
+                ],
+                [
+                  'fetch',
+                  ('ModQueueItem' satisfies _StdModQueueEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ModQueueItemLoadFailed',
+                      'success': 'ModQueueItemLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'error',
               'to': 'idle',
             },
             {

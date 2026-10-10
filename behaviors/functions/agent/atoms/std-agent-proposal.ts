@@ -755,6 +755,10 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   {
                     'name': 'role',
                     'type': 'string',
+                    'values': [
+                      'user',
+                      'assistant',
+                    ],
                   },
                   {
                     'name': 'content',
@@ -962,6 +966,10 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                     {
                       'name': 'role',
                       'type': 'string',
+                      'values': [
+                        'user',
+                        'assistant',
+                      ],
                     },
                     {
                       'name': 'content',
@@ -1277,6 +1285,80 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
             {
               'effects': [
                 [
+                  'render-ui',
+                  '@config.slot',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  '@config.slot',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': '@config.headingIcon',
+                            'size': 'lg',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.heading',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'label': '@config.inputText',
+                        'onChange': 'INPUT_CHANGED',
+                        'rows': 6,
+                        'type': 'textarea',
+                      },
+                      {
+                        'action': 'START_TYPED',
+                        'icon': 'sparkles',
+                        'label': '@config.startButton',
+                        'type': 'button',
+                        'variant': 'primary',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'working',
+              'guard': '@config.withInputForm',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  '@config.slot',
+                  null,
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'working',
+              'guard': [
+                'not',
+                '@config.withInputForm',
+              ],
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
                   'set',
                   '@entity.summary',
                   [
@@ -1546,6 +1628,80 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
             {
               'effects': [
                 [
+                  'render-ui',
+                  '@config.slot',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  '@config.slot',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': '@config.headingIcon',
+                            'size': 'lg',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.heading',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'label': '@config.inputText',
+                        'onChange': 'INPUT_CHANGED',
+                        'rows': 6,
+                        'type': 'textarea',
+                      },
+                      {
+                        'action': 'START_TYPED',
+                        'icon': 'sparkles',
+                        'label': '@config.startButton',
+                        'type': 'button',
+                        'variant': 'primary',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'review',
+              'guard': '@config.withInputForm',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  '@config.slot',
+                  null,
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'review',
+              'guard': [
+                'not',
+                '@config.withInputForm',
+              ],
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
                   'set',
                   '@entity.feedback',
                   '@payload.value',
@@ -1756,6 +1912,80 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
               ],
               'event': 'CLOSE',
               'from': 'review',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  '@config.slot',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  '@config.slot',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': '@config.headingIcon',
+                            'size': 'lg',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.heading',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'label': '@config.inputText',
+                        'onChange': 'INPUT_CHANGED',
+                        'rows': 6,
+                        'type': 'textarea',
+                      },
+                      {
+                        'action': 'START_TYPED',
+                        'icon': 'sparkles',
+                        'label': '@config.startButton',
+                        'type': 'button',
+                        'variant': 'primary',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'failed',
+              'guard': '@config.withInputForm',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  '@config.slot',
+                  null,
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'failed',
+              'guard': [
+                'not',
+                '@config.withInputForm',
+              ],
               'to': 'idle',
             },
             {

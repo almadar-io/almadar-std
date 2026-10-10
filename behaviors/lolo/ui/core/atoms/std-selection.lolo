@@ -131,6 +131,16 @@ orbital SelectableItemOrbital {
     }
 
     state idle {
+      INIT -> loading
+        (fetch SelectableItem {
+          emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
+        })
       ;; REFETCH_* stays in `idle` and DOES NOT replace the pick-list with a
       ;; spinner — same reasoning as std-browse's REFETCH_* arms: a skeleton
       ;; on refetch unmounts the list and flickers every keystroke. The fetch
@@ -285,6 +295,16 @@ orbital SelectableItemOrbital {
     }
 
     state selecting {
+      INIT -> loading
+        (fetch SelectableItem {
+          emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
+        })
       CONFIRM_SELECTION -> selected
         (render-ui main {
           children: [{
@@ -346,6 +366,16 @@ orbital SelectableItemOrbital {
     }
 
     state selected {
+      INIT -> loading
+        (fetch SelectableItem {
+          emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
+        })
       CLEAR -> loading
         (fetch SelectableItem {
           emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }

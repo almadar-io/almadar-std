@@ -362,6 +362,10 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                   {
                     'name': 'role',
                     'type': 'string',
+                    'values': [
+                      'user',
+                      'assistant',
+                    ],
                   },
                   {
                     'name': 'content',
@@ -436,6 +440,10 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                     {
                       'name': 'role',
                       'type': 'string',
+                      'values': [
+                        'user',
+                        'assistant',
+                      ],
                     },
                     {
                       'name': 'content',
@@ -498,6 +506,10 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                     {
                       'name': 'role',
                       'type': 'string',
+                      'values': [
+                        'user',
+                        'assistant',
+                      ],
                     },
                     {
                       'name': 'content',
@@ -685,6 +697,18 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                 '@config.keepMessages',
               ],
               'to': 'summarizing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.lastSize',
+                  0,
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'summarizing',
+              'to': 'ready',
             },
             {
               'effects': [

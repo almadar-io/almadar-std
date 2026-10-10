@@ -20,7 +20,9 @@
           "BLOOM_ANSWER",
           "ASK",
           "NOTE",
-          "ANNOTATION"
+          "ANNOTATION",
+          "RUN_CODE",
+          "RESET_CODE"
         ],
         "listenedEvents": [],
         "events": [
@@ -58,6 +60,18 @@
             "name": "ANNOTATION",
             "direction": "emit",
             "description": "Event emitted when a highlighted passage is clicked (as `UI:<annotationEvent>`)",
+            "tier": "essential"
+          },
+          {
+            "name": "RUN_CODE",
+            "direction": "emit",
+            "description": "Event a runnable code block emits on Run (`{ code, language, runId }`, runId = the segment index). Omit to render runnable blocks read-only.",
+            "tier": "essential"
+          },
+          {
+            "name": "RESET_CODE",
+            "direction": "emit",
+            "description": "Event a runnable code block emits on Reset (`{ runId }`).",
             "tier": "essential"
           },
           {
@@ -244,6 +258,84 @@
             "tier": "presentation"
           },
           {
+            "key": "codeOutputs",
+            "type": "Map<string,SegmentRendererCodeOutputsValue>",
+            "default": {
+              "item": {
+                "exitCode": 1,
+                "stderr": "Stderr",
+                "stdout": "Stdout",
+                "testResults": [
+                  {
+                    "actualOutput": "Actual Output",
+                    "expectedOutput": "Expected Output",
+                    "input": "Input",
+                    "passed": false
+                  },
+                  {
+                    "actualOutput": "Actual Output 2",
+                    "expectedOutput": "Expected Output 2",
+                    "input": "Input 2",
+                    "passed": true
+                  }
+                ]
+              }
+            },
+            "label": "Code Outputs",
+            "description": "The program's run results, keyed by segment runId.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "exitCode": {
+                  "name": "exitCode",
+                  "required": true,
+                  "type": "number"
+                },
+                "stderr": {
+                  "name": "stderr",
+                  "required": true,
+                  "type": "string"
+                },
+                "stdout": {
+                  "name": "stdout",
+                  "required": true,
+                  "type": "string"
+                },
+                "testResults": {
+                  "name": "testResults",
+                  "required": true,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "actualOutput": {
+                        "name": "actualOutput",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "expectedOutput": {
+                        "name": "expectedOutput",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "input": {
+                        "name": "input",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "passed": {
+                        "name": "passed",
+                        "required": true,
+                        "type": "boolean"
+                      }
+                    },
+                    "type": "object"
+                  }
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "containerClassName",
             "type": "string",
             "label": "Container Class Name",
@@ -318,6 +410,14 @@
             "default": "REFLECTION_SAVE",
             "label": "Reflection Save Event",
             "description": "Event emitted when a reflection note is saved (as `UI:<reflectionSaveEvent>`)",
+            "tier": "presentation"
+          },
+          {
+            "key": "resetCodeEvent",
+            "type": "event",
+            "default": "RESET_CODE",
+            "label": "Reset Code Event",
+            "description": "Event a runnable code block emits on Reset (`{ runId }`).",
             "tier": "presentation"
           },
           {
@@ -409,6 +509,21 @@
               "treegrid",
               "treeitem"
             ]
+          },
+          {
+            "key": "runCodeEvent",
+            "type": "event",
+            "default": "RUN_CODE",
+            "label": "Run Code Event",
+            "description": "Event a runnable code block emits on Run (`{ code, language, runId }`, runId = the segment index). Omit to render runnable blocks read-only.",
+            "tier": "presentation"
+          },
+          {
+            "key": "runningCode",
+            "type": "string",
+            "label": "Running Code",
+            "description": "The runId the program is currently running.",
+            "tier": "presentation"
           },
           {
             "key": "segments",
@@ -699,7 +814,9 @@
           "askEvent",
           "bloomAnswerEvent",
           "noteEvent",
-          "reflectionSaveEvent"
+          "reflectionSaveEvent",
+          "resetCodeEvent",
+          "runCodeEvent"
         ],
         "entityRebindable": true,
         "entityContract": {
@@ -727,7 +844,9 @@
       "ASK",
       "BLOOM_ANSWER",
       "NOTE",
-      "REFLECTION_SAVE"
+      "REFLECTION_SAVE",
+      "RESET_CODE",
+      "RUN_CODE"
     ],
     "listenedEvents": [],
     "exposure": "palette",

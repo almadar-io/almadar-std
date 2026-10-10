@@ -242,6 +242,13 @@ orbital ThreadPostOrbital {
     }
 
     state replying {
+      INIT -> loading
+        (fetch ThreadPost {
+          emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
+          filter: (and (or ["=", (str/default @entity.replyRootId @config.threadRootId), ""] ["=", (object/get @entity threadRootId), (str/default @entity.replyRootId @config.threadRootId)]) ["=", (str/default (object/get @entity parentId) ""), ""])
+          include: (replies)
+        })
+        (render-ui main { type: skeleton, variant: list, rows: 6 })
       EDIT_REPLY -> replying
         (set @entity.replyDraft ?value)
       SUBMIT_REPLY -> browsing when (not ["=", (str/default @entity.replyDraft ""), ""])

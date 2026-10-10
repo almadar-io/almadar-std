@@ -1,0 +1,160 @@
+[
+  {
+    "organism": "std-analytics",
+    "orbital": "AnalyticsOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/infra/atoms/std-analytics.ts",
+    "entities": [
+      {
+        "name": "AnalyticsRecord",
+        "fields": [
+          {
+            "name": "reported",
+            "type": "number",
+            "required": false,
+            "description": "How many pageviews and events the collector accepted",
+            "synonyms": "sent, count, beacons"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false,
+            "description": "What happened to the last report",
+            "synonyms": "state, result"
+          },
+          {
+            "name": "errorMessage",
+            "type": "string",
+            "required": false,
+            "description": "Why the last report failed; blank = none",
+            "synonyms": "error, failure reason"
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "Analytics",
+        "emittedEvents": [
+          "REPORTED",
+          "REPORT_FAILED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "REPORTED",
+            "direction": "emit",
+            "description": "The report was handed to the collector (`sent`), or skipped (no endpoint, or a local host)",
+            "tier": "secondary"
+          },
+          {
+            "name": "REPORT_FAILED",
+            "direction": "emit",
+            "description": "The report could not be sent (a bad event name, or no analytics service on this host)",
+            "tier": "secondary"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "TRACK",
+            "direction": "listen",
+            "description": "Report a named event on this page, with its properties",
+            "synonyms": "track event, log event, record click, analytics event"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "domain",
+            "type": "string",
+            "default": "",
+            "label": "Site",
+            "description": "The site id each report is recorded under; empty records the page's host",
+            "synonyms": "site id, hostname, property",
+            "tier": "domain"
+          },
+          {
+            "key": "endpoint",
+            "type": "string",
+            "default": "",
+            "label": "Collector endpoint",
+            "description": "The analytics collector's ingest URL (`POST`); empty sends nothing",
+            "synonyms": "analytics url, collector, stats endpoint, beacon url",
+            "tier": "domain"
+          },
+          {
+            "key": "path",
+            "type": "string",
+            "default": "/",
+            "label": "Page path",
+            "description": "The path this page is reported under, starting with /",
+            "synonyms": "url, route, page",
+            "tier": "domain"
+          },
+          {
+            "key": "statusSlot",
+            "type": "slot",
+            "default": "main",
+            "label": "Status slot",
+            "description": "Where the atom shows its one-line status; a page running it in the background sends it to `system`",
+            "synonyms": "status area, slot",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "AnalyticsRecord",
+        "transitionEvents": [
+          "INIT",
+          "REPORTED",
+          "REPORT_FAILED",
+          "TRACK"
+        ],
+        "definerKnobs": [],
+        "effectRow": [
+          {
+            "kind": "call-service",
+            "resource": "analytics.pageview"
+          },
+          {
+            "kind": "call-service",
+            "resource": "analytics.track"
+          },
+          {
+            "kind": "render-ui",
+            "resolved": false,
+            "resource": "@config.statusSlot"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.errorMessage"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.reported"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.status"
+          }
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "AnalyticsPage",
+        "defaultPath": "/analytics",
+        "primaryEntity": "AnalyticsRecord"
+      }
+    ],
+    "emittedEvents": [
+      "REPORTED",
+      "REPORT_FAILED"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

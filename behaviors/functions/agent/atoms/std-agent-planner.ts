@@ -506,6 +506,33 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
               'effects': [
                 [
                   'set',
+                  '@entity.prompt',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.memories',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.plan',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'recalling',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
                   '@entity.memories',
                   '@payload.result',
                 ],
@@ -545,6 +572,33 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
               'event': 'RECALL_FAILED',
               'from': 'recalling',
               'to': 'planning',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.prompt',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.memories',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.plan',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'planning',
+              'to': 'idle',
             },
             {
               'effects': [

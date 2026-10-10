@@ -185,6 +185,16 @@ orbital StoredFileOrbital {
     }
 
     state viewing_single {
+      INIT -> loading
+        (fetch StoredFile {
+          emit: { failure: StoredFileLoadFailed, success: StoredFileLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
+        })
       CLOSE_VIEW -> loading
         (fetch StoredFile {
           emit: { failure: StoredFileLoadFailed, success: StoredFileLoaded }

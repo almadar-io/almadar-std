@@ -1,0 +1,61 @@
+app ui-layers-panel [
+  version: "1.0.0",
+  description: "LayersPanel — UI factory (1:1 with the @almadar/ui layers-panel pattern)."
+]
+;; @pattern "layers-panel"
+orbital LayersPanelOrbital {
+  entity LayersPanelItem [runtime] {
+    id : string!
+  }
+
+  trait LayersPanelRender -> @rebindable LayersPanelItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          schema: @config.schema
+          selectedId: @config.selectedId
+          onSelect: @config.onSelect
+          onReorder: @config.onReorder
+          type: layers-panel
+        })
+    }
+
+    emits {
+      @config.onSelect -> external {
+        id : string
+      }
+        @description "onSelect prop"
+        @tier "essential"
+      @config.onReorder -> external {
+        id : string
+        newParentId : string
+        index : number
+      }
+        @description "Reorder a node within the tree. Threaded to FileTree's `onNodeReorder` seam — presence-gated there, so omitting it just means no dragging."
+        @tier "essential"
+    }
+
+    config {
+      schema : SExpr
+        @label "Schema"
+        @description "schema prop"
+        @tier "presentation"
+      selectedId : string
+        @label "Selected Id"
+        @description "Currently selected node id (any level of the ID scheme above)."
+        @tier "presentation"
+      onSelect : event = "SELECT"
+        @label "On Select"
+        @description "onSelect prop"
+        @tier "presentation"
+      onReorder : event = "REORDER"
+        @label "On Reorder"
+        @description "Reorder a node within the tree. Threaded to FileTree's `onNodeReorder` seam — presence-gated there, so omitting it just means no dragging."
+        @tier "presentation"
+    }
+  }
+
+  page "/layers-panel" as LayersPanelPage -> LayersPanelRender
+}

@@ -639,6 +639,48 @@ export function stdMlClassifyMlClassifyOrbital(params: StdMlClassifyMlClassifyOr
               'effects': [
                 [
                   'set',
+                  '@entity.text',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.category',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.confidence',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.reasoning',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.errorMessage',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.request',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'classifying',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
                   '@entity.category',
                   '@payload.category',
                 ],

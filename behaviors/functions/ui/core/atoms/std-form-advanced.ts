@@ -518,6 +518,11 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'active',
+                      'inactive',
+                      'pending',
+                    ],
                   },
                   {
                     'name': 'createdAt',
@@ -542,6 +547,12 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
                   {
                     'name': 'priority',
                     'type': 'string',
+                    'values': [
+                      'low',
+                      'medium',
+                      'high',
+                      'critical',
+                    ],
                   },
                   {
                     'name': 'categoryId',
@@ -658,6 +669,11 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'active',
+                        'inactive',
+                        'pending',
+                      ],
                     },
                     {
                       'name': 'createdAt',
@@ -682,6 +698,12 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
                     {
                       'name': 'priority',
                       'type': 'string',
+                      'values': [
+                        'low',
+                        'medium',
+                        'high',
+                        'critical',
+                      ],
                     },
                     {
                       'name': 'categoryId',
@@ -953,6 +975,75 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
               ],
               'event': 'FormEntryLoadFailed',
               'from': 'editing',
+              'to': 'editing',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('FormEntry' satisfies _StdFormAdvancedEntityName),
+                  {
+                    'emit': {
+                      'failure': 'FormEntryLoadFailed',
+                      'success': 'FormEntryLoaded',
+                    },
+                  },
+                ],
+                [
+                  'fetch',
+                  ('FormEntry' satisfies _StdFormAdvancedEntityName),
+                  {
+                    'emit': {
+                      'failure': 'FormEntryLoadFailed',
+                      'success': 'FormEntryLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': '@config.icon',
+                            'size': 'xl',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'cancelEvent': 'CANCEL',
+                        'cancelLabel': '@config.cancelLabel',
+                        'fields': '@config.fields',
+                        'mode': 'create',
+                        'showCancel': '@config.showCancel',
+                        'submitEvent': 'SUBMIT',
+                        'submitLabel': '@config.submitLabel',
+                        'type': 'form-section',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'submitted',
               'to': 'editing',
             },
             {

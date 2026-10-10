@@ -39,6 +39,16 @@ describe('effectSiteFor', () => {
     expect(effectSiteFor('call-service', ['llm', 'call', {}], resident)).toBe('server');
   });
 
+  it('a call to a browser-only service runs on the client', () => {
+    expect(effectSiteFor('call-service', ['analytics', 'pageview', {}], resident)).toBe('client');
+  });
+
+  it('control: a service that also runs on node, or a binding, stays on the server', () => {
+    expect(effectSiteFor('call-service', ['llm', 'classify', {}], resident)).toBe('server');
+    expect(effectSiteFor('call-service', ['github', 'listIssues', {}], resident)).toBe('server');
+    expect(effectSiteFor('call-service', ['@config.service', 'pageview', {}], resident)).toBe('server');
+  });
+
   it('control: client and any effects keep their declared site', () => {
     expect(effectSiteFor('render-ui', ['main', {}], resident)).toBe('client');
     expect(effectSiteFor('emit', ['DONE'], resident)).toBe('any');

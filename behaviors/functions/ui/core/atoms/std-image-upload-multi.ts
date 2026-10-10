@@ -1173,6 +1173,43 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
             {
               'effects': [
                 [
+                  'fetch',
+                  ('UploadedImage' satisfies _StdImageUploadMultiEntityName),
+                  {
+                    'emit': {
+                      'failure': 'UploadedImageLoadFailed',
+                      'success': 'UploadedImageLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'grid',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'uploading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
                   'persist',
                   'create',
                   ('UploadedImage' satisfies _StdImageUploadMultiEntityName),
@@ -1245,6 +1282,43 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
               'event': 'UploadedImageUploadFailed',
               'from': 'uploading',
               'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('UploadedImage' satisfies _StdImageUploadMultiEntityName),
+                  {
+                    'emit': {
+                      'failure': 'UploadedImageLoadFailed',
+                      'success': 'UploadedImageLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'grid',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'error',
+              'to': 'loading',
             },
             {
               'effects': [

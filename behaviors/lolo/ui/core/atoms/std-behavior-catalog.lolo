@@ -1,0 +1,314 @@
+app std-behavior-catalog [
+  version: "1.2.0",
+  description: "std-behavior-catalog — browse the installed behaviors under the `scope` registry folders (`behavior/catalog`), search them by meaning (the query is embedded with `call-service llm embed` and ranked by cosine similarity to each behavior's description; results under `minScore` drop out), open one's knobs and events (`behavior/describe`), and pick one: PICKED { behavior, trait, value } carries the behavior name, its first trait as a value ready to bind, and the whole behavior as a value ready to embed or store. Pick for block libraries, plugin pickers and any page that lets users choose a building block."
+]
+;; @capabilities "browse installed behaviors, search behaviors by meaning, describe a behavior's knobs and events, pick a behavior to bind"
+
+type CatalogHit = {
+  behavior : string!
+  description : string!
+  topic : string!
+  level : string!
+  capabilities : [string]
+  traits : [trait]!
+  value : behavior!
+  vectors : Map string [number]
+}
+type CatalogRow = {
+  behavior : string!
+  description : string!
+  topic : string!
+  level : string!
+  score : number!
+}
+type KnobField = {
+  name : string!
+  type : string!
+  label : string
+  description : string
+}
+type DescribedTrait = {
+  trait : string!
+  knobs : [KnobField]!
+}
+type DescribedOrbital = {
+  traits : [DescribedTrait]!
+}
+type BehaviorDescription = {
+  behavior : string!
+  knobs : [KnobField]!
+  orbitals : [DescribedOrbital]!
+}
+
+orbital BehaviorCatalogOrbital {
+
+  entity BehaviorCatalogView [runtime] {
+    id : string!
+    query : string = ""
+    entries : [CatalogHit] = []
+    rows : [CatalogRow] = []
+    detail : string = ""
+    knobs : [KnobField] = []
+    error : string = ""
+    status : "loading" | "ready" | "searching" | "describing" | "failed" = loading
+  }
+
+  trait BehaviorCatalog -> @rebindable BehaviorCatalogView [interaction, instance] {
+    config {
+      scope : [string] = ["almadar-std/ui/core"]
+        @label "Where to look"
+        @description "Registry folders (`<prefix>/<topic>[/<tier>]`) the catalog lists."
+        @tier "domain"
+      minScore : number = 0.3
+        @label "Minimum match"
+        @description "Cosine similarity a behavior needs to its description to stay in search results."
+        @tier "policy"
+      searchPlaceholder : string = "Search building blocks"
+        @label "Search placeholder"
+        @tier "presentation"
+      pickLabel : string = "Use"
+        @label "Pick button label"
+        @tier "presentation"
+      describeLabel : string = "Details"
+        @label "Details button label"
+        @tier "presentation"
+      emptyLabel : string = "Nothing matches."
+        @label "Empty message"
+        @tier "presentation"
+      look : "list" | "chips" = list
+        @label "How are behaviors shown?"
+        @description "list = a search box over a card per behavior with Use and Details; chips = the best matches for the current query as a row of chips under a prompt that lives elsewhere (route its text to SEARCH), nothing while the query is empty."
+        @synonyms "suggestion chips, prompt suggestions, compact catalog"
+        @tier "presentation"
+      maxChips : number = 4
+        @label "How many chips?"
+        @description "In the chips look, how many of the best matches are shown."
+        @tier "presentation"
+    }
+    initial: loading
+
+    state loading {
+      INIT -> loading
+        (set @entity.status loading)
+        (render-ui main <loading-state message="Loading the catalog" />)
+        (behavior/catalog { paths: @config.scope } {
+          emit: { success: LISTED, failure: LIST_FAILED }
+        })
+      LISTED -> ready
+        (set @entity.entries ?result)
+        (set @entity.rows (array/map ?result (fn e { behavior: @e.behavior, description: @e.description, topic: @e.topic, level: @e.level, score: 0 })))
+        (set @entity.status ready)
+        (emit CATALOG_SHOWN {})
+      LIST_FAILED -> failed when (= @config.look chips)
+        (set @entity.error ?error)
+        (set @entity.status failed)
+        (render-ui main null)
+      LIST_FAILED -> failed when (!= @config.look chips)
+        (set @entity.error ?error)
+        (set @entity.status failed)
+        (render-ui main <error-state title="The catalog could not be listed" message={?error} retryEvent="RETRY" />)
+    }
+
+    state ready {
+      INIT -> ready
+        (emit CATALOG_SHOWN {})
+      CATALOG_SHOWN -> ready when (= @config.look chips)
+        (render-ui main {
+          type: stack
+          direction: horizontal
+          gap: sm
+          justify: center
+          className: (if (= @entity.query "") "hidden" "flex-wrap")
+          children: (array/map (array/take @entity.rows @config.maxChips) (fn row {
+            type: button
+            label: @row.behavior
+            variant: secondary
+            size: sm
+            className: "rounded-full"
+            action: PICK
+            actionPayload: { behavior: @row.behavior }
+          }))
+        })
+      CATALOG_SHOWN -> ready when (!= @config.look chips)
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: md
+          children: [{
+            type: search-input
+            placeholder: @config.searchPlaceholder
+            value: @entity.query
+            event: SEARCH
+          }, {
+            type: empty-state
+            title: @config.emptyLabel
+            className: (if (= (array/len @entity.rows) 0) "" hidden)
+          }, {
+            type: stack
+            direction: vertical
+            gap: sm
+            children: (array/map @entity.rows (fn row {
+              type: card
+              padding: md
+              children: [{
+                type: stack
+                direction: vertical
+                gap: xs
+                children: [{
+                  type: stack
+                  direction: horizontal
+                  gap: sm
+                  align: center
+                  children: [
+                    { type: typography, content: @row.behavior, variant: h4, weight: semibold },
+                    { type: badge, label: @row.topic, variant: default },
+                    { type: badge, label: @row.level, variant: info },
+                    { type: badge, label: (str/concat (math/round (* @row.score 100)) "%"), variant: success, className: (if (> @row.score 0) "" hidden) }
+                  ]
+                }, {
+                  type: typography
+                  content: @row.description
+                  variant: body
+                  color: muted
+                }, {
+                  type: stack
+                  direction: horizontal
+                  gap: sm
+                  children: [
+                    { type: button, label: @config.pickLabel, variant: primary, size: sm, action: PICK, actionPayload: { behavior: @row.behavior } },
+                    { type: button, label: @config.describeLabel, variant: ghost, size: sm, action: DESCRIBE, actionPayload: { behavior: @row.behavior } }
+                  ]
+                }, {
+                  type: stack
+                  direction: vertical
+                  gap: xs
+                  className: (if (= @entity.detail @row.behavior) "" hidden)
+                  children: (array/map @entity.knobs (fn k {
+                    type: typography
+                    content: (str/concat (object/get @k label @k.name) " · " @k.type " — " (object/get @k description ""))
+                    variant: caption
+                  }))
+                }]
+              }]
+            }))
+          }]
+        })
+      SEARCH -> ready when (= ?searchTerm "")
+        (set @entity.query "")
+        (set @entity.rows (array/map @entity.entries (fn e { behavior: @e.behavior, description: @e.description, topic: @e.topic, level: @e.level, score: 0 })))
+        (emit CATALOG_SHOWN {})
+      SEARCH -> searching when (!= ?searchTerm "")
+        (set @entity.query ?searchTerm)
+        (set @entity.status searching)
+        (call-service llm embed { texts: [?searchTerm] } {
+          emit: { success: EMBEDDED, failure: SEARCH_FAILED }
+        })
+      PICK -> ready
+        (emit PICKED { behavior: ?behavior, description: (object/get (array/find @entity.entries (fn e (= @e.behavior ?behavior))) description ""), trait: (array/first (object/get (array/find @entity.entries (fn e (= @e.behavior ?behavior))) traits [])), value: (object/get (array/find @entity.entries (fn e (= @e.behavior ?behavior))) value) })
+      DESCRIBE -> describing
+        (set @entity.detail ?behavior)
+        (set @entity.status describing)
+        (behavior/describe { behavior: ?behavior } {
+          emit: { success: DESCRIBED, failure: DESCRIBE_FAILED }
+        })
+    }
+
+    state searching {
+      INIT -> loading
+        (set @entity.status loading)
+        (render-ui main <loading-state message="Loading the catalog" />)
+        (behavior/catalog { paths: @config.scope } {
+          emit: { success: LISTED, failure: LIST_FAILED }
+        })
+      EMBEDDED -> ready when (> (array/len ?embeddings) 0)
+        (set @entity.rows (array/sort (array/filter (array/map @entity.entries (fn e { behavior: @e.behavior, description: @e.description, topic: @e.topic, level: @e.level, score: (array/cosine (object/get @e.vectors description) (array/first ?embeddings)) })) (fn r (>= @r.score @config.minScore))) score desc))
+        (set @entity.status ready)
+        (emit CATALOG_SHOWN {})
+      EMBEDDED -> ready when (= (array/len ?embeddings) 0)
+        (set @entity.error "The model returned no embedding")
+        (set @entity.status ready)
+        (render-ui toast { type: alert, variant: error, message: "Search is unavailable: the model returned no embedding." })
+        (emit CATALOG_SHOWN {})
+      SEARCH_FAILED -> ready
+        (set @entity.error ?error)
+        (set @entity.status ready)
+        (render-ui toast { type: alert, variant: error, message: (str/concat "Search failed: " ?error) })
+        (emit CATALOG_SHOWN {})
+    }
+
+    state describing {
+      INIT -> loading
+        (set @entity.status loading)
+        (render-ui main <loading-state message="Loading the catalog" />)
+        (behavior/catalog { paths: @config.scope } {
+          emit: { success: LISTED, failure: LIST_FAILED }
+        })
+      DESCRIBED -> ready
+        (set @entity.knobs (object/get ?result knobs []))
+        (set @entity.status ready)
+        (emit CATALOG_SHOWN {})
+      DESCRIBE_FAILED -> ready
+        (set @entity.error ?error)
+        (set @entity.knobs [])
+        (set @entity.status ready)
+        (render-ui toast { type: alert, variant: error, message: (str/concat "Details failed: " ?error) })
+        (emit CATALOG_SHOWN {})
+    }
+
+    state failed {
+      INIT -> failed when (= @config.look chips)
+        (render-ui main null)
+      INIT -> failed when (!= @config.look chips)
+        (render-ui main <error-state title="The catalog could not be listed" message={@entity.error} retryEvent="RETRY" />)
+      RETRY -> loading
+        (set @entity.status loading)
+        (render-ui main <loading-state message="Loading the catalog" />)
+        (behavior/catalog { paths: @config.scope } {
+          emit: { success: LISTED, failure: LIST_FAILED }
+        })
+    }
+
+    emits {
+      PICKED -> external {
+        behavior : string!
+        description : string
+        trait : trait
+        value : behavior
+      }
+      CATALOG_SHOWN
+      LISTED {
+        result : [CatalogHit]!
+      }
+      LIST_FAILED {
+        error : string!
+      }
+      EMBEDDED {
+        embeddings : [[number]]!
+      }
+      SEARCH_FAILED {
+        error : string!
+      }
+      DESCRIBED {
+        result : BehaviorDescription!
+      }
+      DESCRIBE_FAILED {
+        error : string!
+      }
+    }
+
+    listens {
+      SEARCH {
+        searchTerm : string!
+      }
+      PICK {
+        behavior : string!
+      }
+      DESCRIBE {
+        behavior : string!
+      }
+      RETRY
+    }
+  }
+
+  page "/behavior-catalog" as BehaviorCatalogPage -> BehaviorCatalog
+}

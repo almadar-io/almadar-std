@@ -172,6 +172,11 @@ orbital SignatureCaptureOrbital {
     }
 
     state submitting {
+      INIT -> loading
+        (fetch Signature {
+          emit: { failure: SignatureLoadFailed, success: SignatureLoaded }
+        })
+        (render-ui main { type: skeleton, variant: card })
       SignatureSubmitted -> submitted
         (render-ui main {
           align: center

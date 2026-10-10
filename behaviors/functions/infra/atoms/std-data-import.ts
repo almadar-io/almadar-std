@@ -497,6 +497,11 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'staged',
+                      'imported',
+                      'failed',
+                    ],
                   },
                 ],
                 'type': '[object]',
@@ -697,6 +702,11 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'staged',
+                        'imported',
+                        'failed',
+                      ],
                     },
                   ],
                   'type': '[object]',
@@ -929,6 +939,72 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
               'event': 'UPLOAD_CSV',
               'from': 'idle',
               'to': 'uploaded',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.sourceName',
+                  '@config.sourceName',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'uploaded',
+                ],
+                [
+                  'set',
+                  '@entity.rowCount',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.errorCount',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.mappingJson',
+                  '@config.fieldMappingJson',
+                ],
+                [
+                  'set',
+                  '@entity.createdAt',
+                  0,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'content': [
+                          'str/concat',
+                          'Import ',
+                          '@entity.sourceName',
+                        ],
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'accept': '.csv,text/csv',
+                        'action': 'UPLOAD_CSV',
+                        'description': 'Drop a CSV file here or click to browse',
+                        'icon': 'upload',
+                        'label': 'Upload CSV file',
+                        'maxFiles': 1,
+                        'type': 'upload-drop-zone',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'uploaded',
+              'to': 'idle',
             },
             {
               'effects': [
@@ -1190,6 +1266,72 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
               'to': 'idle',
             },
             {
+              'effects': [
+                [
+                  'set',
+                  '@entity.sourceName',
+                  '@config.sourceName',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'uploaded',
+                ],
+                [
+                  'set',
+                  '@entity.rowCount',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.errorCount',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.mappingJson',
+                  '@config.fieldMappingJson',
+                ],
+                [
+                  'set',
+                  '@entity.createdAt',
+                  0,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'content': [
+                          'str/concat',
+                          'Import ',
+                          '@entity.sourceName',
+                        ],
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'accept': '.csv,text/csv',
+                        'action': 'UPLOAD_CSV',
+                        'description': 'Drop a CSV file here or click to browse',
+                        'icon': 'upload',
+                        'label': 'Upload CSV file',
+                        'maxFiles': 1,
+                        'type': 'upload-drop-zone',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'staged',
+              'to': 'idle',
+            },
+            {
               'event': 'ROWS_STAGED',
               'from': 'staged',
               'to': 'staged',
@@ -1312,6 +1454,72 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
               ],
               'event': 'DISCARD_IMPORT',
               'from': 'staged',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.sourceName',
+                  '@config.sourceName',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'uploaded',
+                ],
+                [
+                  'set',
+                  '@entity.rowCount',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.errorCount',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.mappingJson',
+                  '@config.fieldMappingJson',
+                ],
+                [
+                  'set',
+                  '@entity.createdAt',
+                  0,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'content': [
+                          'str/concat',
+                          'Import ',
+                          '@entity.sourceName',
+                        ],
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'accept': '.csv,text/csv',
+                        'action': 'UPLOAD_CSV',
+                        'description': 'Drop a CSV file here or click to browse',
+                        'icon': 'upload',
+                        'label': 'Upload CSV file',
+                        'maxFiles': 1,
+                        'type': 'upload-drop-zone',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'confirmed',
               'to': 'idle',
             },
             {
@@ -1519,6 +1727,72 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
               'event': 'IMPORT_ROWS_PARSED',
               'from': 'confirmed',
               'to': 'confirmed',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.sourceName',
+                  '@config.sourceName',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'uploaded',
+                ],
+                [
+                  'set',
+                  '@entity.rowCount',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.errorCount',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.mappingJson',
+                  '@config.fieldMappingJson',
+                ],
+                [
+                  'set',
+                  '@entity.createdAt',
+                  0,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'content': [
+                          'str/concat',
+                          'Import ',
+                          '@entity.sourceName',
+                        ],
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'accept': '.csv,text/csv',
+                        'action': 'UPLOAD_CSV',
+                        'description': 'Drop a CSV file here or click to browse',
+                        'icon': 'upload',
+                        'label': 'Upload CSV file',
+                        'maxFiles': 1,
+                        'type': 'upload-drop-zone',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'failed',
+              'to': 'idle',
             },
             {
               'effects': [

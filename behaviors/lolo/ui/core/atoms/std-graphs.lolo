@@ -20,7 +20,7 @@ orbital GraphItemOrbital {
       INIT -> idle
         (render-ui main {
           chartType: @config.chartType
-          data: @entity.chartData
+          data: (array/map @entity.chartData (fn p { label: (object/get @config.categoryLabels @p.label @p.label), value: @p.value }))
           drillEvent: @config.drillEvent
           height: @config.height
           series: @config.series
@@ -49,7 +49,7 @@ orbital GraphItemOrbital {
         (set @entity.chartData (if [">", @config.limit, 0] (array/take @entity.chartData @config.limit) @entity.chartData))
         (render-ui main {
           chartType: @config.chartType
-          data: @entity.chartData
+          data: (array/map @entity.chartData (fn p { label: (object/get @config.categoryLabels @p.label @p.label), value: @p.value }))
           drillEvent: @config.drillEvent
           height: @config.height
           series: @config.series
@@ -114,6 +114,10 @@ orbital GraphItemOrbital {
         @label "Value field"
         @description "Numeric field aggregated per bucket (blank = row count)"
         @synonyms "the numeric column to aggregate. empty string counts rows. user phrases: 'sum revenue' -> valueField=revenue + aggregation=sum"
+        @tier "presentation"
+      categoryLabels : Map string string = {}
+        @label "Category labels"
+        @description "Display name for each category key (such as a stage key to its translated name); read only when rendering, so the names may be translated. A key without an entry shows as itself"
         @tier "presentation"
       aggregation : "count" | "sum" | "avg" | "min" | "max" = count
         @label "Aggregation"

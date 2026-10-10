@@ -524,6 +524,14 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'draft',
+                      'sent',
+                      'viewed',
+                      'signed',
+                      'declined',
+                      'expired',
+                    ],
                   },
                   {
                     'name': 'sentAt',
@@ -610,6 +618,14 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'draft',
+                        'sent',
+                        'viewed',
+                        'signed',
+                        'declined',
+                        'expired',
+                      ],
                     },
                     {
                       'name': 'sentAt',
@@ -766,6 +782,43 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
               'event': 'ESignRequestLoadFailed',
               'from': 'loading',
               'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('ESignRequest' satisfies _StdEsignRequestEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ESignRequestLoadFailed',
+                      'success': 'ESignRequestLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'grid',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'browsing',
+              'to': 'loading',
             },
             {
               'effects': [

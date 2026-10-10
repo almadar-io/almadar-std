@@ -7,6 +7,7 @@
  * @packageDocumentation
  */
 
+import { isBrowserOnlyService } from '@almadar/core/patterns';
 import type { OperatorMeta, OperatorVisualForm, RunsOn, StdOperatorMeta, StdModule } from './types.js';
 import { isStdOperator, getModuleFromOperator, STD_MODULES } from './types.js';
 
@@ -309,8 +310,10 @@ export function getOperatorRunsOn(operator: string): RunsOn | undefined {
 /**
  * Where one effect call runs: its declared `runsOn`, except a data effect
  * (`entityArgPosition`) whose target entity stores its rows in the browser
- * (core's `storesRowsInBrowser` over the program's entities), which runs on the
- * client. Undefined for a pure op. Twin of Rust `effects::effect_site`.
+ * (core's `storesRowsInBrowser` over the program's entities), or a
+ * `call-service` to a browser-only service (core's `isBrowserOnlyService`),
+ * which runs on the client. Undefined for a pure op. Twin of Rust
+ * `effects::effect_site`.
  */
 export function effectSiteFor(
   operator: string,
@@ -319,6 +322,10 @@ export function effectSiteFor(
 ): RunsOn | undefined {
   const meta = STD_OPERATORS[operator];
   const site = meta?.runsOn;
+  if (operator === 'call-service' && site === 'server') {
+    const service = args[0];
+    return typeof service === 'string' && !service.startsWith('@') && isBrowserOnlyService(service) ? 'client' : 'server';
+  }
   if (site !== 'server' || meta.entityArgPosition === undefined) return site;
   const entity = args[meta.entityArgPosition];
   return typeof entity === 'string' && !entity.startsWith('@') && storesRowsInBrowser(entity) ? 'client' : 'server';

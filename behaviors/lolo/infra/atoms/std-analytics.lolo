@@ -1,0 +1,74 @@
+app std-analytics [
+  version: "1.0.0",
+  description: "std-analytics — cookieless first-party analytics for one page: on entry it reports a pageview of `path` to the collector at `endpoint`, and each TRACK it hears reports a named event (a download, a sign-up) with its properties. Calls run in the browser through the `analytics` service; an empty `endpoint` or a local host sends nothing. Compose one per tracked page, listed in that page's traits."
+]
+
+orbital AnalyticsOrbital {
+  entity AnalyticsRecord [runtime] {
+    reported : number @description "How many pageviews and events the collector accepted" @synonyms "sent, count, beacons" = 0
+    status : "reporting" | "reported" | "skipped" | "failed" @description "What happened to the last report" @synonyms "state, result" = reporting
+    errorMessage : string @description "Why the last report failed; blank = none" @synonyms "error, failure reason" = ""
+  }
+
+  trait Analytics -> AnalyticsRecord [lifecycle, instance] {
+    initial: active
+
+    config {
+      statusSlot : slot = main
+        @label "Status slot"
+        @description "Where the atom shows its one-line status; a page running it in the background sends it to `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+      endpoint : string = ""
+        @label "Collector endpoint"
+        @description "The analytics collector's ingest URL (`POST`); empty sends nothing"
+        @synonyms "analytics url, collector, stats endpoint, beacon url"
+        @tier "domain"
+      path : string = "/"
+        @label "Page path"
+        @description "The path this page is reported under, starting with /"
+        @synonyms "url, route, page"
+        @tier "domain"
+      domain : string = ""
+        @label "Site"
+        @description "The site id each report is recorded under; empty records the page's host"
+        @synonyms "site id, hostname, property"
+        @tier "domain"
+    }
+
+    state active {
+      INIT -> active
+        (call-service "analytics" "pageview" { endpoint: @config.endpoint, path: @config.path, domain: @config.domain }
+          { emit: { success: REPORTED, failure: REPORT_FAILED } })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Reporting this visit…" })
+      TRACK -> active
+        (call-service "analytics" "track" { endpoint: @config.endpoint, name: ?name, path: @config.path, props: ?props, domain: @config.domain }
+          { emit: { success: REPORTED, failure: REPORT_FAILED } })
+      REPORTED -> active
+        (set @entity.status (if ?sent reported skipped))
+        (set @entity.reported (if ?sent (+ @entity.reported 1) @entity.reported))
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (if ?sent "Visit reported" "Not reported here") })
+      REPORT_FAILED -> active
+        (set @entity.status failed)
+        (set @entity.errorMessage ?error)
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Not reported: " ?error) })
+    }
+
+    emits {
+      REPORTED { sent : boolean! }
+        @description "The report was handed to the collector (`sent`), or skipped (no endpoint, or a local host)"
+        @tier "secondary"
+      REPORT_FAILED -> external { error : string! }
+        @description "The report could not be sent (a bad event name, or no analytics service on this host)"
+        @tier "secondary"
+    }
+
+    listens {
+      TRACK -> external { name : string!, props : Map string string }
+        @description "Report a named event on this page, with its properties"
+        @synonyms "track event, log event, record click, analytics event"
+    }
+  }
+
+  page "/analytics" as AnalyticsPage -> Analytics
+}

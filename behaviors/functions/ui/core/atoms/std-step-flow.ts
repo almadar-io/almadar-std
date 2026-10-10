@@ -92,10 +92,30 @@ export interface StdStepFlowStepItemsLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdStepFlowConfig {
-  /** Default: `{"children":[{"align":"center","children":[{"name":"shield-check","size":"lg","type":"icon"},{"content":"@config.title","type":"typography","variant":"h3"}],"direction":"horizontal","gap":"sm","type":"stack"},{"allowNavigation":false,"currentStep":"@entity.currentStepIndex","steps":"@entity.wizardSteps","type":"wizard-progress"},{"children":[{"children":[{"align":"center","children":[{"name":"@entity.currentStepIcon","size":"xl","type":"icon"},{"children":[{"content":"@entity.currentStepLabel","type":"typography","variant":"h2"},{"color":"muted","content":"@entity.currentStepDescription","type":"typography","variant":"body"}],"direction":"vertical","gap":"xs","type":"stack"}],"direction":"horizontal","gap":"sm","type":"stack"}],"direction":"vertical","gap":"md","type":"stack"}],"look":"@config.cardLook","type":"card"},{"align":"center","children":[{"action":"BACK","actionPayload":{"id":"@entity.id"},"disabled":"@entity.isFirstStep","icon":"chevron-left","label":"Back","type":"button","variant":"ghost"},{"action":"REJECT","actionPayload":{"id":"@entity.id"},"icon":"x","label":"Reject","type":"button","variant":"ghost"},{"action":"ESCALATE","actionPayload":{"id":"@entity.id"},"icon":"alert-triangle","label":"Escalate","type":"button","variant":"ghost"},{"action":"ADVANCE","actionPayload":{"id":"@entity.id"},"icon":"@entity.primaryActionIcon","label":"@entity.primaryActionLabel","type":"button","variant":"primary"}],"direction":"horizontal","gap":"sm","type":"stack","wrap":true}],"direction":"vertical","gap":"lg","type":"stack"}` */
+  /** Default: `"Back"` */
+  backLabel?: string;
+  /** Default: `{"children":[{"align":"center","children":[{"name":"shield-check","size":"lg","type":"icon"},{"content":"@config.title","type":"typography","variant":"h3"}],"direction":"horizontal","gap":"sm","type":"stack"},{"allowNavigation":false,"currentStep":"@entity.currentStepIndex","steps":["if",["=",["array/len","@config.stepLabels"],0],"@entity.wizardSteps",["array/map","@entity.wizardSteps",["fn","step",{"description":["if",["=",["array/len","@config.stepDescriptions"],0],["object/get","@step","description",""],["array/nth","@config.stepDescriptions","@index"]],"id":["object/get","@step","id",""],"title":["array/nth","@config.stepLabels","@index"]}]]],"type":"wizard-progress"},{"children":[{"children":[{"align":"center","children":[{"name":"@entity.currentStepIcon","size":"xl","type":"icon"},{"children":[{"content":["if",["=",["array/len","@config.stepLabels"],0],"@entity.currentStepLabel",["array/nth","@config.stepLabels","@entity.currentStepIndex"]],"type":"typography","variant":"h2"},{"color":"muted","content":["if",["=",["array/len","@config.stepDescriptions"],0],"@entity.currentStepDescription",["array/nth","@config.stepDescriptions","@entity.currentStepIndex"]],"type":"typography","variant":"body"}],"direction":"vertical","gap":"xs","type":"stack"}],"direction":"horizontal","gap":"sm","type":"stack"}],"direction":"vertical","gap":"md","type":"stack"}],"look":"@config.cardLook","type":"card"},{"align":"center","children":[{"action":"BACK","actionPayload":{"id":"@entity.id"},"disabled":"@entity.isFirstStep","icon":"chevron-left","label":"@config.backLabel","type":"button","variant":"ghost"},{"action":"REJECT","actionPayload":{"id":"@entity.id"},"icon":"x","label":"@config.rejectLabel","type":"button","variant":"ghost"},{"action":"ESCALATE","actionPayload":{"id":"@entity.id"},"icon":"alert-triangle","label":"@config.escalateLabel","type":"button","variant":"ghost"},{"action":"ADVANCE","actionPayload":{"id":"@entity.id"},"icon":"@entity.primaryActionIcon","label":["if",["=","@entity.currentStepIndex",["-","@entity.totalSteps",1]],"@config.finishLabel","@config.continueLabel"],"type":"button","variant":"primary"}],"direction":"horizontal","gap":"sm","type":"stack","wrap":true}],"direction":"vertical","gap":"lg","type":"stack"}` */
   bodyContent?: unknown;
   /** Default: `"elevated"` */
   cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
+  /** Default: `"All review steps completed successfully."` */
+  completedText?: string;
+  /** Default: `"Approve & Continue"` */
+  continueLabel?: string;
+  /** Default: `"Escalate"` */
+  escalateLabel?: string;
+  /** Default: `"This item has been escalated for further review."` */
+  escalatedText?: string;
+  /** Default: `"Finalize Approval"` */
+  finishLabel?: string;
+  /** Default: `"Reject"` */
+  rejectLabel?: string;
+  /** Default: `"Start a new review"` */
+  restartLabel?: string;
+  /** Default: `[]` */
+  stepDescriptions?: string[];
+  /** Default: `[]` */
+  stepLabels?: string[];
   /** Default: `[{"description":"Initial review by direct manager","icon":"user","key":"manager","label":"Manager Review"},{"description":"Department director sign-off","icon":"users","key":"director","label":"Director Approval"},{"description":"Final executive approval","icon":"shield","key":"executive","label":"Executive Sign-off"}]` */
   steps?: EntityRow[];
   /** Default: `"Review"` */
@@ -407,6 +427,12 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
       {
         'category': 'interaction',
         'config': {
+          'backLabel': {
+            'default': 'Back',
+            'label': 'Back label',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'bodyContent': {
             'default': {
               'children': [
@@ -431,7 +457,61 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
                 {
                   'allowNavigation': false,
                   'currentStep': '@entity.currentStepIndex',
-                  'steps': '@entity.wizardSteps',
+                  'steps': [
+                    'if',
+                    [
+                      '=',
+                      [
+                        'array/len',
+                        '@config.stepLabels',
+                      ],
+                      0,
+                    ],
+                    '@entity.wizardSteps',
+                    [
+                      'array/map',
+                      '@entity.wizardSteps',
+                      [
+                        'fn',
+                        'step',
+                        {
+                          'description': [
+                            'if',
+                            [
+                              '=',
+                              [
+                                'array/len',
+                                '@config.stepDescriptions',
+                              ],
+                              0,
+                            ],
+                            [
+                              'object/get',
+                              '@step',
+                              'description',
+                              '',
+                            ],
+                            [
+                              'array/nth',
+                              '@config.stepDescriptions',
+                              '@index',
+                            ],
+                          ],
+                          'id': [
+                            'object/get',
+                            '@step',
+                            'id',
+                            '',
+                          ],
+                          'title': [
+                            'array/nth',
+                            '@config.stepLabels',
+                            '@index',
+                          ],
+                        },
+                      ],
+                    ],
+                  ],
                   'type': 'wizard-progress',
                 },
                 {
@@ -449,13 +529,45 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
                             {
                               'children': [
                                 {
-                                  'content': '@entity.currentStepLabel',
+                                  'content': [
+                                    'if',
+                                    [
+                                      '=',
+                                      [
+                                        'array/len',
+                                        '@config.stepLabels',
+                                      ],
+                                      0,
+                                    ],
+                                    '@entity.currentStepLabel',
+                                    [
+                                      'array/nth',
+                                      '@config.stepLabels',
+                                      '@entity.currentStepIndex',
+                                    ],
+                                  ],
                                   'type': 'typography',
                                   'variant': 'h2',
                                 },
                                 {
                                   'color': 'muted',
-                                  'content': '@entity.currentStepDescription',
+                                  'content': [
+                                    'if',
+                                    [
+                                      '=',
+                                      [
+                                        'array/len',
+                                        '@config.stepDescriptions',
+                                      ],
+                                      0,
+                                    ],
+                                    '@entity.currentStepDescription',
+                                    [
+                                      'array/nth',
+                                      '@config.stepDescriptions',
+                                      '@entity.currentStepIndex',
+                                    ],
+                                  ],
                                   'type': 'typography',
                                   'variant': 'body',
                                 },
@@ -488,7 +600,7 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
                       },
                       'disabled': '@entity.isFirstStep',
                       'icon': 'chevron-left',
-                      'label': 'Back',
+                      'label': '@config.backLabel',
                       'type': 'button',
                       'variant': 'ghost',
                     },
@@ -498,7 +610,7 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
                         'id': '@entity.id',
                       },
                       'icon': 'x',
-                      'label': 'Reject',
+                      'label': '@config.rejectLabel',
                       'type': 'button',
                       'variant': 'ghost',
                     },
@@ -508,7 +620,7 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
                         'id': '@entity.id',
                       },
                       'icon': 'alert-triangle',
-                      'label': 'Escalate',
+                      'label': '@config.escalateLabel',
                       'type': 'button',
                       'variant': 'ghost',
                     },
@@ -518,7 +630,20 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
                         'id': '@entity.id',
                       },
                       'icon': '@entity.primaryActionIcon',
-                      'label': '@entity.primaryActionLabel',
+                      'label': [
+                        'if',
+                        [
+                          '=',
+                          '@entity.currentStepIndex',
+                          [
+                            '-',
+                            '@entity.totalSteps',
+                            1,
+                          ],
+                        ],
+                        '@config.finishLabel',
+                        '@config.continueLabel',
+                      ],
                       'type': 'button',
                       'variant': 'primary',
                     },
@@ -553,6 +678,69 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
               'chip',
               'tile-image-first',
             ],
+          },
+          'completedText': {
+            'default': 'All review steps completed successfully.',
+            'label': 'Completed text',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'continueLabel': {
+            'default': 'Approve & Continue',
+            'label': 'Continue label',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'escalateLabel': {
+            'default': 'Escalate',
+            'label': 'Escalate label',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'escalatedText': {
+            'default': 'This item has been escalated for further review.',
+            'label': 'Escalated text',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'finishLabel': {
+            'default': 'Finalize Approval',
+            'description': 'The primary button on the last step',
+            'label': 'Finish label',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'rejectLabel': {
+            'default': 'Reject',
+            'label': 'Reject label',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'restartLabel': {
+            'default': 'Start a new review',
+            'label': 'Restart label',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'stepDescriptions': {
+            'default': [],
+            'description': 'In step order: the description shown for each step, in place of its `steps` description (render-only, so it may be translated)',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Step descriptions',
+            'tier': 'presentation',
+            'type': '[string]',
+          },
+          'stepLabels': {
+            'default': [],
+            'description': 'In step order: the label shown for each step, in place of its `steps` label (render-only, so it may be translated)',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Step labels',
+            'tier': 'presentation',
+            'type': '[string]',
           },
           'steps': {
             'default': [
@@ -1634,14 +1822,68 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
                       {
                         'align': 'center',
                         'color': 'muted',
-                        'content': 'All review steps completed successfully.',
+                        'content': '@config.completedText',
                         'type': 'typography',
                         'variant': 'body',
                       },
                       {
                         'allowNavigation': false,
                         'currentStep': '@entity.totalSteps',
-                        'steps': '@entity.wizardSteps',
+                        'steps': [
+                          'if',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              '@config.stepLabels',
+                            ],
+                            0,
+                          ],
+                          '@entity.wizardSteps',
+                          [
+                            'array/map',
+                            '@entity.wizardSteps',
+                            [
+                              'fn',
+                              'step',
+                              {
+                                'description': [
+                                  'if',
+                                  [
+                                    '=',
+                                    [
+                                      'array/len',
+                                      '@config.stepDescriptions',
+                                    ],
+                                    0,
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@step',
+                                    'description',
+                                    '',
+                                  ],
+                                  [
+                                    'array/nth',
+                                    '@config.stepDescriptions',
+                                    '@index',
+                                  ],
+                                ],
+                                'id': [
+                                  'object/get',
+                                  '@step',
+                                  'id',
+                                  '',
+                                ],
+                                'title': [
+                                  'array/nth',
+                                  '@config.stepLabels',
+                                  '@index',
+                                ],
+                              },
+                            ],
+                          ],
+                        ],
                         'type': 'wizard-progress',
                       },
                       {
@@ -1650,7 +1892,7 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
                           'id': '@entity.id',
                         },
                         'icon': 'rotate-ccw',
-                        'label': 'Start a new review',
+                        'label': '@config.restartLabel',
                         'type': 'button',
                         'variant': 'secondary',
                       },
@@ -1985,7 +2227,7 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
                           'id': '@entity.id',
                         },
                         'icon': 'rotate-ccw',
-                        'label': 'Start a new review',
+                        'label': '@config.restartLabel',
                         'type': 'button',
                         'variant': 'secondary',
                       },
@@ -2027,7 +2269,7 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
                       {
                         'align': 'center',
                         'color': 'muted',
-                        'content': 'This item has been escalated for further review.',
+                        'content': '@config.escalatedText',
                         'type': 'typography',
                         'variant': 'body',
                       },
@@ -2037,7 +2279,7 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
                           'id': '@entity.id',
                         },
                         'icon': 'rotate-ccw',
-                        'label': 'Start a new review',
+                        'label': '@config.restartLabel',
                         'type': 'button',
                         'variant': 'secondary',
                       },
@@ -2051,6 +2293,31 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
               'event': 'ESCALATE',
               'from': 'running',
               'to': 'escalated',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('StepFlowView' satisfies _StdStepFlowEntityName),
+                  {
+                    'emit': {
+                      'failure': 'StepItemsLoadFailed',
+                      'success': 'StepItemsLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'skeleton',
+                    'variant': 'card',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'approved',
+              'to': 'loading',
             },
             {
               'effects': [
@@ -2085,6 +2352,31 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
               ],
               'event': 'RESTART',
               'from': 'approved',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('StepFlowView' satisfies _StdStepFlowEntityName),
+                  {
+                    'emit': {
+                      'failure': 'StepItemsLoadFailed',
+                      'success': 'StepItemsLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'skeleton',
+                    'variant': 'card',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'rejected',
               'to': 'loading',
             },
             {
@@ -2125,6 +2417,31 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
               ],
               'event': 'RESTART',
               'from': 'rejected',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('StepFlowView' satisfies _StdStepFlowEntityName),
+                  {
+                    'emit': {
+                      'failure': 'StepItemsLoadFailed',
+                      'success': 'StepItemsLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'skeleton',
+                    'variant': 'card',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'escalated',
               'to': 'loading',
             },
             {

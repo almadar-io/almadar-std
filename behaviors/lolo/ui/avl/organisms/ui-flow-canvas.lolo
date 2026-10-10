@@ -1,0 +1,700 @@
+app ui-flow-canvas [
+  version: "1.0.0",
+  description: "FlowCanvas — UI factory (1:1 with the @almadar/ui flow-canvas pattern)."
+]
+;; @pattern "flow-canvas"
+orbital FlowCanvasOrbital {
+  type FlowCanvasSystemMap = {
+    openCodeEvent : string
+    previewEvent : string
+    highlighted : string
+  }
+  type FlowCanvasSystemDependencies = {
+    orbitals : Map string [string]!
+    behaviors : Map string FlowCanvasSystemDependenciesBehaviorsValue!
+  }
+  type FlowCanvasSystemDependenciesBehaviorsValue = {
+    layer : "io" | "std" | "primitive" | "unknown"!
+    imports : [string]!
+  }
+  type FlowCanvasTraitView = {
+    lens : "flow" | "traits"!
+    filter : FlowCanvasTraitViewFilter
+  }
+  type FlowCanvasTraitViewFilter = {
+    unit : string!
+    traits : [string]!
+  }
+  type FlowCanvasScene = {
+    steps : [FlowCanvasSceneStepsItem]!
+    cursor : number!
+  }
+  type FlowCanvasSceneStepsItem = {
+    orbital : string!
+    trait : string!
+    from : string!
+  }
+  type FlowCanvasInitialSelectedNode = {
+    orbitalName : string!
+    traitName : string
+    stateName : string
+    transitionEvent : string
+    fromState : string
+    toState : string
+    cardWidth : number
+    cardLabel : "screen"
+    enteredBy : [string]
+    patterns : [FlowCanvasInitialSelectedNodePatternsItem]!
+    eventSources : [FlowCanvasInitialSelectedNodeEventSourcesItem]!
+    layer : string
+    stateRole : "initial" | "terminal" | "hub" | "default"
+    effectTypes : [string]
+    guard : SExpr
+    entityName : string
+    persistence : string
+    fieldCount : number
+    traitCount : number
+    pageRoutes : [string]
+    status : "idle" | "running" | "success" | "error"
+    sourceSchemaName : string
+    focused : boolean
+    kind : "trait-card" | "system-orbital" | "system-band" | "dependency" | "dependency-column"
+    dependencyColumn : "app" | "own" | "io" | "std" | "primitive" | "unknown" | "client" | "host" | "service" | "store" | "external"
+    dependencyRole : "selected" | "upstream" | "downstream" | "both" | "dim"
+    flowTraits : number
+    flowRenderPieces : number
+    unitStatus : "ok" | "degraded" | "down" | "idle"
+    unitMetric : string
+    bandKind : "connected" | "standalone"
+    bandCount : number
+    wireEvents : [string]
+    transitions : [FlowCanvasInitialSelectedNodeTransitionsItem]
+    emits : [string]
+    listens : [string]
+    linkedEntity : string
+    _fullSchema : SExpr
+  }
+  type FlowCanvasInitialSelectedNodePatternsItem = {
+    slot : string!
+    pattern : SExpr!
+  }
+  type FlowCanvasInitialSelectedNodeEventSourcesItem = {
+    event : string!
+    patternType : string!
+    label : string
+    path : string!
+    positionHint : number!
+    payloadFields : [FlowCanvasInitialSelectedNodeEventSourcesItemPayloadFieldsItem]
+  }
+  type FlowCanvasInitialSelectedNodeEventSourcesItemPayloadFieldsItem = {
+    name : string!
+    type : string!
+    required : boolean
+  }
+  type FlowCanvasInitialSelectedNodeTransitionsItem = {
+    event : string!
+    fromState : string!
+    toState : string!
+  }
+  type FlowCanvasBehaviorMetaValue = {
+    layer : string!
+  }
+  type FlowCanvasFocusTarget = {
+    type : string!
+    name : string!
+  }
+  type FlowCanvasNodePositionsValue = {
+    x : number!
+    y : number!
+    width : number
+  }
+  type FlowCanvasVerify = {
+
+  }
+  type FlowCanvasNODECLICKContext = {
+    level : "overview" | "trait-expanded" | "system" | "code" | "transition"!
+    orbital : string!
+    trait : string
+    transition : string
+    transitionIndex : number
+  }
+  type FlowCanvasTRAITVIEWCHANGEView = {
+    lens : "flow" | "traits"!
+    filter : FlowCanvasTRAITVIEWCHANGEViewFilter
+  }
+  type FlowCanvasTRAITVIEWCHANGEViewFilter = {
+    unit : string!
+    traits : [string]!
+  }
+  type FlowCanvasFOCUSCHANGEFocus = {
+    orbital : string!
+    scope : "local" | "world"!
+    state : string!
+  }
+  type FlowCanvasPATTERNDELETEContext = {
+    patternIds : [string]!
+    nodeData : FlowCanvasPATTERNDELETEContextNodeData!
+    elements : [FlowCanvasPATTERNDELETEContextElementsItem]
+  }
+  type FlowCanvasPATTERNDELETEContextNodeData = {
+    orbitalName : string!
+    traitName : string
+    stateName : string
+    transitionEvent : string
+    fromState : string
+    toState : string
+    cardWidth : number
+    cardLabel : "screen"
+    enteredBy : [string]
+    patterns : [FlowCanvasPATTERNDELETEContextNodeDataPatternsItem]!
+    eventSources : [FlowCanvasPATTERNDELETEContextNodeDataEventSourcesItem]!
+    layer : string
+    stateRole : "initial" | "terminal" | "hub" | "default"
+    effectTypes : [string]
+    guard : SExpr
+    entityName : string
+    persistence : string
+    fieldCount : number
+    traitCount : number
+    pageRoutes : [string]
+    status : "idle" | "running" | "success" | "error"
+    sourceSchemaName : string
+    focused : boolean
+    kind : "trait-card" | "system-orbital" | "system-band" | "dependency" | "dependency-column"
+    dependencyColumn : "app" | "own" | "io" | "std" | "primitive" | "unknown" | "client" | "host" | "service" | "store" | "external"
+    dependencyRole : "selected" | "upstream" | "downstream" | "both" | "dim"
+    flowTraits : number
+    flowRenderPieces : number
+    unitStatus : "ok" | "degraded" | "down" | "idle"
+    unitMetric : string
+    bandKind : "connected" | "standalone"
+    bandCount : number
+    wireEvents : [string]
+    transitions : [FlowCanvasPATTERNDELETEContextNodeDataTransitionsItem]
+    emits : [string]
+    listens : [string]
+    linkedEntity : string
+    _fullSchema : SExpr
+  }
+  type FlowCanvasPATTERNDELETEContextNodeDataPatternsItem = {
+    slot : string!
+    pattern : SExpr!
+  }
+  type FlowCanvasPATTERNDELETEContextNodeDataEventSourcesItem = {
+    event : string!
+    patternType : string!
+    label : string
+    path : string!
+    positionHint : number!
+    payloadFields : [FlowCanvasPATTERNDELETEContextNodeDataEventSourcesItemPayloadFieldsItem]
+  }
+  type FlowCanvasPATTERNDELETEContextNodeDataEventSourcesItemPayloadFieldsItem = {
+    name : string!
+    type : string!
+    required : boolean
+  }
+  type FlowCanvasPATTERNDELETEContextNodeDataTransitionsItem = {
+    event : string!
+    fromState : string!
+    toState : string!
+  }
+  type FlowCanvasPATTERNDELETEContextElementsItem = {
+    level : "node" | "slot" | "field" | "effect" | "trait" | "page" | "orbital"!
+    orbital : string!
+    trait : string
+    transition : string
+    state : string
+    slot : string
+    path : string
+    patternType : string
+    entity : string
+    source : string
+    label : string!
+  }
+  type FlowCanvasEVENTWIREWire = {
+    eventName : string!
+    sourceOrbital : string!
+    targetOrbital : string!
+    sourceTraitName : string
+    targetTraitName : string
+  }
+  type FlowCanvasPOSITIONSCHANGEPositionsValue = {
+    x : number!
+    y : number!
+    width : number
+  }
+  type FlowCanvasSELECTEDNODECHANGENode = {
+    orbitalName : string!
+    traitName : string
+    stateName : string
+    transitionEvent : string
+    fromState : string
+    toState : string
+    cardWidth : number
+    cardLabel : "screen"
+    enteredBy : [string]
+    patterns : [FlowCanvasSELECTEDNODECHANGENodePatternsItem]!
+    eventSources : [FlowCanvasSELECTEDNODECHANGENodeEventSourcesItem]!
+    layer : string
+    stateRole : "initial" | "terminal" | "hub" | "default"
+    effectTypes : [string]
+    guard : SExpr
+    entityName : string
+    persistence : string
+    fieldCount : number
+    traitCount : number
+    pageRoutes : [string]
+    status : "idle" | "running" | "success" | "error"
+    sourceSchemaName : string
+    focused : boolean
+    kind : "trait-card" | "system-orbital" | "system-band" | "dependency" | "dependency-column"
+    dependencyColumn : "app" | "own" | "io" | "std" | "primitive" | "unknown" | "client" | "host" | "service" | "store" | "external"
+    dependencyRole : "selected" | "upstream" | "downstream" | "both" | "dim"
+    flowTraits : number
+    flowRenderPieces : number
+    unitStatus : "ok" | "degraded" | "down" | "idle"
+    unitMetric : string
+    bandKind : "connected" | "standalone"
+    bandCount : number
+    wireEvents : [string]
+    transitions : [FlowCanvasSELECTEDNODECHANGENodeTransitionsItem]
+    emits : [string]
+    listens : [string]
+    linkedEntity : string
+    _fullSchema : SExpr
+  }
+  type FlowCanvasSELECTEDNODECHANGENodePatternsItem = {
+    slot : string!
+    pattern : SExpr!
+  }
+  type FlowCanvasSELECTEDNODECHANGENodeEventSourcesItem = {
+    event : string!
+    patternType : string!
+    label : string
+    path : string!
+    positionHint : number!
+    payloadFields : [FlowCanvasSELECTEDNODECHANGENodeEventSourcesItemPayloadFieldsItem]
+  }
+  type FlowCanvasSELECTEDNODECHANGENodeEventSourcesItemPayloadFieldsItem = {
+    name : string!
+    type : string!
+    required : boolean
+  }
+  type FlowCanvasSELECTEDNODECHANGENodeTransitionsItem = {
+    event : string!
+    fromState : string!
+    toState : string!
+  }
+  type FlowCanvasSELECTEDPATTERNCHANGEPattern = {
+    patternType : string!
+    patternId : string
+    nodeData : FlowCanvasSELECTEDPATTERNCHANGEPatternNodeData!
+    sourceTrait : string
+    rect : FlowCanvasSELECTEDPATTERNCHANGEPatternRect
+    selection : [string]
+    offsetInParent : FlowCanvasSELECTEDPATTERNCHANGEPatternOffsetInParent
+    focus : FlowCanvasSELECTEDPATTERNCHANGEPatternFocus
+    elements : [FlowCanvasSELECTEDPATTERNCHANGEPatternElementsItem]
+  }
+  type FlowCanvasSELECTEDPATTERNCHANGEPatternNodeData = {
+    orbitalName : string!
+    traitName : string
+    stateName : string
+    transitionEvent : string
+    fromState : string
+    toState : string
+    cardWidth : number
+    cardLabel : "screen"
+    enteredBy : [string]
+    patterns : [FlowCanvasSELECTEDPATTERNCHANGEPatternNodeDataPatternsItem]!
+    eventSources : [FlowCanvasSELECTEDPATTERNCHANGEPatternNodeDataEventSourcesItem]!
+    layer : string
+    stateRole : "initial" | "terminal" | "hub" | "default"
+    effectTypes : [string]
+    guard : SExpr
+    entityName : string
+    persistence : string
+    fieldCount : number
+    traitCount : number
+    pageRoutes : [string]
+    status : "idle" | "running" | "success" | "error"
+    sourceSchemaName : string
+    focused : boolean
+    kind : "trait-card" | "system-orbital" | "system-band" | "dependency" | "dependency-column"
+    dependencyColumn : "app" | "own" | "io" | "std" | "primitive" | "unknown" | "client" | "host" | "service" | "store" | "external"
+    dependencyRole : "selected" | "upstream" | "downstream" | "both" | "dim"
+    flowTraits : number
+    flowRenderPieces : number
+    unitStatus : "ok" | "degraded" | "down" | "idle"
+    unitMetric : string
+    bandKind : "connected" | "standalone"
+    bandCount : number
+    wireEvents : [string]
+    transitions : [FlowCanvasSELECTEDPATTERNCHANGEPatternNodeDataTransitionsItem]
+    emits : [string]
+    listens : [string]
+    linkedEntity : string
+    _fullSchema : SExpr
+  }
+  type FlowCanvasSELECTEDPATTERNCHANGEPatternNodeDataPatternsItem = {
+    slot : string!
+    pattern : SExpr!
+  }
+  type FlowCanvasSELECTEDPATTERNCHANGEPatternNodeDataEventSourcesItem = {
+    event : string!
+    patternType : string!
+    label : string
+    path : string!
+    positionHint : number!
+    payloadFields : [FlowCanvasSELECTEDPATTERNCHANGEPatternNodeDataEventSourcesItemPayloadFieldsItem]
+  }
+  type FlowCanvasSELECTEDPATTERNCHANGEPatternNodeDataEventSourcesItemPayloadFieldsItem = {
+    name : string!
+    type : string!
+    required : boolean
+  }
+  type FlowCanvasSELECTEDPATTERNCHANGEPatternNodeDataTransitionsItem = {
+    event : string!
+    fromState : string!
+    toState : string!
+  }
+  type FlowCanvasSELECTEDPATTERNCHANGEPatternRect = {
+    top : number!
+    left : number!
+    width : number!
+    height : number!
+  }
+  type FlowCanvasSELECTEDPATTERNCHANGEPatternOffsetInParent = {
+    left : number!
+    top : number!
+    right : number!
+    bottom : number!
+    parentWidth : number!
+    parentHeight : number!
+  }
+  type FlowCanvasSELECTEDPATTERNCHANGEPatternFocus = {
+    level : "node" | "slot" | "field" | "effect" | "trait" | "page" | "orbital"!
+    orbital : string!
+    trait : string
+    transition : string
+    state : string
+    slot : string
+    path : string
+    patternType : string
+    entity : string
+    source : string
+    label : string!
+  }
+  type FlowCanvasSELECTEDPATTERNCHANGEPatternElementsItem = {
+    level : "node" | "slot" | "field" | "effect" | "trait" | "page" | "orbital"!
+    orbital : string!
+    trait : string
+    transition : string
+    state : string
+    slot : string
+    path : string
+    patternType : string
+    entity : string
+    source : string
+    label : string!
+  }
+
+  entity FlowCanvasItem [runtime] {
+    id : string!
+  }
+
+  trait FlowCanvasRender -> @rebindable FlowCanvasItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          schema: @config.schema
+          className: @config.className
+          width: @config.width
+          height: @config.height
+          onNodeClick: @config.onNodeClick
+          systemMap: @config.systemMap
+          systemDependencies: @config.systemDependencies
+          traitView: @config.traitView
+          onTraitViewChange: @config.onTraitViewChange
+          openBehaviorEvent: @config.openBehaviorEvent
+          scene: @config.scene
+          onFocusChange: @config.onFocusChange
+          initialOrbital: @config.initialOrbital
+          initialLevel: @config.initialLevel
+          focusedOrbital: @config.focusedOrbital
+          initialSelectedNode: @config.initialSelectedNode
+          editable: @config.editable
+          onSchemaChange: @config.onSchemaChange
+          onPatternDelete: @config.onPatternDelete
+          tools: @config.tools
+          onEventWire: @config.onEventWire
+          behaviorMeta: @config.behaviorMeta
+          orbitalStatus: @config.orbitalStatus
+          onOrbitalHover: @config.onOrbitalHover
+          layoutHint: @config.layoutHint
+          onNodeSelect: @config.onNodeSelect
+          onZoomChange: @config.onZoomChange
+          focusTarget: @config.focusTarget
+          color: @config.color
+          animated: @config.animated
+          initialTrait: @config.initialTrait
+          stateCoverage: @config.stateCoverage
+          userType: @config.userType
+          nodePositions: @config.nodePositions
+          onPositionsChange: @config.onPositionsChange
+          onSelectedNodeChange: @config.onSelectedNodeChange
+          onSelectedPatternChange: @config.onSelectedPatternChange
+          externalInspector: @config.externalInspector
+          verify: @config.verify
+          enter: @config.enter
+          enterDelay: @config.enterDelay
+          skeleton: @config.skeleton
+          type: flow-canvas
+        })
+    }
+
+    emits {
+      @config.onNodeClick -> external {
+        context : FlowCanvasNODECLICKContext
+      }
+        @description "onNodeClick prop"
+        @tier "essential"
+      @config.onTraitViewChange -> external {
+        view : FlowCanvasTRAITVIEWCHANGEView
+      }
+        @description "onTraitViewChange prop"
+        @tier "essential"
+      @config.openBehaviorEvent -> external {
+        name : string!
+      }
+        @description "Dependencies lens: emits UI:{openBehaviorEvent} with { name } to open a selected behavior's source."
+        @tier "essential"
+      @config.onFocusChange -> external {
+        focus : FlowCanvasFOCUSCHANGEFocus
+      }
+        @description "Fired when the focused orbital, the scope, or the focused card's state changes."
+        @tier "essential"
+      @config.onSchemaChange -> external {
+        schema : SExpr
+      }
+        @description "Called when the user edits the schema via the inspector."
+        @tier "essential"
+      @config.onPatternDelete -> external {
+        context : FlowCanvasPATTERNDELETEContext
+      }
+        @description "Called when the user presses Delete/Backspace with patterns selected (all of a multi-select)."
+        @tier "essential"
+      @config.onEventWire -> external {
+        wire : FlowCanvasEVENTWIREWire
+      }
+        @description "Called when the user drags from a source handle to a target handle (event wiring)."
+        @tier "essential"
+      @config.onOrbitalHover -> external {
+        orbitalName : string
+      }
+        @description "Hover handler for overview-level orbital nodes. Fires with the orbital name on enter and `null` on leave. Reserved for the upcoming trace tooltip: consumers will use it to anchor a popover that shows the subagent's live trace + reasoning for the hovered orbital."
+        @tier "essential"
+      @config.onNodeSelect -> external {
+        orbitalName : string
+      }
+        @description "Called when the user clicks a node in overview level (for composition hints)."
+        @tier "essential"
+      @config.onZoomChange -> external {
+        level : string
+        context : Map string string
+      }
+        @description "onZoomChange prop"
+        @tier "essential"
+      @config.onPositionsChange -> external {
+        positions : Map string FlowCanvasPOSITIONSCHANGEPositionsValue
+      }
+        @description "Fired on node drag-stop and card resize with the full {id → placement} map of the current node set, so the consumer can persist the arrangement."
+        @tier "essential"
+      @config.onSelectedNodeChange -> external {
+        node : FlowCanvasSELECTEDNODECHANGENode
+      }
+        @description "Fired whenever the internal `selectedNode` changes — select, clear-on- escape, clear-on-level-change, and pattern-selection sync all route through this. Lets a consumer mirror selection into a persistent properties panel rendered outside the canvas (see `externalInspector`)."
+        @tier "essential"
+      @config.onSelectedPatternChange -> external {
+        pattern : FlowCanvasSELECTEDPATTERNCHANGEPattern
+      }
+        @description "Fired whenever the in-node pattern selection changes (a pattern click inside `OrbPreviewNode`, cleared on background click / Escape / pattern delete). `PatternSelectionContext` is internal to this component's own render tree, so an externally-rendered `OrbInspector` (see `externalInspector`) has no other way to learn which pattern the user picked — pass this straight through to `OrbInspector`'s `selectedPattern` prop to keep Design-tab prop editing working outside the canvas."
+        @tier "essential"
+    }
+
+    config {
+      schema : SExpr
+        @label "Schema"
+        @description "schema prop"
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      width : scalar = "100%"
+        @label "Width"
+        @description "width prop"
+        @tier "presentation"
+      height : scalar = 500
+        @label "Height"
+        @description "height prop"
+        @tier "presentation"
+      onNodeClick : event = "NODE_CLICK"
+        @label "On Node Click"
+        @description "onNodeClick prop"
+        @tier "presentation"
+      systemMap : FlowCanvasSystemMap
+        @label "System Map"
+        @description "With `initialLevel='system'`: what an orbital chip does (drill in, hover preview, open code, preview)."
+        @tier "presentation"
+      systemDependencies : FlowCanvasSystemDependencies
+        @label "System Dependencies"
+        @description "With `initialLevel='system'`: the app's imports, for the Dependencies lens (absent: Events only)."
+        @tier "presentation"
+      traitView : FlowCanvasTraitView
+        @label "Trait View"
+        @description "Trait level: which lens (and trait filter) shows — pass with `onTraitViewChange` to keep it across remounts."
+        @tier "presentation"
+      onTraitViewChange : event = "TRAIT_VIEW_CHANGE"
+        @label "On Trait View Change"
+        @description "onTraitViewChange prop"
+        @tier "presentation"
+      openBehaviorEvent : event = "OPEN_BEHAVIOR"
+        @label "Open Behavior Event"
+        @description "Dependencies lens: emits UI:{openBehaviorEvent} with { name } to open a selected behavior's source."
+        @tier "presentation"
+      scene : FlowCanvasScene
+        @label "Scene"
+        @description "With `initialLevel='trait-expanded'`: played steps lighting each trait card's state machine."
+        @tier "presentation"
+      onFocusChange : event = "FOCUS_CHANGE"
+        @label "On Focus Change"
+        @description "Fired when the focused orbital, the scope, or the focused card's state changes."
+        @tier "presentation"
+      initialOrbital : string
+        @label "Initial Orbital"
+        @description "The orbital cards open on (local view) — or, with `initialLevel='trait-expanded'`, the orbital whose traits are shown."
+        @tier "presentation"
+      initialLevel : "overview" | "trait-expanded" | "system"
+        @label "Initial Level"
+        @description "`trait-expanded`: one card per trait of `initialOrbital` (cosmic). Default: orbital cards."
+        @tier "presentation"
+      focusedOrbital : string
+        @label "Focused Orbital"
+        @description "Focus this orbital (e.g. picked in a Layers panel); changing it moves the focus without remounting."
+        @tier "presentation"
+      initialSelectedNode : FlowCanvasInitialSelectedNode
+        @label "Initial Selected Node"
+        @description "Pre-select a node on mount (opens OrbInspector)."
+        @tier "presentation"
+      editable : boolean
+        @label "Editable"
+        @description "Enable editing in the inspector. When true, fields become inputs."
+        @tier "presentation"
+      onSchemaChange : event = "SCHEMA_CHANGE"
+        @label "On Schema Change"
+        @description "Called when the user edits the schema via the inspector."
+        @tier "presentation"
+      onPatternDelete : event = "PATTERN_DELETE"
+        @label "On Pattern Delete"
+        @description "Called when the user presses Delete/Backspace with patterns selected (all of a multi-select)."
+        @tier "presentation"
+      tools : ["multiSelect" | "clipboard" | "inlineText" | "zoomToSelection" | "designHandles" | "autoLayout" | "sizeLimits" | "absolute" | "guides" | "measure"] = []
+        @label "Tools"
+        @description "Editing tools the canvas turns on (a persona's shell manifest declares them); all by default."
+        @tier "presentation"
+      onEventWire : event = "EVENT_WIRE"
+        @label "On Event Wire"
+        @description "Called when the user drags from a source handle to a target handle (event wiring)."
+        @tier "presentation"
+      behaviorMeta : Map string FlowCanvasBehaviorMetaValue = { item: { layer: "Layer" } }
+        @label "Behavior Meta"
+        @description "Behavior layer metadata for node styling (layer color bands)."
+        @tier "presentation"
+      orbitalStatus : Map string string = {}
+        @label "Orbital Status"
+        @description "Per-orbital generation status. Keyed by orbital name. Drives the spinner + accent border treatment on the overview node and (future) the hover trace surface. Defaults to `'idle'` for missing entries. Consumers derive this from agent subagent_start/complete SSE events."
+        @tier "presentation"
+      onOrbitalHover : event = "ORBITAL_HOVER"
+        @label "On Orbital Hover"
+        @description "Hover handler for overview-level orbital nodes. Fires with the orbital name on enter and `null` on leave. Reserved for the upcoming trace tooltip: consumers will use it to anchor a popover that shows the subagent's live trace + reasoning for the hovered orbital."
+        @tier "presentation"
+      layoutHint : "pipeline" | "grid"
+        @label "Layout Hint"
+        @description "Layout hint: 'pipeline' renders nodes left-to-right, 'grid' (default) uses sqrt-based grid."
+        @tier "presentation"
+      onNodeSelect : event = "NODE_SELECT"
+        @label "On Node Select"
+        @description "Called when the user clicks a node in overview level (for composition hints)."
+        @tier "presentation"
+      onZoomChange : event = "ZOOM_CHANGE"
+        @label "On Zoom Change"
+        @description "onZoomChange prop"
+        @tier "presentation"
+      focusTarget : FlowCanvasFocusTarget
+        @label "Focus Target"
+        @description "focusTarget prop"
+        @tier "presentation"
+      color : string
+        @label "Color"
+        @description "color prop"
+        @tier "presentation"
+      animated : boolean
+        @label "Animated"
+        @description "animated prop"
+        @tier "presentation"
+      initialTrait : string
+        @label "Initial Trait"
+        @description "initialTrait prop"
+        @tier "presentation"
+      stateCoverage : Map string string = { item: "Item" }
+        @label "State Coverage"
+        @description "stateCoverage prop"
+        @tier "presentation"
+      userType : "builder" | "designer" | "architect" = builder
+        @label "User Type"
+        @description "Studio persona viewing the canvas. Drives `OrbInspector` tab/section visibility — designers and builders hide the raw `code` tab and the architect-only Entity / raw-guard / raw-effects sections; architects see everything. Default `'builder'` preserves pre-Phase-2 behavior."
+        @tier "presentation"
+      nodePositions : Map string FlowCanvasNodePositionsValue = { item: { x: 1, y: 1, width: 1 } }
+        @label "Node Positions"
+        @description "Persisted node positions keyed by node id. When the node set changes (level/schema switch), any id present here overrides the computed layout position, restoring a user's manual drag arrangement. Node ids are unique per view level, so a single flat map covers overview + expanded. A saved `width` restores a card frame the designer resized."
+        @tier "presentation"
+      onPositionsChange : event = "POSITIONS_CHANGE"
+        @label "On Positions Change"
+        @description "Fired on node drag-stop and card resize with the full {id → placement} map of the current node set, so the consumer can persist the arrangement."
+        @tier "presentation"
+      onSelectedNodeChange : event = "SELECTED_NODE_CHANGE"
+        @label "On Selected Node Change"
+        @description "Fired whenever the internal `selectedNode` changes — select, clear-on- escape, clear-on-level-change, and pattern-selection sync all route through this. Lets a consumer mirror selection into a persistent properties panel rendered outside the canvas (see `externalInspector`)."
+        @tier "presentation"
+      onSelectedPatternChange : event = "SELECTED_PATTERN_CHANGE"
+        @label "On Selected Pattern Change"
+        @description "Fired whenever the in-node pattern selection changes (a pattern click inside `OrbPreviewNode`, cleared on background click / Escape / pattern delete). `PatternSelectionContext` is internal to this component's own render tree, so an externally-rendered `OrbInspector` (see `externalInspector`) has no other way to learn which pattern the user picked — pass this straight through to `OrbInspector`'s `selectedPattern` prop to keep Design-tab prop editing working outside the canvas."
+        @tier "presentation"
+      externalInspector : boolean = false
+        @label "External Inspector"
+        @description "When true, FlowCanvas does not render its inline `OrbInspector` — the consumer is expected to render one externally, fed by `onSelectedNodeChange` + `onSelectedPatternChange`. Selection highlighting, keyboard delete, and every other behavior is unchanged. Default `false` preserves the built-in inline panel."
+        @tier "presentation"
+      verify : FlowCanvasVerify
+        @label "Verify"
+        @description "A host that verifies from the canvas: cards show verify controls and the trait's verdict, and follow `UI:CANVAS_SHOW_STATE` to the states a run reaches."
+        @tier "presentation"
+      enter : "none" | "fade" | "rise" | "scale" | "slide"
+        @label "Enter"
+        @description "How this element animates in when it mounts (theme-styled); overrides the theme's default slot entry. `none` opts out."
+        @tier "presentation"
+      enterDelay : number
+        @label "Enter Delay"
+        @description "Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating."
+        @tier "presentation"
+      skeleton : "header" | "table" | "list" | "grid" | "detail" | "stats" | "form" | "card" | "text" | "none"
+        @label "Skeleton"
+        @description "Skeleton shown while this element's server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`."
+        @tier "presentation"
+    }
+  }
+
+  page "/flow-canvas" as FlowCanvasPage -> FlowCanvasRender
+}

@@ -30,7 +30,23 @@ const ALIAS = 'UiCodeRunnerPanel';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiCodeRunnerPanelEventKey = 'INIT';
+export type StdUiCodeRunnerPanelEventKey = 'INIT' | 'RESET' | 'RUN';
+
+/**
+ * Payload shape for the `RUN` event.
+ */
+export interface StdUiCodeRunnerPanelRunPayload {
+  code: string;
+  language: string;
+  runId: string;
+}
+
+/**
+ * Payload shape for the `RESET` event.
+ */
+export interface StdUiCodeRunnerPanelResetPayload {
+  runId: string;
+}
 
 /**
  * Typed call-site config block for this trait — every
@@ -55,14 +71,21 @@ export interface StdUiCodeRunnerPanelConfig {
   dir?: 'ltr' | 'rtl' | 'auto';
   enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   enterDelay?: number;
+  error?: string;
   lang?: string;
   /** Default: `""` */
   language?: string;
+  output?: EntityRow;
+  /** Default: `"RESET"` */
+  resetEvent?: string;
   role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `"RUN_CODE"` */
+  /** Default: `"RUN"` */
   runEvent?: string;
-  /** Default: `true` */
+  runId?: string;
+  /** Default: `false` */
   runnable?: boolean;
+  /** Default: `false` */
+  running?: boolean;
   skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
 }
@@ -125,6 +148,23 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
           {
             'name': 'id',
             'required': true,
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'intrinsic': true,
+            'name': 'code',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'intrinsic': true,
+            'name': 'language',
+            'type': 'string',
+          },
+          {
+            'intrinsic': true,
+            'name': 'runId',
             'type': 'string',
           },
         ];
@@ -270,6 +310,12 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
             'tier': 'presentation',
             'type': 'number',
           },
+          'error': {
+            'description': 'A run failure message from the program; replaces the output body.',
+            'label': 'Error',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'lang': {
             'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
             'label': 'Lang',
@@ -282,6 +328,66 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
             'label': 'Language',
             'tier': 'presentation',
             'type': 'string',
+          },
+          'output': {
+            'description': 'The program\'s result for the last run, bound back into the panel.',
+            'label': 'Output',
+            'properties': {
+              'exitCode': {
+                'name': 'exitCode',
+                'required': true,
+                'type': 'number',
+              },
+              'stderr': {
+                'name': 'stderr',
+                'required': true,
+                'type': 'string',
+              },
+              'stdout': {
+                'name': 'stdout',
+                'required': true,
+                'type': 'string',
+              },
+              'testResults': {
+                'items': {
+                  'properties': {
+                    'actualOutput': {
+                      'name': 'actualOutput',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    'expectedOutput': {
+                      'name': 'expectedOutput',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    'input': {
+                      'name': 'input',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    'passed': {
+                      'name': 'passed',
+                      'required': true,
+                      'type': 'boolean',
+                    },
+                  },
+                  'type': 'object',
+                },
+                'name': 'testResults',
+                'required': true,
+                'type': 'array',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'CodeRunnerPanelOutput',
+          },
+          'resetEvent': {
+            'default': 'RESET',
+            'description': 'Event emitted on Reset as `UI:<resetEvent>` with `{ runId }`; Reset only restores the code when absent.',
+            'label': 'Reset Event',
+            'tier': 'presentation',
+            'type': 'event',
           },
           'role': {
             'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
@@ -373,16 +479,29 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
             ],
           },
           'runEvent': {
-            'default': 'RUN_CODE',
-            'description': 'Event name to emit on run (emitted as `UI:<runEvent>`). Defaults to \'RUN_CODE\'.',
+            'default': 'RUN',
+            'description': 'Event emitted on Run as `UI:<runEvent>` with `{ code, language, runId }`. Defaults to \'RUN_CODE\'.',
             'label': 'Run Event',
+            'tier': 'presentation',
+            'type': 'event',
+          },
+          'runId': {
+            'description': 'Identifies this panel in its run/reset payloads (e.g. a lesson segment); empty when one panel stands alone.',
+            'label': 'Run Id',
             'tier': 'presentation',
             'type': 'string',
           },
           'runnable': {
-            'default': true,
-            'description': 'Whether the panel allows running (false = read-only code block)',
+            'default': false,
+            'description': 'Whether the panel is editable and runnable (default false = read-only code block)',
             'label': 'Runnable',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'running': {
+            'default': false,
+            'description': 'True while the program is running the code.',
+            'label': 'Running',
             'tier': 'presentation',
             'type': 'boolean',
           },
@@ -416,9 +535,65 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
             'kind': 'render-ui',
             'resource': 'main',
           },
+          {
+            'kind': 'set',
+            'resource': '@entity.code',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.language',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.runId',
+          },
+        ],
+        'emits': [
+          {
+            'definerKnob': 'runEvent',
+            'description': 'Event emitted on Run as `UI:<runEvent>` with `{ code, language, runId }`. Defaults to \'RUN_CODE\'.',
+            'event': '@config.runEvent',
+            'payloadSchema': [
+              {
+                'name': 'code',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'language',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'runId',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'essential',
+          },
+          {
+            'definerKnob': 'resetEvent',
+            'description': 'Event emitted on Reset as `UI:<resetEvent>` with `{ runId }`; Reset only restores the code when absent.',
+            'event': '@config.resetEvent',
+            'payloadSchema': [
+              {
+                'name': 'runId',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'essential',
+          },
         ],
         'entityContract': {
-          'provides': [],
+          'provides': [
+            'code',
+            'language',
+            'runId',
+          ],
           'requires': [],
         },
         'entityRebindable': true,
@@ -431,6 +606,74 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
               'key': 'INIT',
               'name': 'Initialize',
             },
+            {
+              'key': 'RUN',
+              'name': 'Run',
+              'payloadSchema': [
+                {
+                  'name': 'code',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'language',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'runId',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+              'payloadSchema': [
+                {
+                  'name': 'runId',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'description': 'Event emitted on Run as `UI:<runEvent>` with `{ code, language, runId }`. Defaults to \'RUN_CODE\'.',
+              'key': '@config.runEvent',
+              'name': '@config.run event',
+              'payloadSchema': [
+                {
+                  'name': 'code',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'language',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'runId',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'tier': 'essential',
+            },
+            {
+              'description': 'Event emitted on Reset as `UI:<resetEvent>` with `{ runId }`; Reset only restores the code when absent.',
+              'key': '@config.resetEvent',
+              'name': '@config.reset event',
+              'payloadSchema': [
+                {
+                  'name': 'runId',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'tier': 'essential',
+            },
           ],
           'states': [
             {
@@ -441,6 +684,21 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
           'transitions': [
             {
               'effects': [
+                [
+                  'set',
+                  '@entity.code',
+                  '@config.code',
+                ],
+                [
+                  'set',
+                  '@entity.language',
+                  '@config.language',
+                ],
+                [
+                  'set',
+                  '@entity.runId',
+                  '@config.runId',
+                ],
                 [
                   'render-ui',
                   'main',
@@ -456,15 +714,20 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
                     'aria-pressed': '@config.ariaPressed',
                     'aria-selected': '@config.ariaSelected',
                     'className': '@config.className',
-                    'code': '@config.code',
+                    'code': '@entity.code',
                     'dir': '@config.dir',
                     'enter': '@config.enter',
                     'enterDelay': '@config.enterDelay',
+                    'error': '@config.error',
                     'lang': '@config.lang',
-                    'language': '@config.language',
+                    'language': '@entity.language',
+                    'output': '@config.output',
+                    'resetEvent': '@config.resetEvent',
                     'role': '@config.role',
                     'runEvent': '@config.runEvent',
+                    'runId': '@entity.runId',
                     'runnable': '@config.runnable',
+                    'running': '@config.running',
                     'skeleton': '@config.skeleton',
                     'tabIndex': '@config.tabIndex',
                     'type': 'code-runner-panel',
@@ -472,6 +735,108 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
                 ],
               ],
               'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.code',
+                  '@payload.code',
+                ],
+                [
+                  'set',
+                  '@entity.language',
+                  '@payload.language',
+                ],
+                [
+                  'set',
+                  '@entity.runId',
+                  '@payload.runId',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'aria-busy': '@config.ariaBusy',
+                    'aria-current': '@config.ariaCurrent',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'aria-hidden': '@config.ariaHidden',
+                    'aria-label': '@config.ariaLabel',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'aria-live': '@config.ariaLive',
+                    'aria-pressed': '@config.ariaPressed',
+                    'aria-selected': '@config.ariaSelected',
+                    'className': '@config.className',
+                    'code': '@entity.code',
+                    'dir': '@config.dir',
+                    'enter': '@config.enter',
+                    'enterDelay': '@config.enterDelay',
+                    'error': '@config.error',
+                    'lang': '@config.lang',
+                    'language': '@entity.language',
+                    'output': '@config.output',
+                    'resetEvent': '@config.resetEvent',
+                    'role': '@config.role',
+                    'runEvent': '@config.runEvent',
+                    'runId': '@entity.runId',
+                    'runnable': '@config.runnable',
+                    'running': '@config.running',
+                    'skeleton': '@config.skeleton',
+                    'tabIndex': '@config.tabIndex',
+                    'type': 'code-runner-panel',
+                  },
+                ],
+              ],
+              'event': 'RUN',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.runId',
+                  '@payload.runId',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'aria-busy': '@config.ariaBusy',
+                    'aria-current': '@config.ariaCurrent',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'aria-hidden': '@config.ariaHidden',
+                    'aria-label': '@config.ariaLabel',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'aria-live': '@config.ariaLive',
+                    'aria-pressed': '@config.ariaPressed',
+                    'aria-selected': '@config.ariaSelected',
+                    'className': '@config.className',
+                    'code': '@entity.code',
+                    'dir': '@config.dir',
+                    'enter': '@config.enter',
+                    'enterDelay': '@config.enterDelay',
+                    'error': '@config.error',
+                    'lang': '@config.lang',
+                    'language': '@entity.language',
+                    'output': '@config.output',
+                    'resetEvent': '@config.resetEvent',
+                    'role': '@config.role',
+                    'runEvent': '@config.runEvent',
+                    'runId': '@entity.runId',
+                    'runnable': '@config.runnable',
+                    'running': '@config.running',
+                    'skeleton': '@config.skeleton',
+                    'tabIndex': '@config.tabIndex',
+                    'type': 'code-runner-panel',
+                  },
+                ],
+              ],
+              'event': 'RESET',
               'from': 'idle',
               'to': 'idle',
             },

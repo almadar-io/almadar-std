@@ -217,6 +217,51 @@
         "parent": "trt_01M0MMZJ7CEY2SRHX9NBWDN7ZS",
         "renames": []
       },
+      "evt_01M4H13DSYHKHT7VPGBV2XDT16": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M4H13DSYHKHT7VPGBV2XDT16",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M4H13DSYTHNQ73APZV6ZS5RH",
+        "renames": []
+      },
+      "evt_01M4H13DSYKY1EJH0YH260ZKKP": {
+        "bakedName": "SEND_ENVELOPE",
+        "curName": "SEND_ENVELOPE",
+        "id": "evt_01M4H13DSYKY1EJH0YH260ZKKP",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M4H13DSYTHNQ73APZV6ZS5RH",
+        "renames": []
+      },
+      "evt_01M4H13DSYMWDKF0S3T498A7JT": {
+        "bakedName": "CLOSE",
+        "curName": "CLOSE",
+        "id": "evt_01M4H13DSYMWDKF0S3T498A7JT",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M4H13DSYTHNQ73APZV6ZS5RH",
+        "renames": []
+      },
+      "evt_01M4H13DSYQV6HFHMKJ5T1XQB1": {
+        "bakedName": "REQUEST_SEND",
+        "curName": "REQUEST_SEND",
+        "id": "evt_01M4H13DSYQV6HFHMKJ5T1XQB1",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M4H13DSYTHNQ73APZV6ZS5RH",
+        "renames": []
+      },
+      "evt_01M4H13DSYR20QBFD9414KDZFA": {
+        "bakedName": "SEND_FOR_SIGNATURE",
+        "curName": "SEND_FOR_SIGNATURE",
+        "id": "evt_01M4H13DSYR20QBFD9414KDZFA",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04G2XFKTVZ6MWT4X4Y28W",
+        "renames": []
+      },
       "orb_01KXG04G2XPVD49MAX6GWP787V": {
         "bakedName": "SignatureSessionOrbital",
         "curName": "SignatureSessionOrbital",
@@ -269,6 +314,14 @@
         "bakedName": "EnvelopeDispatcher",
         "curName": "EnvelopeDispatcher",
         "id": "trt_01M0MMZJ7CEY2SRHX9NBWDN7ZS",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M4H13DSYTHNQ73APZV6ZS5RH": {
+        "bakedName": "EnvelopeSendDialog",
+        "curName": "EnvelopeSendDialog",
+        "id": "trt_01M4H13DSYTHNQ73APZV6ZS5RH",
         "kind": "trait",
         "owner": "workspace",
         "renames": []
@@ -392,6 +445,10 @@
               "refId": "trt_01KXG04G2X40Y24PAD7JV6DE0C"
             },
             {
+              "ref": "EnvelopeSendDialog",
+              "refId": "trt_01M4H13DSYTHNQ73APZV6ZS5RH"
+            },
+            {
               "ref": "EnvelopeDispatcher",
               "refId": "trt_01M0MMZJ7CEY2SRHX9NBWDN7ZS"
             }
@@ -404,6 +461,11 @@
           "config": {
             "itemActions": {
               "default": [
+                {
+                  "event": "SEND_FOR_SIGNATURE",
+                  "label": "Send for signature",
+                  "variant": "primary"
+                },
                 {
                   "event": "RESEND_REQUEST",
                   "label": "Resend",
@@ -528,7 +590,14 @@
                     },
                     {
                       "name": "status",
-                      "type": "string"
+                      "type": "string",
+                      "values": [
+                        "draft",
+                        "sent",
+                        "viewed",
+                        "signed",
+                        "declined"
+                      ]
                     },
                     {
                       "name": "sentAt",
@@ -597,7 +666,14 @@
                     },
                     {
                       "name": "status",
-                      "type": "string"
+                      "type": "string",
+                      "values": [
+                        "draft",
+                        "sent",
+                        "viewed",
+                        "signed",
+                        "declined"
+                      ]
                     },
                     {
                       "name": "sentAt",
@@ -620,6 +696,82 @@
                 }
               ],
               "synonyms": "refresh status, check signature, poll envelope",
+              "tier": "domain"
+            },
+            {
+              "description": "Open the send step for this request: attach the document and dispatch it for signature.",
+              "event": "SEND_FOR_SIGNATURE",
+              "eventId": "evt_01M4H13DSYR20QBFD9414KDZFA",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "entity": "SignatureSession",
+                  "name": "row",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "documentId",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "documentName",
+                      "type": "string"
+                    },
+                    {
+                      "name": "recipientName",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "recipientEmail",
+                      "required": true,
+                      "type": "email"
+                    },
+                    {
+                      "name": "requesterName",
+                      "type": "string"
+                    },
+                    {
+                      "name": "status",
+                      "type": "string",
+                      "values": [
+                        "draft",
+                        "sent",
+                        "viewed",
+                        "signed",
+                        "declined"
+                      ]
+                    },
+                    {
+                      "name": "sentAt",
+                      "type": "datetime"
+                    },
+                    {
+                      "name": "signedAt",
+                      "type": "datetime"
+                    },
+                    {
+                      "name": "envelopeId",
+                      "type": "string"
+                    },
+                    {
+                      "name": "pendingId",
+                      "type": "string"
+                    }
+                  ],
+                  "type": "object"
+                }
+              ],
+              "synonyms": "send for signature, dispatch, send envelope",
               "tier": "domain"
             },
             {
@@ -666,7 +818,14 @@
                     },
                     {
                       "name": "status",
-                      "type": "string"
+                      "type": "string",
+                      "values": [
+                        "draft",
+                        "sent",
+                        "viewed",
+                        "signed",
+                        "declined"
+                      ]
                     },
                     {
                       "name": "sentAt",
@@ -730,7 +889,14 @@
                     },
                     {
                       "name": "status",
-                      "type": "string"
+                      "type": "string",
+                      "values": [
+                        "draft",
+                        "sent",
+                        "viewed",
+                        "signed",
+                        "declined"
+                      ]
                     },
                     {
                       "name": "sentAt",
@@ -865,7 +1031,14 @@
                       },
                       {
                         "name": "status",
-                        "type": "string"
+                        "type": "string",
+                        "values": [
+                          "draft",
+                          "sent",
+                          "viewed",
+                          "signed",
+                          "declined"
+                        ]
                       },
                       {
                         "name": "sentAt",
@@ -966,7 +1139,14 @@
                       },
                       {
                         "name": "status",
-                        "type": "string"
+                        "type": "string",
+                        "values": [
+                          "draft",
+                          "sent",
+                          "viewed",
+                          "signed",
+                          "declined"
+                        ]
                       },
                       {
                         "name": "sentAt",
@@ -1036,7 +1216,14 @@
                       },
                       {
                         "name": "status",
-                        "type": "string"
+                        "type": "string",
+                        "values": [
+                          "draft",
+                          "sent",
+                          "viewed",
+                          "signed",
+                          "declined"
+                        ]
                       },
                       {
                         "name": "sentAt",
@@ -1059,6 +1246,83 @@
                   }
                 ],
                 "synonyms": "refresh status, check signature, poll envelope",
+                "tier": "domain"
+              },
+              {
+                "description": "Open the send step for this request: attach the document and dispatch it for signature.",
+                "id": "evt_01M4H13DSYR20QBFD9414KDZFA",
+                "key": "SEND_FOR_SIGNATURE",
+                "name": "Send For Signature",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "entity": "SignatureSession",
+                    "name": "row",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "documentId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "documentName",
+                        "type": "string"
+                      },
+                      {
+                        "name": "recipientName",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "recipientEmail",
+                        "required": true,
+                        "type": "email"
+                      },
+                      {
+                        "name": "requesterName",
+                        "type": "string"
+                      },
+                      {
+                        "name": "status",
+                        "type": "string",
+                        "values": [
+                          "draft",
+                          "sent",
+                          "viewed",
+                          "signed",
+                          "declined"
+                        ]
+                      },
+                      {
+                        "name": "sentAt",
+                        "type": "datetime"
+                      },
+                      {
+                        "name": "signedAt",
+                        "type": "datetime"
+                      },
+                      {
+                        "name": "envelopeId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "pendingId",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "synonyms": "send for signature, dispatch, send envelope",
                 "tier": "domain"
               },
               {
@@ -1106,7 +1370,14 @@
                       },
                       {
                         "name": "status",
-                        "type": "string"
+                        "type": "string",
+                        "values": [
+                          "draft",
+                          "sent",
+                          "viewed",
+                          "signed",
+                          "declined"
+                        ]
                       },
                       {
                         "name": "sentAt",
@@ -1807,6 +2078,350 @@
           }
         },
         {
+          "category": "interaction",
+          "effectRow": [
+            {
+              "kind": "render-ui",
+              "resource": "modal"
+            }
+          ],
+          "entityRefIds": {
+            "SignatureSession": "ent_01KXG04G2XSNH89NP1ZVCSX2F8"
+          },
+          "id": "trt_01M4H13DSYTHNQ73APZV6ZS5RH",
+          "linkedEntity": "SignatureSession",
+          "linkedEntityId": "ent_01KXG04G2XSNH89NP1ZVCSX2F8",
+          "listens": [
+            {
+              "event": "SEND_FOR_SIGNATURE",
+              "eventId": "evt_01M4H13DSYR20QBFD9414KDZFA",
+              "source": {
+                "kind": "trait",
+                "trait": "SignatureSessionBrowse",
+                "traitId": "trt_01KXG04G2XFKTVZ6MWT4X4Y28W"
+              },
+              "triggers": "REQUEST_SEND",
+              "triggersId": "evt_01M4H13DSYQV6HFHMKJ5T1XQB1"
+            }
+          ],
+          "name": "EnvelopeSendDialog",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M4H13DSYHKHT7VPGBV2XDT16",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "A request's send step was opened.",
+                "id": "evt_01M4H13DSYQV6HFHMKJ5T1XQB1",
+                "key": "REQUEST_SEND",
+                "name": "Request Send",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "entity": "SignatureSession",
+                    "name": "row",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "documentId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "documentName",
+                        "type": "string"
+                      },
+                      {
+                        "name": "recipientName",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "recipientEmail",
+                        "required": true,
+                        "type": "email"
+                      },
+                      {
+                        "name": "requesterName",
+                        "type": "string"
+                      },
+                      {
+                        "name": "status",
+                        "type": "string",
+                        "values": [
+                          "draft",
+                          "sent",
+                          "viewed",
+                          "signed",
+                          "declined"
+                        ]
+                      },
+                      {
+                        "name": "sentAt",
+                        "type": "datetime"
+                      },
+                      {
+                        "name": "signedAt",
+                        "type": "datetime"
+                      },
+                      {
+                        "name": "envelopeId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "pendingId",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "synonyms": "open send, start send",
+                "tier": "presentation"
+              },
+              {
+                "description": "The document was dropped; the request is being dispatched.",
+                "id": "evt_01M4H13DSYKY1EJH0YH260ZKKP",
+                "key": "SEND_ENVELOPE",
+                "name": "Send Envelope",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "entity": "SignatureSession",
+                    "name": "row",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "documentId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "documentName",
+                        "type": "string"
+                      },
+                      {
+                        "name": "recipientName",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "recipientEmail",
+                        "required": true,
+                        "type": "email"
+                      },
+                      {
+                        "name": "requesterName",
+                        "type": "string"
+                      },
+                      {
+                        "name": "status",
+                        "type": "string",
+                        "values": [
+                          "draft",
+                          "sent",
+                          "viewed",
+                          "signed",
+                          "declined"
+                        ]
+                      },
+                      {
+                        "name": "sentAt",
+                        "type": "datetime"
+                      },
+                      {
+                        "name": "signedAt",
+                        "type": "datetime"
+                      },
+                      {
+                        "name": "envelopeId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "pendingId",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "name": "files",
+                    "properties": [
+                      {
+                        "name": "name",
+                        "type": "string"
+                      },
+                      {
+                        "name": "size",
+                        "type": "number"
+                      },
+                      {
+                        "name": "type",
+                        "type": "string"
+                      },
+                      {
+                        "name": "content",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "synonyms": "send, dispatch",
+                "tier": "presentation"
+              },
+              {
+                "id": "evt_01M4H13DSYMWDKF0S3T498A7JT",
+                "key": "CLOSE",
+                "name": "Close",
+                "tier": "presentation"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "closed"
+              },
+              {
+                "name": "open"
+              }
+            ],
+            "transitions": [
+              {
+                "event": "INIT",
+                "eventId": "evt_01M4H13DSYHKHT7VPGBV2XDT16",
+                "from": "closed",
+                "to": "closed"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "children": [
+                        {
+                          "content": [
+                            "str/concat",
+                            "Send ",
+                            [
+                              "object/get",
+                              "@payload.row",
+                              "documentName"
+                            ],
+                            " for signature"
+                          ],
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "color": "muted",
+                          "content": [
+                            "str/concat",
+                            "The signer ",
+                            [
+                              "object/get",
+                              "@payload.row",
+                              "recipientName"
+                            ],
+                            " receives it by email."
+                          ],
+                          "type": "typography",
+                          "variant": "body"
+                        },
+                        {
+                          "accept": ".pdf",
+                          "action": "SEND_ENVELOPE",
+                          "actionPayload": {
+                            "id": "@payload.id",
+                            "row": "@payload.row"
+                          },
+                          "description": "PDF, one file",
+                          "icon": "file-up",
+                          "label": "Drop the document to send",
+                          "maxFiles": 1.0,
+                          "type": "upload-drop-zone"
+                        },
+                        {
+                          "action": "CLOSE",
+                          "label": "Cancel",
+                          "type": "button",
+                          "variant": "ghost"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "REQUEST_SEND",
+                "eventId": "evt_01M4H13DSYQV6HFHMKJ5T1XQB1",
+                "from": "closed",
+                "to": "open"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M4H13DSYHKHT7VPGBV2XDT16",
+                "from": "open",
+                "to": "closed"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ],
+                "event": "SEND_ENVELOPE",
+                "eventId": "evt_01M4H13DSYKY1EJH0YH260ZKKP",
+                "from": "open",
+                "to": "closed"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ],
+                "event": "CLOSE",
+                "eventId": "evt_01M4H13DSYMWDKF0S3T498A7JT",
+                "from": "open",
+                "to": "closed"
+              }
+            ]
+          }
+        },
+        {
           "category": "lifecycle",
           "effectRow": [
             {
@@ -1949,7 +2564,7 @@
           "stateMachine": {
             "events": [
               {
-                "description": "Dispatch this session as a real e-sign envelope; `file.content` is the document as a base64 data URL (UploadDropZone shape).",
+                "description": "Dispatch this session as a real e-sign envelope; the first of `files` is the document, its `content` a base64 data URL (UploadDropZone shape).",
                 "id": "evt_01M0MMZJ7C3R220FHX6FWPRNNB",
                 "key": "SEND_ENVELOPE",
                 "name": "Send Envelope",
@@ -1993,7 +2608,14 @@
                       },
                       {
                         "name": "status",
-                        "type": "string"
+                        "type": "string",
+                        "values": [
+                          "draft",
+                          "sent",
+                          "viewed",
+                          "signed",
+                          "declined"
+                        ]
                       },
                       {
                         "name": "sentAt",
@@ -2015,7 +2637,7 @@
                     "type": "object"
                   },
                   {
-                    "name": "file",
+                    "name": "files",
                     "properties": [
                       {
                         "name": "name",
@@ -2034,7 +2656,7 @@
                         "type": "string"
                       }
                     ],
-                    "type": "object"
+                    "type": "[object]"
                   }
                 ],
                 "synonyms": "send envelope, dispatch signature, send for signing",
@@ -2085,7 +2707,14 @@
                       },
                       {
                         "name": "status",
-                        "type": "string"
+                        "type": "string",
+                        "values": [
+                          "draft",
+                          "sent",
+                          "viewed",
+                          "signed",
+                          "declined"
+                        ]
                       },
                       {
                         "name": "sentAt",
@@ -2236,7 +2865,10 @@
                     {
                       "documentContent": [
                         "object/get",
-                        "@payload.file",
+                        [
+                          "array/first",
+                          "@payload.files"
+                        ],
                         "content"
                       ],
                       "documentName": [

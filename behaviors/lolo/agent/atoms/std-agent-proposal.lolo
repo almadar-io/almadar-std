@@ -279,6 +279,37 @@ orbital AgentProposalOrbital {
     }
 
     state working {
+      INIT -> idle when @config.withInputForm
+        (render-ui @config.slot null)
+        (render-ui @config.slot {
+          children: [{
+            align: center
+            children: [{ name: @config.headingIcon, size: lg, type: icon }, {
+              content: @config.heading
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            label: @config.inputText
+            onChange: INPUT_CHANGED
+            rows: 6
+            type: textarea
+          }, {
+            action: START_TYPED
+            icon: sparkles
+            label: @config.startButton
+            type: button
+            variant: primary
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      INIT -> idle when (not @config.withInputForm)
+        (render-ui @config.slot null)
       PROPOSE -> review
         (set @entity.summary (str/default ?summary ""))
         (set @entity.items ?items)
@@ -416,6 +447,37 @@ orbital AgentProposalOrbital {
     }
 
     state review {
+      INIT -> idle when @config.withInputForm
+        (render-ui @config.slot null)
+        (render-ui @config.slot {
+          children: [{
+            align: center
+            children: [{ name: @config.headingIcon, size: lg, type: icon }, {
+              content: @config.heading
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            label: @config.inputText
+            onChange: INPUT_CHANGED
+            rows: 6
+            type: textarea
+          }, {
+            action: START_TYPED
+            icon: sparkles
+            label: @config.startButton
+            type: button
+            variant: primary
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      INIT -> idle when (not @config.withInputForm)
+        (render-ui @config.slot null)
       FEEDBACK_CHANGED -> review
         (set @entity.feedback ?value)
       PROPOSE -> review
@@ -443,6 +505,37 @@ orbital AgentProposalOrbital {
     }
 
     state failed {
+      INIT -> idle when @config.withInputForm
+        (render-ui @config.slot null)
+        (render-ui @config.slot {
+          children: [{
+            align: center
+            children: [{ name: @config.headingIcon, size: lg, type: icon }, {
+              content: @config.heading
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            label: @config.inputText
+            onChange: INPUT_CHANGED
+            rows: 6
+            type: textarea
+          }, {
+            action: START_TYPED
+            icon: sparkles
+            label: @config.startButton
+            type: button
+            variant: primary
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      INIT -> idle when (not @config.withInputForm)
+        (render-ui @config.slot null)
       RETRY -> working
         (emit PROPOSAL_RUN_REQUESTED { messages: [{ role: user, content: @entity.request }] })
       DISCARD -> idle when (== @config.slot main)

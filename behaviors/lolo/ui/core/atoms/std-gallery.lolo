@@ -248,6 +248,19 @@ orbital GalleryItemOrbital {
     }
 
     state viewing {
+      INIT -> loading
+        (render-ui modal null)
+        (fetch GalleryItem {
+          emit: { failure: GalleryItemLoadFailed, success: GalleryItemLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [@trait.ReloadSpinner, @trait.ReloadCaption]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
       CLOSE -> loading
         (render-ui modal null)
         (fetch GalleryItem {

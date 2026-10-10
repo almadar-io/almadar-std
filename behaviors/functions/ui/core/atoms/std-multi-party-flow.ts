@@ -1649,6 +1649,42 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
             {
               'effects': [
                 [
+                  'fetch',
+                  ('MultiPartyView' satisfies _StdMultiPartyFlowEntityName),
+                  {
+                    'emit': {
+                      'failure': 'FlowLoadFailed',
+                      'success': 'FlowLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'awaiting',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
                   'set',
                   '@entity.audit',
                   [
@@ -2530,6 +2566,42 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
             {
               'effects': [
                 [
+                  'fetch',
+                  ('MultiPartyView' satisfies _StdMultiPartyFlowEntityName),
+                  {
+                    'emit': {
+                      'failure': 'FlowLoadFailed',
+                      'success': 'FlowLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'capturing_dispute',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
                   'set',
                   '@entity.disputeReason',
                   [
@@ -2694,6 +2766,42 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
             {
               'effects': [
                 [
+                  'fetch',
+                  ('MultiPartyView' satisfies _StdMultiPartyFlowEntityName),
+                  {
+                    'emit': {
+                      'failure': 'FlowLoadFailed',
+                      'success': 'FlowLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'capturing_cancel',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
                   'set',
                   '@entity.cancelReason',
                   [
@@ -2853,6 +2961,42 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
               ],
               'event': 'CANCEL_REASON',
               'from': 'capturing_cancel',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('MultiPartyView' satisfies _StdMultiPartyFlowEntityName),
+                  {
+                    'emit': {
+                      'failure': 'FlowLoadFailed',
+                      'success': 'FlowLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'funded',
               'to': 'loading',
             },
             {
@@ -3090,7 +3234,7 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   },
                 ],
               ],
-              'event': 'RESTART',
+              'event': 'INIT',
               'from': 'released',
               'to': 'loading',
             },
@@ -3127,7 +3271,115 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                 ],
               ],
               'event': 'RESTART',
+              'from': 'released',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('MultiPartyView' satisfies _StdMultiPartyFlowEntityName),
+                  {
+                    'emit': {
+                      'failure': 'FlowLoadFailed',
+                      'success': 'FlowLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
               'from': 'disputed',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('MultiPartyView' satisfies _StdMultiPartyFlowEntityName),
+                  {
+                    'emit': {
+                      'failure': 'FlowLoadFailed',
+                      'success': 'FlowLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'RESTART',
+              'from': 'disputed',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('MultiPartyView' satisfies _StdMultiPartyFlowEntityName),
+                  {
+                    'emit': {
+                      'failure': 'FlowLoadFailed',
+                      'success': 'FlowLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'cancelled',
               'to': 'loading',
             },
             {

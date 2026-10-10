@@ -119,15 +119,17 @@ orbital RevisionOrbital {
           children: [{ type: skeleton, variant: header }, { type: skeleton, variant: grid, rows: 6 }]
         })
       OPEN_REVISION -> viewing_single
-        (set @entity.id ?row.id)
-        (set @entity.documentId ?row.documentId)
-        (set @entity.documentType ?row.documentType)
-        (set @entity.versionNumber ?row.versionNumber)
-        (set @entity.authorId ?row.authorId)
-        (set @entity.authorName ?row.authorName)
-        (set @entity.content ?row.content)
-        (set @entity.summary ?row.summary)
-        (set @entity.createdAt ?row.createdAt)
+        (let ((rev (or ?row (array/find @entity.revisions (fn x ["=", (object/get @x id), ?id])))))
+          (do
+            (set @entity.id (object/get @rev id))
+            (set @entity.documentId (object/get @rev documentId))
+            (set @entity.documentType (object/get @rev documentType))
+            (set @entity.versionNumber (object/get @rev versionNumber))
+            (set @entity.authorId (object/get @rev authorId))
+            (set @entity.authorName (object/get @rev authorName))
+            (set @entity.content (object/get @rev content))
+            (set @entity.summary (object/get @rev summary))
+            (set @entity.createdAt (object/get @rev createdAt))))
         (render-ui main {
           children: [{
             align: center
@@ -277,6 +279,18 @@ orbital RevisionOrbital {
     }
 
     state viewing_single {
+      INIT -> loading
+        (set @entity.scopeKey (str/default ?id ""))
+        (fetch Revision {
+          filter: (or ["=", @config.scopeField, ""] ["=", (str/default ?id ""), ""] ["=", (object/get @entity @config.scopeField), ?id])
+          emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: grid, rows: 6 }]
+        })
       CLOSE_VIEW -> loading
         (fetch Revision {
           filter: (or ["=", @config.scopeField, ""] ["=", @entity.scopeKey, ""] ["=", (object/get @entity @config.scopeField), @entity.scopeKey])
@@ -364,6 +378,18 @@ orbital RevisionOrbital {
     }
 
     state comparing {
+      INIT -> loading
+        (set @entity.scopeKey (str/default ?id ""))
+        (fetch Revision {
+          filter: (or ["=", @config.scopeField, ""] ["=", (str/default ?id ""), ""] ["=", (object/get @entity @config.scopeField), ?id])
+          emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: grid, rows: 6 }]
+        })
       CLOSE_VIEW -> loading
         (fetch Revision {
           filter: (or ["=", @config.scopeField, ""] ["=", @entity.scopeKey, ""] ["=", (object/get @entity @config.scopeField), @entity.scopeKey])

@@ -772,6 +772,12 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
                   {
                     'name': 'invoiceStatus',
                     'type': 'string',
+                    'values': [
+                      'unbilled',
+                      'invoiced',
+                      'paid',
+                      'written_off',
+                    ],
                   },
                 ],
                 'type': 'object',
@@ -866,6 +872,12 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
                   {
                     'name': 'invoiceStatus',
                     'type': 'string',
+                    'values': [
+                      'unbilled',
+                      'invoiced',
+                      'paid',
+                      'written_off',
+                    ],
                   },
                 ],
                 'type': '[object]',
@@ -955,6 +967,12 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
                     {
                       'name': 'invoiceStatus',
                       'type': 'string',
+                      'values': [
+                        'unbilled',
+                        'invoiced',
+                        'paid',
+                        'written_off',
+                      ],
                     },
                   ],
                   'type': '[object]',
@@ -1040,6 +1058,12 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
                     {
                       'name': 'invoiceStatus',
                       'type': 'string',
+                      'values': [
+                        'unbilled',
+                        'invoiced',
+                        'paid',
+                        'written_off',
+                      ],
                     },
                   ],
                   'type': 'object',
@@ -1490,6 +1514,43 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
               ],
               'event': 'WRITE_OFF_HOURS',
               'from': 'browsing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('BillableHour' satisfies _StdBillableHourEntityName),
+                  {
+                    'emit': {
+                      'failure': 'BillableHourLoadFailed',
+                      'success': 'BillableHourLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'table',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'viewing_single',
               'to': 'loading',
             },
             {

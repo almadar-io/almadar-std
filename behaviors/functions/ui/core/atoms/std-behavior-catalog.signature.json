@@ -1,0 +1,301 @@
+[
+  {
+    "organism": "std-behavior-catalog",
+    "orbital": "BehaviorCatalogOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-behavior-catalog.ts",
+    "entities": [
+      {
+        "name": "BehaviorCatalogView",
+        "fields": [
+          {
+            "name": "query",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "entries",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "rows",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "detail",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "knobs",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "BehaviorCatalog",
+        "emittedEvents": [
+          "PICKED",
+          "CATALOG_SHOWN",
+          "LISTED",
+          "LIST_FAILED",
+          "EMBEDDED",
+          "SEARCH_FAILED",
+          "DESCRIBED",
+          "DESCRIBE_FAILED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "PICKED",
+            "direction": "emit"
+          },
+          {
+            "name": "CATALOG_SHOWN",
+            "direction": "emit"
+          },
+          {
+            "name": "LISTED",
+            "direction": "emit"
+          },
+          {
+            "name": "LIST_FAILED",
+            "direction": "emit"
+          },
+          {
+            "name": "EMBEDDED",
+            "direction": "emit"
+          },
+          {
+            "name": "SEARCH_FAILED",
+            "direction": "emit"
+          },
+          {
+            "name": "DESCRIBED",
+            "direction": "emit"
+          },
+          {
+            "name": "DESCRIBE_FAILED",
+            "direction": "emit"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "SEARCH",
+            "direction": "listen"
+          },
+          {
+            "name": "PICK",
+            "direction": "listen"
+          },
+          {
+            "name": "DESCRIBE",
+            "direction": "listen"
+          },
+          {
+            "name": "RETRY",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "describeLabel",
+            "type": "string",
+            "default": "Details",
+            "label": "Details button label",
+            "tier": "presentation"
+          },
+          {
+            "key": "emptyLabel",
+            "type": "string",
+            "default": "Nothing matches.",
+            "label": "Empty message",
+            "tier": "presentation"
+          },
+          {
+            "key": "look",
+            "type": "string",
+            "default": "list",
+            "label": "How are behaviors shown?",
+            "description": "list = a search box over a card per behavior with Use and Details; chips = the best matches for the current query as a row of chips under a prompt that lives elsewhere (route its text to SEARCH), nothing while the query is empty.",
+            "synonyms": "suggestion chips, prompt suggestions, compact catalog",
+            "tier": "presentation",
+            "enumValues": [
+              "list",
+              "chips"
+            ]
+          },
+          {
+            "key": "maxChips",
+            "type": "number",
+            "default": 4,
+            "label": "How many chips?",
+            "description": "In the chips look, how many of the best matches are shown.",
+            "tier": "presentation"
+          },
+          {
+            "key": "minScore",
+            "type": "number",
+            "default": 0.3,
+            "label": "Minimum match",
+            "description": "Cosine similarity a behavior needs to its description to stay in search results.",
+            "tier": "policy"
+          },
+          {
+            "key": "pickLabel",
+            "type": "string",
+            "default": "Use",
+            "label": "Pick button label",
+            "tier": "presentation"
+          },
+          {
+            "key": "scope",
+            "type": "[string]",
+            "default": [
+              "almadar-std/ui/core"
+            ],
+            "label": "Where to look",
+            "description": "Registry folders (`<prefix>/<topic>[/<tier>]`) the catalog lists.",
+            "tier": "domain",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "searchPlaceholder",
+            "type": "string",
+            "default": "Search building blocks",
+            "label": "Search placeholder",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "BehaviorCatalogView",
+        "transitionEvents": [
+          "CATALOG_SHOWN",
+          "DESCRIBE",
+          "DESCRIBED",
+          "DESCRIBE_FAILED",
+          "EMBEDDED",
+          "INIT",
+          "LISTED",
+          "LIST_FAILED",
+          "PICK",
+          "RETRY",
+          "SEARCH",
+          "SEARCH_FAILED"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "detail",
+            "entries",
+            "error",
+            "knobs",
+            "query",
+            "rows",
+            "status"
+          ]
+        },
+        "effectRow": [
+          {
+            "kind": "behavior/catalog"
+          },
+          {
+            "kind": "behavior/describe"
+          },
+          {
+            "kind": "call-service",
+            "resource": "llm.embed"
+          },
+          {
+            "kind": "emit",
+            "resource": "CATALOG_SHOWN"
+          },
+          {
+            "kind": "emit",
+            "resource": "PICKED"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "main"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "toast"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.detail"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.entries"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.error"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.knobs"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.query"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.rows"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.status"
+          }
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "BehaviorCatalogPage",
+        "defaultPath": "/behavior-catalog",
+        "primaryEntity": "BehaviorCatalogView"
+      }
+    ],
+    "emittedEvents": [
+      "CATALOG_SHOWN",
+      "DESCRIBED",
+      "DESCRIBE_FAILED",
+      "EMBEDDED",
+      "LISTED",
+      "LIST_FAILED",
+      "PICKED",
+      "SEARCH_FAILED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "capabilities": "browse installed behaviors, search behaviors by meaning, describe a behavior's knobs and events, pick a behavior to bind",
+    "sourceValid": true
+  }
+]

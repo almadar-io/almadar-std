@@ -271,6 +271,16 @@ orbital RatingReviewOrbital {
     }
 
     state viewing {
+      INIT -> loading
+        (fetch ReviewView {
+          emit: { failure: ReviewsLoadFailed, success: ReviewsLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: card }, { type: skeleton, variant: list, rows: 6 }]
+        })
       WRITE_REVIEW -> composing
         (set @entity.draftRating 0)
         (set @entity.draftComment "")
@@ -1076,6 +1086,16 @@ orbital RatingReviewOrbital {
     }
 
     state composing {
+      INIT -> loading
+        (fetch ReviewView {
+          emit: { failure: ReviewsLoadFailed, success: ReviewsLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: card }, { type: skeleton, variant: list, rows: 6 }]
+        })
       RATE_DRAFT -> composing
         (set @entity.draftRating ?value)
         (render-ui main {
@@ -1166,6 +1186,16 @@ orbital RatingReviewOrbital {
     }
 
     state submitting {
+      INIT -> loading
+        (fetch ReviewView {
+          emit: { failure: ReviewsLoadFailed, success: ReviewsLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: card }, { type: skeleton, variant: list, rows: 6 }]
+        })
       ReviewSaved -> submitted
         (render-ui main {
           align: center
@@ -1205,6 +1235,16 @@ orbital RatingReviewOrbital {
     }
 
     state submitted {
+      INIT -> loading
+        (fetch ReviewView {
+          emit: { failure: ReviewsLoadFailed, success: ReviewsLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: card }, { type: skeleton, variant: list, rows: 6 }]
+        })
       RESTART -> loading
         (fetch ReviewView {
           emit: { failure: ReviewsLoadFailed, success: ReviewsLoaded }
@@ -1540,6 +1580,38 @@ orbital RatingReviewOrbital {
     }
 
     state submitting {
+      INIT -> composing
+        (set @entity.draftRating 0)
+        (set @entity.draftComment "")
+        (render-ui main {
+          children: [{
+            children: [{
+              content: @config.title
+              type: typography
+              variant: h3
+            }, {
+              action: RATE_DRAFT
+              max: @config.maxStars
+              label: "Your rating"
+              type: star-rating
+              value: @entity.draftRating
+            }, {
+              cancelEvent: CANCEL_REVIEW
+              entity: @entity
+              fields: (if @config.allowComment ["draftComment"] [])
+              mode: edit
+              submitEvent: SUBMIT_REVIEW
+              submitLabel: @config.submitLabel
+              cancelLabel: @config.cancelLabel
+              type: form-section
+            }]
+            direction: vertical
+            gap: md
+            type: stack
+          }]
+          look: @config.cardLook
+          type: card
+        })
       ReviewSaved -> submitted
         (render-ui main {
           align: center
@@ -1572,6 +1644,38 @@ orbital RatingReviewOrbital {
     }
 
     state submitted {
+      INIT -> composing
+        (set @entity.draftRating 0)
+        (set @entity.draftComment "")
+        (render-ui main {
+          children: [{
+            children: [{
+              content: @config.title
+              type: typography
+              variant: h3
+            }, {
+              action: RATE_DRAFT
+              max: @config.maxStars
+              label: "Your rating"
+              type: star-rating
+              value: @entity.draftRating
+            }, {
+              cancelEvent: CANCEL_REVIEW
+              entity: @entity
+              fields: (if @config.allowComment ["draftComment"] [])
+              mode: edit
+              submitEvent: SUBMIT_REVIEW
+              submitLabel: @config.submitLabel
+              cancelLabel: @config.cancelLabel
+              type: form-section
+            }]
+            direction: vertical
+            gap: md
+            type: stack
+          }]
+          look: @config.cardLook
+          type: card
+        })
       RESTART -> composing
         (set @entity.draftRating 0)
         (set @entity.draftComment "")
@@ -1607,6 +1711,38 @@ orbital RatingReviewOrbital {
     }
 
     state error {
+      INIT -> composing
+        (set @entity.draftRating 0)
+        (set @entity.draftComment "")
+        (render-ui main {
+          children: [{
+            children: [{
+              content: @config.title
+              type: typography
+              variant: h3
+            }, {
+              action: RATE_DRAFT
+              max: @config.maxStars
+              label: "Your rating"
+              type: star-rating
+              value: @entity.draftRating
+            }, {
+              cancelEvent: CANCEL_REVIEW
+              entity: @entity
+              fields: (if @config.allowComment ["draftComment"] [])
+              mode: edit
+              submitEvent: SUBMIT_REVIEW
+              submitLabel: @config.submitLabel
+              cancelLabel: @config.cancelLabel
+              type: form-section
+            }]
+            direction: vertical
+            gap: md
+            type: stack
+          }]
+          look: @config.cardLook
+          type: card
+        })
       RESTART -> composing
         (render-ui main {
           children: [{

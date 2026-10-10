@@ -89,6 +89,8 @@ orbital AgentMemoryOrbital {
     }
 
     state recalling {
+      INIT -> ready
+        (set @entity.pendingQuery "")
       MemoryEmbedded -> recalling
         (set @entity.queryVector (if (= (array/len ?embeddings) 0) [] (array/first ?embeddings)))
         (fetch AgentMemory {
@@ -116,6 +118,8 @@ orbital AgentMemoryOrbital {
     }
 
     state remembering {
+      INIT -> ready
+        (set @entity.pendingQuery "")
       MemoryEmbedded -> ready
         (persist create AgentMemory {
           ownerId: @user.id

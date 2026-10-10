@@ -72,7 +72,23 @@
                       "clickEvent": "@card.clickEvent",
                       "format": "@card.format",
                       "icon": "@card.icon",
-                      "label": "@card.label",
+                      "label": [
+                        "if",
+                        [
+                          "=",
+                          [
+                            "array/len",
+                            "@config.metricLabels"
+                          ],
+                          0
+                        ],
+                        "@card.label",
+                        [
+                          "array/nth",
+                          "@config.metricLabels",
+                          "@card.position"
+                        ]
+                      ],
                       "look": "@config.statLook",
                       "max": "@card.max",
                       "prefix": "@card.prefix",
@@ -146,7 +162,23 @@
                                     {
                                       "className": "uppercase tracking-widest",
                                       "color": "muted",
-                                      "content": "@card.label",
+                                      "content": [
+                                        "if",
+                                        [
+                                          "=",
+                                          [
+                                            "array/len",
+                                            "@config.metricLabels"
+                                          ],
+                                          0
+                                        ],
+                                        "@card.label",
+                                        [
+                                          "array/nth",
+                                          "@config.metricLabels",
+                                          "@card.position"
+                                        ]
+                                      ],
                                       "type": "typography",
                                       "variant": "overline",
                                       "weight": "bold"
@@ -270,7 +302,23 @@
                             {
                               "className": "uppercase tracking-wide",
                               "color": "muted",
-                              "content": "@card.label",
+                              "content": [
+                                "if",
+                                [
+                                  "=",
+                                  [
+                                    "array/len",
+                                    "@config.metricLabels"
+                                  ],
+                                  0
+                                ],
+                                "@card.label",
+                                [
+                                  "array/nth",
+                                  "@config.metricLabels",
+                                  "@card.position"
+                                ]
+                              ],
                               "type": "typography",
                               "variant": "caption",
                               "weight": "medium"
@@ -351,6 +399,17 @@
             "label": "KPI tiles body content tree",
             "description": "Render-ui SExpr for statsLook='kpi-tiles' — Stripe-dashboard style tile grid: huge typography number, label, trend indicator, sparkline hint.",
             "tier": "internal"
+          },
+          {
+            "key": "metricLabels",
+            "type": "[string]",
+            "default": [],
+            "label": "Metric labels",
+            "description": "In metric order: the label shown on each card, in place of its `metrics` label (render-only, so it may be translated)",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
           },
           {
             "key": "metrics",
@@ -574,7 +633,23 @@
                             {
                               "className": "uppercase tracking-wide truncate",
                               "color": "muted",
-                              "content": "@card.label",
+                              "content": [
+                                "if",
+                                [
+                                  "=",
+                                  [
+                                    "array/len",
+                                    "@config.metricLabels"
+                                  ],
+                                  0
+                                ],
+                                "@card.label",
+                                [
+                                  "array/nth",
+                                  "@config.metricLabels",
+                                  "@card.position"
+                                ]
+                              ],
                               "type": "typography",
                               "variant": "overline",
                               "weight": "semibold"

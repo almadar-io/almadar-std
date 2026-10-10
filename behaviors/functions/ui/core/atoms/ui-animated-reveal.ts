@@ -30,7 +30,7 @@ const ALIAS = 'UiAnimatedReveal';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiAnimatedRevealEventKey = 'INIT' | 'REVEAL';
+export type StdUiAnimatedRevealEventKey = 'ENTER' | 'INIT' | 'LEAVE' | 'REVEAL';
 
 /**
  * Typed call-site config block for this trait — every
@@ -63,7 +63,11 @@ export interface StdUiAnimatedRevealConfig {
   easing?: string;
   enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   enterDelay?: number;
+  /** Default: `"ENTER"` */
+  enterEvent?: string;
   lang?: string;
+  /** Default: `"LEAVE"` */
+  leaveEvent?: string;
   /** Default: `true` */
   once?: boolean;
   /** Default: `"REVEAL"` */

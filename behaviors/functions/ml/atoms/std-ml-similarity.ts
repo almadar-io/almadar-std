@@ -791,6 +791,68 @@ export function stdMlSimilarityMlSimilarityOrbital(params: StdMlSimilarityMlSimi
               'effects': [
                 [
                   'set',
+                  '@entity.query',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.candidates',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.embeddings',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.queryVector',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.candidateVectors',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.matchIndex',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.matchScore',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.matchMargin',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.reason',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.request',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'embedding',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
                   '@entity.embeddings',
                   '@payload.result',
                 ],

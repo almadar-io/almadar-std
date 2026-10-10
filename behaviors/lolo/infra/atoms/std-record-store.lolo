@@ -1,0 +1,113 @@
+app std-record-store [
+  version: "1.0.0",
+  description: "std-record-store — saves the records other traits collect. Route a form's SAVE to DO_CREATE or DO_UPDATE and a delete confirmation to DO_DELETE; it runs the persist and emits RECORD_CREATED / RECORD_UPDATED / RECORD_DELETED so lists can reload."
+]
+orbital RecordStoreOrbital {
+    type RecordSaveFailed = Event { error : string, code : string } "Internal: a create, update or delete failed to persist."
+
+  entity StoredRecord [persistent: stored_records] {
+    id : string!
+    name : string @description "A user-facing name for the record." @synonyms "title, label" = ""
+    description : string @description "Free text about the record." @synonyms "details, notes" = ""
+    createdAt : string
+  }
+
+  trait RecordStore -> @rebindable StoredRecord [lifecycle, instance] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      DO_CREATE -> saving
+        (persist create StoredRecord (if ["=", @config.ownerField, ""] ?data (object/set ?data @config.ownerField @user.id)) {
+          emit: { failure: RecordSaveFailed, success: RECORD_CREATED }
+        })
+      DO_UPDATE -> saving
+        (persist update StoredRecord ?data {
+          emit: { failure: RecordSaveFailed, success: RECORD_UPDATED }
+        })
+      DO_DELETE -> saving
+        (persist delete StoredRecord ?id {
+          emit: { failure: RecordSaveFailed, success: RECORD_DELETED }
+        })
+    }
+
+    state saving {
+      INIT -> ready
+      RECORD_CREATED -> ready
+      RECORD_UPDATED -> ready
+      RECORD_DELETED -> ready
+      RecordSaveFailed -> ready
+        (notify error (str/concat "Couldn't save the record — " ?error))
+    }
+
+    emits {
+      RECORD_CREATED -> external {
+        id : string
+      }
+        @description "A new record was saved."
+        @synonyms "created, added, saved"
+        @tier "domain"
+      RECORD_UPDATED -> external {
+        id : string
+      }
+        @description "A record's changes were saved."
+        @synonyms "updated, edited, changed"
+        @tier "domain"
+      RECORD_DELETED -> external {
+        id : string
+      }
+        @description "A record was removed."
+        @synonyms "deleted, removed"
+        @tier "domain"
+      RecordSaveFailed {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      DO_CREATE -> external {
+        data : @entity!
+      }
+        @description "Save a new record from a submitted form."
+        @synonyms "create, add, save new, submit"
+        @tier "domain"
+      DO_UPDATE -> external {
+        data : @entity!
+      }
+        @description "Save the changes to an existing record."
+        @synonyms "update, edit, save changes"
+        @tier "domain"
+      DO_DELETE -> external {
+        id : string
+      }
+        @description "Remove a record."
+        @synonyms "delete, remove"
+        @tier "domain"
+      RECORD_CREATED {
+        id : string
+      }
+      RECORD_UPDATED {
+        id : string
+      }
+      RECORD_DELETED {
+        id : string
+      }
+      RecordSaveFailed {
+        error : string
+        code : string
+      }
+    }
+
+    config {
+      ownerField : string = ""
+        @label "Which field records who created it?"
+        @description "Field set to the signed-in user's id when a record is created. Empty means records carry no owner."
+        @synonyms "owner, created by, author, holder, belongs to"
+        @tier "domain"
+    }
+  }
+
+  page "/record-store" as RecordStorePage -> RecordStore
+}

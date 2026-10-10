@@ -195,6 +195,16 @@ orbital RecurrenceOrbital {
     }
 
     state viewing {
+      INIT -> loading
+        (fetch RecurrenceView {
+          emit: { failure: RecurrenceLoadFailed, success: RecurrenceLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: card }, { type: skeleton, variant: list, rows: 6 }]
+        })
       EDIT_RULE -> defining_rule
         (render-ui main {
           children: [{
@@ -324,6 +334,16 @@ orbital RecurrenceOrbital {
     }
 
     state defining_rule {
+      INIT -> loading
+        (fetch RecurrenceView {
+          emit: { failure: RecurrenceLoadFailed, success: RecurrenceLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: card }, { type: skeleton, variant: list, rows: 6 }]
+        })
       SAVE_RULE -> loading
         (persist update RecurrenceView ?data {
           emit: { failure: RecurrenceSaveFailed, success: RecurrenceSaved }
@@ -341,6 +361,16 @@ orbital RecurrenceOrbital {
     }
 
     state awaiting_exception_decision {
+      INIT -> loading
+        (fetch RecurrenceView {
+          emit: { failure: RecurrenceLoadFailed, success: RecurrenceLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: card }, { type: skeleton, variant: list, rows: 6 }]
+        })
       SKIP_OCCURRENCE -> loading
         (persist update RecurrenceView { id: ?id, status: skipped } {
           emit: { failure: RecurrenceSaveFailed, success: RecurrenceSaved }
@@ -371,6 +401,16 @@ orbital RecurrenceOrbital {
     }
 
     state cancelled {
+      INIT -> loading
+        (fetch RecurrenceView {
+          emit: { failure: RecurrenceLoadFailed, success: RecurrenceLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: card }, { type: skeleton, variant: list, rows: 6 }]
+        })
       RESTART -> loading
         (fetch RecurrenceView {
           emit: { failure: RecurrenceLoadFailed, success: RecurrenceLoaded }

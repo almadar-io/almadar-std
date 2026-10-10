@@ -80,6 +80,10 @@ export interface StdTreeConfig {
   filters?: EntityRow[];
   /** Default: `"icon"` */
   iconField?: string;
+  /** Default: `""` */
+  initialFilterField?: string;
+  /** Default: `""` */
+  initialFilterValue?: string;
   /** Default: `"name"` */
   labelField?: string;
   /** Default: `"full"` */
@@ -347,6 +351,21 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
             'label': 'Icon column',
             'synonyms': 'glyph field, icon column',
             'tier': 'presentation',
+            'type': 'string',
+          },
+          'initialFilterField': {
+            'default': '',
+            'description': 'Name the field the initial load filters on, paired with initialFilterValue; blank loads every node. REFETCH_FILTER then supplies later selections.',
+            'label': 'Which field does the first load filter on?',
+            'synonyms': 'initial filter, first load filter, start filtered',
+            'tier': 'domain',
+            'type': 'string',
+          },
+          'initialFilterValue': {
+            'default': '',
+            'description': 'The value initialFilterField must equal on the first load',
+            'label': 'What value does the first load filter for?',
+            'tier': 'domain',
             'type': 'string',
           },
           'labelField': {
@@ -710,6 +729,23 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                       'failure': 'TreeNodeLoadFailed',
                       'success': 'TreeNodeLoaded',
                     },
+                    'filter': [
+                      'or',
+                      [
+                        '=',
+                        '@config.initialFilterField',
+                        '',
+                      ],
+                      [
+                        '=',
+                        [
+                          'object/get',
+                          '@entity',
+                          '@config.initialFilterField',
+                        ],
+                        '@config.initialFilterValue',
+                      ],
+                    ],
                   },
                 ],
                 [
@@ -997,6 +1033,23 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                       'failure': 'TreeNodeLoadFailed',
                       'success': 'TreeNodeLoaded',
                     },
+                    'filter': [
+                      'or',
+                      [
+                        '=',
+                        '@config.initialFilterField',
+                        '',
+                      ],
+                      [
+                        '=',
+                        [
+                          'object/get',
+                          '@entity',
+                          '@config.initialFilterField',
+                        ],
+                        '@config.initialFilterValue',
+                      ],
+                    ],
                   },
                 ],
                 [
@@ -1404,6 +1457,23 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                       'failure': 'TreeNodeLoadFailed',
                       'success': 'TreeNodeLoaded',
                     },
+                    'filter': [
+                      'or',
+                      [
+                        '=',
+                        '@config.initialFilterField',
+                        '',
+                      ],
+                      [
+                        '=',
+                        [
+                          'object/get',
+                          '@entity',
+                          '@config.initialFilterField',
+                        ],
+                        '@config.initialFilterValue',
+                      ],
+                    ],
                   },
                 ],
                 [
@@ -1441,6 +1511,23 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                       'failure': 'TreeNodeLoadFailed',
                       'success': 'TreeNodeLoaded',
                     },
+                    'filter': [
+                      'or',
+                      [
+                        '=',
+                        '@config.initialFilterField',
+                        '',
+                      ],
+                      [
+                        '=',
+                        [
+                          'object/get',
+                          '@entity',
+                          '@config.initialFilterField',
+                        ],
+                        '@config.initialFilterValue',
+                      ],
+                    ],
                   },
                 ],
                 [

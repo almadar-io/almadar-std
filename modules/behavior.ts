@@ -29,6 +29,17 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["behavior/apply", "@entity.widget", { "config": { "compact": true } }]',
   },
+  'behavior/ref': {
+    module: 'behavior', category: 'std-behavior-value',
+    minArity: 1, maxArity: 1,
+    description: 'A whole behavior as a value (`.lolo` type `behavior`), named by its specifier: `<prefix>/<name>`, `std/behaviors/<name>`, or a workspace-relative `./<dir>/<name>` (what `program/eval` wrote). A literal specifier is resolved when the program is checked; a computed one when the value is mounted. Embedding the value in a render tree runs the whole program in place, with its own pages.',
+    hasSideEffects: false,
+    returnType: 'behavior',
+    params: [
+      { name: 'specifier', type: 'string', description: 'The behavior specifier' },
+    ],
+    example: '["behavior/ref", "./orbitals/shop"]',
+  },
   'behavior/catalog': {
     module: 'behavior', category: 'std-behavior',
     minArity: 1, maxArity: 2,
@@ -58,12 +69,12 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
   'behavior/source': {
     module: 'behavior', category: 'std-behavior',
     minArity: 1, maxArity: 2,
-    description: 'The behavior a trait value belongs to, as a quoted program.',
+    description: 'The behavior a trait value, an orbital value or `{ behavior }` names, as a quoted program.',
     hasSideEffects: true,
     runsOn: 'server',
     returnType: 'sexpr',
     params: [
-      { name: 'value', type: 'trait', description: 'The trait value' },
+      { name: 'value', type: 'any', description: 'A trait value, an orbital value, or { behavior }' },
       { name: 'options', type: { kind: 'object', fields: {}, open: true }, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
     ],
     example: '["behavior/source", "@entity.widget", { "emit": { "success": "SOURCED", "failure": "SOURCE_FAILED" } }]',

@@ -388,6 +388,13 @@
         {
           "category": "interaction",
           "config": {
+            "allLabel": {
+              "default": "All",
+              "description": "Label of the chip that shows every kind",
+              "label": "All label",
+              "tier": "presentation",
+              "type": "string"
+            },
             "bodySearch": {
               "default": false,
               "description": "Embeds a search box above the activity feed. Set true only when the page has no other search affordance (e.g. no page-level std-search), so the surface shows one search box instead of two. False is the default — no consumer of this atom has ever had a search box.",
@@ -494,6 +501,16 @@
               "synonyms": "kind column, type field, category column, filter by kind",
               "tier": "policy",
               "type": "string"
+            },
+            "kindLabels": {
+              "default": [],
+              "description": "In kindOptions order: the label shown on each kind's filter chip, in place of its kindOptions label (render-only, so it may be translated)",
+              "items": {
+                "type": "string"
+              },
+              "label": "Kind labels",
+              "tier": "presentation",
+              "type": "[string]"
             },
             "kindOptions": {
               "default": [
@@ -1353,7 +1370,63 @@
                         {
                           "activeTab": "@entity.filterKind",
                           "tabChangeEvent": "APPLY_FILTER",
-                          "tabs": "@entity.filterChips",
+                          "tabs": [
+                            "array/map",
+                            "@entity.filterChips",
+                            [
+                              "fn",
+                              "chip",
+                              {
+                                "icon": [
+                                  "object/get",
+                                  "@chip",
+                                  "icon",
+                                  "list"
+                                ],
+                                "id": [
+                                  "object/get",
+                                  "@chip",
+                                  "id",
+                                  ""
+                                ],
+                                "label": [
+                                  "if",
+                                  [
+                                    "=",
+                                    "@index",
+                                    0.0
+                                  ],
+                                  "@config.allLabel",
+                                  [
+                                    "if",
+                                    [
+                                      "=",
+                                      [
+                                        "array/len",
+                                        "@config.kindLabels"
+                                      ],
+                                      0.0
+                                    ],
+                                    [
+                                      "object/get",
+                                      "@chip",
+                                      "label",
+                                      ""
+                                    ],
+                                    [
+                                      "array/nth",
+                                      "@config.kindLabels",
+                                      [
+                                        "-",
+                                        "@index",
+                                        1.0
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          ],
                           "type": "tabs"
                         },
                         {
@@ -1605,7 +1678,63 @@
                         {
                           "activeTab": "@entity.filterKind",
                           "tabChangeEvent": "APPLY_FILTER",
-                          "tabs": "@entity.filterChips",
+                          "tabs": [
+                            "array/map",
+                            "@entity.filterChips",
+                            [
+                              "fn",
+                              "chip",
+                              {
+                                "icon": [
+                                  "object/get",
+                                  "@chip",
+                                  "icon",
+                                  "list"
+                                ],
+                                "id": [
+                                  "object/get",
+                                  "@chip",
+                                  "id",
+                                  ""
+                                ],
+                                "label": [
+                                  "if",
+                                  [
+                                    "=",
+                                    "@index",
+                                    0.0
+                                  ],
+                                  "@config.allLabel",
+                                  [
+                                    "if",
+                                    [
+                                      "=",
+                                      [
+                                        "array/len",
+                                        "@config.kindLabels"
+                                      ],
+                                      0.0
+                                    ],
+                                    [
+                                      "object/get",
+                                      "@chip",
+                                      "label",
+                                      ""
+                                    ],
+                                    [
+                                      "array/nth",
+                                      "@config.kindLabels",
+                                      [
+                                        "-",
+                                        "@index",
+                                        1.0
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          ],
                           "type": "tabs"
                         },
                         {
@@ -2091,7 +2220,63 @@
                         {
                           "activeTab": "@entity.filterKind",
                           "tabChangeEvent": "APPLY_FILTER",
-                          "tabs": "@entity.filterChips",
+                          "tabs": [
+                            "array/map",
+                            "@entity.filterChips",
+                            [
+                              "fn",
+                              "chip",
+                              {
+                                "icon": [
+                                  "object/get",
+                                  "@chip",
+                                  "icon",
+                                  "list"
+                                ],
+                                "id": [
+                                  "object/get",
+                                  "@chip",
+                                  "id",
+                                  ""
+                                ],
+                                "label": [
+                                  "if",
+                                  [
+                                    "=",
+                                    "@index",
+                                    0.0
+                                  ],
+                                  "@config.allLabel",
+                                  [
+                                    "if",
+                                    [
+                                      "=",
+                                      [
+                                        "array/len",
+                                        "@config.kindLabels"
+                                      ],
+                                      0.0
+                                    ],
+                                    [
+                                      "object/get",
+                                      "@chip",
+                                      "label",
+                                      ""
+                                    ],
+                                    [
+                                      "array/nth",
+                                      "@config.kindLabels",
+                                      [
+                                        "-",
+                                        "@index",
+                                        1.0
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          ],
                           "type": "tabs"
                         },
                         {
@@ -2205,6 +2390,44 @@
               {
                 "effects": [
                   [
+                    "fetch",
+                    "EventLogView",
+                    {
+                      "emit": {
+                        "failure": "EventLogLoadFailed",
+                        "success": "EventLogLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "skeleton",
+                          "variant": "header"
+                        },
+                        {
+                          "rows": 6.0,
+                          "type": "skeleton",
+                          "variant": "list"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KXG04G771DVHZGBVT99JT5ZZ",
+                "from": "backfilling",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
                     "persist",
                     "create",
                     "EventLogView",
@@ -2310,7 +2533,63 @@
                         {
                           "activeTab": "@entity.filterKind",
                           "tabChangeEvent": "APPLY_FILTER",
-                          "tabs": "@entity.filterChips",
+                          "tabs": [
+                            "array/map",
+                            "@entity.filterChips",
+                            [
+                              "fn",
+                              "chip",
+                              {
+                                "icon": [
+                                  "object/get",
+                                  "@chip",
+                                  "icon",
+                                  "list"
+                                ],
+                                "id": [
+                                  "object/get",
+                                  "@chip",
+                                  "id",
+                                  ""
+                                ],
+                                "label": [
+                                  "if",
+                                  [
+                                    "=",
+                                    "@index",
+                                    0.0
+                                  ],
+                                  "@config.allLabel",
+                                  [
+                                    "if",
+                                    [
+                                      "=",
+                                      [
+                                        "array/len",
+                                        "@config.kindLabels"
+                                      ],
+                                      0.0
+                                    ],
+                                    [
+                                      "object/get",
+                                      "@chip",
+                                      "label",
+                                      ""
+                                    ],
+                                    [
+                                      "array/nth",
+                                      "@config.kindLabels",
+                                      [
+                                        "-",
+                                        "@index",
+                                        1.0
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          ],
                           "type": "tabs"
                         },
                         {
@@ -2421,7 +2700,13 @@
           },
           {
             "name": "status",
-            "type": "string"
+            "type": "string",
+            "values": [
+              "complete",
+              "active",
+              "pending",
+              "error"
+            ]
           }
         ],
         "LogEntry": [
@@ -2445,11 +2730,23 @@
           },
           {
             "name": "status",
-            "type": "string"
+            "type": "string",
+            "values": [
+              "complete",
+              "active",
+              "pending",
+              "error"
+            ]
           },
           {
             "name": "kind",
-            "type": "string"
+            "type": "string",
+            "values": [
+              "created",
+              "updated",
+              "approved",
+              "rejected"
+            ]
           }
         ],
         "ObjectSpec": [

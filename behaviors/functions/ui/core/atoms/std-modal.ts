@@ -438,6 +438,11 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'active',
+                      'inactive',
+                      'pending',
+                    ],
                   },
                   {
                     'name': 'seedRow',
@@ -513,6 +518,11 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'active',
+                        'inactive',
+                        'pending',
+                      ],
                     },
                     {
                       'name': 'seedRow',
@@ -557,6 +567,11 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'active',
+                        'inactive',
+                        'pending',
+                      ],
                     },
                     {
                       'name': 'seedRow',
@@ -618,6 +633,11 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'active',
+                        'inactive',
+                        'pending',
+                      ],
                     },
                     {
                       'name': 'seedRow',
@@ -780,6 +800,18 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                 ],
               ],
               'to': 'open',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  '@config.detailSlot',
+                  null,
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'open',
+              'to': 'closed',
             },
             {
               'effects': [

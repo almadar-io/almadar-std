@@ -894,6 +894,11 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
               {
                 'name': 'currentSort',
                 'type': 'string',
+                'values': [
+                  'recent',
+                  'highest',
+                  'lowest',
+                ],
               },
               {
                 'name': 'draftRating',
@@ -1089,6 +1094,11 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                 {
                   'name': 'currentSort',
                   'type': 'string',
+                  'values': [
+                    'recent',
+                    'highest',
+                    'lowest',
+                  ],
                 },
                 {
                   'name': 'draftRating',
@@ -1716,6 +1726,47 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
               'event': 'ReviewSaveFailed',
               'from': 'loading',
               'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('ReviewView' satisfies _StdRatingReviewEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ReviewsLoadFailed',
+                      'success': 'ReviewsLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'viewing',
+              'to': 'loading',
             },
             {
               'effects': [
@@ -2991,6 +3042,47 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
             {
               'effects': [
                 [
+                  'fetch',
+                  ('ReviewView' satisfies _StdRatingReviewEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ReviewsLoadFailed',
+                      'success': 'ReviewsLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'composing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
                   'set',
                   '@entity.draftRating',
                   '@payload.value',
@@ -3154,6 +3246,47 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
             {
               'effects': [
                 [
+                  'fetch',
+                  ('ReviewView' satisfies _StdRatingReviewEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ReviewsLoadFailed',
+                      'success': 'ReviewsLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'submitting',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
                   'render-ui',
                   'main',
                   {
@@ -3215,6 +3348,47 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
               'event': 'ReviewSaveFailed',
               'from': 'submitting',
               'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('ReviewView' satisfies _StdRatingReviewEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ReviewsLoadFailed',
+                      'success': 'ReviewsLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'submitted',
+              'to': 'loading',
             },
             {
               'effects': [
@@ -3522,6 +3696,11 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
               {
                 'name': 'currentSort',
                 'type': 'string',
+                'values': [
+                  'recent',
+                  'highest',
+                  'lowest',
+                ],
               },
               {
                 'name': 'draftRating',
@@ -3707,6 +3886,11 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                 {
                   'name': 'currentSort',
                   'type': 'string',
+                  'values': [
+                    'recent',
+                    'highest',
+                    'lowest',
+                  ],
                 },
                 {
                   'name': 'draftRating',
@@ -3996,6 +4180,69 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
             {
               'effects': [
                 [
+                  'set',
+                  '@entity.draftRating',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.draftComment',
+                  '',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                          {
+                            'action': 'RATE_DRAFT',
+                            'label': 'Your rating',
+                            'max': '@config.maxStars',
+                            'type': 'star-rating',
+                            'value': '@entity.draftRating',
+                          },
+                          {
+                            'cancelEvent': 'CANCEL_REVIEW',
+                            'cancelLabel': '@config.cancelLabel',
+                            'entity': '@entity',
+                            'fields': [
+                              'if',
+                              '@config.allowComment',
+                              [
+                                'draftComment',
+                              ],
+                              [],
+                            ],
+                            'mode': 'edit',
+                            'submitEvent': 'SUBMIT_REVIEW',
+                            'submitLabel': '@config.submitLabel',
+                            'type': 'form-section',
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'gap': 'md',
+                        'type': 'stack',
+                      },
+                    ],
+                    'look': '@config.cardLook',
+                    'type': 'card',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'submitting',
+              'to': 'composing',
+            },
+            {
+              'effects': [
+                [
                   'render-ui',
                   'main',
                   {
@@ -4079,6 +4326,69 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                             'label': 'Your rating',
                             'max': '@config.maxStars',
                             'type': 'star-rating',
+                            'value': '@entity.draftRating',
+                          },
+                          {
+                            'cancelEvent': 'CANCEL_REVIEW',
+                            'cancelLabel': '@config.cancelLabel',
+                            'entity': '@entity',
+                            'fields': [
+                              'if',
+                              '@config.allowComment',
+                              [
+                                'draftComment',
+                              ],
+                              [],
+                            ],
+                            'mode': 'edit',
+                            'submitEvent': 'SUBMIT_REVIEW',
+                            'submitLabel': '@config.submitLabel',
+                            'type': 'form-section',
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'gap': 'md',
+                        'type': 'stack',
+                      },
+                    ],
+                    'look': '@config.cardLook',
+                    'type': 'card',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'submitted',
+              'to': 'composing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.draftRating',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.draftComment',
+                  '',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                          {
+                            'action': 'RATE_DRAFT',
+                            'label': 'Your rating',
+                            'max': '@config.maxStars',
+                            'type': 'star-rating',
                             'value': 0,
                           },
                           {
@@ -4111,6 +4421,69 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
               ],
               'event': 'RESTART',
               'from': 'submitted',
+              'to': 'composing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.draftRating',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.draftComment',
+                  '',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                          {
+                            'action': 'RATE_DRAFT',
+                            'label': 'Your rating',
+                            'max': '@config.maxStars',
+                            'type': 'star-rating',
+                            'value': '@entity.draftRating',
+                          },
+                          {
+                            'cancelEvent': 'CANCEL_REVIEW',
+                            'cancelLabel': '@config.cancelLabel',
+                            'entity': '@entity',
+                            'fields': [
+                              'if',
+                              '@config.allowComment',
+                              [
+                                'draftComment',
+                              ],
+                              [],
+                            ],
+                            'mode': 'edit',
+                            'submitEvent': 'SUBMIT_REVIEW',
+                            'submitLabel': '@config.submitLabel',
+                            'type': 'form-section',
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'gap': 'md',
+                        'type': 'stack',
+                      },
+                    ],
+                    'look': '@config.cardLook',
+                    'type': 'card',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'error',
               'to': 'composing',
             },
             {

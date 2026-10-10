@@ -25,6 +25,15 @@ orbital DashboardLayoutOrbital {
     variant : "default" | "primary" | "danger"
     roles : [string]
   }
+  type DashboardLayoutUserMenuItemsItem = {
+    icon : icon!
+    label : string
+    event : event
+    navigatesTo : string
+    badge : string
+    variant : "default" | "primary" | "danger"
+    roles : [string]
+  }
   type DashboardLayoutNotificationsItem = {
     id : string!
     message : string!
@@ -52,6 +61,8 @@ orbital DashboardLayoutOrbital {
           searchEvent: @config.searchEvent
           onSearchSubmit: @config.onSearchSubmit
           topBarActions: (array/filter @config.topBarActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          userMenuItems: (array/filter @config.userMenuItems (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          fullBleed: @config.fullBleed
           notifications: @config.notifications
           notificationClickEvent: @config.notificationClickEvent
           onNotificationClick: @config.onNotificationClick
@@ -121,6 +132,14 @@ orbital DashboardLayoutOrbital {
       topBarActions : [DashboardLayoutTopBarActionsItem] = []
         @label "Top Bar Actions"
         @description "Generic top-bar action buttons rendered between the search bar and the notifications bell. Each entry: `{icon, label?, event, badge?, variant?}`. Domain-agnostic — consumers add a cart icon, profile button, help-bubble, or any other top-bar action by appending entries. Empty array (default) renders nothing."
+        @tier "presentation"
+      userMenuItems : [DashboardLayoutUserMenuItemsItem] = []
+        @label "User Menu Items"
+        @description "Account-menu entries listed above Sign out (Settings, a profile page), each `{icon, label, event?, navigatesTo?, variant?}` like `topBarActions`."
+        @tier "presentation"
+      fullBleed : boolean = false
+        @label "Full Bleed"
+        @description "Content fills the area edge to edge — no padding, no max width, full height (workspaces, canvases, maps)."
         @tier "presentation"
       notifications : [DashboardLayoutNotificationsItem] = []
         @label "Notifications"

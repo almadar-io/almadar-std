@@ -859,6 +859,11 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'active',
+                      'inactive',
+                      'pending',
+                    ],
                   },
                   {
                     'name': 'createdAt',
@@ -960,6 +965,11 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'active',
+                        'inactive',
+                        'pending',
+                      ],
                     },
                     {
                       'name': 'createdAt',
@@ -1174,6 +1184,63 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
             {
               'effects': [
                 [
+                  'set',
+                  '@entity.failureCount',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.successCount',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.threshold',
+                  '@config.failureThreshold',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'children': [
+                              '@trait.ShieldIcon',
+                              '@trait.ServiceNodeLabel',
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          '@trait.ClosedStatusDot',
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      '@trait.CircuitDivider',
+                      '@trait.SuccessAlert',
+                      '@trait.StatsGrid',
+                      '@trait.FailuresMeter',
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'open',
+              'to': 'closed',
+            },
+            {
+              'effects': [
+                [
                   'render-ui',
                   'main',
                   {
@@ -1252,6 +1319,63 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
               ],
               'event': 'RESET',
               'from': 'open',
+              'to': 'closed',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.failureCount',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.successCount',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.threshold',
+                  '@config.failureThreshold',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'children': [
+                              '@trait.ShieldIcon',
+                              '@trait.ServiceNodeLabel',
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          '@trait.ClosedStatusDot',
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      '@trait.CircuitDivider',
+                      '@trait.SuccessAlert',
+                      '@trait.StatsGrid',
+                      '@trait.FailuresMeter',
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'halfOpen',
               'to': 'closed',
             },
             {

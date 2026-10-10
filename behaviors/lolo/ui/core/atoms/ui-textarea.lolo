@@ -6,6 +6,7 @@ app ui-textarea [
 orbital TextareaOrbital {
   entity TextareaItem [runtime] {
     id : string!
+    value : string @intrinsic
   }
 
   trait TextareaRender -> @rebindable TextareaItem [interaction, instance] {
@@ -13,11 +14,75 @@ orbital TextareaOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.value @config.value)
         (render-ui main {
           className: @config.className
           label: @config.label
           placeholder: @config.placeholder
           rows: @config.rows
+          value: @entity.value
+          action: @config.action
+          helperText: @config.helperText
+          error: @config.error
+          onChange: @config.onChange
+          enter: @config.enter
+          enterDelay: @config.enterDelay
+          skeleton: @config.skeleton
+          aria-label: @config.ariaLabel
+          aria-labelledby: @config.ariaLabelledby
+          aria-describedby: @config.ariaDescribedby
+          aria-live: @config.ariaLive
+          aria-current: @config.ariaCurrent
+          aria-pressed: @config.ariaPressed
+          aria-expanded: @config.ariaExpanded
+          aria-selected: @config.ariaSelected
+          aria-hidden: @config.ariaHidden
+          aria-busy: @config.ariaBusy
+          role: @config.role
+          lang: @config.lang
+          dir: @config.dir
+          tabIndex: @config.tabIndex
+          type: textarea
+        })
+      ACTION -> idle
+        (set @entity.value ?value)
+        (render-ui main {
+          className: @config.className
+          label: @config.label
+          placeholder: @config.placeholder
+          rows: @config.rows
+          value: @entity.value
+          action: @config.action
+          helperText: @config.helperText
+          error: @config.error
+          onChange: @config.onChange
+          enter: @config.enter
+          enterDelay: @config.enterDelay
+          skeleton: @config.skeleton
+          aria-label: @config.ariaLabel
+          aria-labelledby: @config.ariaLabelledby
+          aria-describedby: @config.ariaDescribedby
+          aria-live: @config.ariaLive
+          aria-current: @config.ariaCurrent
+          aria-pressed: @config.ariaPressed
+          aria-expanded: @config.ariaExpanded
+          aria-selected: @config.ariaSelected
+          aria-hidden: @config.ariaHidden
+          aria-busy: @config.ariaBusy
+          role: @config.role
+          lang: @config.lang
+          dir: @config.dir
+          tabIndex: @config.tabIndex
+          type: textarea
+        })
+      CHANGE -> idle
+        (set @entity.value ?value)
+        (render-ui main {
+          className: @config.className
+          label: @config.label
+          placeholder: @config.placeholder
+          rows: @config.rows
+          value: @entity.value
           action: @config.action
           helperText: @config.helperText
           error: @config.error
@@ -56,6 +121,15 @@ orbital TextareaOrbital {
         @tier "essential"
     }
 
+    listens {
+      ACTION {
+        value : string!
+      }
+      CHANGE {
+        value : string!
+      }
+    }
+
     config {
       className : string
         @label "Class Name"
@@ -72,6 +146,10 @@ orbital TextareaOrbital {
       rows : number
         @label "Rows"
         @description "Number of visible rows"
+        @tier "presentation"
+      value : string
+        @label "Value"
+        @description "Controlled value, for a field the program fills or clears."
         @tier "presentation"
       action : event = "ACTION"
         @label "Action"

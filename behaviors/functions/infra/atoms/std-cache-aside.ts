@@ -236,11 +236,11 @@ export function stdCacheAsideInlineTypographyRender6Trait(params: StdCacheAsideP
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineStatusDotRender7`. */
-export function stdCacheAsideInlineStatusDotRender7Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineDividerRender7`. */
+export function stdCacheAsideInlineDividerRender7Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineStatusDotRender7`,
+    ref: `${ALIAS}.traits.InlineDividerRender7`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -251,11 +251,11 @@ export function stdCacheAsideInlineStatusDotRender7Trait(params: StdCacheAsidePa
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineDividerRender8`. */
-export function stdCacheAsideInlineDividerRender8Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineEmptyStateRender8`. */
+export function stdCacheAsideInlineEmptyStateRender8Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineDividerRender8`,
+    ref: `${ALIAS}.traits.InlineEmptyStateRender8`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -296,11 +296,11 @@ export function stdCacheAsideInlineTypographyRender10Trait(params: StdCacheAside
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineBadgeRender11`. */
-export function stdCacheAsideInlineBadgeRender11Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineStatusDotRender11`. */
+export function stdCacheAsideInlineStatusDotRender11Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineBadgeRender11`,
+    ref: `${ALIAS}.traits.InlineStatusDotRender11`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -311,11 +311,11 @@ export function stdCacheAsideInlineBadgeRender11Trait(params: StdCacheAsideParam
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineTypographyRender12`. */
-export function stdCacheAsideInlineTypographyRender12Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineDividerRender12`. */
+export function stdCacheAsideInlineDividerRender12Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineTypographyRender12`,
+    ref: `${ALIAS}.traits.InlineDividerRender12`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -356,11 +356,11 @@ export function stdCacheAsideInlineTypographyRender14Trait(params: StdCacheAside
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineTypographyRender15`. */
-export function stdCacheAsideInlineTypographyRender15Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineBadgeRender15`. */
+export function stdCacheAsideInlineBadgeRender15Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineTypographyRender15`,
+    ref: `${ALIAS}.traits.InlineBadgeRender15`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -371,11 +371,11 @@ export function stdCacheAsideInlineTypographyRender15Trait(params: StdCacheAside
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineIconRender16`. */
-export function stdCacheAsideInlineIconRender16Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineTypographyRender16`. */
+export function stdCacheAsideInlineTypographyRender16Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineIconRender16`,
+    ref: `${ALIAS}.traits.InlineTypographyRender16`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -386,11 +386,11 @@ export function stdCacheAsideInlineIconRender16Trait(params: StdCacheAsideParams
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineTypographyRender17`. */
-export function stdCacheAsideInlineTypographyRender17Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineIconRender17`. */
+export function stdCacheAsideInlineIconRender17Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineTypographyRender17`,
+    ref: `${ALIAS}.traits.InlineIconRender17`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -401,11 +401,11 @@ export function stdCacheAsideInlineTypographyRender17Trait(params: StdCacheAside
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineStatusDotRender18`. */
-export function stdCacheAsideInlineStatusDotRender18Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineTypographyRender18`. */
+export function stdCacheAsideInlineTypographyRender18Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineStatusDotRender18`,
+    ref: `${ALIAS}.traits.InlineTypographyRender18`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -416,11 +416,11 @@ export function stdCacheAsideInlineStatusDotRender18Trait(params: StdCacheAsideP
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineDividerRender19`. */
-export function stdCacheAsideInlineDividerRender19Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineTypographyRender19`. */
+export function stdCacheAsideInlineTypographyRender19Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineDividerRender19`,
+    ref: `${ALIAS}.traits.InlineTypographyRender19`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -431,11 +431,11 @@ export function stdCacheAsideInlineDividerRender19Trait(params: StdCacheAsidePar
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineAlertRender20`. */
-export function stdCacheAsideInlineAlertRender20Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineIconRender20`. */
+export function stdCacheAsideInlineIconRender20Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineAlertRender20`,
+    ref: `${ALIAS}.traits.InlineIconRender20`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -446,11 +446,11 @@ export function stdCacheAsideInlineAlertRender20Trait(params: StdCacheAsideParam
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineSpinnerRender21`. */
-export function stdCacheAsideInlineSpinnerRender21Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineTypographyRender21`. */
+export function stdCacheAsideInlineTypographyRender21Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineSpinnerRender21`,
+    ref: `${ALIAS}.traits.InlineTypographyRender21`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -461,11 +461,191 @@ export function stdCacheAsideInlineSpinnerRender21Trait(params: StdCacheAsidePar
   });
 }
 
-/** Trait descriptor: `CacheAside.traits.InlineEmptyStateRender22`. */
-export function stdCacheAsideInlineEmptyStateRender22Trait(params: StdCacheAsideParams): TraitReference {
+/** Trait descriptor: `CacheAside.traits.InlineDividerRender22`. */
+export function stdCacheAsideInlineDividerRender22Trait(params: StdCacheAsideParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InlineEmptyStateRender22`,
+    ref: `${ALIAS}.traits.InlineDividerRender22`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CacheAside.traits.InlineEmptyStateRender23`. */
+export function stdCacheAsideInlineEmptyStateRender23Trait(params: StdCacheAsideParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.InlineEmptyStateRender23`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CacheAside.traits.InlineIconRender24`. */
+export function stdCacheAsideInlineIconRender24Trait(params: StdCacheAsideParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.InlineIconRender24`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CacheAside.traits.InlineTypographyRender25`. */
+export function stdCacheAsideInlineTypographyRender25Trait(params: StdCacheAsideParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.InlineTypographyRender25`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CacheAside.traits.InlineStatusDotRender26`. */
+export function stdCacheAsideInlineStatusDotRender26Trait(params: StdCacheAsideParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.InlineStatusDotRender26`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CacheAside.traits.InlineDividerRender27`. */
+export function stdCacheAsideInlineDividerRender27Trait(params: StdCacheAsideParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.InlineDividerRender27`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CacheAside.traits.InlineAlertRender28`. */
+export function stdCacheAsideInlineAlertRender28Trait(params: StdCacheAsideParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.InlineAlertRender28`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CacheAside.traits.InlineSpinnerRender29`. */
+export function stdCacheAsideInlineSpinnerRender29Trait(params: StdCacheAsideParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.InlineSpinnerRender29`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CacheAside.traits.InlineIconRender30`. */
+export function stdCacheAsideInlineIconRender30Trait(params: StdCacheAsideParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.InlineIconRender30`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CacheAside.traits.InlineTypographyRender31`. */
+export function stdCacheAsideInlineTypographyRender31Trait(params: StdCacheAsideParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.InlineTypographyRender31`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CacheAside.traits.InlineDividerRender32`. */
+export function stdCacheAsideInlineDividerRender32Trait(params: StdCacheAsideParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.InlineDividerRender32`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CacheAside.traits.InlineEmptyStateRender33`. */
+export function stdCacheAsideInlineEmptyStateRender33Trait(params: StdCacheAsideParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.InlineEmptyStateRender33`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `CacheAside.traits.InlineEmptyStateRender34`. */
+export function stdCacheAsideInlineEmptyStateRender34Trait(params: StdCacheAsideParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.InlineEmptyStateRender34`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
@@ -510,22 +690,34 @@ export function stdCacheAside(params: StdCacheAsideParams): OrbitalDefinition {
       stdCacheAsideInlineEmptyStateRender4Trait(params),
       stdCacheAsideInlineIconRender5Trait(params),
       stdCacheAsideInlineTypographyRender6Trait(params),
-      stdCacheAsideInlineStatusDotRender7Trait(params),
-      stdCacheAsideInlineDividerRender8Trait(params),
+      stdCacheAsideInlineDividerRender7Trait(params),
+      stdCacheAsideInlineEmptyStateRender8Trait(params),
       stdCacheAsideInlineIconRender9Trait(params),
       stdCacheAsideInlineTypographyRender10Trait(params),
-      stdCacheAsideInlineBadgeRender11Trait(params),
-      stdCacheAsideInlineTypographyRender12Trait(params),
+      stdCacheAsideInlineStatusDotRender11Trait(params),
+      stdCacheAsideInlineDividerRender12Trait(params),
       stdCacheAsideInlineIconRender13Trait(params),
       stdCacheAsideInlineTypographyRender14Trait(params),
-      stdCacheAsideInlineTypographyRender15Trait(params),
-      stdCacheAsideInlineIconRender16Trait(params),
-      stdCacheAsideInlineTypographyRender17Trait(params),
-      stdCacheAsideInlineStatusDotRender18Trait(params),
-      stdCacheAsideInlineDividerRender19Trait(params),
-      stdCacheAsideInlineAlertRender20Trait(params),
-      stdCacheAsideInlineSpinnerRender21Trait(params),
-      stdCacheAsideInlineEmptyStateRender22Trait(params),
+      stdCacheAsideInlineBadgeRender15Trait(params),
+      stdCacheAsideInlineTypographyRender16Trait(params),
+      stdCacheAsideInlineIconRender17Trait(params),
+      stdCacheAsideInlineTypographyRender18Trait(params),
+      stdCacheAsideInlineTypographyRender19Trait(params),
+      stdCacheAsideInlineIconRender20Trait(params),
+      stdCacheAsideInlineTypographyRender21Trait(params),
+      stdCacheAsideInlineDividerRender22Trait(params),
+      stdCacheAsideInlineEmptyStateRender23Trait(params),
+      stdCacheAsideInlineIconRender24Trait(params),
+      stdCacheAsideInlineTypographyRender25Trait(params),
+      stdCacheAsideInlineStatusDotRender26Trait(params),
+      stdCacheAsideInlineDividerRender27Trait(params),
+      stdCacheAsideInlineAlertRender28Trait(params),
+      stdCacheAsideInlineSpinnerRender29Trait(params),
+      stdCacheAsideInlineIconRender30Trait(params),
+      stdCacheAsideInlineTypographyRender31Trait(params),
+      stdCacheAsideInlineDividerRender32Trait(params),
+      stdCacheAsideInlineEmptyStateRender33Trait(params),
+      stdCacheAsideInlineEmptyStateRender34Trait(params),
     ],
     pages: [
       stdCacheAsidePage(params),
@@ -534,7 +726,7 @@ export function stdCacheAside(params: StdCacheAsideParams): OrbitalDefinition {
 }
 
 type _StdCacheAsideEntityName = 'CacheEntry' | 'IconItem' | 'TypographyItem' | 'ButtonItem' | 'DividerItem' | 'EmptyStateItem' | 'SpinnerItem' | 'StatusDotItem' | 'BadgeItem' | 'AlertItem';
-type _StdCacheAsideListenTraitName = 'FetchButton' | 'InvalidateButton' | 'RefreshButton' | 'RetryButton' | 'CacheEntryCacheManager' | 'InlineIconRender1' | 'InlineTypographyRender2' | 'InlineDividerRender3' | 'InlineEmptyStateRender4' | 'InlineIconRender5' | 'InlineTypographyRender6' | 'InlineStatusDotRender7' | 'InlineDividerRender8' | 'InlineIconRender9' | 'InlineTypographyRender10' | 'InlineBadgeRender11' | 'InlineTypographyRender12' | 'InlineIconRender13' | 'InlineTypographyRender14' | 'InlineTypographyRender15' | 'InlineIconRender16' | 'InlineTypographyRender17' | 'InlineStatusDotRender18' | 'InlineDividerRender19' | 'InlineAlertRender20' | 'InlineSpinnerRender21' | 'InlineEmptyStateRender22';
+type _StdCacheAsideListenTraitName = 'FetchButton' | 'InvalidateButton' | 'RefreshButton' | 'RetryButton' | 'CacheEntryCacheManager' | 'InlineIconRender1' | 'InlineTypographyRender2' | 'InlineDividerRender3' | 'InlineEmptyStateRender4' | 'InlineIconRender5' | 'InlineTypographyRender6' | 'InlineDividerRender7' | 'InlineEmptyStateRender8' | 'InlineIconRender9' | 'InlineTypographyRender10' | 'InlineStatusDotRender11' | 'InlineDividerRender12' | 'InlineIconRender13' | 'InlineTypographyRender14' | 'InlineBadgeRender15' | 'InlineTypographyRender16' | 'InlineIconRender17' | 'InlineTypographyRender18' | 'InlineTypographyRender19' | 'InlineIconRender20' | 'InlineTypographyRender21' | 'InlineDividerRender22' | 'InlineEmptyStateRender23' | 'InlineIconRender24' | 'InlineTypographyRender25' | 'InlineStatusDotRender26' | 'InlineDividerRender27' | 'InlineAlertRender28' | 'InlineSpinnerRender29' | 'InlineIconRender30' | 'InlineTypographyRender31' | 'InlineDividerRender32' | 'InlineEmptyStateRender33' | 'InlineEmptyStateRender34';
 
 /**
  * Tunable params for the CacheEntryOrbital orbital.
@@ -576,7 +768,7 @@ export interface StdCacheAsideCacheEntryOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'FetchButton' | 'InvalidateButton' | 'RefreshButton' | 'RetryButton' | 'InlineIconRender1' | 'InlineTypographyRender2' | 'InlineDividerRender3' | 'InlineEmptyStateRender4' | 'InlineIconRender5' | 'InlineTypographyRender6' | 'InlineStatusDotRender7' | 'InlineDividerRender8' | 'InlineIconRender9' | 'InlineTypographyRender10' | 'InlineBadgeRender11' | 'InlineTypographyRender12' | 'InlineIconRender13' | 'InlineTypographyRender14' | 'InlineTypographyRender15' | 'InlineIconRender16' | 'InlineTypographyRender17' | 'InlineStatusDotRender18' | 'InlineDividerRender19' | 'InlineAlertRender20' | 'InlineSpinnerRender21' | 'InlineEmptyStateRender22' | 'CacheEntryCacheManager',
+    'FetchButton' | 'InvalidateButton' | 'RefreshButton' | 'RetryButton' | 'InlineIconRender1' | 'InlineTypographyRender2' | 'InlineDividerRender3' | 'InlineEmptyStateRender4' | 'InlineIconRender5' | 'InlineTypographyRender6' | 'InlineDividerRender7' | 'InlineEmptyStateRender8' | 'InlineIconRender9' | 'InlineTypographyRender10' | 'InlineStatusDotRender11' | 'InlineDividerRender12' | 'InlineIconRender13' | 'InlineTypographyRender14' | 'InlineBadgeRender15' | 'InlineTypographyRender16' | 'InlineIconRender17' | 'InlineTypographyRender18' | 'InlineTypographyRender19' | 'InlineIconRender20' | 'InlineTypographyRender21' | 'InlineDividerRender22' | 'InlineEmptyStateRender23' | 'InlineIconRender24' | 'InlineTypographyRender25' | 'InlineStatusDotRender26' | 'InlineDividerRender27' | 'InlineAlertRender28' | 'InlineSpinnerRender29' | 'InlineIconRender30' | 'InlineTypographyRender31' | 'InlineDividerRender32' | 'InlineEmptyStateRender33' | 'InlineEmptyStateRender34' | 'CacheEntryCacheManager',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -855,6 +1047,11 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'active',
+                      'inactive',
+                      'pending',
+                    ],
                   },
                   {
                     'name': 'createdAt',
@@ -963,6 +1160,11 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'active',
+                        'inactive',
+                        'pending',
+                      ],
                     },
                     {
                       'name': 'createdAt',
@@ -1060,6 +1262,11 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'active',
+                        'inactive',
+                        'pending',
+                      ],
                     },
                     {
                       'name': 'createdAt',
@@ -1185,10 +1392,48 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
                             'gap': 'md',
                             'type': 'stack',
                           },
+                          '@trait.FetchButton',
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      '@trait.InlineDividerRender7',
+                      '@trait.InlineEmptyStateRender8',
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'loading',
+              'to': 'empty',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              '@trait.InlineIconRender9',
+                              '@trait.InlineTypographyRender10',
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
                           {
                             'align': 'center',
                             'children': [
-                              '@trait.InlineStatusDotRender7',
+                              '@trait.InlineStatusDotRender11',
                               '@trait.InvalidateButton',
                             ],
                             'direction': 'horizontal',
@@ -1201,7 +1446,7 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
                         'justify': 'between',
                         'type': 'stack',
                       },
-                      '@trait.InlineDividerRender8',
+                      '@trait.InlineDividerRender12',
                       {
                         'entity': '@payload.data',
                         'fields': [],
@@ -1217,20 +1462,20 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
                                   {
                                     'align': 'center',
                                     'children': [
-                                      '@trait.InlineIconRender9',
-                                      '@trait.InlineTypographyRender10',
+                                      '@trait.InlineIconRender13',
+                                      '@trait.InlineTypographyRender14',
                                     ],
                                     'direction': 'horizontal',
                                     'gap': 'sm',
                                     'type': 'stack',
                                   },
-                                  '@trait.InlineBadgeRender11',
+                                  '@trait.InlineBadgeRender15',
                                 ],
                                 'direction': 'horizontal',
                                 'justify': 'between',
                                 'type': 'stack',
                               },
-                              '@trait.InlineTypographyRender12',
+                              '@trait.InlineTypographyRender16',
                             ],
                             'direction': 'vertical',
                             'gap': 'sm',
@@ -1258,9 +1503,9 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
                   {
                     'align': 'center',
                     'children': [
-                      '@trait.InlineIconRender13',
-                      '@trait.InlineTypographyRender14',
-                      '@trait.InlineTypographyRender15',
+                      '@trait.InlineIconRender17',
+                      '@trait.InlineTypographyRender18',
+                      '@trait.InlineTypographyRender19',
                       '@trait.RetryButton',
                     ],
                     'className': 'py-12',
@@ -1323,8 +1568,46 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
                         'children': [
                           {
                             'children': [
-                              '@trait.InlineIconRender16',
-                              '@trait.InlineTypographyRender17',
+                              '@trait.InlineIconRender20',
+                              '@trait.InlineTypographyRender21',
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          '@trait.FetchButton',
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      '@trait.InlineDividerRender22',
+                      '@trait.InlineEmptyStateRender23',
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'cached',
+              'to': 'empty',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              '@trait.InlineIconRender24',
+                              '@trait.InlineTypographyRender25',
                             ],
                             'direction': 'horizontal',
                             'gap': 'md',
@@ -1333,7 +1616,7 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
                           {
                             'align': 'center',
                             'children': [
-                              '@trait.InlineStatusDotRender18',
+                              '@trait.InlineStatusDotRender26',
                               '@trait.RefreshButton',
                             ],
                             'direction': 'horizontal',
@@ -1346,8 +1629,8 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
                         'justify': 'between',
                         'type': 'stack',
                       },
-                      '@trait.InlineDividerRender19',
-                      '@trait.InlineAlertRender20',
+                      '@trait.InlineDividerRender27',
+                      '@trait.InlineAlertRender28',
                     ],
                     'direction': 'vertical',
                     'gap': 'lg',
@@ -1388,7 +1671,7 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
                   'main',
                   {
                     'children': [
-                      '@trait.InlineSpinnerRender21',
+                      '@trait.InlineSpinnerRender29',
                     ],
                     'type': 'stack',
                   },
@@ -1397,6 +1680,44 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
               'event': 'CACHED',
               'from': 'cached',
               'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              '@trait.InlineIconRender30',
+                              '@trait.InlineTypographyRender31',
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          '@trait.FetchButton',
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      '@trait.InlineDividerRender32',
+                      '@trait.InlineEmptyStateRender33',
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'stale',
+              'to': 'empty',
             },
             {
               'effects': [
@@ -1455,7 +1776,7 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
                   'main',
                   {
                     'children': [
-                      '@trait.InlineEmptyStateRender22',
+                      '@trait.InlineEmptyStateRender34',
                     ],
                     'type': 'stack',
                   },
@@ -1561,7 +1882,7 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
       makeTraitRef({
         'config': {
           'content': {
-            'default': 'Cache (hot)',
+            'default': 'Cache (empty)',
             'type': 'unknown',
           },
           'variant': {
@@ -1574,199 +1895,9 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
         'ref': ('Typography.traits.TypographyRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
       }),
       makeTraitRef({
-        'config': {
-          'label': {
-            'default': 'Cached',
-            'type': 'unknown',
-          },
-          'pulse': {
-            'default': false,
-            'type': 'unknown',
-          },
-          'status': {
-            'default': 'online',
-            'type': 'unknown',
-          },
-        },
         'linkedEntity': 'CacheEntry',
-        'name': 'InlineStatusDotRender7',
-        'ref': ('StatusDot.traits.StatusDotRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
-      }),
-      makeTraitRef({
-        'linkedEntity': 'CacheEntry',
-        'name': 'InlineDividerRender8',
+        'name': 'InlineDividerRender7',
         'ref': ('Divider.traits.DividerRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
-      }),
-      makeTraitRef({
-        'config': {
-          'name': {
-            'default': 'database',
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'CacheEntry',
-        'name': 'InlineIconRender9',
-        'ref': ('Icon.traits.IconRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
-      }),
-      makeTraitRef({
-        'config': {
-          'content': {
-            'default': '@item.name',
-            'type': 'unknown',
-          },
-          'variant': {
-            'default': 'h4',
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'CacheEntry',
-        'name': 'InlineTypographyRender10',
-        'ref': ('Typography.traits.TypographyRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
-      }),
-      makeTraitRef({
-        'config': {
-          'label': {
-            'default': '@item.description',
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'CacheEntry',
-        'name': 'InlineBadgeRender11',
-        'ref': ('Badge.traits.BadgeRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
-      }),
-      makeTraitRef({
-        'config': {
-          'content': {
-            'default': '@item.status',
-            'type': 'unknown',
-          },
-          'variant': {
-            'default': 'caption',
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'CacheEntry',
-        'name': 'InlineTypographyRender12',
-        'ref': ('Typography.traits.TypographyRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
-      }),
-      makeTraitRef({
-        'config': {
-          'color': {
-            'default': 'error',
-            'type': 'unknown',
-          },
-          'name': {
-            'default': 'alert-triangle',
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'CacheEntry',
-        'name': 'InlineIconRender13',
-        'ref': ('Icon.traits.IconRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
-      }),
-      makeTraitRef({
-        'config': {
-          'content': {
-            'default': 'Failed to load',
-            'type': 'unknown',
-          },
-          'variant': {
-            'default': 'h3',
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'CacheEntry',
-        'name': 'InlineTypographyRender14',
-        'ref': ('Typography.traits.TypographyRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
-      }),
-      makeTraitRef({
-        'config': {
-          'color': {
-            'default': 'muted',
-            'type': 'unknown',
-          },
-          'content': {
-            'default': '@callsitePayload.error',
-            'type': 'unknown',
-          },
-          'variant': {
-            'default': 'body',
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'CacheEntry',
-        'name': 'InlineTypographyRender15',
-        'ref': ('Typography.traits.TypographyRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
-      }),
-      makeTraitRef({
-        'config': {
-          'name': {
-            'default': 'database',
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'CacheEntry',
-        'name': 'InlineIconRender16',
-        'ref': ('Icon.traits.IconRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
-      }),
-      makeTraitRef({
-        'config': {
-          'content': {
-            'default': 'Cache (stale)',
-            'type': 'unknown',
-          },
-          'variant': {
-            'default': 'h2',
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'CacheEntry',
-        'name': 'InlineTypographyRender17',
-        'ref': ('Typography.traits.TypographyRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
-      }),
-      makeTraitRef({
-        'config': {
-          'label': {
-            'default': 'Stale',
-            'type': 'unknown',
-          },
-          'pulse': {
-            'default': true,
-            'type': 'unknown',
-          },
-          'status': {
-            'default': 'warning',
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'CacheEntry',
-        'name': 'InlineStatusDotRender18',
-        'ref': ('StatusDot.traits.StatusDotRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
-      }),
-      makeTraitRef({
-        'linkedEntity': 'CacheEntry',
-        'name': 'InlineDividerRender19',
-        'ref': ('Divider.traits.DividerRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
-      }),
-      makeTraitRef({
-        'config': {
-          'message': {
-            'default': 'Cache data is stale. Refresh to get the latest data.',
-            'type': 'unknown',
-          },
-          'variant': {
-            'default': 'warning',
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'CacheEntry',
-        'name': 'InlineAlertRender20',
-        'ref': ('Alert.traits.AlertRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
-      }),
-      makeTraitRef({
-        'linkedEntity': 'CacheEntry',
-        'name': 'InlineSpinnerRender21',
-        'ref': ('Spinner.traits.SpinnerRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
       }),
       makeTraitRef({
         'config': {
@@ -1788,7 +1919,359 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
           },
         },
         'linkedEntity': 'CacheEntry',
-        'name': 'InlineEmptyStateRender22',
+        'name': 'InlineEmptyStateRender8',
+        'ref': ('EmptyState.traits.EmptyStateRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'name': {
+            'default': 'database',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineIconRender9',
+        'ref': ('Icon.traits.IconRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'content': {
+            'default': 'Cache (hot)',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'h2',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineTypographyRender10',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'label': {
+            'default': 'Cached',
+            'type': 'unknown',
+          },
+          'pulse': {
+            'default': false,
+            'type': 'unknown',
+          },
+          'status': {
+            'default': 'online',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineStatusDotRender11',
+        'ref': ('StatusDot.traits.StatusDotRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineDividerRender12',
+        'ref': ('Divider.traits.DividerRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'name': {
+            'default': 'database',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineIconRender13',
+        'ref': ('Icon.traits.IconRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'content': {
+            'default': '@item.name',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'h4',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineTypographyRender14',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'label': {
+            'default': '@item.description',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineBadgeRender15',
+        'ref': ('Badge.traits.BadgeRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'content': {
+            'default': '@item.status',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'caption',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineTypographyRender16',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'color': {
+            'default': 'error',
+            'type': 'unknown',
+          },
+          'name': {
+            'default': 'alert-triangle',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineIconRender17',
+        'ref': ('Icon.traits.IconRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'content': {
+            'default': 'Failed to load',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'h3',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineTypographyRender18',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'color': {
+            'default': 'muted',
+            'type': 'unknown',
+          },
+          'content': {
+            'default': '@callsitePayload.error',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'body',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineTypographyRender19',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'name': {
+            'default': 'database',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineIconRender20',
+        'ref': ('Icon.traits.IconRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'content': {
+            'default': 'Cache (empty)',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'h2',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineTypographyRender21',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineDividerRender22',
+        'ref': ('Divider.traits.DividerRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'description': {
+            'default': 'Fetch data to populate the cache.',
+            'type': 'unknown',
+          },
+          'icon': {
+            'default': 'inbox',
+            'type': 'unknown',
+          },
+          'look': {
+            'default': '@config.emptyLook',
+            'type': 'unknown',
+          },
+          'title': {
+            'default': 'Cache is empty',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineEmptyStateRender23',
+        'ref': ('EmptyState.traits.EmptyStateRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'name': {
+            'default': 'database',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineIconRender24',
+        'ref': ('Icon.traits.IconRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'content': {
+            'default': 'Cache (stale)',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'h2',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineTypographyRender25',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'label': {
+            'default': 'Stale',
+            'type': 'unknown',
+          },
+          'pulse': {
+            'default': true,
+            'type': 'unknown',
+          },
+          'status': {
+            'default': 'warning',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineStatusDotRender26',
+        'ref': ('StatusDot.traits.StatusDotRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineDividerRender27',
+        'ref': ('Divider.traits.DividerRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'message': {
+            'default': 'Cache data is stale. Refresh to get the latest data.',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'warning',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineAlertRender28',
+        'ref': ('Alert.traits.AlertRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineSpinnerRender29',
+        'ref': ('Spinner.traits.SpinnerRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'name': {
+            'default': 'database',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineIconRender30',
+        'ref': ('Icon.traits.IconRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'content': {
+            'default': 'Cache (empty)',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'h2',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineTypographyRender31',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineDividerRender32',
+        'ref': ('Divider.traits.DividerRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'description': {
+            'default': 'Fetch data to populate the cache.',
+            'type': 'unknown',
+          },
+          'icon': {
+            'default': 'inbox',
+            'type': 'unknown',
+          },
+          'look': {
+            'default': '@config.emptyLook',
+            'type': 'unknown',
+          },
+          'title': {
+            'default': 'Cache is empty',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineEmptyStateRender33',
+        'ref': ('EmptyState.traits.EmptyStateRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'description': {
+            'default': 'Fetch data to populate the cache.',
+            'type': 'unknown',
+          },
+          'icon': {
+            'default': 'inbox',
+            'type': 'unknown',
+          },
+          'look': {
+            'default': '@config.emptyLook',
+            'type': 'unknown',
+          },
+          'title': {
+            'default': 'Cache is empty',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'CacheEntry',
+        'name': 'InlineEmptyStateRender34',
         'ref': ('EmptyState.traits.EmptyStateRender' satisfies _StdCacheAsideCacheEntryOrbitalUsesRef),
       }),
     ],
@@ -1819,10 +2302,10 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
             'ref': 'InlineTypographyRender6',
           },
           {
-            'ref': 'InlineStatusDotRender7',
+            'ref': 'InlineDividerRender7',
           },
           {
-            'ref': 'InlineDividerRender8',
+            'ref': 'InlineEmptyStateRender8',
           },
           {
             'ref': 'InlineIconRender9',
@@ -1831,10 +2314,10 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
             'ref': 'InlineTypographyRender10',
           },
           {
-            'ref': 'InlineBadgeRender11',
+            'ref': 'InlineStatusDotRender11',
           },
           {
-            'ref': 'InlineTypographyRender12',
+            'ref': 'InlineDividerRender12',
           },
           {
             'ref': 'InlineIconRender13',
@@ -1843,28 +2326,64 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
             'ref': 'InlineTypographyRender14',
           },
           {
-            'ref': 'InlineTypographyRender15',
+            'ref': 'InlineBadgeRender15',
           },
           {
-            'ref': 'InlineIconRender16',
+            'ref': 'InlineTypographyRender16',
           },
           {
-            'ref': 'InlineTypographyRender17',
+            'ref': 'InlineIconRender17',
           },
           {
-            'ref': 'InlineStatusDotRender18',
+            'ref': 'InlineTypographyRender18',
           },
           {
-            'ref': 'InlineDividerRender19',
+            'ref': 'InlineTypographyRender19',
           },
           {
-            'ref': 'InlineAlertRender20',
+            'ref': 'InlineIconRender20',
           },
           {
-            'ref': 'InlineSpinnerRender21',
+            'ref': 'InlineTypographyRender21',
           },
           {
-            'ref': 'InlineEmptyStateRender22',
+            'ref': 'InlineDividerRender22',
+          },
+          {
+            'ref': 'InlineEmptyStateRender23',
+          },
+          {
+            'ref': 'InlineIconRender24',
+          },
+          {
+            'ref': 'InlineTypographyRender25',
+          },
+          {
+            'ref': 'InlineStatusDotRender26',
+          },
+          {
+            'ref': 'InlineDividerRender27',
+          },
+          {
+            'ref': 'InlineAlertRender28',
+          },
+          {
+            'ref': 'InlineSpinnerRender29',
+          },
+          {
+            'ref': 'InlineIconRender30',
+          },
+          {
+            'ref': 'InlineTypographyRender31',
+          },
+          {
+            'ref': 'InlineDividerRender32',
+          },
+          {
+            'ref': 'InlineEmptyStateRender33',
+          },
+          {
+            'ref': 'InlineEmptyStateRender34',
           },
         ],
       } satisfies Page,
@@ -1954,22 +2473,34 @@ export const StdCacheAsideCacheEntryOrbitalManifest = {
     'InlineEmptyStateRender4',
     'InlineIconRender5',
     'InlineTypographyRender6',
-    'InlineStatusDotRender7',
-    'InlineDividerRender8',
+    'InlineDividerRender7',
+    'InlineEmptyStateRender8',
     'InlineIconRender9',
     'InlineTypographyRender10',
-    'InlineBadgeRender11',
-    'InlineTypographyRender12',
+    'InlineStatusDotRender11',
+    'InlineDividerRender12',
     'InlineIconRender13',
     'InlineTypographyRender14',
-    'InlineTypographyRender15',
-    'InlineIconRender16',
-    'InlineTypographyRender17',
-    'InlineStatusDotRender18',
-    'InlineDividerRender19',
-    'InlineAlertRender20',
-    'InlineSpinnerRender21',
-    'InlineEmptyStateRender22',
+    'InlineBadgeRender15',
+    'InlineTypographyRender16',
+    'InlineIconRender17',
+    'InlineTypographyRender18',
+    'InlineTypographyRender19',
+    'InlineIconRender20',
+    'InlineTypographyRender21',
+    'InlineDividerRender22',
+    'InlineEmptyStateRender23',
+    'InlineIconRender24',
+    'InlineTypographyRender25',
+    'InlineStatusDotRender26',
+    'InlineDividerRender27',
+    'InlineAlertRender28',
+    'InlineSpinnerRender29',
+    'InlineIconRender30',
+    'InlineTypographyRender31',
+    'InlineDividerRender32',
+    'InlineEmptyStateRender33',
+    'InlineEmptyStateRender34',
   ] as const,
   inlineTraitNames: [
     'CacheEntryCacheManager',

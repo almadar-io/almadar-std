@@ -148,6 +148,16 @@
               "tier": "presentation",
               "type": "string"
             },
+            "categoryLabels": {
+              "default": {},
+              "description": "Display name for each category key (such as a stage key to its translated name); read only when rendering, so the names may be translated. A key without an entry shows as itself",
+              "items": {
+                "type": "string"
+              },
+              "label": "Category labels",
+              "tier": "presentation",
+              "type": "Map<string,string>"
+            },
             "chartType": {
               "default": "bar",
               "description": "Visual format for the rendered chart",
@@ -450,7 +460,23 @@
                     "main",
                     {
                       "chartType": "@config.chartType",
-                      "data": "@entity.chartData",
+                      "data": [
+                        "array/map",
+                        "@entity.chartData",
+                        [
+                          "fn",
+                          "p",
+                          {
+                            "label": [
+                              "object/get",
+                              "@config.categoryLabels",
+                              "@p.label",
+                              "@p.label"
+                            ],
+                            "value": "@p.value"
+                          }
+                        ]
+                      ],
                       "drillEvent": "@config.drillEvent",
                       "height": "@config.height",
                       "period": "@config.period",
@@ -750,7 +776,23 @@
                     "main",
                     {
                       "chartType": "@config.chartType",
-                      "data": "@entity.chartData",
+                      "data": [
+                        "array/map",
+                        "@entity.chartData",
+                        [
+                          "fn",
+                          "p",
+                          {
+                            "label": [
+                              "object/get",
+                              "@config.categoryLabels",
+                              "@p.label",
+                              "@p.label"
+                            ],
+                            "value": "@p.value"
+                          }
+                        ]
+                      ],
                       "drillEvent": "@config.drillEvent",
                       "height": "@config.height",
                       "period": "@config.period",

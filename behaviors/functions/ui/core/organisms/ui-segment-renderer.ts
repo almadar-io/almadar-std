@@ -30,7 +30,7 @@ const ALIAS = 'UiSegmentRenderer';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiSegmentRendererEventKey = 'ACTIVATION_SAVE' | 'ANNOTATION' | 'ASK' | 'BLOOM_ANSWER' | 'INIT' | 'NOTE' | 'REFLECTION_SAVE';
+export type StdUiSegmentRendererEventKey = 'ACTIVATION_SAVE' | 'ANNOTATION' | 'ASK' | 'BLOOM_ANSWER' | 'INIT' | 'NOTE' | 'REFLECTION_SAVE' | 'RESET_CODE' | 'RUN_CODE';
 
 /**
  * Payload shape for the `ACTIVATION_SAVE` event.
@@ -77,6 +77,22 @@ export interface StdUiSegmentRendererAnnotationPayload {
 }
 
 /**
+ * Payload shape for the `RUN_CODE` event.
+ */
+export interface StdUiSegmentRendererRunCodePayload {
+  code: string;
+  language: string;
+  runId: string;
+}
+
+/**
+ * Payload shape for the `RESET_CODE` event.
+ */
+export interface StdUiSegmentRendererResetCodePayload {
+  runId: string;
+}
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
@@ -105,6 +121,8 @@ export interface StdUiSegmentRendererConfig {
   /** Default: `"BLOOM_ANSWER"` */
   bloomAnswerEvent?: string;
   className?: string;
+  /** Default: `{"item":{"exitCode":1,"stderr":"Stderr","stdout":"Stdout","testResults":[{"actualOutput":"Actual Output","expectedOutput":"Expected Output","input":"Input","passed":false},{"actualOutput":"Actual Output 2","expectedOutput":"Expected Output 2","input":"Input 2","passed":true}]}}` */
+  codeOutputs?: Record<string, TraitConfig>;
   containerClassName?: string;
   dir?: 'ltr' | 'rtl' | 'auto';
   enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
@@ -116,7 +134,12 @@ export interface StdUiSegmentRendererConfig {
   noteLabel?: string;
   /** Default: `"REFLECTION_SAVE"` */
   reflectionSaveEvent?: string;
+  /** Default: `"RESET_CODE"` */
+  resetCodeEvent?: string;
   role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  /** Default: `"RUN_CODE"` */
+  runCodeEvent?: string;
+  runningCode?: string;
   /** Default: `[]` */
   segments?: EntityRow[];
   skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
@@ -355,6 +378,83 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
             'tier': 'presentation',
             'type': 'string',
           },
+          'codeOutputs': {
+            'default': {
+              'item': {
+                'exitCode': 1,
+                'stderr': 'Stderr',
+                'stdout': 'Stdout',
+                'testResults': [
+                  {
+                    'actualOutput': 'Actual Output',
+                    'expectedOutput': 'Expected Output',
+                    'input': 'Input',
+                    'passed': false,
+                  },
+                  {
+                    'actualOutput': 'Actual Output 2',
+                    'expectedOutput': 'Expected Output 2',
+                    'input': 'Input 2',
+                    'passed': true,
+                  },
+                ],
+              },
+            },
+            'description': 'The program\'s run results, keyed by segment runId.',
+            'items': {
+              'properties': {
+                'exitCode': {
+                  'name': 'exitCode',
+                  'required': true,
+                  'type': 'number',
+                },
+                'stderr': {
+                  'name': 'stderr',
+                  'required': true,
+                  'type': 'string',
+                },
+                'stdout': {
+                  'name': 'stdout',
+                  'required': true,
+                  'type': 'string',
+                },
+                'testResults': {
+                  'items': {
+                    'properties': {
+                      'actualOutput': {
+                        'name': 'actualOutput',
+                        'required': true,
+                        'type': 'string',
+                      },
+                      'expectedOutput': {
+                        'name': 'expectedOutput',
+                        'required': true,
+                        'type': 'string',
+                      },
+                      'input': {
+                        'name': 'input',
+                        'required': true,
+                        'type': 'string',
+                      },
+                      'passed': {
+                        'name': 'passed',
+                        'required': true,
+                        'type': 'boolean',
+                      },
+                    },
+                    'type': 'object',
+                  },
+                  'name': 'testResults',
+                  'required': true,
+                  'type': 'array',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Code Outputs',
+            'tier': 'presentation',
+            'type': 'Map<string,SegmentRendererCodeOutputsValue>',
+          },
           'containerClassName': {
             'description': 'CSS classes for the outer wrapping div',
             'label': 'Container Class Name',
@@ -420,6 +520,13 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
             'default': 'REFLECTION_SAVE',
             'description': 'Event emitted when a reflection note is saved (as `UI:<reflectionSaveEvent>`)',
             'label': 'Reflection Save Event',
+            'tier': 'presentation',
+            'type': 'event',
+          },
+          'resetCodeEvent': {
+            'default': 'RESET_CODE',
+            'description': 'Event a runnable code block emits on Reset (`{ runId }`).',
+            'label': 'Reset Code Event',
             'tier': 'presentation',
             'type': 'event',
           },
@@ -511,6 +618,19 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
               'treegrid',
               'treeitem',
             ],
+          },
+          'runCodeEvent': {
+            'default': 'RUN_CODE',
+            'description': 'Event a runnable code block emits on Run (`{ code, language, runId }`, runId = the segment index). Omit to render runnable blocks read-only.',
+            'label': 'Run Code Event',
+            'tier': 'presentation',
+            'type': 'event',
+          },
+          'runningCode': {
+            'description': 'The runId the program is currently running.',
+            'label': 'Running Code',
+            'tier': 'presentation',
+            'type': 'string',
           },
           'segments': {
             'default': [],
@@ -894,6 +1014,44 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
             'scope': 'external',
             'tier': 'essential',
           },
+          {
+            'definerKnob': 'runCodeEvent',
+            'description': 'Event a runnable code block emits on Run (`{ code, language, runId }`, runId = the segment index). Omit to render runnable blocks read-only.',
+            'event': '@config.runCodeEvent',
+            'payloadSchema': [
+              {
+                'name': 'code',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'language',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'runId',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'essential',
+          },
+          {
+            'definerKnob': 'resetCodeEvent',
+            'description': 'Event a runnable code block emits on Reset (`{ runId }`).',
+            'event': '@config.resetCodeEvent',
+            'payloadSchema': [
+              {
+                'name': 'runId',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'essential',
+          },
         ],
         'entityContract': {
           'provides': [],
@@ -1004,6 +1162,42 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
               ],
               'tier': 'essential',
             },
+            {
+              'description': 'Event a runnable code block emits on Run (`{ code, language, runId }`, runId = the segment index). Omit to render runnable blocks read-only.',
+              'key': '@config.runCodeEvent',
+              'name': '@config.run code event',
+              'payloadSchema': [
+                {
+                  'name': 'code',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'language',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'runId',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'tier': 'essential',
+            },
+            {
+              'description': 'Event a runnable code block emits on Reset (`{ runId }`).',
+              'key': '@config.resetCodeEvent',
+              'name': '@config.reset code event',
+              'payloadSchema': [
+                {
+                  'name': 'runId',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'tier': 'essential',
+            },
           ],
           'states': [
             {
@@ -1035,6 +1229,7 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
                     'askLabel': '@config.askLabel',
                     'bloomAnswerEvent': '@config.bloomAnswerEvent',
                     'className': '@config.className',
+                    'codeOutputs': '@config.codeOutputs',
                     'containerClassName': '@config.containerClassName',
                     'dir': '@config.dir',
                     'enter': '@config.enter',
@@ -1044,7 +1239,10 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
                     'noteEvent': '@config.noteEvent',
                     'noteLabel': '@config.noteLabel',
                     'reflectionSaveEvent': '@config.reflectionSaveEvent',
+                    'resetCodeEvent': '@config.resetCodeEvent',
                     'role': '@config.role',
+                    'runCodeEvent': '@config.runCodeEvent',
+                    'runningCode': '@config.runningCode',
                     'segments': '@config.segments',
                     'skeleton': '@config.skeleton',
                     'tabIndex': '@config.tabIndex',

@@ -1678,6 +1678,43 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'viewing_single',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('StoredFile' satisfies _StdFileStoreEntityName),
+                  {
+                    'emit': {
+                      'failure': 'StoredFileLoadFailed',
+                      'success': 'StoredFileLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
               'event': 'CLOSE_VIEW',
               'from': 'viewing_single',
               'to': 'loading',

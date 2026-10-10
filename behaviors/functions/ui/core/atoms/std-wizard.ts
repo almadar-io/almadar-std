@@ -83,10 +83,32 @@ export interface StdWizardWizardSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdWizardConfig {
+  /** Default: `"Back"` */
+  backLabel?: string;
+  /** Default: `"Cancel wizard"` */
+  cancelLabel?: string;
+  /** Default: `"The wizard was cancelled. No data was submitted."` */
+  cancelledText?: string;
+  /** Default: `"Cancelled"` */
+  cancelledTitle?: string;
   /** Default: `"elevated"` */
   cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
+  /** Default: `""` */
+  completedText?: string;
+  /** Default: `"Complete"` */
+  completedTitle?: string;
+  /** Default: `"Next"` */
+  nextLabel?: string;
+  /** Default: `"Start a new wizard"` */
+  restartLabel?: string;
+  /** Default: `[]` */
+  stepDescriptions?: string[];
+  /** Default: `[]` */
+  stepLabels?: string[];
   /** Default: `[{"description":"Basic information","fields":["title","description"],"icon":"file-text","key":"details","label":"Details"},{"description":"Configure preferences","fields":["category","priority"],"icon":"settings","key":"options","label":"Options"},{"description":"Confirm and submit","fields":["notes"],"icon":"check-circle","key":"review","label":"Review"}]` */
   steps?: EntityRow[];
+  /** Default: `"Submit"` */
+  submitLabel?: string;
   /** Default: `"Wizard"` */
   title?: string;
 }
@@ -415,6 +437,30 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
       {
         'category': 'interaction',
         'config': {
+          'backLabel': {
+            'default': 'Back',
+            'label': 'Back label',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'cancelLabel': {
+            'default': 'Cancel wizard',
+            'label': 'Cancel label',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'cancelledText': {
+            'default': 'The wizard was cancelled. No data was submitted.',
+            'label': 'Cancelled text',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'cancelledTitle': {
+            'default': 'Cancelled',
+            'label': 'Cancelled title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'cardLook': {
             'default': 'elevated',
             'description': 'Layer 2 visual treatment for cards rendered by this atom.',
@@ -430,6 +476,51 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
               'chip',
               'tile-image-first',
             ],
+          },
+          'completedText': {
+            'default': '',
+            'description': 'Shown when the wizard finishes; empty shows the default completion message',
+            'label': 'Completed text',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'completedTitle': {
+            'default': 'Complete',
+            'label': 'Completed title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'nextLabel': {
+            'default': 'Next',
+            'label': 'Next label',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'restartLabel': {
+            'default': 'Start a new wizard',
+            'label': 'Restart label',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'stepDescriptions': {
+            'default': [],
+            'description': 'In step order: the description shown for each step, in place of its `steps` description (render-only, so it may be translated)',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Step descriptions',
+            'tier': 'presentation',
+            'type': '[string]',
+          },
+          'stepLabels': {
+            'default': [],
+            'description': 'In step order: the label shown for each step, in place of its `steps` label (render-only, so it may be translated)',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Step labels',
+            'tier': 'presentation',
+            'type': '[string]',
           },
           'steps': {
             'default': [
@@ -508,6 +599,13 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
             'label': 'Steps',
             'tier': 'domain',
             'type': '[StepSpec]',
+          },
+          'submitLabel': {
+            'default': 'Submit',
+            'description': 'The primary button on the last step',
+            'label': 'Submit label',
+            'tier': 'presentation',
+            'type': 'string',
           },
           'title': {
             'default': 'Wizard',
@@ -1080,7 +1178,61 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                       {
                         'allowNavigation': false,
                         'currentStep': '@entity.currentStepIndex',
-                        'steps': '@entity.wizardSteps',
+                        'steps': [
+                          'if',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              '@config.stepLabels',
+                            ],
+                            0,
+                          ],
+                          '@entity.wizardSteps',
+                          [
+                            'array/map',
+                            '@entity.wizardSteps',
+                            [
+                              'fn',
+                              'step',
+                              {
+                                'description': [
+                                  'if',
+                                  [
+                                    '=',
+                                    [
+                                      'array/len',
+                                      '@config.stepDescriptions',
+                                    ],
+                                    0,
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@step',
+                                    'description',
+                                    '',
+                                  ],
+                                  [
+                                    'array/nth',
+                                    '@config.stepDescriptions',
+                                    '@index',
+                                  ],
+                                ],
+                                'id': [
+                                  'object/get',
+                                  '@step',
+                                  'id',
+                                  '',
+                                ],
+                                'title': [
+                                  'array/nth',
+                                  '@config.stepLabels',
+                                  '@index',
+                                ],
+                              },
+                            ],
+                          ],
+                        ],
                         'type': 'wizard-progress',
                       },
                       {
@@ -1098,13 +1250,45 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                                   {
                                     'children': [
                                       {
-                                        'content': '@entity.currentStepLabel',
+                                        'content': [
+                                          'if',
+                                          [
+                                            '=',
+                                            [
+                                              'array/len',
+                                              '@config.stepLabels',
+                                            ],
+                                            0,
+                                          ],
+                                          '@entity.currentStepLabel',
+                                          [
+                                            'array/nth',
+                                            '@config.stepLabels',
+                                            '@entity.currentStepIndex',
+                                          ],
+                                        ],
                                         'type': 'typography',
                                         'variant': 'h2',
                                       },
                                       {
                                         'color': 'muted',
-                                        'content': '@entity.currentStepDescription',
+                                        'content': [
+                                          'if',
+                                          [
+                                            '=',
+                                            [
+                                              'array/len',
+                                              '@config.stepDescriptions',
+                                            ],
+                                            0,
+                                          ],
+                                          '@entity.currentStepDescription',
+                                          [
+                                            'array/nth',
+                                            '@config.stepDescriptions',
+                                            '@entity.currentStepIndex',
+                                          ],
+                                        ],
                                         'type': 'typography',
                                         'variant': 'body',
                                       },
@@ -1157,21 +1341,34 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                             'action': 'RETREAT',
                             'disabled': '@entity.isFirstStep',
                             'icon': 'chevron-left',
-                            'label': 'Back',
+                            'label': '@config.backLabel',
                             'type': 'button',
                             'variant': 'ghost',
                           },
                           {
                             'action': 'CANCEL',
                             'icon': 'x',
-                            'label': 'Cancel wizard',
+                            'label': '@config.cancelLabel',
                             'type': 'button',
                             'variant': 'ghost',
                           },
                           {
                             'action': 'ADVANCE',
                             'icon': '@entity.primaryActionIcon',
-                            'label': '@entity.primaryActionLabel',
+                            'label': [
+                              'if',
+                              [
+                                '=',
+                                '@entity.currentStepIndex',
+                                [
+                                  '-',
+                                  '@entity.totalSteps',
+                                  1,
+                                ],
+                              ],
+                              '@config.submitLabel',
+                              '@config.nextLabel',
+                            ],
                             'type': 'button',
                             'variant': 'primary',
                           },
@@ -1269,6 +1466,43 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
               'event': 'WizardSaveFailed',
               'from': 'loading',
               'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('WizardView' satisfies _StdWizardEntityName),
+                  {
+                    'emit': {
+                      'failure': 'WizardLoadFailed',
+                      'success': 'WizardLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'fields': 3,
+                        'type': 'skeleton',
+                        'variant': 'form',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'running',
+              'to': 'loading',
             },
             {
               'effects': [
@@ -1420,7 +1654,61 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                       {
                         'allowNavigation': false,
                         'currentStep': '@entity.currentStepIndex',
-                        'steps': '@entity.wizardSteps',
+                        'steps': [
+                          'if',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              '@config.stepLabels',
+                            ],
+                            0,
+                          ],
+                          '@entity.wizardSteps',
+                          [
+                            'array/map',
+                            '@entity.wizardSteps',
+                            [
+                              'fn',
+                              'step',
+                              {
+                                'description': [
+                                  'if',
+                                  [
+                                    '=',
+                                    [
+                                      'array/len',
+                                      '@config.stepDescriptions',
+                                    ],
+                                    0,
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@step',
+                                    'description',
+                                    '',
+                                  ],
+                                  [
+                                    'array/nth',
+                                    '@config.stepDescriptions',
+                                    '@index',
+                                  ],
+                                ],
+                                'id': [
+                                  'object/get',
+                                  '@step',
+                                  'id',
+                                  '',
+                                ],
+                                'title': [
+                                  'array/nth',
+                                  '@config.stepLabels',
+                                  '@index',
+                                ],
+                              },
+                            ],
+                          ],
+                        ],
                         'type': 'wizard-progress',
                       },
                       {
@@ -1438,13 +1726,45 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                                   {
                                     'children': [
                                       {
-                                        'content': '@entity.currentStepLabel',
+                                        'content': [
+                                          'if',
+                                          [
+                                            '=',
+                                            [
+                                              'array/len',
+                                              '@config.stepLabels',
+                                            ],
+                                            0,
+                                          ],
+                                          '@entity.currentStepLabel',
+                                          [
+                                            'array/nth',
+                                            '@config.stepLabels',
+                                            '@entity.currentStepIndex',
+                                          ],
+                                        ],
                                         'type': 'typography',
                                         'variant': 'h2',
                                       },
                                       {
                                         'color': 'muted',
-                                        'content': '@entity.currentStepDescription',
+                                        'content': [
+                                          'if',
+                                          [
+                                            '=',
+                                            [
+                                              'array/len',
+                                              '@config.stepDescriptions',
+                                            ],
+                                            0,
+                                          ],
+                                          '@entity.currentStepDescription',
+                                          [
+                                            'array/nth',
+                                            '@config.stepDescriptions',
+                                            '@entity.currentStepIndex',
+                                          ],
+                                        ],
                                         'type': 'typography',
                                         'variant': 'body',
                                       },
@@ -1497,21 +1817,34 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                             'action': 'RETREAT',
                             'disabled': '@entity.isFirstStep',
                             'icon': 'chevron-left',
-                            'label': 'Back',
+                            'label': '@config.backLabel',
                             'type': 'button',
                             'variant': 'ghost',
                           },
                           {
                             'action': 'CANCEL',
                             'icon': 'x',
-                            'label': 'Cancel wizard',
+                            'label': '@config.cancelLabel',
                             'type': 'button',
                             'variant': 'ghost',
                           },
                           {
                             'action': 'ADVANCE',
                             'icon': '@entity.primaryActionIcon',
-                            'label': '@entity.primaryActionLabel',
+                            'label': [
+                              'if',
+                              [
+                                '=',
+                                '@entity.currentStepIndex',
+                                [
+                                  '-',
+                                  '@entity.totalSteps',
+                                  1,
+                                ],
+                              ],
+                              '@config.submitLabel',
+                              '@config.nextLabel',
+                            ],
                             'type': 'button',
                             'variant': 'primary',
                           },
@@ -1567,27 +1900,90 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                       },
                       {
                         'align': 'center',
-                        'content': 'Complete',
+                        'content': '@config.completedTitle',
                         'type': 'typography',
                         'variant': 'h2',
                       },
                       {
                         'align': 'center',
                         'color': 'muted',
-                        'content': '@entity.completionMessage',
+                        'content': [
+                          'if',
+                          [
+                            '=',
+                            '@config.completedText',
+                            '',
+                          ],
+                          '@entity.completionMessage',
+                          '@config.completedText',
+                        ],
                         'type': 'typography',
                         'variant': 'body',
                       },
                       {
                         'allowNavigation': false,
                         'currentStep': '@entity.totalSteps',
-                        'steps': '@entity.wizardSteps',
+                        'steps': [
+                          'if',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              '@config.stepLabels',
+                            ],
+                            0,
+                          ],
+                          '@entity.wizardSteps',
+                          [
+                            'array/map',
+                            '@entity.wizardSteps',
+                            [
+                              'fn',
+                              'step',
+                              {
+                                'description': [
+                                  'if',
+                                  [
+                                    '=',
+                                    [
+                                      'array/len',
+                                      '@config.stepDescriptions',
+                                    ],
+                                    0,
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@step',
+                                    'description',
+                                    '',
+                                  ],
+                                  [
+                                    'array/nth',
+                                    '@config.stepDescriptions',
+                                    '@index',
+                                  ],
+                                ],
+                                'id': [
+                                  'object/get',
+                                  '@step',
+                                  'id',
+                                  '',
+                                ],
+                                'title': [
+                                  'array/nth',
+                                  '@config.stepLabels',
+                                  '@index',
+                                ],
+                              },
+                            ],
+                          ],
+                        ],
                         'type': 'wizard-progress',
                       },
                       {
                         'action': 'RESTART',
                         'icon': 'rotate-ccw',
-                        'label': 'Start a new wizard',
+                        'label': '@config.restartLabel',
                         'type': 'button',
                         'variant': 'secondary',
                       },
@@ -1753,7 +2149,61 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                       {
                         'allowNavigation': false,
                         'currentStep': '@entity.currentStepIndex',
-                        'steps': '@entity.wizardSteps',
+                        'steps': [
+                          'if',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              '@config.stepLabels',
+                            ],
+                            0,
+                          ],
+                          '@entity.wizardSteps',
+                          [
+                            'array/map',
+                            '@entity.wizardSteps',
+                            [
+                              'fn',
+                              'step',
+                              {
+                                'description': [
+                                  'if',
+                                  [
+                                    '=',
+                                    [
+                                      'array/len',
+                                      '@config.stepDescriptions',
+                                    ],
+                                    0,
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@step',
+                                    'description',
+                                    '',
+                                  ],
+                                  [
+                                    'array/nth',
+                                    '@config.stepDescriptions',
+                                    '@index',
+                                  ],
+                                ],
+                                'id': [
+                                  'object/get',
+                                  '@step',
+                                  'id',
+                                  '',
+                                ],
+                                'title': [
+                                  'array/nth',
+                                  '@config.stepLabels',
+                                  '@index',
+                                ],
+                              },
+                            ],
+                          ],
+                        ],
                         'type': 'wizard-progress',
                       },
                       {
@@ -1771,13 +2221,45 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                                   {
                                     'children': [
                                       {
-                                        'content': '@entity.currentStepLabel',
+                                        'content': [
+                                          'if',
+                                          [
+                                            '=',
+                                            [
+                                              'array/len',
+                                              '@config.stepLabels',
+                                            ],
+                                            0,
+                                          ],
+                                          '@entity.currentStepLabel',
+                                          [
+                                            'array/nth',
+                                            '@config.stepLabels',
+                                            '@entity.currentStepIndex',
+                                          ],
+                                        ],
                                         'type': 'typography',
                                         'variant': 'h2',
                                       },
                                       {
                                         'color': 'muted',
-                                        'content': '@entity.currentStepDescription',
+                                        'content': [
+                                          'if',
+                                          [
+                                            '=',
+                                            [
+                                              'array/len',
+                                              '@config.stepDescriptions',
+                                            ],
+                                            0,
+                                          ],
+                                          '@entity.currentStepDescription',
+                                          [
+                                            'array/nth',
+                                            '@config.stepDescriptions',
+                                            '@entity.currentStepIndex',
+                                          ],
+                                        ],
                                         'type': 'typography',
                                         'variant': 'body',
                                       },
@@ -1830,21 +2312,34 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                             'action': 'RETREAT',
                             'disabled': '@entity.isFirstStep',
                             'icon': 'chevron-left',
-                            'label': 'Back',
+                            'label': '@config.backLabel',
                             'type': 'button',
                             'variant': 'ghost',
                           },
                           {
                             'action': 'CANCEL',
                             'icon': 'x',
-                            'label': 'Cancel wizard',
+                            'label': '@config.cancelLabel',
                             'type': 'button',
                             'variant': 'ghost',
                           },
                           {
                             'action': 'ADVANCE',
                             'icon': '@entity.primaryActionIcon',
-                            'label': '@entity.primaryActionLabel',
+                            'label': [
+                              'if',
+                              [
+                                '=',
+                                '@entity.currentStepIndex',
+                                [
+                                  '-',
+                                  '@entity.totalSteps',
+                                  1,
+                                ],
+                              ],
+                              '@config.submitLabel',
+                              '@config.nextLabel',
+                            ],
                             'type': 'button',
                             'variant': 'primary',
                           },
@@ -1884,21 +2379,21 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                       },
                       {
                         'align': 'center',
-                        'content': 'Cancelled',
+                        'content': '@config.cancelledTitle',
                         'type': 'typography',
                         'variant': 'h2',
                       },
                       {
                         'align': 'center',
                         'color': 'muted',
-                        'content': 'The wizard was cancelled. No data was submitted.',
+                        'content': '@config.cancelledText',
                         'type': 'typography',
                         'variant': 'body',
                       },
                       {
                         'action': 'RESTART',
                         'icon': 'rotate-ccw',
-                        'label': 'Start a new wizard',
+                        'label': '@config.restartLabel',
                         'type': 'button',
                         'variant': 'secondary',
                       },
@@ -1916,6 +2411,43 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
             {
               'effects': [
                 [
+                  'fetch',
+                  ('WizardView' satisfies _StdWizardEntityName),
+                  {
+                    'emit': {
+                      'failure': 'WizardLoadFailed',
+                      'success': 'WizardLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'fields': 3,
+                        'type': 'skeleton',
+                        'variant': 'form',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'completed',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
                   'render-ui',
                   'main',
                   {
@@ -1928,27 +2460,90 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                       },
                       {
                         'align': 'center',
-                        'content': 'Complete',
+                        'content': '@config.completedTitle',
                         'type': 'typography',
                         'variant': 'h2',
                       },
                       {
                         'align': 'center',
                         'color': 'muted',
-                        'content': '@entity.completionMessage',
+                        'content': [
+                          'if',
+                          [
+                            '=',
+                            '@config.completedText',
+                            '',
+                          ],
+                          '@entity.completionMessage',
+                          '@config.completedText',
+                        ],
                         'type': 'typography',
                         'variant': 'body',
                       },
                       {
                         'allowNavigation': false,
                         'currentStep': '@entity.totalSteps',
-                        'steps': '@entity.wizardSteps',
+                        'steps': [
+                          'if',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              '@config.stepLabels',
+                            ],
+                            0,
+                          ],
+                          '@entity.wizardSteps',
+                          [
+                            'array/map',
+                            '@entity.wizardSteps',
+                            [
+                              'fn',
+                              'step',
+                              {
+                                'description': [
+                                  'if',
+                                  [
+                                    '=',
+                                    [
+                                      'array/len',
+                                      '@config.stepDescriptions',
+                                    ],
+                                    0,
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@step',
+                                    'description',
+                                    '',
+                                  ],
+                                  [
+                                    'array/nth',
+                                    '@config.stepDescriptions',
+                                    '@index',
+                                  ],
+                                ],
+                                'id': [
+                                  'object/get',
+                                  '@step',
+                                  'id',
+                                  '',
+                                ],
+                                'title': [
+                                  'array/nth',
+                                  '@config.stepLabels',
+                                  '@index',
+                                ],
+                              },
+                            ],
+                          ],
+                        ],
                         'type': 'wizard-progress',
                       },
                       {
                         'action': 'RESTART',
                         'icon': 'rotate-ccw',
-                        'label': 'Start a new wizard',
+                        'label': '@config.restartLabel',
                         'type': 'button',
                         'variant': 'secondary',
                       },
@@ -2029,6 +2624,43 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
               ],
               'event': 'RESTART',
               'from': 'completed',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('WizardView' satisfies _StdWizardEntityName),
+                  {
+                    'emit': {
+                      'failure': 'WizardLoadFailed',
+                      'success': 'WizardLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'fields': 3,
+                        'type': 'skeleton',
+                        'variant': 'form',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'cancelled',
               'to': 'loading',
             },
             {

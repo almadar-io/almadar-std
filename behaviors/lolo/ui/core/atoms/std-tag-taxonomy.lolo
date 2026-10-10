@@ -292,6 +292,20 @@ orbital TagTaxonomyOrbital {
     }
 
     state creating {
+      INIT -> loading
+        (render-ui modal null)
+        (set @entity.id "")
+        (set @entity.parentId "")
+        (fetch Tag {
+          filter: ["=", (object/get @entity parentId), ""]
+          emit: { failure: TagLoadFailed, success: TagLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: grid, rows: 6 }]
+        })
       COMMIT_TAG -> creating
         (persist create Tag {
           name: (object/get ?data name)

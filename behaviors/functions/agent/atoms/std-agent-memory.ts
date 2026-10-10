@@ -429,6 +429,10 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   {
                     'name': 'role',
                     'type': 'string',
+                    'values': [
+                      'user',
+                      'assistant',
+                    ],
                   },
                   {
                     'name': 'content',
@@ -527,6 +531,10 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                       {
                         'name': 'role',
                         'type': 'string',
+                        'values': [
+                          'user',
+                          'assistant',
+                        ],
                       },
                       {
                         'name': 'content',
@@ -627,6 +635,10 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                       {
                         'name': 'role',
                         'type': 'string',
+                        'values': [
+                          'user',
+                          'assistant',
+                        ],
                       },
                       {
                         'name': 'content',
@@ -755,6 +767,10 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                         {
                           'name': 'role',
                           'type': 'string',
+                          'values': [
+                            'user',
+                            'assistant',
+                          ],
                         },
                         {
                           'name': 'content',
@@ -808,6 +824,10 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                     {
                       'name': 'role',
                       'type': 'string',
+                      'values': [
+                        'user',
+                        'assistant',
+                      ],
                     },
                     {
                       'name': 'content',
@@ -896,6 +916,10 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                         {
                           'name': 'role',
                           'type': 'string',
+                          'values': [
+                            'user',
+                            'assistant',
+                          ],
                         },
                         {
                           'name': 'content',
@@ -961,6 +985,10 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                     {
                       'name': 'role',
                       'type': 'string',
+                      'values': [
+                        'user',
+                        'assistant',
+                      ],
                     },
                     {
                       'name': 'content',
@@ -1264,6 +1292,18 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
               'effects': [
                 [
                   'set',
+                  '@entity.pendingQuery',
+                  '',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'recalling',
+              'to': 'ready',
+            },
+            {
+              'effects': [
+                [
+                  'set',
                   '@entity.queryVector',
                   [
                     'if',
@@ -1428,6 +1468,18 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
             {
               'effects': [
                 [
+                  'set',
+                  '@entity.pendingQuery',
+                  '',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'remembering',
+              'to': 'ready',
+            },
+            {
+              'effects': [
+                [
                   'persist',
                   'create',
                   ('AgentMemory' satisfies _StdAgentMemoryEntityName),
@@ -1520,6 +1572,10 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                       {
                         'name': 'role',
                         'type': 'string',
+                        'values': [
+                          'user',
+                          'assistant',
+                        ],
                       },
                       {
                         'name': 'content',

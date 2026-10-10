@@ -330,6 +330,102 @@ export function stdGameClockGameClockOrbital(params: StdGameClockGameClockOrbita
                 [
                   'set',
                   '@entity.running',
+                  false,
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'paused',
+              'guard': [
+                'not',
+                '@config.autoStart',
+              ],
+              'to': 'paused',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.running',
+                  false,
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'paused',
+              'guard': [
+                'not',
+                '@config.autoStart',
+              ],
+              'to': 'paused',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.running',
+                  false,
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'paused',
+              'guard': [
+                'not',
+                '@config.autoStart',
+              ],
+              'to': 'paused',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.running',
+                  false,
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'paused',
+              'guard': [
+                'not',
+                '@config.autoStart',
+              ],
+              'to': 'paused',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.running',
+                  false,
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'paused',
+              'guard': [
+                'not',
+                '@config.autoStart',
+              ],
+              'to': 'paused',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.running',
+                  false,
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'paused',
+              'guard': [
+                'not',
+                '@config.autoStart',
+              ],
+              'to': 'paused',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.running',
                   true,
                 ],
               ],

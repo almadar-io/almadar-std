@@ -322,6 +322,30 @@
         {
           "category": "interaction",
           "config": {
+            "backLabel": {
+              "default": "Back",
+              "label": "Back label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "cancelLabel": {
+              "default": "Cancel wizard",
+              "label": "Cancel label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "cancelledText": {
+              "default": "The wizard was cancelled. No data was submitted.",
+              "label": "Cancelled text",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "cancelledTitle": {
+              "default": "Cancelled",
+              "label": "Cancelled title",
+              "tier": "presentation",
+              "type": "string"
+            },
             "cardLook": {
               "default": "elevated",
               "description": "Layer 2 visual treatment for cards rendered by this atom.",
@@ -337,6 +361,51 @@
                 "chip",
                 "tile-image-first"
               ]
+            },
+            "completedText": {
+              "default": "",
+              "description": "Shown when the wizard finishes; empty shows the default completion message",
+              "label": "Completed text",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "completedTitle": {
+              "default": "Complete",
+              "label": "Completed title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "nextLabel": {
+              "default": "Next",
+              "label": "Next label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "restartLabel": {
+              "default": "Start a new wizard",
+              "label": "Restart label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "stepDescriptions": {
+              "default": [],
+              "description": "In step order: the description shown for each step, in place of its `steps` description (render-only, so it may be translated)",
+              "items": {
+                "type": "string"
+              },
+              "label": "Step descriptions",
+              "tier": "presentation",
+              "type": "[string]"
+            },
+            "stepLabels": {
+              "default": [],
+              "description": "In step order: the label shown for each step, in place of its `steps` label (render-only, so it may be translated)",
+              "items": {
+                "type": "string"
+              },
+              "label": "Step labels",
+              "tier": "presentation",
+              "type": "[string]"
             },
             "steps": {
               "default": [
@@ -415,6 +484,13 @@
               "label": "Steps",
               "tier": "domain",
               "type": "[StepSpec]"
+            },
+            "submitLabel": {
+              "default": "Submit",
+              "description": "The primary button on the last step",
+              "label": "Submit label",
+              "tier": "presentation",
+              "type": "string"
             },
             "title": {
               "default": "Wizard",
@@ -1010,7 +1086,61 @@
                         {
                           "allowNavigation": false,
                           "currentStep": "@entity.currentStepIndex",
-                          "steps": "@entity.wizardSteps",
+                          "steps": [
+                            "if",
+                            [
+                              "=",
+                              [
+                                "array/len",
+                                "@config.stepLabels"
+                              ],
+                              0.0
+                            ],
+                            "@entity.wizardSteps",
+                            [
+                              "array/map",
+                              "@entity.wizardSteps",
+                              [
+                                "fn",
+                                "step",
+                                {
+                                  "description": [
+                                    "if",
+                                    [
+                                      "=",
+                                      [
+                                        "array/len",
+                                        "@config.stepDescriptions"
+                                      ],
+                                      0.0
+                                    ],
+                                    [
+                                      "object/get",
+                                      "@step",
+                                      "description",
+                                      ""
+                                    ],
+                                    [
+                                      "array/nth",
+                                      "@config.stepDescriptions",
+                                      "@index"
+                                    ]
+                                  ],
+                                  "id": [
+                                    "object/get",
+                                    "@step",
+                                    "id",
+                                    ""
+                                  ],
+                                  "title": [
+                                    "array/nth",
+                                    "@config.stepLabels",
+                                    "@index"
+                                  ]
+                                }
+                              ]
+                            ]
+                          ],
                           "type": "wizard-progress"
                         },
                         {
@@ -1028,13 +1158,45 @@
                                     {
                                       "children": [
                                         {
-                                          "content": "@entity.currentStepLabel",
+                                          "content": [
+                                            "if",
+                                            [
+                                              "=",
+                                              [
+                                                "array/len",
+                                                "@config.stepLabels"
+                                              ],
+                                              0.0
+                                            ],
+                                            "@entity.currentStepLabel",
+                                            [
+                                              "array/nth",
+                                              "@config.stepLabels",
+                                              "@entity.currentStepIndex"
+                                            ]
+                                          ],
                                           "type": "typography",
                                           "variant": "h2"
                                         },
                                         {
                                           "color": "muted",
-                                          "content": "@entity.currentStepDescription",
+                                          "content": [
+                                            "if",
+                                            [
+                                              "=",
+                                              [
+                                                "array/len",
+                                                "@config.stepDescriptions"
+                                              ],
+                                              0.0
+                                            ],
+                                            "@entity.currentStepDescription",
+                                            [
+                                              "array/nth",
+                                              "@config.stepDescriptions",
+                                              "@entity.currentStepIndex"
+                                            ]
+                                          ],
                                           "type": "typography",
                                           "variant": "body"
                                         }
@@ -1087,21 +1249,34 @@
                               "action": "RETREAT",
                               "disabled": "@entity.isFirstStep",
                               "icon": "chevron-left",
-                              "label": "Back",
+                              "label": "@config.backLabel",
                               "type": "button",
                               "variant": "ghost"
                             },
                             {
                               "action": "CANCEL",
                               "icon": "x",
-                              "label": "Cancel wizard",
+                              "label": "@config.cancelLabel",
                               "type": "button",
                               "variant": "ghost"
                             },
                             {
                               "action": "ADVANCE",
                               "icon": "@entity.primaryActionIcon",
-                              "label": "@entity.primaryActionLabel",
+                              "label": [
+                                "if",
+                                [
+                                  "=",
+                                  "@entity.currentStepIndex",
+                                  [
+                                    "-",
+                                    "@entity.totalSteps",
+                                    1.0
+                                  ]
+                                ],
+                                "@config.submitLabel",
+                                "@config.nextLabel"
+                              ],
                               "type": "button",
                               "variant": "primary"
                             }
@@ -1203,6 +1378,44 @@
                 "eventId": "evt_01KXG04HYZ9CJ2XSJH7A472NNE",
                 "from": "loading",
                 "to": "error"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "WizardView",
+                    {
+                      "emit": {
+                        "failure": "WizardLoadFailed",
+                        "success": "WizardLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "skeleton",
+                          "variant": "header"
+                        },
+                        {
+                          "fields": 3.0,
+                          "type": "skeleton",
+                          "variant": "form"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KXG04HYZJTMVD37K2S0G59KA",
+                "from": "running",
+                "to": "loading"
               },
               {
                 "effects": [
@@ -1354,7 +1567,61 @@
                         {
                           "allowNavigation": false,
                           "currentStep": "@entity.currentStepIndex",
-                          "steps": "@entity.wizardSteps",
+                          "steps": [
+                            "if",
+                            [
+                              "=",
+                              [
+                                "array/len",
+                                "@config.stepLabels"
+                              ],
+                              0.0
+                            ],
+                            "@entity.wizardSteps",
+                            [
+                              "array/map",
+                              "@entity.wizardSteps",
+                              [
+                                "fn",
+                                "step",
+                                {
+                                  "description": [
+                                    "if",
+                                    [
+                                      "=",
+                                      [
+                                        "array/len",
+                                        "@config.stepDescriptions"
+                                      ],
+                                      0.0
+                                    ],
+                                    [
+                                      "object/get",
+                                      "@step",
+                                      "description",
+                                      ""
+                                    ],
+                                    [
+                                      "array/nth",
+                                      "@config.stepDescriptions",
+                                      "@index"
+                                    ]
+                                  ],
+                                  "id": [
+                                    "object/get",
+                                    "@step",
+                                    "id",
+                                    ""
+                                  ],
+                                  "title": [
+                                    "array/nth",
+                                    "@config.stepLabels",
+                                    "@index"
+                                  ]
+                                }
+                              ]
+                            ]
+                          ],
                           "type": "wizard-progress"
                         },
                         {
@@ -1372,13 +1639,45 @@
                                     {
                                       "children": [
                                         {
-                                          "content": "@entity.currentStepLabel",
+                                          "content": [
+                                            "if",
+                                            [
+                                              "=",
+                                              [
+                                                "array/len",
+                                                "@config.stepLabels"
+                                              ],
+                                              0.0
+                                            ],
+                                            "@entity.currentStepLabel",
+                                            [
+                                              "array/nth",
+                                              "@config.stepLabels",
+                                              "@entity.currentStepIndex"
+                                            ]
+                                          ],
                                           "type": "typography",
                                           "variant": "h2"
                                         },
                                         {
                                           "color": "muted",
-                                          "content": "@entity.currentStepDescription",
+                                          "content": [
+                                            "if",
+                                            [
+                                              "=",
+                                              [
+                                                "array/len",
+                                                "@config.stepDescriptions"
+                                              ],
+                                              0.0
+                                            ],
+                                            "@entity.currentStepDescription",
+                                            [
+                                              "array/nth",
+                                              "@config.stepDescriptions",
+                                              "@entity.currentStepIndex"
+                                            ]
+                                          ],
                                           "type": "typography",
                                           "variant": "body"
                                         }
@@ -1431,21 +1730,34 @@
                               "action": "RETREAT",
                               "disabled": "@entity.isFirstStep",
                               "icon": "chevron-left",
-                              "label": "Back",
+                              "label": "@config.backLabel",
                               "type": "button",
                               "variant": "ghost"
                             },
                             {
                               "action": "CANCEL",
                               "icon": "x",
-                              "label": "Cancel wizard",
+                              "label": "@config.cancelLabel",
                               "type": "button",
                               "variant": "ghost"
                             },
                             {
                               "action": "ADVANCE",
                               "icon": "@entity.primaryActionIcon",
-                              "label": "@entity.primaryActionLabel",
+                              "label": [
+                                "if",
+                                [
+                                  "=",
+                                  "@entity.currentStepIndex",
+                                  [
+                                    "-",
+                                    "@entity.totalSteps",
+                                    1.0
+                                  ]
+                                ],
+                                "@config.submitLabel",
+                                "@config.nextLabel"
+                              ],
                               "type": "button",
                               "variant": "primary"
                             }
@@ -1502,27 +1814,90 @@
                         },
                         {
                           "align": "center",
-                          "content": "Complete",
+                          "content": "@config.completedTitle",
                           "type": "typography",
                           "variant": "h2"
                         },
                         {
                           "align": "center",
                           "color": "muted",
-                          "content": "@entity.completionMessage",
+                          "content": [
+                            "if",
+                            [
+                              "=",
+                              "@config.completedText",
+                              ""
+                            ],
+                            "@entity.completionMessage",
+                            "@config.completedText"
+                          ],
                           "type": "typography",
                           "variant": "body"
                         },
                         {
                           "allowNavigation": false,
                           "currentStep": "@entity.totalSteps",
-                          "steps": "@entity.wizardSteps",
+                          "steps": [
+                            "if",
+                            [
+                              "=",
+                              [
+                                "array/len",
+                                "@config.stepLabels"
+                              ],
+                              0.0
+                            ],
+                            "@entity.wizardSteps",
+                            [
+                              "array/map",
+                              "@entity.wizardSteps",
+                              [
+                                "fn",
+                                "step",
+                                {
+                                  "description": [
+                                    "if",
+                                    [
+                                      "=",
+                                      [
+                                        "array/len",
+                                        "@config.stepDescriptions"
+                                      ],
+                                      0.0
+                                    ],
+                                    [
+                                      "object/get",
+                                      "@step",
+                                      "description",
+                                      ""
+                                    ],
+                                    [
+                                      "array/nth",
+                                      "@config.stepDescriptions",
+                                      "@index"
+                                    ]
+                                  ],
+                                  "id": [
+                                    "object/get",
+                                    "@step",
+                                    "id",
+                                    ""
+                                  ],
+                                  "title": [
+                                    "array/nth",
+                                    "@config.stepLabels",
+                                    "@index"
+                                  ]
+                                }
+                              ]
+                            ]
+                          ],
                           "type": "wizard-progress"
                         },
                         {
                           "action": "RESTART",
                           "icon": "rotate-ccw",
-                          "label": "Start a new wizard",
+                          "label": "@config.restartLabel",
                           "type": "button",
                           "variant": "secondary"
                         }
@@ -1689,7 +2064,61 @@
                         {
                           "allowNavigation": false,
                           "currentStep": "@entity.currentStepIndex",
-                          "steps": "@entity.wizardSteps",
+                          "steps": [
+                            "if",
+                            [
+                              "=",
+                              [
+                                "array/len",
+                                "@config.stepLabels"
+                              ],
+                              0.0
+                            ],
+                            "@entity.wizardSteps",
+                            [
+                              "array/map",
+                              "@entity.wizardSteps",
+                              [
+                                "fn",
+                                "step",
+                                {
+                                  "description": [
+                                    "if",
+                                    [
+                                      "=",
+                                      [
+                                        "array/len",
+                                        "@config.stepDescriptions"
+                                      ],
+                                      0.0
+                                    ],
+                                    [
+                                      "object/get",
+                                      "@step",
+                                      "description",
+                                      ""
+                                    ],
+                                    [
+                                      "array/nth",
+                                      "@config.stepDescriptions",
+                                      "@index"
+                                    ]
+                                  ],
+                                  "id": [
+                                    "object/get",
+                                    "@step",
+                                    "id",
+                                    ""
+                                  ],
+                                  "title": [
+                                    "array/nth",
+                                    "@config.stepLabels",
+                                    "@index"
+                                  ]
+                                }
+                              ]
+                            ]
+                          ],
                           "type": "wizard-progress"
                         },
                         {
@@ -1707,13 +2136,45 @@
                                     {
                                       "children": [
                                         {
-                                          "content": "@entity.currentStepLabel",
+                                          "content": [
+                                            "if",
+                                            [
+                                              "=",
+                                              [
+                                                "array/len",
+                                                "@config.stepLabels"
+                                              ],
+                                              0.0
+                                            ],
+                                            "@entity.currentStepLabel",
+                                            [
+                                              "array/nth",
+                                              "@config.stepLabels",
+                                              "@entity.currentStepIndex"
+                                            ]
+                                          ],
                                           "type": "typography",
                                           "variant": "h2"
                                         },
                                         {
                                           "color": "muted",
-                                          "content": "@entity.currentStepDescription",
+                                          "content": [
+                                            "if",
+                                            [
+                                              "=",
+                                              [
+                                                "array/len",
+                                                "@config.stepDescriptions"
+                                              ],
+                                              0.0
+                                            ],
+                                            "@entity.currentStepDescription",
+                                            [
+                                              "array/nth",
+                                              "@config.stepDescriptions",
+                                              "@entity.currentStepIndex"
+                                            ]
+                                          ],
                                           "type": "typography",
                                           "variant": "body"
                                         }
@@ -1766,21 +2227,34 @@
                               "action": "RETREAT",
                               "disabled": "@entity.isFirstStep",
                               "icon": "chevron-left",
-                              "label": "Back",
+                              "label": "@config.backLabel",
                               "type": "button",
                               "variant": "ghost"
                             },
                             {
                               "action": "CANCEL",
                               "icon": "x",
-                              "label": "Cancel wizard",
+                              "label": "@config.cancelLabel",
                               "type": "button",
                               "variant": "ghost"
                             },
                             {
                               "action": "ADVANCE",
                               "icon": "@entity.primaryActionIcon",
-                              "label": "@entity.primaryActionLabel",
+                              "label": [
+                                "if",
+                                [
+                                  "=",
+                                  "@entity.currentStepIndex",
+                                  [
+                                    "-",
+                                    "@entity.totalSteps",
+                                    1.0
+                                  ]
+                                ],
+                                "@config.submitLabel",
+                                "@config.nextLabel"
+                              ],
                               "type": "button",
                               "variant": "primary"
                             }
@@ -1821,21 +2295,21 @@
                         },
                         {
                           "align": "center",
-                          "content": "Cancelled",
+                          "content": "@config.cancelledTitle",
                           "type": "typography",
                           "variant": "h2"
                         },
                         {
                           "align": "center",
                           "color": "muted",
-                          "content": "The wizard was cancelled. No data was submitted.",
+                          "content": "@config.cancelledText",
                           "type": "typography",
                           "variant": "body"
                         },
                         {
                           "action": "RESTART",
                           "icon": "rotate-ccw",
-                          "label": "Start a new wizard",
+                          "label": "@config.restartLabel",
                           "type": "button",
                           "variant": "secondary"
                         }
@@ -1854,6 +2328,44 @@
               {
                 "effects": [
                   [
+                    "fetch",
+                    "WizardView",
+                    {
+                      "emit": {
+                        "failure": "WizardLoadFailed",
+                        "success": "WizardLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "skeleton",
+                          "variant": "header"
+                        },
+                        {
+                          "fields": 3.0,
+                          "type": "skeleton",
+                          "variant": "form"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KXG04HYZJTMVD37K2S0G59KA",
+                "from": "completed",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
                     "render-ui",
                     "main",
                     {
@@ -1866,27 +2378,90 @@
                         },
                         {
                           "align": "center",
-                          "content": "Complete",
+                          "content": "@config.completedTitle",
                           "type": "typography",
                           "variant": "h2"
                         },
                         {
                           "align": "center",
                           "color": "muted",
-                          "content": "@entity.completionMessage",
+                          "content": [
+                            "if",
+                            [
+                              "=",
+                              "@config.completedText",
+                              ""
+                            ],
+                            "@entity.completionMessage",
+                            "@config.completedText"
+                          ],
                           "type": "typography",
                           "variant": "body"
                         },
                         {
                           "allowNavigation": false,
                           "currentStep": "@entity.totalSteps",
-                          "steps": "@entity.wizardSteps",
+                          "steps": [
+                            "if",
+                            [
+                              "=",
+                              [
+                                "array/len",
+                                "@config.stepLabels"
+                              ],
+                              0.0
+                            ],
+                            "@entity.wizardSteps",
+                            [
+                              "array/map",
+                              "@entity.wizardSteps",
+                              [
+                                "fn",
+                                "step",
+                                {
+                                  "description": [
+                                    "if",
+                                    [
+                                      "=",
+                                      [
+                                        "array/len",
+                                        "@config.stepDescriptions"
+                                      ],
+                                      0.0
+                                    ],
+                                    [
+                                      "object/get",
+                                      "@step",
+                                      "description",
+                                      ""
+                                    ],
+                                    [
+                                      "array/nth",
+                                      "@config.stepDescriptions",
+                                      "@index"
+                                    ]
+                                  ],
+                                  "id": [
+                                    "object/get",
+                                    "@step",
+                                    "id",
+                                    ""
+                                  ],
+                                  "title": [
+                                    "array/nth",
+                                    "@config.stepLabels",
+                                    "@index"
+                                  ]
+                                }
+                              ]
+                            ]
+                          ],
                           "type": "wizard-progress"
                         },
                         {
                           "action": "RESTART",
                           "icon": "rotate-ccw",
-                          "label": "Start a new wizard",
+                          "label": "@config.restartLabel",
                           "type": "button",
                           "variant": "secondary"
                         }
@@ -1970,6 +2545,44 @@
                 "event": "RESTART",
                 "eventId": "evt_01KXG04HYZMJ3WAKWFR8S0B2HJ",
                 "from": "completed",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "WizardView",
+                    {
+                      "emit": {
+                        "failure": "WizardLoadFailed",
+                        "success": "WizardLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "skeleton",
+                          "variant": "header"
+                        },
+                        {
+                          "fields": 3.0,
+                          "type": "skeleton",
+                          "variant": "form"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KXG04HYZJTMVD37K2S0G59KA",
+                "from": "cancelled",
                 "to": "loading"
               },
               {

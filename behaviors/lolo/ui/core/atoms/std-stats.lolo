@@ -4,7 +4,7 @@ app std-stats [
 ]
 type ObjectSpec = { id : string, label : string, value : string }
 orbital StatsItemOrbital {
-    type StatCard = { label : string!, value : number, icon : string, format : "number" | "currency" | "percent", variant : "default" | "primary" | "success" | "warning" | "error" | "info", prefix : string, suffix : string, max : number, target : number, trend : number, trendPolarity : "higher-is-better" | "lower-is-better", trendFormat : "absolute" | "percent", sparklineData : [number], clickEvent : string }
+    type StatCard = { label : string!, position : number, value : number, icon : string, format : "number" | "currency" | "percent", variant : "default" | "primary" | "success" | "warning" | "error" | "info", prefix : string, suffix : string, max : number, target : number, trend : number, trendPolarity : "higher-is-better" | "lower-is-better", trendFormat : "absolute" | "percent", sparklineData : [number], clickEvent : string }
 
   ;; Author-side metric definition. Superset of StatCard with the
   ;; aggregation knobs (aggregation/field) the trait consumes on
@@ -30,6 +30,7 @@ orbital StatsItemOrbital {
           format: (object/get @metric format number)
           icon: (object/get @metric icon "")
           label: (object/get @metric label)
+          position: @index
           max: (object/get @metric max 0)
           prefix: (object/get @metric prefix "")
           sparklineData: (object/get @metric sparklineData [])
@@ -59,6 +60,7 @@ orbital StatsItemOrbital {
           format: (object/get @metric format number)
           icon: (object/get @metric icon "")
           label: (object/get @metric label)
+          position: @index
           max: (object/get @metric max 0)
           prefix: (object/get @metric prefix "")
           sparklineData: (object/get @metric sparklineData [])
@@ -90,6 +92,10 @@ orbital StatsItemOrbital {
     }
 
     config {
+      metricLabels : [string] = []
+        @label "Metric labels"
+        @description "In metric order: the label shown on each card, in place of its `metrics` label (render-only, so it may be translated)"
+        @tier "presentation"
       metrics : [MetricSpec] = [{
         aggregation: count
         format: number
@@ -146,7 +152,7 @@ orbital StatsItemOrbital {
           clickEvent: @card.clickEvent
           format: @card.format
           icon: @card.icon
-          label: @card.label
+          label: (if (= (array/len @config.metricLabels) 0) @card.label (array/nth @config.metricLabels @card.position))
           look: @config.statLook
           max: @card.max
           prefix: @card.prefix
@@ -177,7 +183,7 @@ orbital StatsItemOrbital {
             children: [{
               className: "uppercase tracking-wide"
               color: muted
-              content: @card.label
+              content: (if (= (array/len @config.metricLabels) 0) @card.label (array/nth @config.metricLabels @card.position))
               type: typography
               variant: caption
               weight: medium
@@ -259,7 +265,7 @@ orbital StatsItemOrbital {
                 }, {
                   className: "uppercase tracking-widest"
                   color: muted
-                  content: @card.label
+                  content: (if (= (array/len @config.metricLabels) 0) @card.label (array/nth @config.metricLabels @card.position))
                   type: typography
                   variant: overline
                   weight: bold
@@ -343,7 +349,7 @@ orbital StatsItemOrbital {
             }, {
               className: "uppercase tracking-wide truncate"
               color: muted
-              content: @card.label
+              content: (if (= (array/len @config.metricLabels) 0) @card.label (array/nth @config.metricLabels @card.position))
               type: typography
               variant: overline
               weight: semibold

@@ -61,6 +61,8 @@ orbital AgentContextOrbital {
     }
 
     state summarizing {
+      INIT -> ready
+        (set @entity.lastSize 0)
       ContextSummarized -> ready
         (emit COMPACTED {
           messages: (array/prepend (array/takeLast @entity.pendingMessages @config.keepMessages) { role: assistant, content: (str/concat "Earlier in this conversation: " ?summary) })

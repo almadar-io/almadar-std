@@ -1534,6 +1534,11 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
               'to': 'idle',
             },
             {
+              'event': 'INIT',
+              'from': 'pulling',
+              'to': 'idle',
+            },
+            {
               'effects': [
                 [
                   'set',

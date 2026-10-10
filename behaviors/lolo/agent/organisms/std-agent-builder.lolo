@@ -53,6 +53,8 @@ orbital AgentBuilderOrbital {
     }
 
     state searching {
+      INIT -> searching
+        (set @entity.status searching)
       REQUEST_EMBEDDED -> searching when (> (array/len ?embeddings) 0)
         (set @entity.queryVector (array/first ?embeddings))
         (behavior/catalog { paths: @config.scope } {
@@ -97,6 +99,8 @@ orbital AgentBuilderOrbital {
     }
 
     state building {
+      INIT -> building
+        (set @entity.status building)
       BUILT -> done
         (set @entity.behavior (object/get ?result behavior))
         (set @entity.status done)

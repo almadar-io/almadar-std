@@ -81,6 +81,8 @@ export interface StdAppLayoutConfig {
   contentTrait?: TraitFieldRef;
   /** Default: `""` */
   currentPath?: string;
+  /** Default: `false` */
+  fullBleed?: boolean;
   /** Default: `"sidebar"` */
   layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal' | 'drawer';
   /** Default: `"dashboard-layout"` */
@@ -96,6 +98,8 @@ export interface StdAppLayoutConfig {
   /** Default: `"SEARCH"` */
   searchEvent?: string;
   /** Default: `true` */
+  showNotifications?: boolean;
+  /** Default: `true` */
   showSearch?: boolean;
   /** Default: `true` */
   showThemeToggle?: boolean;
@@ -104,6 +108,8 @@ export interface StdAppLayoutConfig {
   theme?: string;
   /** Default: `[]` */
   topBarActions?: EntityRow[];
+  /** Default: `[]` */
+  userMenuItems?: EntityRow[];
   /** Default: `""` */
   viewerAvatar?: string;
   /** Default: `""` */
@@ -320,6 +326,14 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
             'tier': 'internal',
             'type': 'string',
           },
+          'fullBleed': {
+            'default': false,
+            'description': 'Content runs edge to edge at full height, with no padding or width cap — for workspaces, canvases and maps.',
+            'label': 'Should pages fill the whole area?',
+            'synonyms': 'full width, edge to edge, no padding, full screen content',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
           'layoutMode': {
             'default': 'sidebar',
             'description': 'sidebar = left rail; topnav = top bar; bottomnav = mobile tab bar; minimal = no nav; drawer = navigation behind a menu button at every width, content full width.',
@@ -444,6 +458,14 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
             'tier': 'internal',
             'type': 'event',
           },
+          'showNotifications': {
+            'default': true,
+            'description': 'The bell and its dropdown in the top bar; turn off for apps that have no notifications.',
+            'label': 'Show the notifications bell?',
+            'synonyms': 'bell, alerts icon, hide notifications',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
           'showSearch': {
             'default': true,
             'description': 'The top-bar search box; turn off for apps whose pages carry their own search.',
@@ -517,6 +539,52 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
             },
             'label': 'What shortcuts go in the top bar?',
             'synonyms': 'toolbar buttons, header actions, shortcut icons, quick actions',
+            'tier': 'presentation',
+            'type': '[ItemAction]',
+          },
+          'userMenuItems': {
+            'default': [],
+            'description': 'Entries listed above Sign out in the signed-in viewer\'s account menu (e.g. Settings, Profile); each navigates (navigatesTo) or emits its event.',
+            'items': {
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'event',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'navigatesTo': {
+                  'name': 'navigatesTo',
+                  'required': false,
+                  'type': 'string',
+                },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'What goes in the account menu?',
+            'synonyms': 'account menu, user menu, profile menu, avatar menu',
             'tier': 'presentation',
             'type': '[ItemAction]',
           },
@@ -747,6 +815,7 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
                           },
                         ],
                         'currentPath': '@config.currentPath',
+                        'fullBleed': '@config.fullBleed',
                         'layoutMode': '@config.layoutMode',
                         'logo': [
                           'if',
@@ -860,7 +929,12 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
                           ],
                         ],
                         'notificationClickEvent': '@config.notificationClickEvent',
-                        'notifications': '@config.notifications',
+                        'notifications': [
+                          'if',
+                          '@config.showNotifications',
+                          '@config.notifications',
+                          null,
+                        ],
                         'searchEvent': [
                           'if',
                           '@config.showSearch',
@@ -913,6 +987,40 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
                             'name': '@config.viewerName',
                           },
                           null,
+                        ],
+                        'userMenuItems': [
+                          'array/filter',
+                          '@config.userMenuItems',
+                          [
+                            'fn',
+                            'action',
+                            [
+                              'or',
+                              [
+                                '=',
+                                [
+                                  'array/len',
+                                  [
+                                    'object/get',
+                                    '@action',
+                                    'roles',
+                                    [],
+                                  ],
+                                ],
+                                0,
+                              ],
+                              [
+                                'array/includes',
+                                [
+                                  'object/get',
+                                  '@action',
+                                  'roles',
+                                  [],
+                                ],
+                                '@config.viewerRole',
+                              ],
+                            ],
+                          ],
                         ],
                       },
                     ],
@@ -979,6 +1087,7 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
                           },
                         ],
                         'currentPath': '@config.currentPath',
+                        'fullBleed': '@config.fullBleed',
                         'layoutMode': '@config.layoutMode',
                         'logo': [
                           'if',
@@ -1092,7 +1201,12 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
                           ],
                         ],
                         'notificationClickEvent': '@config.notificationClickEvent',
-                        'notifications': '@config.notifications',
+                        'notifications': [
+                          'if',
+                          '@config.showNotifications',
+                          '@config.notifications',
+                          null,
+                        ],
                         'searchEvent': [
                           'if',
                           '@config.showSearch',
@@ -1145,6 +1259,40 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
                             'name': '@config.viewerName',
                           },
                           null,
+                        ],
+                        'userMenuItems': [
+                          'array/filter',
+                          '@config.userMenuItems',
+                          [
+                            'fn',
+                            'action',
+                            [
+                              'or',
+                              [
+                                '=',
+                                [
+                                  'array/len',
+                                  [
+                                    'object/get',
+                                    '@action',
+                                    'roles',
+                                    [],
+                                  ],
+                                ],
+                                0,
+                              ],
+                              [
+                                'array/includes',
+                                [
+                                  'object/get',
+                                  '@action',
+                                  'roles',
+                                  [],
+                                ],
+                                '@config.viewerRole',
+                              ],
+                            ],
+                          ],
                         ],
                       },
                     ],

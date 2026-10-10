@@ -76,6 +76,11 @@ orbital TutorialOverlayOrbital {
     }
 
     state showing {
+      INIT -> hidden
+        (render-ui overlay null)
+        (if @config.autoShow
+          (emit TUT_AUTO { id: "auto" })
+          (render-ui overlay null))
       TUT_NEXT -> showing when (< (+ @entity.step 1) (array/len @config.steps))
         (set @entity.step (+ @entity.step 1))
         (render-ui overlay {

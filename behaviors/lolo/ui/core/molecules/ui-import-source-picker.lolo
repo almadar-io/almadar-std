@@ -14,6 +14,12 @@ orbital ImportSourcePickerOrbital {
     multiple : boolean
     disabled : boolean
   }
+  type ImportSourcePickerFILESSELECTEDFilesItem = {
+    name : string!
+    size : number!
+    type : string!
+    text : string!
+  }
 
   entity ImportSourcePickerItem [runtime] {
     id : string!
@@ -27,6 +33,7 @@ orbital ImportSourcePickerOrbital {
         (render-ui main {
           sources: @config.sources
           onSelect: @config.onSelect
+          onFilesSelected: @config.onFilesSelected
           title: @config.title
           moreSources: @config.moreSources
           className: @config.className
@@ -57,6 +64,11 @@ orbital ImportSourcePickerOrbital {
       }
         @description "Called with the source id when an 'action' option is picked"
         @tier "essential"
+      @config.onFilesSelected -> external {
+        files : [ImportSourcePickerFILESSELECTEDFilesItem]
+      }
+        @description "Called with the chosen files, read as text, when a 'file' option resolves"
+        @tier "essential"
     }
 
     config {
@@ -67,6 +79,10 @@ orbital ImportSourcePickerOrbital {
       onSelect : event = "SELECT"
         @label "On Select"
         @description "Called with the source id when an 'action' option is picked"
+        @tier "presentation"
+      onFilesSelected : event = "FILES_SELECTED"
+        @label "On Files Selected"
+        @description "Called with the chosen files, read as text, when a 'file' option resolves"
         @tier "presentation"
       title : string
         @label "Title"

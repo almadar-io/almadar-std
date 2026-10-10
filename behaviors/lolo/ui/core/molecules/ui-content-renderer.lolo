@@ -10,6 +10,27 @@ orbital ContentRendererOrbital {
     code : string
     stack : string
   }
+  type ContentRendererSegmentsItem = ContentRendererSegmentsItemMarkdown | ContentRendererSegmentsItemCode | ContentRendererSegmentsItemOrbital | ContentRendererSegmentsItemQuiz
+  type ContentRendererSegmentsItemMarkdown = {
+    type : "markdown"!
+    content : string!
+  }
+  type ContentRendererSegmentsItemCode = {
+    type : "code"!
+    language : string!
+    content : string!
+  }
+  type ContentRendererSegmentsItemOrbital = {
+    type : "orbital"!
+    language : string!
+    content : string!
+    schema : SExpr!
+  }
+  type ContentRendererSegmentsItemQuiz = {
+    type : "quiz"!
+    question : string!
+    answer : string!
+  }
 
   entity ContentRendererItem [runtime] {
     id : string!
@@ -33,6 +54,7 @@ orbital ContentRendererOrbital {
           activeFilters: @config.activeFilters
           selectedIds: @config.selectedIds
           content: @config.content
+          segments: @config.segments
           direction: @config.direction
           enter: @config.enter
           enterDelay: @config.enterDelay
@@ -104,6 +126,10 @@ orbital ContentRendererOrbital {
       content : string
         @label "Content"
         @description "Raw content string — auto-parsed into segments"
+        @tier "presentation"
+      segments : [ContentRendererSegmentsItem] = []
+        @label "Segments"
+        @description "Pre-parsed segments (overrides content)"
         @tier "presentation"
       direction : "rtl" | "ltr"
         @label "Direction"

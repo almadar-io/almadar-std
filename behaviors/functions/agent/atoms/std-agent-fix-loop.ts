@@ -601,6 +601,27 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
                 [
                   'set',
                   '@entity.status',
+                  'idle',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'content': 'Waiting for a program.',
+                    'type': 'typography',
+                    'variant': 'caption',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'validating',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
                   'valid',
                 ],
                 [
@@ -708,6 +729,27 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
               'event': 'PROGRAM_INVALID',
               'from': 'validating',
               'to': 'fixing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'content': 'Waiting for a program.',
+                    'type': 'typography',
+                    'variant': 'caption',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'fixing',
+              'to': 'idle',
             },
             {
               'effects': [

@@ -106,6 +106,7 @@ orbital CalendarSyncOrbital {
     }
 
     state pulling {
+      INIT -> idle
       PULL_TARGET_LOADED -> pulling
         (set @entity.headId (object/get (array/first @entity.pending) id))
         (if ["=", (array/len (array/filter ?data (fn r ["=", (object/get @r externalEventId), @entity.headId]))), 0] (persist create CalendarEvent {

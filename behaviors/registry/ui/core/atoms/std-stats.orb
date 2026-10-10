@@ -101,6 +101,11 @@
                   "required": false,
                   "type": "number"
                 },
+                "position": {
+                  "name": "position",
+                  "required": false,
+                  "type": "number"
+                },
                 "prefix": {
                   "name": "prefix",
                   "required": false,
@@ -227,7 +232,23 @@
                         "clickEvent": "@card.clickEvent",
                         "format": "@card.format",
                         "icon": "@card.icon",
-                        "label": "@card.label",
+                        "label": [
+                          "if",
+                          [
+                            "=",
+                            [
+                              "array/len",
+                              "@config.metricLabels"
+                            ],
+                            0.0
+                          ],
+                          "@card.label",
+                          [
+                            "array/nth",
+                            "@config.metricLabels",
+                            "@card.position"
+                          ]
+                        ],
                         "look": "@config.statLook",
                         "max": "@card.max",
                         "prefix": "@card.prefix",
@@ -300,7 +321,23 @@
                                       {
                                         "className": "uppercase tracking-widest",
                                         "color": "muted",
-                                        "content": "@card.label",
+                                        "content": [
+                                          "if",
+                                          [
+                                            "=",
+                                            [
+                                              "array/len",
+                                              "@config.metricLabels"
+                                            ],
+                                            0.0
+                                          ],
+                                          "@card.label",
+                                          [
+                                            "array/nth",
+                                            "@config.metricLabels",
+                                            "@card.position"
+                                          ]
+                                        ],
                                         "type": "typography",
                                         "variant": "overline",
                                         "weight": "bold"
@@ -423,7 +460,23 @@
                               {
                                 "className": "uppercase tracking-wide",
                                 "color": "muted",
-                                "content": "@card.label",
+                                "content": [
+                                  "if",
+                                  [
+                                    "=",
+                                    [
+                                      "array/len",
+                                      "@config.metricLabels"
+                                    ],
+                                    0.0
+                                  ],
+                                  "@card.label",
+                                  [
+                                    "array/nth",
+                                    "@config.metricLabels",
+                                    "@card.position"
+                                  ]
+                                ],
                                 "type": "typography",
                                 "variant": "caption",
                                 "weight": "medium"
@@ -505,6 +558,16 @@
               "label": "KPI tiles body content tree",
               "tier": "internal",
               "type": "render-ui"
+            },
+            "metricLabels": {
+              "default": [],
+              "description": "In metric order: the label shown on each card, in place of its `metrics` label (render-only, so it may be translated)",
+              "items": {
+                "type": "string"
+              },
+              "label": "Metric labels",
+              "tier": "presentation",
+              "type": "[string]"
             },
             "metrics": {
               "default": [
@@ -725,7 +788,23 @@
                               {
                                 "className": "uppercase tracking-wide truncate",
                                 "color": "muted",
-                                "content": "@card.label",
+                                "content": [
+                                  "if",
+                                  [
+                                    "=",
+                                    [
+                                      "array/len",
+                                      "@config.metricLabels"
+                                    ],
+                                    0.0
+                                  ],
+                                  "@card.label",
+                                  [
+                                    "array/nth",
+                                    "@config.metricLabels",
+                                    "@card.position"
+                                  ]
+                                ],
                                 "type": "typography",
                                 "variant": "overline",
                                 "weight": "semibold"
@@ -967,6 +1046,7 @@
                             "max",
                             0.0
                           ],
+                          "position": "@index",
                           "prefix": [
                             "object/get",
                             "@metric",
@@ -1115,6 +1195,7 @@
                             "max",
                             0.0
                           ],
+                          "position": "@index",
                           "prefix": [
                             "object/get",
                             "@metric",
@@ -1464,11 +1545,24 @@
           },
           {
             "name": "format",
-            "type": "string"
+            "type": "string",
+            "values": [
+              "number",
+              "currency",
+              "percent"
+            ]
           },
           {
             "name": "variant",
-            "type": "string"
+            "type": "string",
+            "values": [
+              "default",
+              "primary",
+              "success",
+              "warning",
+              "error",
+              "info"
+            ]
           },
           {
             "name": "prefix",
@@ -1492,11 +1586,19 @@
           },
           {
             "name": "trendPolarity",
-            "type": "string"
+            "type": "string",
+            "values": [
+              "higher-is-better",
+              "lower-is-better"
+            ]
           },
           {
             "name": "trendFormat",
-            "type": "string"
+            "type": "string",
+            "values": [
+              "absolute",
+              "percent"
+            ]
           },
           {
             "name": "sparklineData",
@@ -1508,7 +1610,15 @@
           },
           {
             "name": "aggregation",
-            "type": "string"
+            "type": "string",
+            "values": [
+              "count",
+              "sum",
+              "avg",
+              "min",
+              "max",
+              "variance"
+            ]
           },
           {
             "name": "field",
@@ -1536,6 +1646,10 @@
             "type": "string"
           },
           {
+            "name": "position",
+            "type": "number"
+          },
+          {
             "name": "value",
             "type": "number"
           },
@@ -1545,11 +1659,24 @@
           },
           {
             "name": "format",
-            "type": "string"
+            "type": "string",
+            "values": [
+              "number",
+              "currency",
+              "percent"
+            ]
           },
           {
             "name": "variant",
-            "type": "string"
+            "type": "string",
+            "values": [
+              "default",
+              "primary",
+              "success",
+              "warning",
+              "error",
+              "info"
+            ]
           },
           {
             "name": "prefix",
@@ -1573,11 +1700,19 @@
           },
           {
             "name": "trendPolarity",
-            "type": "string"
+            "type": "string",
+            "values": [
+              "higher-is-better",
+              "lower-is-better"
+            ]
           },
           {
             "name": "trendFormat",
-            "type": "string"
+            "type": "string",
+            "values": [
+              "absolute",
+              "percent"
+            ]
           },
           {
             "name": "sparklineData",

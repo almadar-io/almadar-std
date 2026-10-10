@@ -348,6 +348,14 @@ orbital AgentSuggestionsOrbital {
     }
 
     state open {
+      INIT -> open when @config.showOnMount
+        (render-ui @config.inboxSlot null)
+        (fetch AgentSuggestion {
+          filter: ["=", (object/get @entity ownerId), @user.id]
+          emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
+        })
+      INIT -> closed when (not @config.showOnMount)
+        (render-ui @config.inboxSlot null)
       SuggestionsLoaded -> open
         (render-ui @config.inboxSlot {
           children: [{
@@ -676,6 +684,7 @@ orbital AgentSuggestionsOrbital {
     }
 
     state starting {
+      INIT -> ready
       RunRecorded -> analyzing
         (emit SUGGESTION_RUN_STARTED { messages: [{ role: user, content: @config.request }] })
       RunRecordFailed -> ready
@@ -688,6 +697,7 @@ orbital AgentSuggestionsOrbital {
     }
 
     state analyzing {
+      INIT -> ready
       LOOP_REPLIED -> ready
         (emit SUGGESTION_RUN_DONE {})
       LOOP_FAILED -> ready

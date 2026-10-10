@@ -378,6 +378,9 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
                         {
                           'name': 'type',
                           'type': 'string',
+                          'values': [
+                            'function',
+                          ],
                         },
                         {
                           'name': 'function',
@@ -526,6 +529,33 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
               'event': 'CALL_TOOLS',
               'from': 'idle',
               'to': 'calling',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.messages',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.tools',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.response',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'calling',
+              'to': 'idle',
             },
             {
               'effects': [

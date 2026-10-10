@@ -1,5 +1,5 @@
 {
-  "description": "std-behavior-tour — plays a real behavior through a scripted sequence so people can watch it work: a guided demo on a website, or a step-by-step tutorial. The composing program embeds the running behavior in the `demo` slot and lists `events` (the event each step sends) and `captions` (what is shown while it plays; only ever rendered, so they may be translated). The composed std-learn-transport owns Play / Pause / Step / Reset and the clock; on every step the tour emits TOUR_STEP { index, event } and shows that step's caption, and the program routes TOUR_STEP to the behavior's own events with a filtered listen (`Tour.TOUR_STEP -> MOVE when (= ?event \"MOVE\")`). Reset emits TOUR_RESET. `loop` quietly resets the demo after the last step (TOUR_RESET, intro caption) and plays again. `playWhenVisible` starts it the first time it scrolls into view (never under reduced motion), and `compact` keeps only Play / Pause and Reset. Pick to demonstrate or teach a behavior.",
+  "description": "std-behavior-tour — plays a real behavior through a scripted sequence so people can watch it work: a guided demo on a website, or a step-by-step tutorial. The composing program embeds the running behavior in the `demo` slot and lists `events` (the event each step sends) and `captions` (what is shown while it plays; only ever rendered, so they may be translated). The composed std-learn-transport owns Play / Pause / Step / Reset and the clock; on every step the tour emits TOUR_STEP { index, event } and shows that step's caption, and the program routes TOUR_STEP to the behavior's own events with a filtered listen (`Tour.TOUR_STEP -> MOVE when (= ?event \"MOVE\")`). Reset emits TOUR_RESET. `loop` quietly resets the demo after the last step (TOUR_RESET, intro caption) and plays again. `playWhenVisible` starts it the first time it scrolls into view (never under reduced motion), and `compact` keeps only Play / Pause and Reset, and `demoTheme` shows the demo in its own theme so it stands apart from the page. Pick to demonstrate or teach a behavior.",
   "ledger": {
     "entries": {
       "ent_01M4E0NAZ9S802PC6J6BDFP6PK": {
@@ -77,6 +77,24 @@
         "bakedName": "TOUR_VISIBLE",
         "curName": "TOUR_VISIBLE",
         "id": "evt_01M4E0Q61MXVT1AK6AABH1F0C4",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M4E0NAZ9Z9Z64SAWM3B9VFQB",
+        "renames": []
+      },
+      "evt_01M4GRYX0F01YYB4S15Z462RSW": {
+        "bakedName": "TOUR_SHOWN",
+        "curName": "TOUR_SHOWN",
+        "id": "evt_01M4GRYX0F01YYB4S15Z462RSW",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M4E0NAZ9Z9Z64SAWM3B9VFQB",
+        "renames": []
+      },
+      "evt_01M4GRYX0FY8C1HYTTG145G1M1": {
+        "bakedName": "TOUR_HIDDEN",
+        "curName": "TOUR_HIDDEN",
+        "id": "evt_01M4GRYX0FY8C1HYTTG145G1M1",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01M4E0NAZ9Z9Z64SAWM3B9VFQB",
@@ -173,6 +191,11 @@
             "default": -1.0,
             "name": "shown",
             "type": "number"
+          },
+          {
+            "default": false,
+            "name": "offscreenPaused",
+            "type": "boolean"
           }
         ],
         "id": "ent_01M4E0NAZ9S802PC6J6BDFP6PK",
@@ -361,6 +384,20 @@
               "tier": "domain",
               "type": "trait"
             },
+            "demoTheme": {
+              "default": "",
+              "description": "Theme the running demo is shown in (a theme name with its mode, such as almadar-dark), so a live demo stands apart from the page around it; empty keeps the page's theme",
+              "label": "Demo theme",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "desktopFrame": {
+              "default": false,
+              "description": "Show the demo as a whole app window: rendered at desktop size (1280 by 800) in a browser-style frame and scaled down to fit, so a full page keeps its real layout at any width",
+              "label": "Desktop frame",
+              "tier": "presentation",
+              "type": "boolean"
+            },
             "doneLabel": {
               "default": "Done",
               "label": "Done label",
@@ -481,13 +518,73 @@
                     "animation": "none",
                     "children": [
                       {
+                        "animateChanges": true,
                         "children": [
-                          "@config.demo"
+                          [
+                            "if",
+                            "@config.desktopFrame",
+                            {
+                              "children": [
+                                {
+                                  "align": "center",
+                                  "aria-hidden": true,
+                                  "children": [
+                                    {
+                                      "className": "w-2.5 h-2.5 rounded-full bg-error",
+                                      "type": "box"
+                                    },
+                                    {
+                                      "className": "w-2.5 h-2.5 rounded-full bg-warning",
+                                      "type": "box"
+                                    },
+                                    {
+                                      "className": "w-2.5 h-2.5 rounded-full bg-success",
+                                      "type": "box"
+                                    }
+                                  ],
+                                  "className": "px-3 py-2 bg-muted border-b border-border",
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "children": [
+                                        "@config.demo"
+                                      ],
+                                      "className": "w-[1280px] h-[800px] overflow-hidden bg-background",
+                                      "type": "box"
+                                    }
+                                  ],
+                                  "type": "scaled-diagram"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "none",
+                              "type": "stack"
+                            },
+                            {
+                              "children": [
+                                "@config.demo"
+                              ],
+                              "padding": "md",
+                              "type": "card"
+                            }
+                          ]
                         ],
-                        "padding": "lg",
-                        "type": "card"
+                        "className": [
+                          "if",
+                          "@config.desktopFrame",
+                          "rounded-container overflow-hidden border border-border shadow-elevation-popover bg-background",
+                          "rounded-container"
+                        ],
+                        "data-theme": "@config.demoTheme",
+                        "type": "box"
                       }
                     ],
+                    "enterEvent": "TOUR_SHOWN",
+                    "leaveEvent": "TOUR_HIDDEN",
                     "revealEvent": [
                       "if",
                       "@config.playWhenVisible",
@@ -499,54 +596,60 @@
                     "type": "animated-reveal"
                   },
                   {
-                    "align": "start",
+                    "animateChanges": true,
                     "children": [
                       {
-                        "color": "primary",
-                        "name": "message-square-text",
-                        "size": "md",
-                        "type": "icon"
-                      },
-                      {
-                        "content": [
+                        "align": "start",
+                        "children": [
+                          {
+                            "color": "primary",
+                            "name": "message-square-text",
+                            "size": "md",
+                            "type": "icon"
+                          },
+                          {
+                            "content": [
+                              "if",
+                              [
+                                "<",
+                                "@entity.shown",
+                                0.0
+                              ],
+                              "@config.introCaption",
+                              [
+                                "array/nth",
+                                "@config.captions",
+                                "@entity.shown"
+                              ]
+                            ],
+                            "type": "typography",
+                            "variant": "body"
+                          }
+                        ],
+                        "className": [
                           "if",
                           [
-                            "<",
-                            "@entity.shown",
-                            0.0
+                            "and",
+                            [
+                              "<",
+                              "@entity.shown",
+                              0.0
+                            ],
+                            [
+                              "==",
+                              "@config.introCaption",
+                              ""
+                            ]
                           ],
-                          "@config.introCaption",
-                          [
-                            "array/nth",
-                            "@config.captions",
-                            "@entity.shown"
-                          ]
+                          "hidden",
+                          ""
                         ],
-                        "type": "typography",
-                        "variant": "body"
+                        "direction": "horizontal",
+                        "gap": "sm",
+                        "type": "stack"
                       }
                     ],
-                    "className": [
-                      "if",
-                      [
-                        "and",
-                        [
-                          "<",
-                          "@entity.shown",
-                          0.0
-                        ],
-                        [
-                          "==",
-                          "@config.introCaption",
-                          ""
-                        ]
-                      ],
-                      "hidden",
-                      ""
-                    ],
-                    "direction": "horizontal",
-                    "gap": "sm",
-                    "type": "stack"
+                    "type": "box"
                   },
                   "@trait.TourTransport"
                 ],
@@ -586,12 +689,16 @@
             },
             {
               "kind": "set",
+              "resource": "@entity.offscreenPaused"
+            },
+            {
+              "kind": "set",
               "resource": "@entity.shown"
             }
           ],
           "emits": [
             {
-              "description": "The demo scrolled into view with playWhenVisible on: starts the composed transport's clock.",
+              "description": "Toggles the composed transport's clock: the demo scrolled into view with playWhenVisible on, or it left the view while playing (paused) and came back (resumed).",
               "event": "TOUR_PLAY",
               "eventId": "evt_01M4E0Q61MEVR787BDF0EBGVF0",
               "tier": "internal"
@@ -627,6 +734,7 @@
             "provides": [
               "cursor",
               "done",
+              "offscreenPaused",
               "shown"
             ],
             "requires": [
@@ -693,6 +801,16 @@
                 "name": "Tour Visible"
               },
               {
+                "id": "evt_01M4GRYX0FY8C1HYTTG145G1M1",
+                "key": "TOUR_HIDDEN",
+                "name": "Tour Hidden"
+              },
+              {
+                "id": "evt_01M4GRYX0F01YYB4S15Z462RSW",
+                "key": "TOUR_SHOWN",
+                "name": "Tour Shown"
+              },
+              {
                 "description": "The composed transport's Reset.",
                 "id": "evt_01M4E0NAZ9ZXQC4PBQGJ38WTGT",
                 "key": "LEARN_RESET",
@@ -700,7 +818,7 @@
                 "tier": "internal"
               },
               {
-                "description": "The demo scrolled into view with playWhenVisible on: starts the composed transport's clock.",
+                "description": "Toggles the composed transport's clock: the demo scrolled into view with playWhenVisible on, or it left the view while playing (paused) and came back (resumed).",
                 "id": "evt_01M4E0Q61MEVR787BDF0EBGVF0",
                 "key": "TOUR_PLAY",
                 "name": "Tour Play",
@@ -961,6 +1079,79 @@
                     [
                       "==",
                       "@entity.done",
+                      true
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.offscreenPaused",
+                    true
+                  ],
+                  [
+                    "emit",
+                    "TOUR_PLAY",
+                    {}
+                  ]
+                ],
+                "event": "TOUR_HIDDEN",
+                "eventId": "evt_01M4GRYX0FY8C1HYTTG145G1M1",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "==",
+                    "@entity.running",
+                    true
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@entity.done",
+                      true
+                    ]
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.offscreenPaused",
+                    false
+                  ],
+                  [
+                    "emit",
+                    "TOUR_PLAY",
+                    {}
+                  ]
+                ],
+                "event": "TOUR_SHOWN",
+                "eventId": "evt_01M4GRYX0F01YYB4S15Z462RSW",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@entity.offscreenPaused",
+                    true
+                  ],
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@entity.running",
                       true
                     ]
                   ]

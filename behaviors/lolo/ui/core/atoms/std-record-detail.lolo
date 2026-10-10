@@ -136,7 +136,7 @@ orbital RecordItemOrbital {
       ;; draft=1 and lands straight in the editor — a distinct target state,
       ;; not a flag on the render, so the machine stays honest about being
       ;; in an editing session.
-      RecordItemLoaded -> editing when ["=", (str/default (object/get @entity openDraft) ""), "1"]
+      RecordItemLoaded -> editing when (and ["=", @config.detailLook, document] ["=", (str/default (object/get @entity openDraft) ""), "1"])
         ;; (object/merge … {}) is a type adapter only: type_compat lacks "declared object accepts a named row type" (ledgered)
         (set @entity.loadedRow (object/merge ?data {}))
         (set @entity.id (object/get ?data id))
@@ -146,7 +146,7 @@ orbital RecordItemOrbital {
         (set @entity.coverUrl (str/default (object/get ?data @config.coverField) ""))
         (set @entity.iconName (str/default (object/get ?data @config.iconField) ""))
         (render-ui main @config.documentEditingContent)
-      RecordItemLoaded -> viewing when ["!=", (str/default (object/get @entity openDraft) ""), "1"]
+      RecordItemLoaded -> viewing when (or ["!=", @config.detailLook, document] ["!=", (str/default (object/get @entity openDraft) ""), "1"])
         ;; (object/merge … {}) is a type adapter only: type_compat lacks "declared object accepts a named row type" (ledgered)
         (set @entity.loadedRow (object/merge ?data {}))
         (set @entity.id (object/get ?data id))
@@ -162,7 +162,7 @@ orbital RecordItemOrbital {
             (if ["=", @config.detailLook, page]
               (render-ui main @config.pageBodyContent)
               (render-ui main @config.bodyContent))))
-      RecordItemSlugLoaded -> editing when (and [">", (array/len ?data), 0] ["=", (str/default (object/get @entity openDraft) ""), "1"])
+      RecordItemSlugLoaded -> editing when (and [">", (array/len ?data), 0] ["=", @config.detailLook, document] ["=", (str/default (object/get @entity openDraft) ""), "1"])
         (set @entity.loadedRow (array/first ?data))
         (set @entity.id (object/get (array/first ?data) id))
         (set @entity.name (if [">", (array/len @config.titleFields), 0] (str/join (array/map @config.titleFields (fn f (str/default (object/get (array/first ?data) @f) ""))) " ") (object/get (array/first ?data) @config.titleField)))
@@ -171,7 +171,7 @@ orbital RecordItemOrbital {
         (set @entity.coverUrl (str/default (object/get (array/first ?data) @config.coverField) ""))
         (set @entity.iconName (str/default (object/get (array/first ?data) @config.iconField) ""))
         (render-ui main @config.documentEditingContent)
-      RecordItemSlugLoaded -> viewing when (and [">", (array/len ?data), 0] ["!=", (str/default (object/get @entity openDraft) ""), "1"])
+      RecordItemSlugLoaded -> viewing when (and [">", (array/len ?data), 0] (or ["!=", @config.detailLook, document] ["!=", (str/default (object/get @entity openDraft) ""), "1"]))
         (set @entity.loadedRow (array/first ?data))
         (set @entity.id (object/get (array/first ?data) id))
         (set @entity.name (if [">", (array/len @config.titleFields), 0] (str/join (array/map @config.titleFields (fn f (str/default (object/get (array/first ?data) @f) ""))) " ") (object/get (array/first ?data) @config.titleField)))
@@ -296,7 +296,7 @@ orbital RecordItemOrbital {
         (render-ui main { description: "No record matches this address.", icon: search-x, title: "Not found", type: empty-state })
       ;; The document body is its own edit affordance: clicking it (or its
       ;; Edit button) starts the editing session with a cursor in the text.
-      EDIT_CONTENT -> editing
+      EDIT_CONTENT -> editing when ["=", @config.detailLook, document]
         (render-ui main @config.documentEditingContent)
       ;; The title renames from the read view too, without an editing session.
       TITLE_COMMITTED -> viewing
@@ -645,7 +645,7 @@ orbital RecordItemOrbital {
         @tier "internal"
       bodyContent : render-ui = {
         children: [{
-          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          actions: (if @config.showActions (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole)))) [])
           entity: @entity.loadedRow
           fields: @config.fields
           closeEvent: @config.closeEvent
@@ -679,7 +679,7 @@ orbital RecordItemOrbital {
         @tier "internal"
       slideOverBodyContent : render-ui = {
         children: [{
-          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          actions: (if @config.showActions (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole)))) [])
           entity: @entity.loadedRow
           fields: @config.fields
           closeEvent: @config.closeEvent
@@ -714,7 +714,7 @@ orbital RecordItemOrbital {
         @tier "internal"
       pageBodyContent : render-ui = {
         children: [{
-          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          actions: (if @config.showActions (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole)))) [])
           entity: @entity.loadedRow
           fields: @config.fields
           closeEvent: @config.closeEvent

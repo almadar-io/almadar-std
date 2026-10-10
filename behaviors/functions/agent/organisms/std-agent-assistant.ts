@@ -765,6 +765,13 @@ export function stdAgentAssistantAgentRecordsOrbital(params: StdAgentAssistantAg
         'from': 'std/behaviors/std-agent-trace',
       },
     ],
+    expects: [
+      {
+        'kind': 'event',
+        'traitName': 'AssistantTrace',
+        'event': 'RUN_RECORDED',
+      },
+    ],
     entity: {
       name: 'AgentRun',
       collection: collectionName,

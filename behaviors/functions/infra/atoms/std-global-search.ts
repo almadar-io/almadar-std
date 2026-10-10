@@ -224,6 +224,21 @@ export function stdGlobalSearchInlineTypographyRender5Trait(params: StdGlobalSea
   });
 }
 
+/** Trait descriptor: `GlobalSearch.traits.InlineTypographyRender6`. */
+export function stdGlobalSearchInlineTypographyRender6Trait(params: StdGlobalSearchParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.InlineTypographyRender6`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
 /** Page descriptor: `GlobalSearch.pages.GlobalSearchPage`. */
 export function stdGlobalSearchPage(params: StdGlobalSearchParams): PageRefObject {
   return makePageRef({
@@ -252,6 +267,7 @@ export function stdGlobalSearch(params: StdGlobalSearchParams): OrbitalDefinitio
       stdGlobalSearchInlineTypographyRender3Trait(params),
       stdGlobalSearchInlineTypographyRender4Trait(params),
       stdGlobalSearchInlineTypographyRender5Trait(params),
+      stdGlobalSearchInlineTypographyRender6Trait(params),
     ],
     pages: [
       stdGlobalSearchPage(params),
@@ -260,7 +276,7 @@ export function stdGlobalSearch(params: StdGlobalSearchParams): OrbitalDefinitio
 }
 
 type _StdGlobalSearchEntityName = 'SearchQuery' | 'TypographyItem' | 'SpinnerItem';
-type _StdGlobalSearchListenTraitName = 'GlobalSearch' | 'InlineTypographyRender1' | 'InlineSpinnerRender2' | 'InlineTypographyRender3' | 'InlineTypographyRender4' | 'InlineTypographyRender5';
+type _StdGlobalSearchListenTraitName = 'GlobalSearch' | 'InlineTypographyRender1' | 'InlineSpinnerRender2' | 'InlineTypographyRender3' | 'InlineTypographyRender4' | 'InlineTypographyRender5' | 'InlineTypographyRender6';
 
 /**
  * Tunable params for the GlobalSearchOrbital orbital.
@@ -302,7 +318,7 @@ export interface StdGlobalSearchGlobalSearchOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'InlineTypographyRender1' | 'InlineSpinnerRender2' | 'InlineTypographyRender3' | 'InlineTypographyRender4' | 'InlineTypographyRender5' | 'GlobalSearch',
+    'InlineTypographyRender1' | 'InlineSpinnerRender2' | 'InlineTypographyRender3' | 'InlineTypographyRender4' | 'InlineTypographyRender5' | 'InlineTypographyRender6' | 'GlobalSearch',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1092,6 +1108,34 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
             {
               'effects': [
                 [
+                  'fetch',
+                  ('SearchQuery' satisfies _StdGlobalSearchEntityName),
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'event': 'SEARCH',
+                        'placeholder': '@config.placeholder',
+                        'type': 'search-input',
+                      },
+                      '@trait.InlineTypographyRender4',
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'searching',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
                   'set',
                   '@entity.queryText',
                   [
@@ -1446,7 +1490,7 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                               'g',
                               {
                                 'children': [
-                                  '@trait.InlineTypographyRender4',
+                                  '@trait.InlineTypographyRender5',
                                   {
                                     'children': [
                                       'array/map',
@@ -1470,7 +1514,7 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                                       [
                                         'fn',
                                         'item',
-                                        '@trait.InlineTypographyRender5',
+                                        '@trait.InlineTypographyRender6',
                                       ],
                                     ],
                                     'direction': 'vertical',
@@ -1667,6 +1711,25 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
       }),
       makeTraitRef({
         'config': {
+          'color': {
+            'default': 'muted',
+            'type': 'unknown',
+          },
+          'content': {
+            'default': 'Search across every connected module — results group by module.',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'caption',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'SearchQuery',
+        'name': 'InlineTypographyRender4',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdGlobalSearchGlobalSearchOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
           'content': {
             'default': '@g.moduleKey',
             'type': 'unknown',
@@ -1677,7 +1740,7 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
           },
         },
         'linkedEntity': 'SearchQuery',
-        'name': 'InlineTypographyRender4',
+        'name': 'InlineTypographyRender5',
         'ref': ('Typography.traits.TypographyRender' satisfies _StdGlobalSearchGlobalSearchOrbitalUsesRef),
       }),
       makeTraitRef({
@@ -1692,7 +1755,7 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
           },
         },
         'linkedEntity': 'SearchQuery',
-        'name': 'InlineTypographyRender5',
+        'name': 'InlineTypographyRender6',
         'ref': ('Typography.traits.TypographyRender' satisfies _StdGlobalSearchGlobalSearchOrbitalUsesRef),
       }),
     ],
@@ -1718,6 +1781,9 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
           },
           {
             'ref': 'InlineTypographyRender5',
+          },
+          {
+            'ref': 'InlineTypographyRender6',
           },
         ],
       } satisfies Page,
@@ -1802,6 +1868,7 @@ export const StdGlobalSearchGlobalSearchOrbitalManifest = {
     'InlineTypographyRender3',
     'InlineTypographyRender4',
     'InlineTypographyRender5',
+    'InlineTypographyRender6',
   ] as const,
   inlineTraitNames: [
     'GlobalSearch',

@@ -619,6 +619,11 @@ export function stdReminderSchedulerReminderSchedulerOrbital(params: StdReminder
               'to': 'idle',
             },
             {
+              'event': 'INIT',
+              'from': 'scanning',
+              'to': 'idle',
+            },
+            {
               'effects': [
                 [
                   'fetch',

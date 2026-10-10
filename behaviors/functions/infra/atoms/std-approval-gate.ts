@@ -827,6 +827,12 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'pending',
+                      'approved',
+                      'denied',
+                      'escalated',
+                    ],
                   },
                   {
                     'name': 'reviewer',
@@ -900,6 +906,12 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'pending',
+                      'approved',
+                      'denied',
+                      'escalated',
+                    ],
                   },
                   {
                     'name': 'reviewer',
@@ -973,6 +985,12 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'pending',
+                      'approved',
+                      'denied',
+                      'escalated',
+                    ],
                   },
                   {
                     'name': 'reviewer',
@@ -1119,6 +1137,12 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'pending',
+                      'approved',
+                      'denied',
+                      'escalated',
+                    ],
                   },
                   {
                     'name': 'reviewer',
@@ -1254,6 +1278,12 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'pending',
+                        'approved',
+                        'denied',
+                        'escalated',
+                      ],
                     },
                     {
                       'name': 'reviewer',
@@ -1394,6 +1424,12 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'pending',
+                        'approved',
+                        'denied',
+                        'escalated',
+                      ],
                     },
                     {
                       'name': 'reviewer',
@@ -1468,6 +1504,12 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'pending',
+                        'approved',
+                        'denied',
+                        'escalated',
+                      ],
                     },
                     {
                       'name': 'reviewer',
@@ -1789,6 +1831,37 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                 [
                   'render-ui',
                   '@config.reviewSlot',
+                  null,
+                ],
+                [
+                  'fetch',
+                  ('ApprovalRequest' satisfies _StdApprovalGateEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ApprovalRequestLoadFailed',
+                      'success': 'ApprovalRequestLoaded',
+                    },
+                    'filter': [
+                      '=',
+                      [
+                        'object/get',
+                        '@entity',
+                        'status',
+                      ],
+                      'pending',
+                    ],
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'loading',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  '@config.reviewSlot',
                   {
                     'children': [
                       {
@@ -1915,6 +1988,37 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
               ],
               'event': 'CLOSE',
               'from': 'loading',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  '@config.reviewSlot',
+                  null,
+                ],
+                [
+                  'fetch',
+                  ('ApprovalRequest' satisfies _StdApprovalGateEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ApprovalRequestLoadFailed',
+                      'success': 'ApprovalRequestLoaded',
+                    },
+                    'filter': [
+                      '=',
+                      [
+                        'object/get',
+                        '@entity',
+                        'status',
+                      ],
+                      'pending',
+                    ],
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'reviewing',
               'to': 'idle',
             },
             {
@@ -2191,6 +2295,37 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
             {
               'effects': [
                 [
+                  'render-ui',
+                  '@config.reviewSlot',
+                  null,
+                ],
+                [
+                  'fetch',
+                  ('ApprovalRequest' satisfies _StdApprovalGateEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ApprovalRequestLoadFailed',
+                      'success': 'ApprovalRequestLoaded',
+                    },
+                    'filter': [
+                      '=',
+                      [
+                        'object/get',
+                        '@entity',
+                        'status',
+                      ],
+                      'pending',
+                    ],
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'denying',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
                   'set',
                   '@entity.id',
                   [
@@ -2345,6 +2480,37 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
               ],
               'event': 'CLOSE',
               'from': 'denying',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  '@config.reviewSlot',
+                  null,
+                ],
+                [
+                  'fetch',
+                  ('ApprovalRequest' satisfies _StdApprovalGateEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ApprovalRequestLoadFailed',
+                      'success': 'ApprovalRequestLoaded',
+                    },
+                    'filter': [
+                      '=',
+                      [
+                        'object/get',
+                        '@entity',
+                        'status',
+                      ],
+                      'pending',
+                    ],
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'error',
               'to': 'idle',
             },
             {

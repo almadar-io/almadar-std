@@ -275,6 +275,12 @@ orbital BoardOrbital {
     }
 
     state viewing_card {
+      INIT -> loading
+        (fetch BoardView {
+          emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
+          include: @config.include
+        })
+        (render-ui main { type: skeleton, variant: card })
       CLOSE_CARD -> loading
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
@@ -296,6 +302,12 @@ orbital BoardOrbital {
     }
 
     state adding {
+      INIT -> loading
+        (fetch BoardView {
+          emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
+          include: @config.include
+        })
+        (render-ui main { type: skeleton, variant: card })
       SAVE_CARD -> loading
         (persist create BoardView ?data {
           emit: { failure: BoardItemsSaveFailed, success: BoardItemsSaved }

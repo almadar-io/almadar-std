@@ -7,16 +7,50 @@
     "entities": [
       {
         "name": "CodeRunnerPanelItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "code",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "language",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "runId",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          }
+        ],
         "persistence": "runtime"
       }
     ],
     "traits": [
       {
         "name": "CodeRunnerPanelRender",
-        "emittedEvents": [],
+        "emittedEvents": [
+          "RUN",
+          "RESET"
+        ],
         "listenedEvents": [],
         "events": [
+          {
+            "name": "RUN",
+            "direction": "emit",
+            "description": "Event emitted on Run as `UI:<runEvent>` with `{ code, language, runId }`. Defaults to 'RUN_CODE'.",
+            "tier": "essential"
+          },
+          {
+            "name": "RESET",
+            "direction": "emit",
+            "description": "Event emitted on Reset as `UI:<resetEvent>` with `{ runId }`; Reset only restores the code when absent.",
+            "tier": "essential"
+          },
           {
             "name": "INIT",
             "direction": "listen"
@@ -171,6 +205,13 @@
             "tier": "presentation"
           },
           {
+            "key": "error",
+            "type": "string",
+            "label": "Error",
+            "description": "A run failure message from the program; replaces the output body.",
+            "tier": "presentation"
+          },
+          {
             "key": "lang",
             "type": "string",
             "label": "Lang",
@@ -183,6 +224,68 @@
             "default": "",
             "label": "Language",
             "description": "Programming language for syntax highlighting",
+            "tier": "presentation"
+          },
+          {
+            "key": "output",
+            "type": "CodeRunnerPanelOutput",
+            "label": "Output",
+            "description": "The program's result for the last run, bound back into the panel.",
+            "tier": "presentation",
+            "properties": {
+              "exitCode": {
+                "name": "exitCode",
+                "required": true,
+                "type": "number"
+              },
+              "stderr": {
+                "name": "stderr",
+                "required": true,
+                "type": "string"
+              },
+              "stdout": {
+                "name": "stdout",
+                "required": true,
+                "type": "string"
+              },
+              "testResults": {
+                "name": "testResults",
+                "required": true,
+                "type": "array",
+                "items": {
+                  "properties": {
+                    "actualOutput": {
+                      "name": "actualOutput",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "expectedOutput": {
+                      "name": "expectedOutput",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "input": {
+                      "name": "input",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "passed": {
+                      "name": "passed",
+                      "required": true,
+                      "type": "boolean"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            }
+          },
+          {
+            "key": "resetEvent",
+            "type": "event",
+            "default": "RESET",
+            "label": "Reset Event",
+            "description": "Event emitted on Reset as `UI:<resetEvent>` with `{ runId }`; Reset only restores the code when absent.",
             "tier": "presentation"
           },
           {
@@ -277,18 +380,33 @@
           },
           {
             "key": "runEvent",
-            "type": "string",
-            "default": "RUN_CODE",
+            "type": "event",
+            "default": "RUN",
             "label": "Run Event",
-            "description": "Event name to emit on run (emitted as `UI:<runEvent>`). Defaults to 'RUN_CODE'.",
+            "description": "Event emitted on Run as `UI:<runEvent>` with `{ code, language, runId }`. Defaults to 'RUN_CODE'.",
+            "tier": "presentation"
+          },
+          {
+            "key": "runId",
+            "type": "string",
+            "label": "Run Id",
+            "description": "Identifies this panel in its run/reset payloads (e.g. a lesson segment); empty when one panel stands alone.",
             "tier": "presentation"
           },
           {
             "key": "runnable",
             "type": "boolean",
-            "default": true,
+            "default": false,
             "label": "Runnable",
-            "description": "Whether the panel allows running (false = read-only code block)",
+            "description": "Whether the panel is editable and runnable (default false = read-only code block)",
+            "tier": "presentation"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": false,
+            "label": "Running",
+            "description": "True while the program is running the code.",
             "tier": "presentation"
           },
           {
@@ -321,18 +439,39 @@
         "capabilities": [],
         "linkedEntity": "CodeRunnerPanelItem",
         "transitionEvents": [
-          "INIT"
+          "INIT",
+          "RESET",
+          "RUN"
         ],
-        "definerKnobs": [],
+        "definerKnobs": [
+          "resetEvent",
+          "runEvent"
+        ],
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "code",
+            "language",
+            "runId"
+          ]
         },
         "effectRow": [
           {
             "kind": "render-ui",
             "resource": "main"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.code"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.language"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.runId"
           }
         ]
       }
@@ -344,7 +483,10 @@
         "primaryEntity": "CodeRunnerPanelItem"
       }
     ],
-    "emittedEvents": [],
+    "emittedEvents": [
+      "RESET",
+      "RUN"
+    ],
     "listenedEvents": [],
     "exposure": "palette",
     "provenance": "generated",

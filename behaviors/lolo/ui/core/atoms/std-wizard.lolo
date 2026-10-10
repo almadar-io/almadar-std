@@ -82,7 +82,7 @@ orbital WizardOrbital {
           }, {
             allowNavigation: false
             currentStep: @entity.currentStepIndex
-            steps: @entity.wizardSteps
+            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (array/nth @config.stepLabels @index), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (array/nth @config.stepDescriptions @index)) })))
             type: wizard-progress
           }, {
             children: [{
@@ -94,12 +94,12 @@ orbital WizardOrbital {
                   type: icon
                 }, {
                   children: [{
-                    content: @entity.currentStepLabel
+                    content: (if (= (array/len @config.stepLabels) 0) @entity.currentStepLabel (array/nth @config.stepLabels @entity.currentStepIndex))
                     type: typography
                     variant: h2
                   }, {
                     color: muted
-                    content: @entity.currentStepDescription
+                    content: (if (= (array/len @config.stepDescriptions) 0) @entity.currentStepDescription (array/nth @config.stepDescriptions @entity.currentStepIndex))
                     type: typography
                     variant: body
                   }]
@@ -132,19 +132,19 @@ orbital WizardOrbital {
               action: RETREAT
               disabled: @entity.isFirstStep
               icon: chevron-left
-              label: Back
+              label: @config.backLabel
               type: button
               variant: ghost
             }, {
               action: CANCEL
               icon: x
-              label: "Cancel wizard"
+              label: @config.cancelLabel
               type: button
               variant: ghost
             }, {
               action: ADVANCE
               icon: @entity.primaryActionIcon
-              label: @entity.primaryActionLabel
+              label: (if ["=", @entity.currentStepIndex, ["-", @entity.totalSteps, 1]] @config.submitLabel @config.nextLabel)
               type: button
               variant: primary
             }]
@@ -183,6 +183,16 @@ orbital WizardOrbital {
     }
 
     state running {
+      INIT -> loading
+        (fetch WizardView {
+          emit: { failure: WizardLoadFailed, success: WizardLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: form, fields: 3 }]
+        })
       ADVANCE -> running when (not @entity.isLastStep)
         (set @entity.currentStepIndex ["+", @entity.currentStepIndex, 1])
         (set @entity.currentStepLabel (object/get (array/nth @config.steps @entity.currentStepIndex) label))
@@ -207,7 +217,7 @@ orbital WizardOrbital {
           }, {
             allowNavigation: false
             currentStep: @entity.currentStepIndex
-            steps: @entity.wizardSteps
+            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (array/nth @config.stepLabels @index), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (array/nth @config.stepDescriptions @index)) })))
             type: wizard-progress
           }, {
             children: [{
@@ -219,12 +229,12 @@ orbital WizardOrbital {
                   type: icon
                 }, {
                   children: [{
-                    content: @entity.currentStepLabel
+                    content: (if (= (array/len @config.stepLabels) 0) @entity.currentStepLabel (array/nth @config.stepLabels @entity.currentStepIndex))
                     type: typography
                     variant: h2
                   }, {
                     color: muted
-                    content: @entity.currentStepDescription
+                    content: (if (= (array/len @config.stepDescriptions) 0) @entity.currentStepDescription (array/nth @config.stepDescriptions @entity.currentStepIndex))
                     type: typography
                     variant: body
                   }]
@@ -257,19 +267,19 @@ orbital WizardOrbital {
               action: RETREAT
               disabled: @entity.isFirstStep
               icon: chevron-left
-              label: Back
+              label: @config.backLabel
               type: button
               variant: ghost
             }, {
               action: CANCEL
               icon: x
-              label: "Cancel wizard"
+              label: @config.cancelLabel
               type: button
               variant: ghost
             }, {
               action: ADVANCE
               icon: @entity.primaryActionIcon
-              label: @entity.primaryActionLabel
+              label: (if ["=", @entity.currentStepIndex, ["-", @entity.totalSteps, 1]] @config.submitLabel @config.nextLabel)
               type: button
               variant: primary
             }]
@@ -294,24 +304,24 @@ orbital WizardOrbital {
             type: icon
           }, {
             align: center
-            content: Complete
+            content: @config.completedTitle
             type: typography
             variant: h2
           }, {
             align: center
             color: muted
-            content: @entity.completionMessage
+            content: (if (= @config.completedText "") @entity.completionMessage @config.completedText)
             type: typography
             variant: body
           }, {
             allowNavigation: false
             currentStep: @entity.totalSteps
-            steps: @entity.wizardSteps
+            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (array/nth @config.stepLabels @index), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (array/nth @config.stepDescriptions @index)) })))
             type: wizard-progress
           }, {
             action: RESTART
             icon: rotate-ccw
-            label: "Start a new wizard"
+            label: @config.restartLabel
             type: button
             variant: secondary
           }]
@@ -343,7 +353,7 @@ orbital WizardOrbital {
           }, {
             allowNavigation: false
             currentStep: @entity.currentStepIndex
-            steps: @entity.wizardSteps
+            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (array/nth @config.stepLabels @index), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (array/nth @config.stepDescriptions @index)) })))
             type: wizard-progress
           }, {
             children: [{
@@ -355,12 +365,12 @@ orbital WizardOrbital {
                   type: icon
                 }, {
                   children: [{
-                    content: @entity.currentStepLabel
+                    content: (if (= (array/len @config.stepLabels) 0) @entity.currentStepLabel (array/nth @config.stepLabels @entity.currentStepIndex))
                     type: typography
                     variant: h2
                   }, {
                     color: muted
-                    content: @entity.currentStepDescription
+                    content: (if (= (array/len @config.stepDescriptions) 0) @entity.currentStepDescription (array/nth @config.stepDescriptions @entity.currentStepIndex))
                     type: typography
                     variant: body
                   }]
@@ -393,19 +403,19 @@ orbital WizardOrbital {
               action: RETREAT
               disabled: @entity.isFirstStep
               icon: chevron-left
-              label: Back
+              label: @config.backLabel
               type: button
               variant: ghost
             }, {
               action: CANCEL
               icon: x
-              label: "Cancel wizard"
+              label: @config.cancelLabel
               type: button
               variant: ghost
             }, {
               action: ADVANCE
               icon: @entity.primaryActionIcon
-              label: @entity.primaryActionLabel
+              label: (if ["=", @entity.currentStepIndex, ["-", @entity.totalSteps, 1]] @config.submitLabel @config.nextLabel)
               type: button
               variant: primary
             }]
@@ -427,19 +437,19 @@ orbital WizardOrbital {
             type: icon
           }, {
             align: center
-            content: Cancelled
+            content: @config.cancelledTitle
             type: typography
             variant: h2
           }, {
             align: center
             color: muted
-            content: "The wizard was cancelled. No data was submitted."
+            content: @config.cancelledText
             type: typography
             variant: body
           }, {
             action: RESTART
             icon: rotate-ccw
-            label: "Start a new wizard"
+            label: @config.restartLabel
             type: button
             variant: secondary
           }]
@@ -450,6 +460,16 @@ orbital WizardOrbital {
     }
 
     state completed {
+      INIT -> loading
+        (fetch WizardView {
+          emit: { failure: WizardLoadFailed, success: WizardLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: form, fields: 3 }]
+        })
       WizardSaved -> completed
         (render-ui main {
           align: center
@@ -459,24 +479,24 @@ orbital WizardOrbital {
             type: icon
           }, {
             align: center
-            content: Complete
+            content: @config.completedTitle
             type: typography
             variant: h2
           }, {
             align: center
             color: muted
-            content: @entity.completionMessage
+            content: (if (= @config.completedText "") @entity.completionMessage @config.completedText)
             type: typography
             variant: body
           }, {
             allowNavigation: false
             currentStep: @entity.totalSteps
-            steps: @entity.wizardSteps
+            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (array/nth @config.stepLabels @index), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (array/nth @config.stepDescriptions @index)) })))
             type: wizard-progress
           }, {
             action: RESTART
             icon: rotate-ccw
-            label: "Start a new wizard"
+            label: @config.restartLabel
             type: button
             variant: secondary
           }]
@@ -501,6 +521,16 @@ orbital WizardOrbital {
     }
 
     state cancelled {
+      INIT -> loading
+        (fetch WizardView {
+          emit: { failure: WizardLoadFailed, success: WizardLoaded }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: form, fields: 3 }]
+        })
       RESTART -> loading
         (set @entity.currentStepIndex 0)
         (set @entity.cancelReason "")
@@ -623,6 +653,43 @@ orbital WizardOrbital {
       title : string = Wizard
         @label "Wizard title"
         @description "Heading shown across all wizard steps"
+        @tier "presentation"
+      nextLabel : string = "Next"
+        @label "Next label"
+        @tier "presentation"
+      submitLabel : string = "Submit"
+        @label "Submit label"
+        @description "The primary button on the last step"
+        @tier "presentation"
+      backLabel : string = "Back"
+        @label "Back label"
+        @tier "presentation"
+      cancelLabel : string = "Cancel wizard"
+        @label "Cancel label"
+        @tier "presentation"
+      restartLabel : string = "Start a new wizard"
+        @label "Restart label"
+        @tier "presentation"
+      completedTitle : string = "Complete"
+        @label "Completed title"
+        @tier "presentation"
+      cancelledTitle : string = "Cancelled"
+        @label "Cancelled title"
+        @tier "presentation"
+      completedText : string = ""
+        @label "Completed text"
+        @description "Shown when the wizard finishes; empty shows the default completion message"
+        @tier "presentation"
+      cancelledText : string = "The wizard was cancelled. No data was submitted."
+        @label "Cancelled text"
+        @tier "presentation"
+      stepLabels : [string] = []
+        @label "Step labels"
+        @description "In step order: the label shown for each step, in place of its `steps` label (render-only, so it may be translated)"
+        @tier "presentation"
+      stepDescriptions : [string] = []
+        @label "Step descriptions"
+        @description "In step order: the description shown for each step, in place of its `steps` description (render-only, so it may be translated)"
         @tier "presentation"
       steps : [StepSpec] = [{
         description: "Basic information"

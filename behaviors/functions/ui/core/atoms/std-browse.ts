@@ -417,6 +417,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                     ],
                   ],
                   'itemClickEvent': '@config.itemClickEvent',
+                  'itemEnter': '@config.itemEnter',
                   'maxInlineActions': '@config.maxInlineActions',
                   'pageSize': '@config.displayPageSize',
                   'surface': '@config.surface',
@@ -1038,6 +1039,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                     ],
                   ],
                   'itemClickEvent': '@config.itemClickEvent',
+                  'itemEnter': '@config.itemEnter',
                   'look': [
                     'if',
                     [
@@ -1357,6 +1359,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                     ],
                   ],
                   'itemClickEvent': '@config.itemClickEvent',
+                  'itemEnter': '@config.itemEnter',
                   'maxInlineActions': '@config.maxInlineActions',
                   'minCardWidth': 260,
                   'surface': '@config.surface',
@@ -1480,6 +1483,21 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
             'synonyms': 'row click event, item click, open event, select event',
             'tier': 'presentation',
             'type': 'event',
+          },
+          'itemEnter': {
+            'default': 'none',
+            'description': 'How a row arrives in the list; a row that changes place glides there (dense, feed, gallery and triage looks)',
+            'label': 'Row entrance',
+            'synonyms': 'animate rows, row animation, list motion',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'none',
+              'fade',
+              'rise',
+              'scale',
+              'slide',
+            ],
           },
           'masterDetailBodyContent': {
             'default': {
@@ -1885,6 +1903,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                         ],
                       ],
                       'itemClickEvent': '@config.itemClickEvent',
+                      'itemEnter': '@config.itemEnter',
                       'maxInlineActions': '@config.maxInlineActions',
                       'pageSize': '@config.displayPageSize',
                       'surface': 'none',
@@ -1965,6 +1984,11 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'active',
+                      'inactive',
+                      'pending',
+                    ],
                   },
                   {
                     'name': 'createdAt',
@@ -2029,6 +2053,11 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'active',
+                      'inactive',
+                      'pending',
+                    ],
                   },
                   {
                     'name': 'createdAt',
@@ -2073,6 +2102,11 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'active',
+                      'inactive',
+                      'pending',
+                    ],
                   },
                   {
                     'name': 'createdAt',
@@ -2117,6 +2151,11 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'active',
+                      'inactive',
+                      'pending',
+                    ],
                   },
                   {
                     'name': 'createdAt',
@@ -2172,6 +2211,11 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'active',
+                        'inactive',
+                        'pending',
+                      ],
                     },
                     {
                       'name': 'createdAt',
@@ -2292,6 +2336,11 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'active',
+                        'inactive',
+                        'pending',
+                      ],
                     },
                     {
                       'name': 'createdAt',
@@ -2340,6 +2389,11 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'active',
+                        'inactive',
+                        'pending',
+                      ],
                     },
                     {
                       'name': 'createdAt',
@@ -2384,6 +2438,11 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'active',
+                        'inactive',
+                        'pending',
+                      ],
                     },
                     {
                       'name': 'createdAt',

@@ -462,6 +462,11 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'active',
+                      'inactive',
+                      'pending',
+                    ],
                   },
                   {
                     'name': 'createdAt',
@@ -533,6 +538,11 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'active',
+                        'inactive',
+                        'pending',
+                      ],
                     },
                     {
                       'name': 'createdAt',
@@ -649,6 +659,11 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'active',
+                        'inactive',
+                        'pending',
+                      ],
                     },
                     {
                       'name': 'createdAt',
@@ -940,6 +955,43 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
               'event': 'SelectableItemLoadFailed',
               'from': 'loading',
               'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('SelectableItem' satisfies _StdSelectionEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SelectableItemLoadFailed',
+                      'success': 'SelectableItemLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'loading',
             },
             {
               'effects': [
@@ -1306,6 +1358,43 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
             {
               'effects': [
                 [
+                  'fetch',
+                  ('SelectableItem' satisfies _StdSelectionEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SelectableItemLoadFailed',
+                      'success': 'SelectableItemLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'selecting',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
                   'render-ui',
                   'main',
                   {
@@ -1420,6 +1509,43 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
               ],
               'event': 'CLEAR',
               'from': 'selecting',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('SelectableItem' satisfies _StdSelectionEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SelectableItemLoadFailed',
+                      'success': 'SelectableItemLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'selected',
               'to': 'loading',
             },
             {

@@ -664,7 +664,13 @@
                     },
                     {
                       "name": "invoiceStatus",
-                      "type": "string"
+                      "type": "string",
+                      "values": [
+                        "unbilled",
+                        "invoiced",
+                        "paid",
+                        "written_off"
+                      ]
                     }
                   ],
                   "type": "object"
@@ -762,7 +768,13 @@
                     },
                     {
                       "name": "invoiceStatus",
-                      "type": "string"
+                      "type": "string",
+                      "values": [
+                        "unbilled",
+                        "invoiced",
+                        "paid",
+                        "written_off"
+                      ]
                     }
                   ],
                   "type": "[object]"
@@ -859,7 +871,13 @@
                       },
                       {
                         "name": "invoiceStatus",
-                        "type": "string"
+                        "type": "string",
+                        "values": [
+                          "unbilled",
+                          "invoiced",
+                          "paid",
+                          "written_off"
+                        ]
                       }
                     ],
                     "type": "[object]"
@@ -946,7 +964,13 @@
                       },
                       {
                         "name": "invoiceStatus",
-                        "type": "string"
+                        "type": "string",
+                        "values": [
+                          "unbilled",
+                          "invoiced",
+                          "paid",
+                          "written_off"
+                        ]
                       }
                     ],
                     "type": "object"
@@ -1406,6 +1430,44 @@
                 "event": "WRITE_OFF_HOURS",
                 "eventId": "evt_01KXG04FQN169FTXB66N14DGD1",
                 "from": "browsing",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "BillableHour",
+                    {
+                      "emit": {
+                        "failure": "BillableHourLoadFailed",
+                        "success": "BillableHourLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "skeleton",
+                          "variant": "header"
+                        },
+                        {
+                          "rows": 6.0,
+                          "type": "skeleton",
+                          "variant": "table"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KXG04FQKQJP6SX8JCRF7HBP1",
+                "from": "viewing_single",
                 "to": "loading"
               },
               {

@@ -83,6 +83,8 @@ export interface StdEventLogEventLogSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdEventLogConfig {
+  /** Default: `"All"` */
+  allLabel?: string;
   /** Default: `false` */
   bodySearch?: boolean;
   /** Default: `"elevated"` */
@@ -99,6 +101,8 @@ export interface StdEventLogConfig {
   formFields?: string[];
   /** Default: `"kind"` */
   kindField?: string;
+  /** Default: `[]` */
+  kindLabels?: string[];
   /** Default: `[{"icon":"plus-circle","key":"created","label":"Created","status":"active"},{"icon":"edit-3","key":"updated","label":"Updated","status":"pending"},{"icon":"check-circle","key":"approved","label":"Approved","status":"complete"},{"icon":"x-circle","key":"rejected","label":"Rejected","status":"error"}]` */
   kindOptions?: EntityRow[];
   /** Default: `20` */
@@ -480,6 +484,13 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
       {
         'category': 'interaction',
         'config': {
+          'allLabel': {
+            'default': 'All',
+            'description': 'Label of the chip that shows every kind',
+            'label': 'All label',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'bodySearch': {
             'default': false,
             'description': 'Embeds a search box above the activity feed. Set true only when the page has no other search affordance (e.g. no page-level std-search), so the surface shows one search box instead of two. False is the default — no consumer of this atom has ever had a search box.',
@@ -586,6 +597,16 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
             'synonyms': 'kind column, type field, category column, filter by kind',
             'tier': 'policy',
             'type': 'string',
+          },
+          'kindLabels': {
+            'default': [],
+            'description': 'In kindOptions order: the label shown on each kind\'s filter chip, in place of its kindOptions label (render-only, so it may be translated)',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Kind labels',
+            'tier': 'presentation',
+            'type': '[string]',
           },
           'kindOptions': {
             'default': [
@@ -1419,7 +1440,63 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                       {
                         'activeTab': '@entity.filterKind',
                         'tabChangeEvent': 'APPLY_FILTER',
-                        'tabs': '@entity.filterChips',
+                        'tabs': [
+                          'array/map',
+                          '@entity.filterChips',
+                          [
+                            'fn',
+                            'chip',
+                            {
+                              'icon': [
+                                'object/get',
+                                '@chip',
+                                'icon',
+                                'list',
+                              ],
+                              'id': [
+                                'object/get',
+                                '@chip',
+                                'id',
+                                '',
+                              ],
+                              'label': [
+                                'if',
+                                [
+                                  '=',
+                                  '@index',
+                                  0,
+                                ],
+                                '@config.allLabel',
+                                [
+                                  'if',
+                                  [
+                                    '=',
+                                    [
+                                      'array/len',
+                                      '@config.kindLabels',
+                                    ],
+                                    0,
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@chip',
+                                    'label',
+                                    '',
+                                  ],
+                                  [
+                                    'array/nth',
+                                    '@config.kindLabels',
+                                    [
+                                      '-',
+                                      '@index',
+                                      1,
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            },
+                          ],
+                        ],
                         'type': 'tabs',
                       },
                       {
@@ -1666,7 +1743,63 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                       {
                         'activeTab': '@entity.filterKind',
                         'tabChangeEvent': 'APPLY_FILTER',
-                        'tabs': '@entity.filterChips',
+                        'tabs': [
+                          'array/map',
+                          '@entity.filterChips',
+                          [
+                            'fn',
+                            'chip',
+                            {
+                              'icon': [
+                                'object/get',
+                                '@chip',
+                                'icon',
+                                'list',
+                              ],
+                              'id': [
+                                'object/get',
+                                '@chip',
+                                'id',
+                                '',
+                              ],
+                              'label': [
+                                'if',
+                                [
+                                  '=',
+                                  '@index',
+                                  0,
+                                ],
+                                '@config.allLabel',
+                                [
+                                  'if',
+                                  [
+                                    '=',
+                                    [
+                                      'array/len',
+                                      '@config.kindLabels',
+                                    ],
+                                    0,
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@chip',
+                                    'label',
+                                    '',
+                                  ],
+                                  [
+                                    'array/nth',
+                                    '@config.kindLabels',
+                                    [
+                                      '-',
+                                      '@index',
+                                      1,
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            },
+                          ],
+                        ],
                         'type': 'tabs',
                       },
                       {
@@ -2147,7 +2280,63 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                       {
                         'activeTab': '@entity.filterKind',
                         'tabChangeEvent': 'APPLY_FILTER',
-                        'tabs': '@entity.filterChips',
+                        'tabs': [
+                          'array/map',
+                          '@entity.filterChips',
+                          [
+                            'fn',
+                            'chip',
+                            {
+                              'icon': [
+                                'object/get',
+                                '@chip',
+                                'icon',
+                                'list',
+                              ],
+                              'id': [
+                                'object/get',
+                                '@chip',
+                                'id',
+                                '',
+                              ],
+                              'label': [
+                                'if',
+                                [
+                                  '=',
+                                  '@index',
+                                  0,
+                                ],
+                                '@config.allLabel',
+                                [
+                                  'if',
+                                  [
+                                    '=',
+                                    [
+                                      'array/len',
+                                      '@config.kindLabels',
+                                    ],
+                                    0,
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@chip',
+                                    'label',
+                                    '',
+                                  ],
+                                  [
+                                    'array/nth',
+                                    '@config.kindLabels',
+                                    [
+                                      '-',
+                                      '@index',
+                                      1,
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            },
+                          ],
+                        ],
                         'type': 'tabs',
                       },
                       {
@@ -2259,6 +2448,43 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
             {
               'effects': [
                 [
+                  'fetch',
+                  ('EventLogView' satisfies _StdEventLogEntityName),
+                  {
+                    'emit': {
+                      'failure': 'EventLogLoadFailed',
+                      'success': 'EventLogLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'backfilling',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
                   'persist',
                   'create',
                   ('EventLogView' satisfies _StdEventLogEntityName),
@@ -2363,7 +2589,63 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                       {
                         'activeTab': '@entity.filterKind',
                         'tabChangeEvent': 'APPLY_FILTER',
-                        'tabs': '@entity.filterChips',
+                        'tabs': [
+                          'array/map',
+                          '@entity.filterChips',
+                          [
+                            'fn',
+                            'chip',
+                            {
+                              'icon': [
+                                'object/get',
+                                '@chip',
+                                'icon',
+                                'list',
+                              ],
+                              'id': [
+                                'object/get',
+                                '@chip',
+                                'id',
+                                '',
+                              ],
+                              'label': [
+                                'if',
+                                [
+                                  '=',
+                                  '@index',
+                                  0,
+                                ],
+                                '@config.allLabel',
+                                [
+                                  'if',
+                                  [
+                                    '=',
+                                    [
+                                      'array/len',
+                                      '@config.kindLabels',
+                                    ],
+                                    0,
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@chip',
+                                    'label',
+                                    '',
+                                  ],
+                                  [
+                                    'array/nth',
+                                    '@config.kindLabels',
+                                    [
+                                      '-',
+                                      '@index',
+                                      1,
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            },
+                          ],
+                        ],
                         'type': 'tabs',
                       },
                       {

@@ -56,6 +56,8 @@ export interface StdUiDashboardLayoutConfig {
   appName?: string;
   children?: PatternValue;
   currentPath?: string;
+  /** Default: `false` */
+  fullBleed?: boolean;
   headerActions?: PatternValue;
   /** Default: `"sidebar"` */
   layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal' | 'drawer';
@@ -83,6 +85,8 @@ export interface StdUiDashboardLayoutConfig {
   /** Default: `[]` */
   topBarActions?: EntityRow[];
   user?: EntityRow;
+  /** Default: `[]` */
+  userMenuItems?: EntityRow[];
   /** Default: `""` */
   viewerRole?: string;
 }

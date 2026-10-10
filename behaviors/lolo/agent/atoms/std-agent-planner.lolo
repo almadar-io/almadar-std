@@ -29,6 +29,11 @@ orbital AgentPlannerOrbital {
     }
 
     state recalling {
+      INIT -> idle
+        (set @entity.prompt "")
+        (set @entity.memories [])
+        (set @entity.plan "")
+        (set @entity.status idle)
       MEMORIES_RECALLED -> planning
         (set @entity.memories ?result)
         (llm/generate @entity.prompt { emit: { success: PLAN_GENERATED, failure: PLAN_GENERATION_FAILED } })
@@ -38,6 +43,11 @@ orbital AgentPlannerOrbital {
     }
 
     state planning {
+      INIT -> idle
+        (set @entity.prompt "")
+        (set @entity.memories [])
+        (set @entity.plan "")
+        (set @entity.status idle)
       PLAN_GENERATED -> planned
         (set @entity.plan ?result)
         (set @entity.status planned)

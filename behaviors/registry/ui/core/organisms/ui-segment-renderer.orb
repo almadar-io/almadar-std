@@ -73,6 +73,24 @@
         "parent": "trt_01KXG04SYNY0B326SBBN7KCRAW",
         "renames": []
       },
+      "evt_01M4HNKWFVD2KM0NWWCRFWECC5": {
+        "bakedName": "@config.resetCodeEvent",
+        "curName": "@config.resetCodeEvent",
+        "id": "evt_01M4HNKWFVD2KM0NWWCRFWECC5",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04SYNY0B326SBBN7KCRAW",
+        "renames": []
+      },
+      "evt_01M4HNKWFVVMPRSVXTT87BBEVD": {
+        "bakedName": "@config.runCodeEvent",
+        "curName": "@config.runCodeEvent",
+        "id": "evt_01M4HNKWFVVMPRSVXTT87BBEVD",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04SYNY0B326SBBN7KCRAW",
+        "renames": []
+      },
       "orb_01KXG04SYNCGV24X7FRR7TRH6N": {
         "bakedName": "SegmentRendererOrbital",
         "curName": "SegmentRendererOrbital",
@@ -294,6 +312,83 @@
               "tier": "presentation",
               "type": "string"
             },
+            "codeOutputs": {
+              "default": {
+                "item": {
+                  "exitCode": 1.0,
+                  "stderr": "Stderr",
+                  "stdout": "Stdout",
+                  "testResults": [
+                    {
+                      "actualOutput": "Actual Output",
+                      "expectedOutput": "Expected Output",
+                      "input": "Input",
+                      "passed": false
+                    },
+                    {
+                      "actualOutput": "Actual Output 2",
+                      "expectedOutput": "Expected Output 2",
+                      "input": "Input 2",
+                      "passed": true
+                    }
+                  ]
+                }
+              },
+              "description": "The program's run results, keyed by segment runId.",
+              "items": {
+                "properties": {
+                  "exitCode": {
+                    "name": "exitCode",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "stderr": {
+                    "name": "stderr",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "stdout": {
+                    "name": "stdout",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "testResults": {
+                    "items": {
+                      "properties": {
+                        "actualOutput": {
+                          "name": "actualOutput",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "expectedOutput": {
+                          "name": "expectedOutput",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "input": {
+                          "name": "input",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "passed": {
+                          "name": "passed",
+                          "required": true,
+                          "type": "boolean"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "testResults",
+                    "required": true,
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Code Outputs",
+              "tier": "presentation",
+              "type": "Map<string,SegmentRendererCodeOutputsValue>"
+            },
             "containerClassName": {
               "description": "CSS classes for the outer wrapping div",
               "label": "Container Class Name",
@@ -359,6 +454,13 @@
               "default": "REFLECTION_SAVE",
               "description": "Event emitted when a reflection note is saved (as `UI:<reflectionSaveEvent>`)",
               "label": "Reflection Save Event",
+              "tier": "presentation",
+              "type": "event"
+            },
+            "resetCodeEvent": {
+              "default": "RESET_CODE",
+              "description": "Event a runnable code block emits on Reset (`{ runId }`).",
+              "label": "Reset Code Event",
               "tier": "presentation",
               "type": "event"
             },
@@ -450,6 +552,19 @@
                 "treegrid",
                 "treeitem"
               ]
+            },
+            "runCodeEvent": {
+              "default": "RUN_CODE",
+              "description": "Event a runnable code block emits on Run (`{ code, language, runId }`, runId = the segment index). Omit to render runnable blocks read-only.",
+              "label": "Run Code Event",
+              "tier": "presentation",
+              "type": "event"
+            },
+            "runningCode": {
+              "description": "The runId the program is currently running.",
+              "label": "Running Code",
+              "tier": "presentation",
+              "type": "string"
             },
             "segments": {
               "default": [],
@@ -838,6 +953,46 @@
               ],
               "scope": "external",
               "tier": "essential"
+            },
+            {
+              "definerKnob": "runCodeEvent",
+              "description": "Event a runnable code block emits on Run (`{ code, language, runId }`, runId = the segment index). Omit to render runnable blocks read-only.",
+              "event": "@config.runCodeEvent",
+              "eventId": "evt_01M4HNKWFVVMPRSVXTT87BBEVD",
+              "payloadSchema": [
+                {
+                  "name": "code",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "language",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "runId",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "definerKnob": "resetCodeEvent",
+              "description": "Event a runnable code block emits on Reset (`{ runId }`).",
+              "event": "@config.resetCodeEvent",
+              "eventId": "evt_01M4HNKWFVD2KM0NWWCRFWECC5",
+              "payloadSchema": [
+                {
+                  "name": "runId",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
             }
           ],
           "entityContract": {
@@ -960,6 +1115,44 @@
                   }
                 ],
                 "tier": "essential"
+              },
+              {
+                "description": "Event a runnable code block emits on Run (`{ code, language, runId }`, runId = the segment index). Omit to render runnable blocks read-only.",
+                "id": "evt_01M4HNKWFVVMPRSVXTT87BBEVD",
+                "key": "@config.runCodeEvent",
+                "name": "@config.run code event",
+                "payloadSchema": [
+                  {
+                    "name": "code",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "language",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "runId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Event a runnable code block emits on Reset (`{ runId }`).",
+                "id": "evt_01M4HNKWFVD2KM0NWWCRFWECC5",
+                "key": "@config.resetCodeEvent",
+                "name": "@config.reset code event",
+                "payloadSchema": [
+                  {
+                    "name": "runId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
               }
             ],
             "states": [
@@ -992,6 +1185,7 @@
                       "askLabel": "@config.askLabel",
                       "bloomAnswerEvent": "@config.bloomAnswerEvent",
                       "className": "@config.className",
+                      "codeOutputs": "@config.codeOutputs",
                       "containerClassName": "@config.containerClassName",
                       "dir": "@config.dir",
                       "enter": "@config.enter",
@@ -1001,7 +1195,10 @@
                       "noteEvent": "@config.noteEvent",
                       "noteLabel": "@config.noteLabel",
                       "reflectionSaveEvent": "@config.reflectionSaveEvent",
+                      "resetCodeEvent": "@config.resetCodeEvent",
                       "role": "@config.role",
+                      "runCodeEvent": "@config.runCodeEvent",
+                      "runningCode": "@config.runningCode",
                       "segments": "@config.segments",
                       "skeleton": "@config.skeleton",
                       "tabIndex": "@config.tabIndex",
@@ -1039,6 +1236,72 @@
               "question",
               "note"
             ]
+          }
+        ],
+        "SegmentRendererCodeOutputsValue": [
+          {
+            "name": "stdout",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "stderr",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "exitCode",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "testResults",
+            "properties": [
+              {
+                "name": "input",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "name": "expectedOutput",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "name": "actualOutput",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "name": "passed",
+                "required": true,
+                "type": "boolean"
+              }
+            ],
+            "required": true,
+            "type": "[object]"
+          }
+        ],
+        "SegmentRendererCodeOutputsValueTestResultsItem": [
+          {
+            "name": "input",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "expectedOutput",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "actualOutput",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "passed",
+            "required": true,
+            "type": "boolean"
           }
         ],
         "SegmentRendererSegmentsItemActivate": [

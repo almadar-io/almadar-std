@@ -637,6 +637,18 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
               'effects': [
                 [
                   'set',
+                  '@entity.status',
+                  'searching',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'searching',
+              'to': 'searching',
+            },
+            {
+              'effects': [
+                [
+                  'set',
                   '@entity.queryVector',
                   [
                     'array/first',
@@ -848,6 +860,18 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
               'event': 'BUILD_FAILED',
               'from': 'searching',
               'to': 'failed',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'building',
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'building',
+              'to': 'building',
             },
             {
               'effects': [

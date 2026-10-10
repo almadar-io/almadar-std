@@ -36,6 +36,9 @@ orbital AgentFixLoopOrbital {
     }
 
     state validating {
+      INIT -> idle
+        (set @entity.status idle)
+        (render-ui main <typography content="Waiting for a program." variant="caption" />)
       PROGRAM_EVALUATED -> valid
         (set @entity.status valid)
         (render-ui main <typography content={(str/concat "Valid: " (object/get ?result behavior))} variant="caption" />)
@@ -52,6 +55,9 @@ orbital AgentFixLoopOrbital {
     }
 
     state fixing {
+      INIT -> idle
+        (set @entity.status idle)
+        (render-ui main <typography content="Waiting for a program." variant="caption" />)
       FIX_GENERATED -> fixed
         (set @entity.fix ?content)
         (set @entity.status fixed)

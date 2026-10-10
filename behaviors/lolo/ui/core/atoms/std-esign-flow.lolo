@@ -186,6 +186,13 @@ orbital SignatureSessionOrbital {
         @description "Pull the provider's current envelope status for this request."
         @synonyms "refresh status, check signature, poll envelope"
         @tier "domain"
+      SEND_FOR_SIGNATURE {
+        id : string!
+        row : SignatureSession
+      }
+        @description "Open the send step for this request: attach the document and dispatch it for signature."
+        @synonyms "send for signature, dispatch, send envelope"
+        @tier "domain"
       REQUEST_DELETE {
         id : string!
         row : SignatureSession
@@ -218,6 +225,10 @@ orbital SignatureSessionOrbital {
 
     config {
       itemActions : [ItemAction] = [{
+        event: SEND_FOR_SIGNATURE
+        label: "Send for signature"
+        variant: primary
+      }, {
         event: RESEND_REQUEST
         label: Resend
         variant: primary
@@ -380,6 +391,53 @@ orbital SignatureSessionOrbital {
   ;; session row is stamped envelopeId/sentAt/status=sent on success. The
   ;; browse grid's "Refresh status" action pulls the provider status and maps
   ;; completed/delivered/declined onto the session's signed/viewed/declined.
+  ;; The send step: a row's "Send for signature" opens a drop zone; dropping the document fires
+  ;; SEND_ENVELOPE with the row, which EnvelopeDispatcher dispatches.
+  trait EnvelopeSendDialog -> SignatureSession [interaction, instance] {
+    initial: closed
+
+    state closed {
+      INIT -> closed
+      REQUEST_SEND -> open
+        (render-ui modal <Stack direction={vertical} gap={md}>
+          <Typography content={(str/concat "Send " (object/get ?row documentName) " for signature")} variant={h3} />
+          <Typography color={muted} content={(str/concat "The signer " (object/get ?row recipientName) " receives it by email.")} variant={body} />
+          <upload-drop-zone action={SEND_ENVELOPE} actionPayload={{ id: ?id, row: ?row }} accept={".pdf"} maxFiles={1} label={"Drop the document to send"} description={"PDF, one file"} icon={file-up} />
+          <Button action={CLOSE} label={"Cancel"} variant={ghost} />
+        </Stack>)
+    }
+
+    state open {
+      INIT -> closed
+        (render-ui modal null)
+      SEND_ENVELOPE -> closed
+        (render-ui modal null)
+      CLOSE -> closed
+        (render-ui modal null)
+    }
+
+    listens {
+      SignatureSessionBrowse.SEND_FOR_SIGNATURE -> REQUEST_SEND
+      REQUEST_SEND {
+        id : string!
+        row : SignatureSession
+      }
+        @description "A request's send step was opened."
+        @synonyms "open send, start send"
+        @tier "presentation"
+      SEND_ENVELOPE {
+        id : string!
+        row : SignatureSession
+        files : [{ name : string, size : number, type : string, content : string }]
+      }
+        @description "The document was dropped; the request is being dispatched."
+        @synonyms "send, dispatch"
+        @tier "presentation"
+      CLOSE
+        @tier "presentation"
+    }
+  }
+
   trait EnvelopeDispatcher -> SignatureSession [lifecycle, instance] {
     initial: idle
 
@@ -387,7 +445,7 @@ orbital SignatureSessionOrbital {
       SEND_ENVELOPE -> dispatching
         (set @entity.id ?id)
         (call-service esign sendEnvelope {
-          documentContent: (object/get ?file content)
+          documentContent: (object/get (array/first ?files) content)
           documentName: (object/get ?row documentName)
           emailSubject: (str/concat "Signature requested: " (object/get ?row documentName))
           recipientEmail: (object/get ?row recipientEmail)
@@ -500,9 +558,9 @@ orbital SignatureSessionOrbital {
       SEND_ENVELOPE {
         id : string!
         row : SignatureSession
-        file : { name : string, size : number, type : string, content : string }
+        files : [{ name : string, size : number, type : string, content : string }]
       }
-        @description "Dispatch this session as a real e-sign envelope; `file.content` is the document as a base64 data URL (UploadDropZone shape)."
+        @description "Dispatch this session as a real e-sign envelope; the first of `files` is the document, its `content` a base64 data URL (UploadDropZone shape)."
         @synonyms "send envelope, dispatch signature, send for signing"
         @tier "domain"
       SignatureSessionBrowse.CHECK_ENVELOPE_STATUS -> CHECK_ENVELOPE_STATUS
@@ -539,5 +597,5 @@ orbital SignatureSessionOrbital {
     }
   }
 
-  page "/esign-flow" as SignatureSessionPage -> SignatureSessionBrowse, SignatureSessionCreate, SignatureSessionDelete, SignatureSessionPersistor, EnvelopeDispatcher
+  page "/esign-flow" as SignatureSessionPage -> SignatureSessionBrowse, SignatureSessionCreate, SignatureSessionDelete, SignatureSessionPersistor, EnvelopeSendDialog, EnvelopeDispatcher
 }

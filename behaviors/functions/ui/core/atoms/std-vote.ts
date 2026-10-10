@@ -290,6 +290,11 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
               {
                 'name': 'next',
                 'type': 'string',
+                'values': [
+                  'up',
+                  'down',
+                  'none',
+                ],
               },
               {
                 'name': 'data',
@@ -326,6 +331,11 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
                   {
                     'name': 'direction',
                     'type': 'string',
+                    'values': [
+                      'up',
+                      'down',
+                      'none',
+                    ],
                   },
                   {
                     'name': 'createdAt',
@@ -428,6 +438,11 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
                     {
                       'name': 'direction',
                       'type': 'string',
+                      'values': [
+                        'up',
+                        'down',
+                        'none',
+                      ],
                     },
                     {
                       'name': 'createdAt',
@@ -470,6 +485,11 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
                 {
                   'name': 'next',
                   'type': 'string',
+                  'values': [
+                    'up',
+                    'down',
+                    'none',
+                  ],
                 },
                 {
                   'name': 'data',
@@ -600,6 +620,31 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
               'event': 'VoteLoadFailed',
               'from': 'loading',
               'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('Vote' satisfies _StdVoteEntityName),
+                  {
+                    'emit': {
+                      'failure': 'VoteLoadFailed',
+                      'success': 'VoteLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'skeleton',
+                    'variant': 'card',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'loading',
             },
             {
               'effects': [
@@ -765,6 +810,31 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
               'event': 'VoteLoadFailed',
               'from': 'idle',
               'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('Vote' satisfies _StdVoteEntityName),
+                  {
+                    'emit': {
+                      'failure': 'VoteLoadFailed',
+                      'success': 'VoteLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'skeleton',
+                    'variant': 'card',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'voting',
+              'to': 'loading',
             },
             {
               'effects': [

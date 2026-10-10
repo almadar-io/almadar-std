@@ -155,30 +155,30 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
         'name': 'AgentSuggestion',
         'shape': [
           {
+            'name': 'action',
             'default': '',
             'description': 'What accepting it does: a name the app routes from SUGGESTION_ACCEPTED.',
-            'name': 'action',
             'synonyms': 'event, command',
             'type': 'string',
           },
           {
+            'name': 'body',
             'default': '',
             'description': 'Why the agent proposes it.',
-            'name': 'body',
             'synonyms': 'reasoning, reason, description, explanation',
             'type': 'string',
           },
           {
+            'name': 'createdAt',
             'default': 0,
             'description': 'When it was proposed (ms).',
-            'name': 'createdAt',
             'synonyms': 'time, timestamp',
             'type': 'number',
           },
           {
+            'name': 'href',
             'default': '',
             'description': 'A page accepting it opens; empty for none.',
-            'name': 'href',
             'synonyms': 'link, url, route',
             'type': 'string',
           },
@@ -188,46 +188,46 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
             'type': 'string',
           },
           {
+            'name': 'kind',
             'default': '',
             'description': 'What sort of suggestion this is; the app\'s own vocabulary.',
-            'name': 'kind',
             'synonyms': 'type, category',
             'type': 'string',
           },
           {
-            'description': 'Whom this is proposed to (the real @user). The binding organism scopes @read/@create/@update to it.',
             'name': 'ownerId',
             'required': true,
+            'description': 'Whom this is proposed to (the real @user). The binding organism scopes @read/@create/@update to it.',
             'synonyms': 'user, owner, account',
             'type': 'string',
           },
           {
+            'name': 'payload',
             'default': {},
             'description': 'What the action needs.',
+            'synonyms': 'params, arguments, data',
+            'type': 'object',
             'items': {
               'type': 'scalar',
             },
-            'name': 'payload',
-            'synonyms': 'params, arguments, data',
-            'type': 'object',
           },
           {
+            'name': 'resolvedAt',
             'default': 0,
             'description': 'When it was accepted or dismissed (ms).',
-            'name': 'resolvedAt',
             'type': 'number',
           },
           {
+            'name': 'signature',
             'default': '',
             'description': 'kind:action:subject. One signature is proposed to a person at most once, whatever became of it.',
-            'name': 'signature',
             'synonyms': 'dedup key, fingerprint',
             'type': 'string',
           },
           {
+            'name': 'status',
             'default': 'pending',
             'description': 'Where the suggestion stands.',
-            'name': 'status',
             'type': 'string',
             'values': [
               'pending',
@@ -236,16 +236,16 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
             ],
           },
           {
+            'name': 'subject',
             'default': '',
             'description': 'What the suggestion is about (an id or slug).',
-            'name': 'subject',
             'synonyms': 'target, topic',
             'type': 'string',
           },
           {
+            'name': 'title',
             'default': '',
             'description': 'The suggestion in a line.',
-            'name': 'title',
             'synonyms': 'headline, name',
             'type': 'string',
           },
@@ -256,16 +256,16 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
         'name': 'AgentSuggestionRun',
         'shape': [
           {
-            'description': 'Whose run this was (the real @user). The binding organism scopes @read/@create to it.',
             'name': 'ownerId',
             'required': true,
+            'description': 'Whose run this was (the real @user). The binding organism scopes @read/@create to it.',
             'synonyms': 'user, owner, account',
             'type': 'string',
           },
           {
+            'name': 'ranAt',
             'default': 0,
             'description': 'When the agent was last asked to look (ms).',
-            'name': 'ranAt',
             'synonyms': 'time, started',
             'type': 'number',
           },
@@ -645,6 +645,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'pending',
+                      'accepted',
+                      'dismissed',
+                    ],
                   },
                   {
                     'name': 'createdAt',
@@ -800,6 +805,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'pending',
+                        'accepted',
+                        'dismissed',
+                      ],
                     },
                     {
                       'name': 'createdAt',
@@ -1570,6 +1580,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'pending',
+                      'accepted',
+                      'dismissed',
+                    ],
                   },
                   {
                     'name': 'createdAt',
@@ -1668,6 +1683,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'pending',
+                      'accepted',
+                      'dismissed',
+                    ],
                   },
                   {
                     'name': 'createdAt',
@@ -1736,6 +1756,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'pending',
+                      'accepted',
+                      'dismissed',
+                    ],
                   },
                   {
                     'name': 'createdAt',
@@ -1802,6 +1827,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
               {
                 'name': 'status',
                 'type': 'string',
+                'values': [
+                  'pending',
+                  'accepted',
+                  'dismissed',
+                ],
               },
               {
                 'name': 'createdAt',
@@ -1865,6 +1895,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
               {
                 'name': 'status',
                 'type': 'string',
+                'values': [
+                  'pending',
+                  'accepted',
+                  'dismissed',
+                ],
               },
               {
                 'name': 'createdAt',
@@ -1985,6 +2020,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'pending',
+                        'accepted',
+                        'dismissed',
+                      ],
                     },
                     {
                       'name': 'createdAt',
@@ -2106,6 +2146,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'pending',
+                        'accepted',
+                        'dismissed',
+                      ],
                     },
                     {
                       'name': 'createdAt',
@@ -2171,6 +2216,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                 {
                   'name': 'status',
                   'type': 'string',
+                  'values': [
+                    'pending',
+                    'accepted',
+                    'dismissed',
+                  ],
                 },
                 {
                   'name': 'createdAt',
@@ -2248,6 +2298,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'pending',
+                        'accepted',
+                        'dismissed',
+                      ],
                     },
                     {
                       'name': 'createdAt',
@@ -2313,6 +2368,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                 {
                   'name': 'status',
                   'type': 'string',
+                  'values': [
+                    'pending',
+                    'accepted',
+                    'dismissed',
+                  ],
                 },
                 {
                   'name': 'createdAt',
@@ -2478,6 +2538,54 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
               'event': 'OPEN',
               'from': 'closed',
               'to': 'open',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  '@config.inboxSlot',
+                  null,
+                ],
+                [
+                  'fetch',
+                  ('AgentSuggestion' satisfies _StdAgentSuggestionsEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SuggestionsLoadFailed',
+                      'success': 'SuggestionsLoaded',
+                    },
+                    'filter': [
+                      '=',
+                      [
+                        'object/get',
+                        '@entity',
+                        'ownerId',
+                      ],
+                      '@user.id',
+                    ],
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'open',
+              'guard': '@config.showOnMount',
+              'to': 'open',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  '@config.inboxSlot',
+                  null,
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'open',
+              'guard': [
+                'not',
+                '@config.showOnMount',
+              ],
+              'to': 'closed',
             },
             {
               'effects': [
@@ -3528,6 +3636,10 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   {
                     'name': 'role',
                     'type': 'string',
+                    'values': [
+                      'user',
+                      'assistant',
+                    ],
                   },
                   {
                     'name': 'content',
@@ -3726,6 +3838,10 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                     {
                       'name': 'role',
                       'type': 'string',
+                      'values': [
+                        'user',
+                        'assistant',
+                      ],
                     },
                     {
                       'name': 'content',
@@ -3802,6 +3918,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
               'to': 'starting',
             },
             {
+              'event': 'INIT',
+              'from': 'starting',
+              'to': 'ready',
+            },
+            {
               'effects': [
                 [
                   'emit',
@@ -3841,6 +3962,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
               ],
               'event': 'RunRecordFailed',
               'from': 'starting',
+              'to': 'ready',
+            },
+            {
+              'event': 'INIT',
+              'from': 'analyzing',
               'to': 'ready',
             },
             {
@@ -4386,6 +4512,11 @@ export function stdAgentSuggestionsAgentSuggestionRecordsOrbital(params: StdAgen
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'pending',
+                      'accepted',
+                      'dismissed',
+                    ],
                   },
                   {
                     'name': 'createdAt',
@@ -4485,6 +4616,11 @@ export function stdAgentSuggestionsAgentSuggestionRecordsOrbital(params: StdAgen
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'pending',
+                        'accepted',
+                        'dismissed',
+                      ],
                     },
                     {
                       'name': 'createdAt',

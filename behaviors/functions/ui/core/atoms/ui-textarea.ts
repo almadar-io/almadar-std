@@ -80,6 +80,7 @@ export interface StdUiTextareaConfig {
   rows?: number;
   skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
+  value?: string;
 }
 
 /**

@@ -98,6 +98,18 @@ orbital GlobalSearchOrbital {
     }
 
     state searching {
+      INIT -> idle
+        (fetch SearchQuery)
+        (render-ui main {
+          children: [{
+            event: SEARCH
+            placeholder: @config.placeholder
+            type: search-input
+          }, <Typography.traits.TypographyRender color={muted} content={"Search across every connected module — results group by module."} linkedEntity={SearchQuery} variant={caption} />]
+          direction: vertical
+          gap: md
+          type: stack
+        })
       SEARCH -> searching
         (set @entity.queryText (str/default ?queryText (str/default ?value ?searchTerm)))
         (set @entity.typeFilter (str/default ?typeFilter ""))

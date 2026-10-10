@@ -1,5 +1,5 @@
 app std-app-layout [
-  version: "1.4.1",
+  version: "1.5.0",
   description: "std-app-layout — dashboard-layout chrome (sidebar nav + top bar with search + topBarActions + notifications) wrapping a single contentTrait slot. Use for list-style apps (CMS / helpdesk / CRM) and account/settings pages: the chrome stays stable while the consumer's content trait renders the data, and the consumer can add domain icons (cart / profile / help) via topBarActions. Bind once per orbital — the consumer rebinds linkedEntity via `XAppLayout = AppShell.traits.AppLayout -> XEntity` so multiple orbitals in one file each get their own chrome without colliding on a shared atom entity."
 ]
 ;; @capabilities "settings page shell, preferences page, account settings layout, profile settings, admin console shell"
@@ -40,13 +40,15 @@ orbital AppLayoutOrbital {
             }]
             currentPath: @config.currentPath
             layoutMode: @config.layoutMode
+            fullBleed: @config.fullBleed
             navItems: (array/map (array/filter @config.navItems (fn item (or (= (array/len (object/get @item roles [])) 0) (array/includes (object/get @item roles []) @config.viewerRole)))) (fn item (if (object/has @item children) (object/merge @item { children: (array/filter (object/get @item children []) (fn child (or (= (array/len (object/get @child roles [])) 0) (array/includes (object/get @child roles []) @config.viewerRole)))) }) @item)))
             notificationClickEvent: @config.notificationClickEvent
-            notifications: @config.notifications
+            notifications: (if @config.showNotifications @config.notifications null)
             searchEvent: (if @config.showSearch @config.searchEvent null)
             showThemeToggle: @config.showThemeToggle
             sidebarContent: @config.sidebarTrait
             topBarActions: (array/filter @config.topBarActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+            userMenuItems: (array/filter @config.userMenuItems (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             type: @config.layoutPattern
             user: (if @config.viewerName { avatar: @config.viewerAvatar, email: @config.viewerEmail, name: @config.viewerName } null)
           }]
@@ -77,13 +79,15 @@ orbital AppLayoutOrbital {
             }]
             currentPath: @config.currentPath
             layoutMode: @config.layoutMode
+            fullBleed: @config.fullBleed
             navItems: (array/map (array/filter @config.navItems (fn item (or (= (array/len (object/get @item roles [])) 0) (array/includes (object/get @item roles []) @config.viewerRole)))) (fn item (if (object/has @item children) (object/merge @item { children: (array/filter (object/get @item children []) (fn child (or (= (array/len (object/get @child roles [])) 0) (array/includes (object/get @child roles []) @config.viewerRole)))) }) @item)))
             notificationClickEvent: @config.notificationClickEvent
-            notifications: @config.notifications
+            notifications: (if @config.showNotifications @config.notifications null)
             searchEvent: (if @config.showSearch @config.searchEvent null)
             showThemeToggle: @config.showThemeToggle
             sidebarContent: @config.sidebarTrait
             topBarActions: (array/filter @config.topBarActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+            userMenuItems: (array/filter @config.userMenuItems (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             type: @config.layoutPattern
             user: (if @config.viewerName { avatar: @config.viewerAvatar, email: @config.viewerEmail, name: @config.viewerName } null)
           }]
@@ -185,6 +189,16 @@ orbital AppLayoutOrbital {
         @description "Icon buttons shown on the right side of the top bar (e.g. cart, help, profile)."
         @synonyms "toolbar buttons, header actions, shortcut icons, quick actions"
         @tier "presentation"
+      userMenuItems : [ItemAction] = []
+        @label "What goes in the account menu?"
+        @description "Entries listed above Sign out in the signed-in viewer's account menu (e.g. Settings, Profile); each navigates (navigatesTo) or emits its event."
+        @synonyms "account menu, user menu, profile menu, avatar menu"
+        @tier "presentation"
+      showNotifications : boolean = true
+        @label "Show the notifications bell?"
+        @description "The bell and its dropdown in the top bar; turn off for apps that have no notifications."
+        @synonyms "bell, alerts icon, hide notifications"
+        @tier "presentation"
       notifications : [NotificationSpec] = []
         @label "What notifications should appear?"
         @description "Items shown in the notifications dropdown."
@@ -198,6 +212,11 @@ orbital AppLayoutOrbital {
         @label "Layout pattern"
         @description "UI pattern used to render the application chrome"
         @tier "internal"
+      fullBleed : boolean = false
+        @label "Should pages fill the whole area?"
+        @description "Content runs edge to edge at full height, with no padding or width cap — for workspaces, canvases and maps."
+        @synonyms "full width, edge to edge, no padding, full screen content"
+        @tier "presentation"
       layoutMode : "sidebar" | "topnav" | "bottomnav" | "minimal" | "drawer" = sidebar
         @label "Where should navigation be placed?"
         @description "sidebar = left rail; topnav = top bar; bottomnav = mobile tab bar; minimal = no nav; drawer = navigation behind a menu button at every width, content full width."

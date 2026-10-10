@@ -1,0 +1,155 @@
+[
+  {
+    "organism": "std-record-store",
+    "orbital": "RecordStoreOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/infra/atoms/std-record-store.ts",
+    "entities": [
+      {
+        "name": "StoredRecord",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string",
+            "required": false,
+            "description": "A user-facing name for the record.",
+            "synonyms": "title, label"
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false,
+            "description": "Free text about the record.",
+            "synonyms": "details, notes"
+          }
+        ],
+        "persistence": "persistent",
+        "dataBearing": true
+      }
+    ],
+    "traits": [
+      {
+        "name": "RecordStore",
+        "emittedEvents": [
+          "RECORD_CREATED",
+          "RECORD_UPDATED",
+          "RECORD_DELETED",
+          "RecordSaveFailed"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "RECORD_CREATED",
+            "direction": "emit",
+            "description": "A new record was saved.",
+            "synonyms": "created, added, saved",
+            "tier": "domain"
+          },
+          {
+            "name": "RECORD_UPDATED",
+            "direction": "emit",
+            "description": "A record's changes were saved.",
+            "synonyms": "updated, edited, changed",
+            "tier": "domain"
+          },
+          {
+            "name": "RECORD_DELETED",
+            "direction": "emit",
+            "description": "A record was removed.",
+            "synonyms": "deleted, removed",
+            "tier": "domain"
+          },
+          {
+            "name": "RecordSaveFailed",
+            "direction": "emit",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "DO_CREATE",
+            "direction": "listen",
+            "description": "Save a new record from a submitted form.",
+            "synonyms": "create, add, save new, submit",
+            "tier": "domain"
+          },
+          {
+            "name": "DO_UPDATE",
+            "direction": "listen",
+            "description": "Save the changes to an existing record.",
+            "synonyms": "update, edit, save changes",
+            "tier": "domain"
+          },
+          {
+            "name": "DO_DELETE",
+            "direction": "listen",
+            "description": "Remove a record.",
+            "synonyms": "delete, remove",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "ownerField",
+            "type": "string",
+            "default": "",
+            "label": "Which field records who created it?",
+            "description": "Field set to the signed-in user's id when a record is created. Empty means records carry no owner.",
+            "synonyms": "owner, created by, author, holder, belongs to",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "StoredRecord",
+        "transitionEvents": [
+          "DO_CREATE",
+          "DO_DELETE",
+          "DO_UPDATE",
+          "INIT",
+          "RECORD_CREATED",
+          "RECORD_DELETED",
+          "RECORD_UPDATED",
+          "RecordSaveFailed"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        },
+        "effectRow": [
+          {
+            "kind": "persist",
+            "resource": "StoredRecord"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "toast"
+          }
+        ],
+        "effectEntityRefs": [
+          "StoredRecord"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "RecordStorePage",
+        "defaultPath": "/record-store",
+        "primaryEntity": "StoredRecord"
+      }
+    ],
+    "emittedEvents": [
+      "RECORD_CREATED",
+      "RECORD_DELETED",
+      "RECORD_UPDATED",
+      "RecordSaveFailed"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]
