@@ -1,0 +1,457 @@
+[
+  {
+    "organism": "std-learn-generate",
+    "orbital": "LearnGenerateOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-generate.ts",
+    "entities": [
+      {
+        "name": "LearnGeneration",
+        "fields": [
+          {
+            "name": "subject",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "context",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "candidates",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "instruments",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "cursor",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "chosen",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "roster",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "LearnGenerate",
+        "emittedEvents": [
+          "GENERATED",
+          "GENERATION_FAILED",
+          "CONVERSE",
+          "CATALOG_LISTED",
+          "SOURCED",
+          "INSTRUMENTS_READY",
+          "GENERATE_FAILED"
+        ],
+        "listenedEvents": [
+          "ASSISTANT_REPLIED",
+          "ASSISTANT_REPLY_FAILED"
+        ],
+        "events": [
+          {
+            "name": "GENERATED",
+            "direction": "emit",
+            "description": "The chosen instrument, its mode (the behavior's name) and its roster as JSON, ready to send as that instrument's ROSTER_LOADED"
+          },
+          {
+            "name": "GENERATION_FAILED",
+            "direction": "emit",
+            "description": "No instrument could be generated for the subject; nothing is shown"
+          },
+          {
+            "name": "CONVERSE",
+            "direction": "emit"
+          },
+          {
+            "name": "CATALOG_LISTED",
+            "direction": "emit"
+          },
+          {
+            "name": "SOURCED",
+            "direction": "emit"
+          },
+          {
+            "name": "INSTRUMENTS_READY",
+            "direction": "emit"
+          },
+          {
+            "name": "GENERATE_FAILED",
+            "direction": "emit"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "CHOOSE",
+            "direction": "listen"
+          },
+          {
+            "name": "FILL",
+            "direction": "listen"
+          },
+          {
+            "name": "GENERATE",
+            "direction": "listen",
+            "description": "Generate an instrument and roster for this subject; `context` is any extra the model should know (the lesson's wording, what to visualise)",
+            "synonyms": "visualise, make an instrument, generate"
+          },
+          {
+            "name": "ASSISTANT_REPLIED",
+            "direction": "listen"
+          },
+          {
+            "name": "TOOLS_FAILED",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "chooseEvent",
+            "type": "EventAddress",
+            "default": "LearnGenerate.CHOOSE",
+            "label": "Choose tool event",
+            "description": "The address the model's CHOOSE tool fires; a consumer that renames this trait sets it to its own name (`VizGen.CHOOSE`)",
+            "tier": "internal"
+          },
+          {
+            "key": "fillEvent",
+            "type": "EventAddress",
+            "default": "LearnGenerate.FILL",
+            "label": "Fill tool event",
+            "description": "The address the model's FILL tool fires; a consumer that renames this trait sets it to its own name (`VizGen.FILL`)",
+            "tier": "internal"
+          },
+          {
+            "key": "instruments",
+            "type": "[string]",
+            "default": [],
+            "label": "Allowed instruments",
+            "description": "Behavior names (`almadar-std/std-learn-predict`) to choose among; empty offers every instrument in the folders",
+            "synonyms": "allow list, instrument list",
+            "tier": "domain",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "scope",
+            "type": "[string]",
+            "default": [
+              "almadar-std/ui/learning"
+            ],
+            "label": "Behavior folders",
+            "description": "Registry folders (`<prefix>/<topic>[/<tier>]`) the generator may draw instruments from; nothing outside them is ever offered",
+            "synonyms": "scope, catalog, folders",
+            "tier": "domain",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "statusSlot",
+            "type": "slot",
+            "default": "main",
+            "label": "Status slot",
+            "description": "Where the atom shows its one-line status; a page running it in the background sends it to `system`",
+            "synonyms": "status area, slot",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "LearnGeneration",
+        "transitionEvents": [
+          "ASSISTANT_REPLIED",
+          "CATALOG_LISTED",
+          "CHOOSE",
+          "FILL",
+          "GENERATE",
+          "GENERATE_FAILED",
+          "INIT",
+          "INSTRUMENTS_READY",
+          "SOURCED",
+          "TOOLS_FAILED"
+        ],
+        "definerKnobs": [],
+        "effectRow": [
+          {
+            "kind": "behavior/catalog"
+          },
+          {
+            "kind": "behavior/source"
+          },
+          {
+            "kind": "emit",
+            "resource": "CONVERSE"
+          },
+          {
+            "kind": "emit",
+            "resource": "GENERATED"
+          },
+          {
+            "kind": "emit",
+            "resource": "GENERATE_FAILED"
+          },
+          {
+            "kind": "emit",
+            "resource": "GENERATION_FAILED"
+          },
+          {
+            "kind": "emit",
+            "resource": "INSTRUMENTS_READY"
+          },
+          {
+            "kind": "render-ui",
+            "resolved": false,
+            "resource": "@config.statusSlot"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.candidates"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.chosen"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.context"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.cursor"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.error"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.instruments"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.roster"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.status"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.subject"
+          }
+        ]
+      },
+      {
+        "name": "LearnGenerateTools",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "CONVERSE"
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "cancelKey",
+            "type": "string",
+            "default": "std-learn-generate",
+            "label": "Cancel key",
+            "description": "The key this instance's model call runs under, so CANCEL aborts it. Give each instance of the loop in one app its own.",
+            "synonyms": "call key, abort key",
+            "tier": "internal"
+          },
+          {
+            "key": "instructions",
+            "type": "string",
+            "default": "You operate this app for the signed-in user. Use the tools to act and to look things up; when a tool reports that something was refused or denied, say so plainly.",
+            "label": "How should the assistant behave?",
+            "description": "Standing instructions sent with every conversation.",
+            "synonyms": "system prompt, persona, guidance",
+            "tier": "domain"
+          },
+          {
+            "key": "maxSteps",
+            "type": "number",
+            "default": 4,
+            "label": "Model round-trips per request",
+            "description": "How many model calls one request may take before it fails.",
+            "tier": "policy"
+          },
+          {
+            "key": "quiet",
+            "type": "boolean",
+            "default": true,
+            "label": "Run in the background?",
+            "description": "No live ASSISTANT_STEP stream and no failure toast: the request is reported only through ASSISTANT_REPLIED and ASSISTANT_REPLY_FAILED. For a run nobody is watching, such as one the app starts on its own.",
+            "synonyms": "silent, background, no toast, suppress errors, headless run",
+            "tier": "policy"
+          },
+          {
+            "key": "tools",
+            "type": "[AgentTool]",
+            "default": [],
+            "label": "What may the assistant do?",
+            "description": "The declared inputs it may fire (`{ event: Trait.EVENT }`) and the entities it may read (`{ read: Entity }`), as the signed-in user.",
+            "synonyms": "allowlist, abilities, actions, permissions",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "AgentToolInput": {
+                  "name": "AgentToolInput",
+                  "properties": {
+                    "event": {
+                      "name": "event",
+                      "required": true,
+                      "type": "EventAddress"
+                    },
+                    "payload": {
+                      "name": "payload",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "properties": {
+                          "description": {
+                            "name": "description",
+                            "required": false,
+                            "type": "string"
+                          },
+                          "name": {
+                            "name": "name",
+                            "required": true,
+                            "type": "string"
+                          },
+                          "properties": {
+                            "name": "properties",
+                            "required": false,
+                            "type": "array",
+                            "items": {
+                              "type": "union",
+                              "values": [
+                                "AgentToolField"
+                              ]
+                            }
+                          },
+                          "required": {
+                            "name": "required",
+                            "required": false,
+                            "type": "boolean"
+                          },
+                          "type": {
+                            "name": "type",
+                            "required": true,
+                            "type": "string"
+                          },
+                          "values": {
+                            "name": "values",
+                            "required": false,
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "type": "object"
+                      }
+                    }
+                  },
+                  "type": "object"
+                },
+                "AgentToolRead": {
+                  "name": "AgentToolRead",
+                  "properties": {
+                    "read": {
+                      "name": "read",
+                      "required": true,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "AgentToolScope": {
+                  "name": "AgentToolScope",
+                  "properties": {
+                    "scope": {
+                      "name": "scope",
+                      "required": true,
+                      "type": "string",
+                      "values": [
+                        "declared"
+                      ]
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "union",
+              "values": [
+                "AgentToolScope",
+                "AgentToolInput",
+                "AgentToolRead"
+              ]
+            }
+          }
+        ],
+        "capabilities": [],
+        "ref": "ToolLoop.traits.AgentToolLoop",
+        "transitionEvents": [
+          "ANSWERED",
+          "ASK_FAILED",
+          "CANCEL",
+          "CONVERSE",
+          "INIT"
+        ],
+        "definerKnobs": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "LearnGeneratePage",
+        "defaultPath": "/learn-generate",
+        "primaryEntity": "LearnGeneration"
+      }
+    ],
+    "emittedEvents": [
+      "CATALOG_LISTED",
+      "CONVERSE",
+      "GENERATED",
+      "GENERATE_FAILED",
+      "GENERATION_FAILED",
+      "INSTRUMENTS_READY",
+      "SOURCED"
+    ],
+    "listenedEvents": [
+      "ASSISTANT_REPLIED",
+      "ASSISTANT_REPLY_FAILED",
+      "CONVERSE"
+    ],
+    "exposure": "palette",
+    "provenance": "generated",
+    "capabilities": "pick a learning instrument for a subject, write an instrument's roster, generate an interactive visualisation for a concept",
+    "sourceValid": true
+  }
+]

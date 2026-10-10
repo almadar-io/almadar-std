@@ -1,0 +1,336 @@
+app std-learn-generate [
+  version: "1.0.0",
+  description: "Generic instrument generator — GENERATE { subject, context } picks one learning instrument for a subject and writes its roster. It lists the installed behaviors under `scope` (optionally narrowed to the `instruments` allow-list), keeps those whose trait listens for ROSTER_LOADED (an instrument that takes its roster at runtime), asks the model to CHOOSE one, then to FILL a roster whose fields are exactly that instrument's ROSTER_LOADED payload; the tool loop checks the roster against those declared fields before it is accepted. GENERATED { behavior, mode, roster } carries the instrument, its mode (the behavior's name, the matchMode a lab router uses) and the roster as JSON, ready to send as that instrument's ROSTER_LOADED. It never writes a program: when no instrument in scope fits or the roster cannot be filled, it emits GENERATE_FAILED { error }. The instrument list is read once and kept for later requests."
+]
+
+;; @capabilities "pick a learning instrument for a subject, write an instrument's roster, generate an interactive visualisation for a concept"
+
+type CatalogHit = {
+  behavior : string!
+  description : string
+  traits : [trait]!
+  vectors : Map string [number]
+}
+type AgentChatMessage = {
+  role : "user" | "assistant"
+  content : string!
+}
+type AgentToolField = {
+  name : string!
+  type : string!
+  required : boolean
+  values : [string]
+  properties : [AgentToolField]
+  description : string
+}
+type AgentToolInput = {
+  event : EventAddress!
+  payload : [AgentToolField]
+}
+type LearnInstrument = {
+  behavior : string!
+  description : string
+  fields : [AgentToolField]!
+}
+
+uses ToolLoop from "std/behaviors/std-agent-tool-loop"
+
+orbital LearnGenerateOrbital {
+
+  entity LearnGeneration [runtime] {
+    id : string!
+    subject : string = ""
+    context : string = ""
+    candidates : [CatalogHit] = []
+    instruments : [LearnInstrument] = []
+    cursor : number = 0
+    chosen : string = ""
+    roster : string = ""
+    error : string = ""
+    status : "idle" | "listing" | "sourcing" | "choosing" | "filling" | "done" | "failed" = idle
+  }
+
+  trait LearnGenerate -> LearnGeneration [lifecycle, instance] {
+    config {
+      scope : [string] = ["almadar-std/ui/learning"]
+        @label "Behavior folders"
+        @description "Registry folders (`<prefix>/<topic>[/<tier>]`) the generator may draw instruments from; nothing outside them is ever offered"
+        @synonyms "scope, catalog, folders"
+        @tier "domain"
+      instruments : [string] = []
+        @label "Allowed instruments"
+        @description "Behavior names (`almadar-std/std-learn-predict`) to choose among; empty offers every instrument in the folders"
+        @synonyms "allow list, instrument list"
+        @tier "domain"
+      chooseEvent : EventAddress = LearnGenerate.CHOOSE
+        @label "Choose tool event"
+        @description "The address the model's CHOOSE tool fires; a consumer that renames this trait sets it to its own name (`VizGen.CHOOSE`)"
+        @tier "internal"
+      fillEvent : EventAddress = LearnGenerate.FILL
+        @label "Fill tool event"
+        @description "The address the model's FILL tool fires; a consumer that renames this trait sets it to its own name (`VizGen.FILL`)"
+        @tier "internal"
+      statusSlot : slot = main
+        @label "Status slot"
+        @description "Where the atom shows its one-line status; a page running it in the background sends it to `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+    }
+
+    state idle {
+      INIT -> idle
+        (set @entity.status idle)
+      CHOOSE -> idle
+      FILL -> idle
+      GENERATE -> listing when (= (array/len @entity.instruments) 0)
+        (set @entity.subject ?subject)
+        (set @entity.context (object/get @payload context ""))
+        (set @entity.chosen "")
+        (set @entity.roster "")
+        (set @entity.error "")
+        (set @entity.status listing)
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Finding an instrument…" })
+        (behavior/catalog { paths: @config.scope } {
+          emit: { failure: GENERATE_FAILED, success: CATALOG_LISTED }
+        })
+      GENERATE -> choosing when (> (array/len @entity.instruments) 0)
+        (set @entity.subject ?subject)
+        (set @entity.context (object/get @payload context ""))
+        (set @entity.chosen "")
+        (set @entity.roster "")
+        (set @entity.error "")
+        (set @entity.status choosing)
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Choosing an instrument…" })
+        (emit CONVERSE {
+          messages: [{ role: "user", content: (str/concat "Subject: " ?subject (if (= (object/get @payload context "") "") "" (str/concat "\nContext: " (object/get @payload context "")))) }]
+          instructions: (str/concat "You pick the one interactive learning instrument that best lets a learner explore the subject. The installed instruments:\n" (str/join (array/map @entity.instruments (fn i (str/concat "- " (object/get @i behavior) ": " (object/get @i description "")))) "\n") "\nCall the CHOOSE tool once with exactly one of them, then reply with one sentence.")
+          tools: [{
+            event: @config.chooseEvent
+            payload: [{ name: "choice", type: "string", required: true, values: (array/map @entity.instruments (fn i (object/get @i behavior))) }]
+          }]
+          ephemeral: true
+        })
+    }
+
+    state listing {
+      INIT -> listing
+        (set @entity.status listing)
+      CATALOG_LISTED -> sourcing when (> (array/len (array/filter ?result (fn h (or (= (array/len @config.instruments) 0) (array/includes @config.instruments (object/get @h behavior)))))) 0)
+        (let ((hits (array/filter ?result (fn h (or (= (array/len @config.instruments) 0) (array/includes @config.instruments (object/get @h behavior)))))))
+          (do
+            (set @entity.candidates @hits)
+            (set @entity.cursor 0)
+            (set @entity.status sourcing)
+            (behavior/source { behavior: (object/get (array/first @hits) behavior) } {
+              emit: { failure: GENERATE_FAILED, success: SOURCED }
+            })))
+      CATALOG_LISTED -> failed when (= (array/len (array/filter ?result (fn h (or (= (array/len @config.instruments) 0) (array/includes @config.instruments (object/get @h behavior)))))) 0)
+        (set @entity.error "No behavior in scope to choose from")
+        (set @entity.status failed)
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No instrument could be generated" })
+        (emit GENERATE_FAILED { error: "No behavior in scope to choose from" })
+      GENERATE_FAILED -> failed
+        (set @entity.error ?error)
+        (set @entity.status failed)
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No instrument could be generated" })
+        (emit GENERATION_FAILED { error: ?error })
+    }
+
+    state sourcing {
+      INIT -> sourcing
+        (set @entity.status sourcing)
+      SOURCED -> sourcing when (< (+ @entity.cursor 1) (array/len @entity.candidates))
+        (let ((fields (array/flatten (array/map (object/get ?result orbitals []) (fn o (array/flatten (array/map (object/get @o traits []) (fn t (array/flatten (array/map (array/filter (object/get (object/get @t stateMachine {}) events []) (fn e (= (object/get @e key "") "ROSTER_LOADED"))) (fn e (array/filter (object/get @e payloadSchema []) (fn f (!= (object/get @f name "") "mode"))))))))))))))
+          (do
+            (set @entity.instruments (if (> (array/len @fields) 0) (array/append @entity.instruments { behavior: (object/get (array/nth @entity.candidates @entity.cursor) behavior), description: (object/get (array/nth @entity.candidates @entity.cursor) description ""), fields: @fields }) @entity.instruments))
+            (set @entity.cursor (+ @entity.cursor 1))
+            (behavior/source { behavior: (object/get (array/nth @entity.candidates (+ @entity.cursor 1)) behavior) } {
+              emit: { failure: GENERATE_FAILED, success: SOURCED }
+            })))
+      SOURCED -> choosing when (>= (+ @entity.cursor 1) (array/len @entity.candidates))
+        (let ((fields (array/flatten (array/map (object/get ?result orbitals []) (fn o (array/flatten (array/map (object/get @o traits []) (fn t (array/flatten (array/map (array/filter (object/get (object/get @t stateMachine {}) events []) (fn e (= (object/get @e key "") "ROSTER_LOADED"))) (fn e (array/filter (object/get @e payloadSchema []) (fn f (!= (object/get @f name "") "mode"))))))))))))))
+          (do
+            (set @entity.instruments (if (> (array/len @fields) 0) (array/append @entity.instruments { behavior: (object/get (array/nth @entity.candidates @entity.cursor) behavior), description: (object/get (array/nth @entity.candidates @entity.cursor) description ""), fields: @fields }) @entity.instruments))
+            (set @entity.status choosing)
+            (emit INSTRUMENTS_READY {})))
+      GENERATE_FAILED -> failed
+        (set @entity.error ?error)
+        (set @entity.status failed)
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No instrument could be generated" })
+        (emit GENERATION_FAILED { error: ?error })
+    }
+
+    state choosing {
+      INIT -> choosing
+        (set @entity.status choosing)
+      INSTRUMENTS_READY -> choosing when (> (array/len @entity.instruments) 0)
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Choosing an instrument…" })
+        (emit CONVERSE {
+          messages: [{ role: "user", content: (str/concat "Subject: " @entity.subject (if (= @entity.context "") "" (str/concat "\nContext: " @entity.context))) }]
+          instructions: (str/concat "You pick the one interactive learning instrument that best lets a learner explore the subject. The installed instruments:\n" (str/join (array/map @entity.instruments (fn i (str/concat "- " (object/get @i behavior) ": " (object/get @i description "")))) "\n") "\nCall the CHOOSE tool once with exactly one of them, then reply with one sentence.")
+          tools: [{
+            event: @config.chooseEvent
+            payload: [{ name: "choice", type: "string", required: true, values: (array/map @entity.instruments (fn i (object/get @i behavior))) }]
+          }]
+          ephemeral: true
+        })
+      INSTRUMENTS_READY -> failed when (= (array/len @entity.instruments) 0)
+        (set @entity.error "No instrument in scope takes a roster")
+        (set @entity.status failed)
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No instrument could be generated" })
+        (emit GENERATION_FAILED { error: "No instrument in scope takes a roster" })
+      CHOOSE -> choosing
+        (set @entity.chosen ?choice)
+      ASSISTANT_REPLIED -> filling when (array/some @entity.instruments (fn i (= (object/get @i behavior) @entity.chosen)))
+        (set @entity.status filling)
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Writing the roster…" })
+        (emit CONVERSE {
+          messages: [{ role: "user", content: (str/concat "Subject: " @entity.subject (if (= @entity.context "") "" (str/concat "\nContext: " @entity.context))) }]
+          instructions: (str/concat "You write the content roster for the learning instrument " @entity.chosen ": " (object/get (array/find @entity.instruments (fn i (= (object/get @i behavior) @entity.chosen))) description "") "\nCall the FILL tool once with a roster of realistic, accurate, pedagogically useful content about the subject. If the tool reports issues, call it again with them fixed. Then reply with one sentence.")
+          tools: [{
+            event: @config.fillEvent
+            payload: [{ name: "roster", type: "object", required: true, properties: (object/get (array/find @entity.instruments (fn i (= (object/get @i behavior) @entity.chosen))) fields []) }]
+          }]
+          ephemeral: true
+        })
+      ASSISTANT_REPLIED -> failed when (not (array/some @entity.instruments (fn i (= (object/get @i behavior) @entity.chosen))))
+        (set @entity.error "The model chose no installed instrument")
+        (set @entity.status failed)
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No instrument could be generated" })
+        (emit GENERATION_FAILED { error: "The model chose no installed instrument" })
+      TOOLS_FAILED -> failed
+        (set @entity.error ?error)
+        (set @entity.status failed)
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No instrument could be generated" })
+        (emit GENERATION_FAILED { error: ?error })
+    }
+
+    state filling {
+      INIT -> filling
+        (set @entity.status filling)
+      FILL -> filling
+        (set @entity.roster (json/stringify ?roster))
+      ASSISTANT_REPLIED -> done when (!= @entity.roster "")
+        (set @entity.status done)
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Instrument ready" })
+        (emit GENERATED { behavior: @entity.chosen, mode: (array/last (str/split @entity.chosen "/")), roster: @entity.roster })
+      ASSISTANT_REPLIED -> failed when (= @entity.roster "")
+        (set @entity.error "The model wrote no roster that matches the instrument")
+        (set @entity.status failed)
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No instrument could be generated" })
+        (emit GENERATION_FAILED { error: "The model wrote no roster that matches the instrument" })
+      TOOLS_FAILED -> failed
+        (set @entity.error ?error)
+        (set @entity.status failed)
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No instrument could be generated" })
+        (emit GENERATION_FAILED { error: ?error })
+    }
+
+    state done {
+      INIT -> done
+        (set @entity.status done)
+      GENERATE -> listing when (= (array/len @entity.instruments) 0)
+        (set @entity.subject ?subject)
+        (set @entity.context (object/get @payload context ""))
+        (set @entity.chosen "")
+        (set @entity.roster "")
+        (set @entity.status listing)
+        (behavior/catalog { paths: @config.scope } {
+          emit: { failure: GENERATE_FAILED, success: CATALOG_LISTED }
+        })
+      GENERATE -> choosing when (> (array/len @entity.instruments) 0)
+        (set @entity.subject ?subject)
+        (set @entity.context (object/get @payload context ""))
+        (set @entity.chosen "")
+        (set @entity.roster "")
+        (set @entity.status choosing)
+        (emit INSTRUMENTS_READY {})
+    }
+
+    state failed {
+      INIT -> failed
+        (set @entity.status failed)
+      GENERATE -> listing when (= (array/len @entity.instruments) 0)
+        (set @entity.subject ?subject)
+        (set @entity.context (object/get @payload context ""))
+        (set @entity.chosen "")
+        (set @entity.roster "")
+        (set @entity.error "")
+        (set @entity.status listing)
+        (behavior/catalog { paths: @config.scope } {
+          emit: { failure: GENERATE_FAILED, success: CATALOG_LISTED }
+        })
+      GENERATE -> choosing when (> (array/len @entity.instruments) 0)
+        (set @entity.subject ?subject)
+        (set @entity.context (object/get @payload context ""))
+        (set @entity.chosen "")
+        (set @entity.roster "")
+        (set @entity.error "")
+        (set @entity.status choosing)
+        (emit INSTRUMENTS_READY {})
+    }
+
+    emits {
+      GENERATED -> external {
+        behavior : string!
+        mode : string!
+        roster : string!
+      }
+        @description "The chosen instrument, its mode (the behavior's name) and its roster as JSON, ready to send as that instrument's ROSTER_LOADED"
+      GENERATION_FAILED -> external {
+        error : string!
+      }
+        @description "No instrument could be generated for the subject; nothing is shown"
+      CONVERSE {
+        messages : [AgentChatMessage]!
+        instructions : string
+        tools : [AgentToolInput]
+        ephemeral : boolean
+      }
+      CATALOG_LISTED {
+        result : [CatalogHit]!
+      }
+      SOURCED {
+        result : SExpr!
+      }
+      INSTRUMENTS_READY {
+      }
+      GENERATE_FAILED {
+        error : string!
+      }
+    }
+
+    listens {
+      GENERATE -> external {
+        subject : string!
+        context : string
+      }
+        @description "Generate an instrument and roster for this subject; `context` is any extra the model should know (the lesson's wording, what to visualise)"
+        @synonyms "visualise, make an instrument, generate"
+      CHOOSE -> external {
+        choice : string!
+      }
+      FILL -> external {
+        roster : SExpr!
+      }
+      LearnGenerateTools.ASSISTANT_REPLIED -> ASSISTANT_REPLIED
+      LearnGenerateTools.ASSISTANT_REPLY_FAILED -> TOOLS_FAILED
+      TOOLS_FAILED {
+        error : string!
+      }
+    }
+  }
+
+  trait LearnGenerateTools = ToolLoop.traits.AgentToolLoop {
+    config {
+      quiet: true
+      maxSteps: 4
+      cancelKey: "std-learn-generate"
+    }
+    listens {
+      LearnGenerate.CONVERSE -> CONVERSE
+    }
+  }
+
+  page "/learn-generate" as LearnGeneratePage -> LearnGenerate, LearnGenerateTools
+}

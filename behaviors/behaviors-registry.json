@@ -1,13 +1,13 @@
 {
-  "$generated": "2026-10-10T05:18:49.152Z",
+  "$generated": "2026-10-10T08:37:16.612Z",
   "$source": "tools/almadar-pattern-sync/behaviors",
   "$package": "@almadar/std",
-  "totalBehaviors": 461,
-  "atoms": 300,
+  "totalBehaviors": 462,
+  "atoms": 301,
   "molecules": 122,
   "organisms": 39,
   "layers": {
-    "UI Patterns": 448,
+    "UI Patterns": 449,
     "ML": 13
   },
   "behaviors": {
@@ -92,6 +92,7 @@
         "std-learn-coupled-sim",
         "std-learn-derivation",
         "std-learn-doser",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-live-sim",
@@ -2318,6 +2319,7 @@
         "std-integration-settings",
         "std-invoice",
         "std-kflow",
+        "std-learn-generate",
         "std-service-accounting",
         "std-service-arxiv",
         "std-service-banking",
@@ -4298,6 +4300,7 @@
         "std-learn-coupled-sim",
         "std-learn-derivation",
         "std-learn-doser",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-live-sim",
@@ -4569,6 +4572,7 @@
         "std-inspection-system",
         "std-integration-settings",
         "std-iram",
+        "std-learn-generate",
         "std-market-board-3d",
         "std-objective-board-3d",
         "std-purchase-order",
@@ -5208,6 +5212,7 @@
         "std-agent-trace",
         "std-app-assistant",
         "std-integration-settings",
+        "std-learn-generate",
         "std-service-accounting",
         "std-service-arxiv",
         "std-service-banking",
@@ -6303,6 +6308,7 @@
         "std-learn-coupled-sim",
         "std-learn-derivation",
         "std-learn-doser",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-live-sim",
@@ -362676,6 +362682,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -363494,6 +363501,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -364387,6 +364395,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -365097,6 +365106,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -366014,6 +366024,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -366873,6 +366884,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -367593,6 +367605,7 @@
         "std-learn-diagram",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -368409,6 +368422,7 @@
         "std-learn-diagram",
         "std-learn-doser",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -369012,6 +369026,7 @@
         "std-learn-diagram",
         "std-learn-doser",
         "std-learn-estimate",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -369718,6 +369733,572 @@
         "reactor"
       ]
     },
+    "std-learn-generate": {
+      "name": "std-learn-generate",
+      "level": "atom",
+      "topic": "ui/learning",
+      "family": "ui/learning",
+      "layer": "UI Patterns",
+      "description": "Generic instrument generator — GENERATE { subject, context } picks one learning instrument for a subject and writes its roster. It lists the installed behaviors under `scope` (optionally narrowed to the `instruments` allow-list), keeps those whose trait listens for ROSTER_LOADED (an instrument that takes its roster at runtime), asks the model to CHOOSE one, then to FILL a roster whose fields are exactly that instrument's ROSTER_LOADED payload; the tool loop checks the roster against those declared fields before it is accepted. GENERATED { behavior, mode, roster } carries the instrument, its mode (the behavior's name, the matchMode a lab router uses) and the roster as JSON, ready to send as that instrument's ROSTER_LOADED. It never writes a program: when no instrument in scope fits or the roster cannot be filled, it emits GENERATE_FAILED { error }. The instrument list is read once and kept for later requests.",
+      "defaultOrbitalName": "LearnGenerateOrbital",
+      "statePattern": "choosing, done, failed, filling, idle, listing, sourcing",
+      "complexity": {
+        "states": 7,
+        "events": 13,
+        "transitions": 31
+      },
+      "defaultEntity": {
+        "name": "LearnGeneration",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "subject",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "context",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "candidates",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "instruments",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "cursor",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "chosen",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "roster",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "idle"
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "LearnGenerations",
+        "entitySingular": "LearnGeneration",
+        "entityPlural": "LearnGenerations"
+      },
+      "defaultIcons": [],
+      "composableWith": [
+        "kflow-lesson",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-completion",
+        "std-agent-session",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-integration-settings",
+        "std-learn-arrangement",
+        "std-learn-classify",
+        "std-learn-compare",
+        "std-learn-coupled-sim",
+        "std-learn-derivation",
+        "std-learn-diagram",
+        "std-learn-doser",
+        "std-learn-estimate",
+        "std-learn-fx-cues",
+        "std-learn-goal-seek",
+        "std-learn-grid-sim",
+        "std-learn-hotspot",
+        "std-learn-live-sim",
+        "std-learn-measure",
+        "std-learn-param-explorer",
+        "std-learn-perturb",
+        "std-learn-predict",
+        "std-learn-sample-accumulator",
+        "std-learn-sandbox",
+        "std-learn-scatter-fit",
+        "std-learn-scenario",
+        "std-learn-sim-3d",
+        "std-learn-slope-probe",
+        "std-learn-speed-drill",
+        "std-learn-stepper",
+        "std-learn-tour-3d",
+        "std-learn-trace-player",
+        "std-learn-transport",
+        "std-learn-tree",
+        "std-service-accounting",
+        "std-service-arxiv",
+        "std-service-banking",
+        "std-service-calendar",
+        "std-service-calendar-ical",
+        "std-service-cli",
+        "std-service-custom-bearer",
+        "std-service-database",
+        "std-service-deepagent",
+        "std-service-docker",
+        "std-service-drive",
+        "std-service-email",
+        "std-service-esign",
+        "std-service-github",
+        "std-service-iconify",
+        "std-service-llm",
+        "std-service-maps",
+        "std-service-marketplace",
+        "std-service-meta-ads",
+        "std-service-ml",
+        "std-service-oauth",
+        "std-service-otel",
+        "std-service-print",
+        "std-service-push",
+        "std-service-queue",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-webhook",
+        "std-service-wikimedia",
+        "std-service-youtube",
+        "std-trade-order",
+        "studio-architect-workspace",
+        "studio-designer-workspace",
+        "studio-generator",
+        "studio-library",
+        "ui-algo-graph-canvas",
+        "ui-algorithm-canvas",
+        "ui-biology-canvas",
+        "ui-chemistry-canvas",
+        "ui-learning-canvas",
+        "ui-math-canvas",
+        "ui-physics-canvas",
+        "ui-visual-novel-board"
+      ],
+      "connectableEvents": [
+        "CHOOSE",
+        "FILL",
+        "GENERATE",
+        "CATALOG_LISTED",
+        "GENERATE_FAILED",
+        "SOURCED",
+        "INSTRUMENTS_READY",
+        "ASSISTANT_REPLIED",
+        "TOOLS_FAILED",
+        "GENERATED",
+        "GENERATION_FAILED",
+        "CONVERSE"
+      ],
+      "eventPayloads": {},
+      "exposure": "palette",
+      "provenance": "generated",
+      "capabilities": "pick a learning instrument for a subject, write an instrument's roster, generate an interactive visualisation for a concept",
+      "traits": [
+        {
+          "name": "LearnGenerate",
+          "orbital": "LearnGenerateOrbital",
+          "role": "renderer",
+          "emittedEvents": [
+            "GENERATED",
+            "GENERATION_FAILED",
+            "CONVERSE",
+            "CATALOG_LISTED",
+            "SOURCED",
+            "INSTRUMENTS_READY",
+            "GENERATE_FAILED"
+          ],
+          "listenedEvents": [
+            "ASSISTANT_REPLIED",
+            "ASSISTANT_REPLY_FAILED"
+          ],
+          "overridableConfigKeys": [
+            {
+              "key": "chooseEvent",
+              "type": "EventAddress",
+              "default": "LearnGenerate.CHOOSE",
+              "label": "Choose tool event",
+              "description": "The address the model's CHOOSE tool fires; a consumer that renames this trait sets it to its own name (`VizGen.CHOOSE`)",
+              "tier": "internal"
+            },
+            {
+              "key": "fillEvent",
+              "type": "EventAddress",
+              "default": "LearnGenerate.FILL",
+              "label": "Fill tool event",
+              "description": "The address the model's FILL tool fires; a consumer that renames this trait sets it to its own name (`VizGen.FILL`)",
+              "tier": "internal"
+            },
+            {
+              "key": "instruments",
+              "type": "[string]",
+              "default": [],
+              "label": "Allowed instruments",
+              "description": "Behavior names (`almadar-std/std-learn-predict`) to choose among; empty offers every instrument in the folders",
+              "synonyms": "allow list, instrument list",
+              "tier": "domain",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "key": "scope",
+              "type": "[string]",
+              "default": [
+                "almadar-std/ui/learning"
+              ],
+              "label": "Behavior folders",
+              "description": "Registry folders (`<prefix>/<topic>[/<tier>]`) the generator may draw instruments from; nothing outside them is ever offered",
+              "synonyms": "scope, catalog, folders",
+              "tier": "domain",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "key": "statusSlot",
+              "type": "slot",
+              "default": "main",
+              "label": "Status slot",
+              "description": "Where the atom shows its one-line status; a page running it in the background sends it to `system`",
+              "synonyms": "status area, slot",
+              "tier": "presentation"
+            }
+          ],
+          "capabilities": [],
+          "ticks": [],
+          "rendersUi": true,
+          "category": "lifecycle",
+          "linkedEntity": "LearnGeneration",
+          "effectRow": [
+            {
+              "kind": "behavior/catalog"
+            },
+            {
+              "kind": "behavior/source"
+            },
+            {
+              "kind": "emit",
+              "resource": "CONVERSE"
+            },
+            {
+              "kind": "emit",
+              "resource": "GENERATED"
+            },
+            {
+              "kind": "emit",
+              "resource": "GENERATE_FAILED"
+            },
+            {
+              "kind": "emit",
+              "resource": "GENERATION_FAILED"
+            },
+            {
+              "kind": "emit",
+              "resource": "INSTRUMENTS_READY"
+            },
+            {
+              "kind": "render-ui",
+              "resolved": false,
+              "resource": "@config.statusSlot"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.candidates"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.chosen"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.context"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.cursor"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.error"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.instruments"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.roster"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.status"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.subject"
+            }
+          ],
+          "transitionEvents": [
+            "ASSISTANT_REPLIED",
+            "CATALOG_LISTED",
+            "CHOOSE",
+            "FILL",
+            "GENERATE",
+            "GENERATE_FAILED",
+            "INIT",
+            "INSTRUMENTS_READY",
+            "SOURCED",
+            "TOOLS_FAILED"
+          ],
+          "events": [
+            {
+              "name": "GENERATED",
+              "direction": "emit",
+              "description": "The chosen instrument, its mode (the behavior's name) and its roster as JSON, ready to send as that instrument's ROSTER_LOADED"
+            },
+            {
+              "name": "GENERATION_FAILED",
+              "direction": "emit",
+              "description": "No instrument could be generated for the subject; nothing is shown"
+            },
+            {
+              "name": "CONVERSE",
+              "direction": "emit"
+            },
+            {
+              "name": "CATALOG_LISTED",
+              "direction": "emit"
+            },
+            {
+              "name": "SOURCED",
+              "direction": "emit"
+            },
+            {
+              "name": "INSTRUMENTS_READY",
+              "direction": "emit"
+            },
+            {
+              "name": "GENERATE_FAILED",
+              "direction": "emit"
+            },
+            {
+              "name": "INIT",
+              "direction": "listen"
+            },
+            {
+              "name": "CHOOSE",
+              "direction": "listen"
+            },
+            {
+              "name": "FILL",
+              "direction": "listen"
+            },
+            {
+              "name": "GENERATE",
+              "direction": "listen",
+              "description": "Generate an instrument and roster for this subject; `context` is any extra the model should know (the lesson's wording, what to visualise)",
+              "synonyms": "visualise, make an instrument, generate"
+            },
+            {
+              "name": "ASSISTANT_REPLIED",
+              "direction": "listen"
+            },
+            {
+              "name": "TOOLS_FAILED",
+              "direction": "listen"
+            }
+          ],
+          "definerKnobs": []
+        },
+        {
+          "name": "LearnGenerateTools",
+          "orbital": "LearnGenerateOrbital",
+          "role": "renderer",
+          "emittedEvents": [],
+          "listenedEvents": [
+            "CONVERSE"
+          ],
+          "overridableConfigKeys": [
+            {
+              "key": "cancelKey",
+              "type": "string",
+              "default": "std-learn-generate",
+              "label": "Cancel key",
+              "description": "The key this instance's model call runs under, so CANCEL aborts it. Give each instance of the loop in one app its own.",
+              "synonyms": "call key, abort key",
+              "tier": "internal"
+            },
+            {
+              "key": "instructions",
+              "type": "string",
+              "default": "You operate this app for the signed-in user. Use the tools to act and to look things up; when a tool reports that something was refused or denied, say so plainly.",
+              "label": "How should the assistant behave?",
+              "description": "Standing instructions sent with every conversation.",
+              "synonyms": "system prompt, persona, guidance",
+              "tier": "domain"
+            },
+            {
+              "key": "maxSteps",
+              "type": "number",
+              "default": 4,
+              "label": "Model round-trips per request",
+              "description": "How many model calls one request may take before it fails.",
+              "tier": "policy"
+            },
+            {
+              "key": "quiet",
+              "type": "boolean",
+              "default": true,
+              "label": "Run in the background?",
+              "description": "No live ASSISTANT_STEP stream and no failure toast: the request is reported only through ASSISTANT_REPLIED and ASSISTANT_REPLY_FAILED. For a run nobody is watching, such as one the app starts on its own.",
+              "synonyms": "silent, background, no toast, suppress errors, headless run",
+              "tier": "policy"
+            },
+            {
+              "key": "tools",
+              "type": "[AgentTool]",
+              "default": [],
+              "label": "What may the assistant do?",
+              "description": "The declared inputs it may fire (`{ event: Trait.EVENT }`) and the entities it may read (`{ read: Entity }`), as the signed-in user.",
+              "synonyms": "allowlist, abilities, actions, permissions",
+              "tier": "domain",
+              "items": {
+                "properties": {
+                  "AgentToolInput": {
+                    "name": "AgentToolInput",
+                    "properties": {
+                      "event": {
+                        "name": "event",
+                        "required": true,
+                        "type": "EventAddress"
+                      },
+                      "payload": {
+                        "name": "payload",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                          "properties": {
+                            "description": {
+                              "name": "description",
+                              "required": false,
+                              "type": "string"
+                            },
+                            "name": {
+                              "name": "name",
+                              "required": true,
+                              "type": "string"
+                            },
+                            "properties": {
+                              "name": "properties",
+                              "required": false,
+                              "type": "array",
+                              "items": {
+                                "type": "union",
+                                "values": [
+                                  "AgentToolField"
+                                ]
+                              }
+                            },
+                            "required": {
+                              "name": "required",
+                              "required": false,
+                              "type": "boolean"
+                            },
+                            "type": {
+                              "name": "type",
+                              "required": true,
+                              "type": "string"
+                            },
+                            "values": {
+                              "name": "values",
+                              "required": false,
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "AgentToolRead": {
+                    "name": "AgentToolRead",
+                    "properties": {
+                      "read": {
+                        "name": "read",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "AgentToolScope": {
+                    "name": "AgentToolScope",
+                    "properties": {
+                      "scope": {
+                        "name": "scope",
+                        "required": true,
+                        "type": "string",
+                        "values": [
+                          "declared"
+                        ]
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "union",
+                "values": [
+                  "AgentToolScope",
+                  "AgentToolInput",
+                  "AgentToolRead"
+                ]
+              }
+            }
+          ],
+          "capabilities": [],
+          "ticks": [],
+          "rendersUi": true,
+          "ref": "ToolLoop.traits.AgentToolLoop",
+          "category": "interaction",
+          "transitionEvents": [
+            "ANSWERED",
+            "ASK_FAILED",
+            "CANCEL",
+            "CONVERSE",
+            "INIT"
+          ],
+          "definerKnobs": []
+        }
+      ],
+      "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-generate.ts",
+      "sourceValid": true,
+      "roles": [
+        "renderer"
+      ]
+    },
     "std-learn-goal-seek": {
       "name": "std-learn-goal-seek",
       "level": "atom",
@@ -369943,6 +370524,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-grid-sim",
         "std-learn-hotspot",
         "std-learn-live-sim",
@@ -370777,6 +371359,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-hotspot",
         "std-learn-live-sim",
@@ -371591,6 +372174,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-live-sim",
@@ -372350,6 +372934,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -373088,6 +373673,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -373775,6 +374361,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -374423,6 +375010,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -375292,6 +375880,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -376149,6 +376738,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -376702,6 +377292,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -377470,6 +378061,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -378607,6 +379199,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -379341,6 +379934,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -379879,6 +380473,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -380424,6 +381019,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -381168,6 +381764,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -381973,6 +382570,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -382991,6 +383589,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -383799,6 +384398,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -384510,6 +385110,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -385098,6 +385699,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -386146,6 +386748,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -387415,6 +388018,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -389216,6 +389820,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -390993,6 +391598,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -392081,6 +392687,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",
@@ -393617,6 +394224,7 @@
         "std-learn-doser",
         "std-learn-estimate",
         "std-learn-fx-cues",
+        "std-learn-generate",
         "std-learn-goal-seek",
         "std-learn-grid-sim",
         "std-learn-hotspot",

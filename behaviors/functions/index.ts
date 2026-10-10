@@ -98,6 +98,7 @@ export * from './ui/learning/atoms/std-learn-diagram.js';
 export * from './ui/learning/atoms/std-learn-doser.js';
 export * from './ui/learning/atoms/std-learn-estimate.js';
 export * from './ui/learning/atoms/std-learn-fx-cues.js';
+export * from './ui/learning/atoms/std-learn-generate.js';
 export * from './ui/learning/atoms/std-learn-goal-seek.js';
 export * from './ui/learning/atoms/std-learn-grid-sim.js';
 export * from './ui/learning/atoms/std-learn-hotspot.js';
